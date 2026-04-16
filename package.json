@@ -1,0 +1,21 @@
+{
+  "name": "@archon-research/uikit-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.2.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "format:check": "npm run format:check --workspaces --if-present",
+    "prepare": "npm run prepare --workspaces --if-present",
+    "release:check": "npm run lint && npm run format:check && npm run build"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.6",
+    "typescript": "^5.9.3"
+  }
+}

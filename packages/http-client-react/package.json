@@ -1,0 +1,21 @@
+{
+  "name": "@archon-research/http-client-react",
+  "version": "0.1.0",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@archon-research/http-client-core": "0.1.0",
+    "@tanstack/react-query": "^5.96.2"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}

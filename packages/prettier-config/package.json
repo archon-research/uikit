@@ -1,0 +1,16 @@
+{
+  "name": "@archon-research/prettier-config",
+  "version": "0.1.0",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "peerDependencies": {
+    "prettier": "^3.0.0"
+  }
+}

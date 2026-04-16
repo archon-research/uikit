@@ -1,0 +1,7 @@
+node_modules/
+.npmrc.local
+*.log
+.DS_Store
+packages/*/dist/
+packages/*/styled-system/
+packages/*/.turbo/
