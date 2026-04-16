@@ -6,9 +6,13 @@
     "access": "restricted"
   },
   "type": "module",
-  "main": "index.js",
+  "main": "index.ts",
+  "types": "index.ts",
   "exports": {
-    ".": "./index.js"
+    ".": {
+      "types": "./index.ts",
+      "default": "./index.ts"
+    }
   },
   "peerDependencies": {
     "prettier": "^3.0.0"

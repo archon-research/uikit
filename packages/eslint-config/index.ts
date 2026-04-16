@@ -5,7 +5,14 @@ import importPlugin from 'eslint-plugin-import';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-export function createBaseConfig(options = {}) {
+export type BaseConfigOptions = {
+  ignores?: string[];
+  ecmaVersion?: number;
+  tsconfigRootDir?: string;
+  project?: string[];
+};
+
+export function createBaseConfig(options: BaseConfigOptions = {}) {
   const {
     ignores = ['dist', 'generated', 'src/generated', 'styled-system'],
     ecmaVersion = 2020,
