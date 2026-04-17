@@ -1,5 +1,5 @@
 {
-  "name": "@archon-research/uikit-workspace",
+  "name": "@archon-research/uikit",
   "private": true,
   "type": "module",
   "packageManager": "npm@11.2.0",

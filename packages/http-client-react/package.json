@@ -1,6 +1,6 @@
 {
   "name": "@archon-research/http-client-react",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
     "access": "public"
@@ -12,7 +12,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@archon-research/http-client-core": "0.1.0",
+    "@archon-research/http-client-core": "0.0.0",
     "@tanstack/react-query": "^5.96.2"
   },
   "peerDependencies": {
