@@ -1,0 +1,34 @@
+# Lefthook configuration for uikit
+# Install: npm run install-hooks
+# Run manually: npm run hooks:pre-commit
+
+pre-commit:
+  parallel: true
+  commands:
+    trailing-whitespace:
+      glob: '*.{ts,tsx,js,mjs,cjs,yml,yaml,json,md}'
+      stage_fixed: true
+      run: |
+        files=$(echo {staged_files} | tr ' ' '\n' || true)
+        if [ -n "$files" ]; then
+          echo "$files" | xargs sed -i '' 's/[[:space:]]*$//'
+        fi
+
+    end-of-file-fixer:
+      glob: '*.{ts,tsx,js,mjs,cjs,yml,yaml,json,md}'
+      stage_fixed: true
+      run: |
+        for file in {staged_files}; do
+          if [ -f "$file" ]; then
+            [ -n "$(tail -c1 "$file")" ] && echo >> "$file"
+            perl -i -0pe 's/\n+$/\n/' "$file"
+          fi
+        done
+
+    lint-workspaces:
+      glob: '*.{ts,tsx,js,mjs,cjs}'
+      run: npm run lint
+
+    format-check-workspaces:
+      glob: '*.{ts,tsx,js,mjs,cjs,json,md,yml,yaml}'
+      run: npm run format:check
