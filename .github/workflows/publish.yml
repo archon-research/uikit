@@ -1,0 +1,57 @@
+name: publish
+
+on:
+  release:
+    types:
+      - released
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Read Node version from package.json
+        id: node-version
+        run: echo "value=$(jq -r '.volta.node // empty' package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ steps.node-version.outputs.value }}
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: '@archon-research'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare packages
+        run: npm run prepare
+
+      - name: Publish packages to GitHub Packages
+        run: npm run publish:workspaces
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pack tarballs for release assets
+        run: |
+          mkdir -p dist-pack
+          for pkg in packages/*/; do
+            if [ -f "$pkg/package.json" ]; then
+              npm pack "$pkg" --pack-destination dist-pack
+            fi
+          done
+
+      - name: Upload tarballs to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" dist-pack/*.tgz --clobber

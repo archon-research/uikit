@@ -1,0 +1,31 @@
+{
+  "name": "@archon-research/uikit",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.2.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "volta": {
+    "node": "24.14.1"
+  },
+  "scripts": {
+    "clean": "npm run clean --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "lint:fix": "npm run lint:fix --workspaces --if-present",
+    "format": "npm run format --workspaces --if-present",
+    "format:check": "npm run format:check --workspaces --if-present",
+    "install-hooks": "lefthook install",
+    "hooks:pre-commit": "lefthook run pre-commit",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "prepare": "npm run prepare --workspaces --if-present",
+    "release:check": "npm run lint && npm run format:check",
+    "publish:workspaces": "npm publish --workspaces --access public"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.6",
+    "lefthook": "^2.1.4",
+    "typescript": "^5.9.3"
+  }
+}

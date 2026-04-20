@@ -1,0 +1,19 @@
+{
+  "name": "@archon-research/tsconfig",
+  "version": "0.0.0",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "type": "module",
+  "files": [
+    "base.json",
+    "react.json",
+    "node.json"
+  ],
+  "exports": {
+    "./base": "./base.json",
+    "./react": "./react.json",
+    "./node": "./node.json"
+  }
+}
