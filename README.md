@@ -5,8 +5,8 @@ Shared frontend scaffold for Archon projects.
 ## Packages
 
 - @archon-research/tsconfig
-- @archon-research/eslint-config
-- @archon-research/prettier-config
+- @archon-research/oxlint-config
+- @archon-research/oxfmt-config
 - @archon-research/design-system
 - @archon-research/http-client-core
 - @archon-research/http-client-react

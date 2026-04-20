@@ -1,0 +1,15 @@
+{
+  "name": "@archon-research/oxfmt-config",
+  "version": "0.0.0",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "type": "module",
+  "files": [
+    "index.mjs"
+  ],
+  "exports": {
+    ".": "./index.mjs"
+  }
+}

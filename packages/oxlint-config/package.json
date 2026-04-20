@@ -1,0 +1,17 @@
+{
+  "name": "@archon-research/oxlint-config",
+  "version": "0.0.0",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "type": "module",
+  "files": [
+    "base.mjs",
+    "react.mjs"
+  ],
+  "exports": {
+    "./base": "./base.mjs",
+    "./react": "./react.mjs"
+  }
+}
