@@ -140,26 +140,26 @@ npm run hooks:pre-commit
 
 The hooks run repository-wide lint and format checks and also normalize trailing whitespace and end-of-file newlines on staged files.
 
-## Versioning with changesets
+## Versioning
 
-Create a changeset entry:
+The repository uses lockstep versioning across all workspace packages.
 
-```bash
-npm run changeset
-```
+The bump workflow runs `semantic-release` with Conventional Commits.
 
-Bump package versions from pending changesets:
+`semantic-release` decides semantic version bump type from commit messages:
 
-```bash
-npm run changeset:version
-```
+- `feat:` => minor
+- `fix:` and other non-breaking changes => patch
+- `!` or `BREAKING CHANGE:` => major
+
+During release preparation, it runs `npm version ${nextRelease.version} --workspaces --no-git-tag-version --no-include-workspace-root` to keep workspace package versions in sync, commits those changes, tags with `release-<version>`, and opens a draft GitHub release.
 
 ## Release and publish
 
-Run release readiness checks:
+Preview release behavior without publishing:
 
 ```bash
-npm run release:check
+npm run release:dry-run
 ```
 
 Prepare publishable workspace artifacts:
