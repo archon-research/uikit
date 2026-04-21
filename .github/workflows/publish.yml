@@ -3,7 +3,7 @@ name: publish
 on:
   release:
     types:
-      - released
+      - created
 
 permissions:
   contents: write
@@ -11,10 +11,11 @@ permissions:
 
 jobs:
   publish:
+    if: ${{ github.event.release.draft == true }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout release tag
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ github.event.release.tag_name }}
 
@@ -23,7 +24,7 @@ jobs:
         run: echo "value=$(jq -r '.volta.node // empty' package.json)" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ${{ steps.node-version.outputs.value }}
           cache: npm
@@ -55,3 +56,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "${{ github.event.release.tag_name }}" dist-pack/*.tgz --clobber
+
+      - name: Mark release as published
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit "${{ github.event.release.tag_name }}" --draft=false

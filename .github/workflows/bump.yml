@@ -1,17 +1,21 @@
-name: ci
+name: bump
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
-  lint:
+  bump:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
 
       - name: Read Node version from package.json
         id: node-version
@@ -27,8 +31,14 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Lint
+      - name: Run lint
         run: npm run lint
+
+      - name: Run format check
+        run: npm run format:check
+
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm exec semantic-release
