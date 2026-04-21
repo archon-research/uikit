@@ -41,4 +41,5 @@ jobs:
       - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.UIKIT_GH_PACKAGES_READ_TOKEN }}
         run: npm exec semantic-release
