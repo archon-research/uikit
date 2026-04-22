@@ -7,7 +7,7 @@ const containerStyle: CSSProperties = {
   alignItems: 'center',
   gap: 6,
   padding: 4,
-  borderRadius: 999,
+  borderRadius: 10,
   border: '1px solid var(--colors-border-subtle, #d0d5dd)',
   background: 'var(--colors-surface-subtle, #f8f9fb)',
 };
@@ -17,7 +17,7 @@ const buttonBaseStyle: CSSProperties = {
   alignItems: 'center',
   gap: 6,
   border: 0,
-  borderRadius: 999,
+  borderRadius: 8,
   padding: '6px 10px',
   fontSize: 12,
   lineHeight: 1.2,
