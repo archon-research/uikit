@@ -1,0 +1,24 @@
+{
+  "name": "@archon-research/uikit-preview",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsx ./scripts/build-preview.ts",
+    "clean": "rm -rf dist",
+    "dev:stories": "ladle serve --host 0.0.0.0 --port 61000",
+    "dev:studio": "panda studio --config panda.config.ts --port 61001"
+  },
+  "dependencies": {
+    "@archon-research/design-system": "*",
+    "@pandacss/studio": "^1.10.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@archon-research/tsconfig": "*",
+    "@ladle/react": "^5.1.1",
+    "@pandacss/dev": "^1.10.0",
+    "tsx": "^4.20.6"
+  }
+}

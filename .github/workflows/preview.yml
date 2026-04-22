@@ -1,0 +1,134 @@
+name: preview
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Read Node version from package.json
+        id: node-version
+        run: echo "value=$(jq -r '.volta.node // empty' package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: ${{ steps.node-version.outputs.value }}
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: '@archon-research'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build preview site
+        run: npm run preview:build
+
+      - name: Publish preview to gh-pages
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          TARGET_DIR="."
+          COMMIT_MSG="chore(preview): update main preview for ${SHA}"
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            TARGET_DIR="pr/${PR_NUMBER}"
+            COMMIT_MSG="chore(preview): update PR #${PR_NUMBER} for ${SHA}"
+          fi
+
+          WORKTREE_DIR="$(mktemp -d)"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git fetch origin gh-pages
+            git worktree add "$WORKTREE_DIR" origin/gh-pages
+            cd "$WORKTREE_DIR"
+            git checkout -B gh-pages
+          else
+            git worktree add --detach "$WORKTREE_DIR"
+            cd "$WORKTREE_DIR"
+            git checkout --orphan gh-pages
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+
+          mkdir -p pr
+
+          if [ "$TARGET_DIR" = "." ]; then
+            rm -rf studio stories tokens index.html .nojekyll
+            cp -R "$GITHUB_WORKSPACE/packages/uikit-preview/dist/." .
+          else
+            rm -rf "$TARGET_DIR"
+            mkdir -p "$TARGET_DIR"
+            cp -R "$GITHUB_WORKSPACE/packages/uikit-preview/dist/." "$TARGET_DIR"
+          fi
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No preview changes to publish"
+            exit 0
+          fi
+
+          git commit -m "$COMMIT_MSG"
+          git push origin gh-pages
+
+      - name: Comment PR with preview links
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PREVIEW_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/
+          STUDIO_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/studio/
+          STORIES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/stories/
+          TOKENS_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/tokens/
+        run: |
+          set -euo pipefail
+
+          MARKER="<!-- uikit-preview-links -->"
+          BODY=$(cat <<EOF
+          ${MARKER}
+          Preview is ready:
+
+          - Home: ${PREVIEW_URL}
+          - Stories: ${STORIES_URL}
+          - Panda Studio: ${STUDIO_URL}
+          - Token Mapping: ${TOKENS_URL}
+          EOF
+          )
+
+          COMMENTS=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments")
+          EXISTING_ID=$(echo "$COMMENTS" | jq -r ".[] | select(.body | contains(\"${MARKER}\")) | .id" | head -n 1)
+
+          if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "null" ]; then
+            gh api \
+              "repos/${REPO}/issues/comments/${EXISTING_ID}" \
+              --method PATCH \
+              -f body="$BODY" >/dev/null
+          else
+            gh api \
+              "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+              --method POST \
+              -f body="$BODY" >/dev/null
+          fi

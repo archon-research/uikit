@@ -140,6 +140,36 @@ npm run hooks:pre-commit
 
 The hooks run repository-wide lint and format checks and also normalize trailing whitespace and end-of-file newlines on staged files.
 
+## Preview site
+
+This repository includes a lightweight preview stack that avoids Storybook:
+
+- Ladle for interactive component stories
+- Panda Studio for token and theme inspection
+- A static component-level token mapping page
+
+Run local preview surfaces:
+
+```bash
+npm run preview:dev:stories
+npm run preview:dev:studio
+```
+
+Build the static preview artifact:
+
+```bash
+npm run preview:build
+```
+
+Output is written to `packages/uikit-preview/dist`.
+
+Deployment model:
+
+- Main branch deploys to GitHub Pages root
+- Pull requests deploy to `pr/<number>/` paths on the `gh-pages` branch
+- PR comments are updated with preview links
+- PR close triggers cleanup of the corresponding `pr/<number>/` folder
+
 ## Versioning
 
 The repository uses lockstep versioning across all workspace packages.
