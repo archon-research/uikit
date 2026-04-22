@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
   issues: write
   pull-requests: write
@@ -44,6 +45,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.UIKIT_GH_PACKAGES_READ_TOKEN }}
         run: npm exec semantic-release
+
+      - name: Trigger publish workflow
+        if: steps.release.outputs.release_version != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run publish.yml -f release_tag="release-${{ steps.release.outputs.release_version }}"
 
       - name: Open version-bump pull request
         if: steps.release.outputs.release_version != ''
