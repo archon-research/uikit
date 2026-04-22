@@ -148,6 +148,9 @@ This repository includes a lightweight preview stack that avoids Storybook:
 - Panda Studio for token and theme inspection
 - A static component-level token mapping page
 
+The preview package consumes the shared Panda theme configuration from the
+design-system package rather than defining a separate theme.
+
 Run local preview surfaces:
 
 ```bash

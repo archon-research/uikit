@@ -8,6 +8,8 @@ It combines:
 - Panda Studio for token/theme exploration
 - A curated component-to-token mapping view
 
+The preview reuses the shared Panda theme config from the design-system package.
+
 ## Local development
 
 From repository root:

@@ -1,35 +1,46 @@
 import { Switch } from '@archon-research/design-system';
 
-const frameStyle = {
-  display: 'flex',
+import '../../styled-system/styles.css';
+import { css } from '../../styled-system/css';
+import { toggleSwitch } from '../../styled-system/recipes';
+
+const frameClassName = css({
   alignItems: 'center',
-  gap: '0.75rem',
-  fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+  display: 'flex',
+  gap: '3',
+});
+
+const renderSwitch = (props?: React.ComponentProps<typeof Switch.Root>) => {
+  const classes = toggleSwitch();
+
+  return (
+    <Switch.Root {...props} className={classes.root}>
+      <Switch.Thumb className={classes.thumb} />
+    </Switch.Root>
+  );
 };
 
 export const Off = () => (
-  <div style={frameStyle}>
-    <Switch.Root aria-label="Notifications">
-      <Switch.Thumb />
-    </Switch.Root>
+  <div className={frameClassName}>
+    {renderSwitch({ 'aria-label': 'Notifications' })}
     <span>Notifications off</span>
   </div>
 );
 
 export const On = () => (
-  <div style={frameStyle}>
-    <Switch.Root defaultChecked aria-label="Notifications">
-      <Switch.Thumb />
-    </Switch.Root>
+  <div className={frameClassName}>
+    {renderSwitch({ 'aria-label': 'Notifications', defaultChecked: true })}
     <span>Notifications on</span>
   </div>
 );
 
 export const Disabled = () => (
-  <div style={frameStyle}>
-    <Switch.Root defaultChecked disabled aria-label="Notifications">
-      <Switch.Thumb />
-    </Switch.Root>
+  <div className={frameClassName}>
+    {renderSwitch({
+      'aria-label': 'Notifications',
+      defaultChecked: true,
+      disabled: true,
+    })}
     <span>Disabled state</span>
   </div>
 );
