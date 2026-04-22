@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event.inputs.release_tag }}
+      NODE_AUTH_TOKEN: ${{ secrets.UIKIT_GH_PACKAGES_READ_TOKEN }}
     steps:
       - name: Checkout release tag
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -42,13 +43,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Set workspace versions from release tag
+        run: |
+          VERSION="${RELEASE_TAG#release-}"
+          if [ "$VERSION" = "$RELEASE_TAG" ]; then
+            echo "Unexpected release tag format: $RELEASE_TAG"
+            exit 1
+          fi
+          npm version "$VERSION" --workspaces --no-git-tag-version --no-include-workspace-root
+
       - name: Prepare packages
         run: npm run prepare
 
       - name: Publish packages to GitHub Packages
         run: npm run publish:workspaces
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.UIKIT_GH_PACKAGES_WRITE_TOKEN != '' && secrets.UIKIT_GH_PACKAGES_WRITE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Pack tarballs for release assets
         run: |

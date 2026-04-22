@@ -174,24 +174,22 @@ function linkLocalPackages(
     return;
   }
 
-  const uniquePackageDirs = new Set<string>();
-  for (const names of neededByWorkspace.values()) {
-    for (const name of names) {
-      const packageDir = dirByName.get(name);
-      if (packageDir) {
-        uniquePackageDirs.add(packageDir);
-      }
+  for (const [workspace, names] of neededByWorkspace.entries()) {
+    const packageArgs = names
+      .map((name) => dirByName.get(name))
+      .filter((pkgDir): pkgDir is string => Boolean(pkgDir))
+      .map((pkgDir) => `"${pkgDir}"`)
+      .join(' ');
+
+    if (!packageArgs) {
+      continue;
     }
+
+    run(
+      `npm link ${packageArgs} --workspace "${workspace}" --package-lock=false --save=false`,
+      consumerRoot,
+    );
   }
-
-  const packageArgs = [...uniquePackageDirs]
-    .map((pkgDir) => `"${pkgDir}"`)
-    .join(' ');
-  const workspaceArgs = [...neededByWorkspace.keys()]
-    .map((workspace) => `-w ${workspace}`)
-    .join(' ');
-
-  run(`npm link ${packageArgs} ${workspaceArgs}`, consumerRoot);
 }
 
 function unlinkLocalPackages(
@@ -205,7 +203,10 @@ function unlinkLocalPackages(
 
   for (const [workspace, names] of neededByWorkspace.entries()) {
     for (const name of names) {
-      const ok = tryRun(`npm unlink "${name}" -w ${workspace}`, consumerRoot);
+      const ok = tryRun(
+        `npm unlink "${name}" --workspace "${workspace}" --package-lock=false --save=false`,
+        consumerRoot,
+      );
       if (!ok) {
         console.warn(
           `Unable to unlink ${name} in ${workspace}; continuing with restore flow.`,
@@ -222,7 +223,7 @@ function areRegistryPackagesReady(
   for (const [workspace, names] of neededByWorkspace.entries()) {
     for (const name of names) {
       const ok = tryRun(
-        `npm ls ${name} -w ${workspace} --depth=0`,
+        `npm_config_min_release_age=0 npm ls ${name} --depth=0 --workspace "${workspace}"`,
         consumerRoot,
         true,
       );
@@ -294,7 +295,16 @@ try {
   }
 
   unlinkLocalPackages(consumerRoot, neededByWorkspace);
-  const installOk = tryRun('npm install', consumerRoot);
+
+  let installOk = true;
+  for (const workspace of neededByWorkspace.keys()) {
+    installOk =
+      tryRun(
+        `npm_config_min_release_age=0 npm install --workspace "${workspace}"`,
+        consumerRoot,
+      ) &&
+      installOk;
+  }
 
   if (!installOk || !areRegistryPackagesReady(consumerRoot, neededByWorkspace)) {
     console.warn(
