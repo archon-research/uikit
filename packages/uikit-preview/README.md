@@ -6,7 +6,7 @@ It combines:
 
 - Ladle stories for interactive component previews
 - Panda Studio for token/theme exploration
-- A curated component-to-token mapping view
+- A generated Panda Spec JSON documentation view
 
 The preview reuses the shared Panda theme config from the design-system package.
 

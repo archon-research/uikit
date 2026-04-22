@@ -3,28 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>UIKit Token Mapping</title>
+    <title>UIKit Panda Spec</title>
     <link rel="stylesheet" href="../design-system.css" />
   </head>
   <body>
     <main>
       <div>
-        <h1>Component Token Mapping</h1>
+        <h1>Panda Spec</h1>
         <a href="../">Back to preview home</a>
       </div>
 
       <p>
-        Curated v1 mapping from design-system recipes to token usage. Start with
-        Switch and extend over time for additional components.
+        Generated documentation view sourced from Panda Spec JSON output. This
+        page is generated from the shared design-system Panda configuration.
       </p>
 
-      <table aria-label="Token mapping table">
+      <table aria-label="Panda spec table">
         <thead>
           <tr>
-            <th>Component</th>
-            <th>Recipe/Source</th>
-            <th>Token References</th>
-            <th>Status</th>
+            <th>Spec File</th>
+            <th>Type</th>
+            <th>Entries</th>
+            <th>Sample</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -33,18 +33,58 @@
 
     <script>
       const table = document.getElementById('rows');
+      const specFiles = [
+        'tokens.json',
+        'semantic-tokens.json',
+        'recipes.json',
+        'patterns.json',
+        'conditions.json',
+        'text-styles.json',
+        'layer-styles.json',
+        'animation-styles.json',
+        'keyframes.json',
+        'color-palette.json',
+      ];
 
-      fetch('./mapping.json')
-        .then((res) => res.json())
-        .then((items) => {
-          table.innerHTML = items
+      const getName = (item) => {
+        if (!item || typeof item !== 'object') return '';
+        if (typeof item.name === 'string') return item.name;
+        if (typeof item.type === 'string') return item.type;
+        return '';
+      };
+
+      Promise.all(
+        specFiles.map(async (fileName) => {
+          const response = await fetch(`./spec/${fileName}`);
+          if (!response.ok) {
+            throw new Error(fileName);
+          }
+
+          const spec = await response.json();
+          const entries = Array.isArray(spec.data) ? spec.data : [];
+          const sample = entries
+            .slice(0, 3)
+            .map(getName)
+            .filter(Boolean)
+            .join(', ');
+
+          return {
+            fileName,
+            type: spec.type || 'unknown',
+            count: entries.length,
+            sample: sample || 'No named entries',
+          };
+        }),
+      )
+        .then((rows) => {
+          table.innerHTML = rows
             .map(
-              (item) => `
+              (row) => `
                 <tr>
-                  <td>${item.component}</td>
-                  <td><a href="${item.sourceHref}">${item.sourceLabel}</a></td>
-                  <td>${item.tokens.join(', ') || 'None yet'}</td>
-                  <td>${item.status}</td>
+                  <td><a href="./spec/${row.fileName}">${row.fileName}</a></td>
+                  <td>${row.type}</td>
+                  <td>${row.count}</td>
+                  <td>${row.sample}</td>
                 </tr>
               `,
             )
@@ -52,7 +92,7 @@
         })
         .catch(() => {
           table.innerHTML =
-            '<tr><td colspan="4">Unable to load mapping data.</td></tr>';
+            '<tr><td colspan="4">Unable to load Panda spec data.</td></tr>';
         });
     </script>
   </body>

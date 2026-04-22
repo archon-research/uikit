@@ -146,7 +146,7 @@ This repository includes a lightweight preview stack that avoids Storybook:
 
 - Ladle for interactive component stories
 - Panda Studio for token and theme inspection
-- A static component-level token mapping page
+- A static Panda Spec JSON documentation page
 
 The preview package consumes the shared Panda theme configuration from the
 design-system package rather than defining a separate theme.
