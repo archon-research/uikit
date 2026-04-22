@@ -47,7 +47,6 @@ jobs:
 
       - name: Open version-bump pull request
         if: steps.release.outputs.release_version != ''
-        id: bump-pr
         uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
         with:
           commit-message: 'chore(release): ${{ steps.release.outputs.release_version }}'
@@ -55,3 +54,4 @@ jobs:
           delete-branch: true
           title: 'chore(release): ${{ steps.release.outputs.release_version }}'
           body: ${{ steps.release.outputs.release_notes }}
+          sign-commits: true
