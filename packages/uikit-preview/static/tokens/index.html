@@ -5,12 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UIKit Panda Spec</title>
     <link rel="stylesheet" href="../design-system.css" />
+    <link rel="stylesheet" href="../preview.css" />
+    <style>
+      main {
+        width: min(1040px, 94vw);
+        margin: 0 auto;
+        padding: 48px 0 72px;
+      }
+
+      h1 {
+        font-size: var(--font-sizes-3xl);
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-top: 8px;
+        color: var(--colors-slate-700);
+      }
+
+      p {
+        margin: 16px 0 0;
+      }
+
+      .table-wrap {
+        margin-top: 20px;
+        border: 1px solid var(--colors-slate-300);
+        border-radius: var(--radii-lg);
+        overflow: auto;
+        background: var(--colors-white);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--colors-slate-200);
+        vertical-align: top;
+      }
+
+      th {
+        font-size: var(--font-sizes-sm);
+        font-weight: var(--font-weights-semibold);
+        color: var(--colors-slate-700);
+        background: var(--colors-slate-100);
+      }
+
+      td {
+        font-size: var(--font-sizes-sm);
+      }
+
+      tbody tr:last-child td {
+        border-bottom: 0;
+      }
+
+      a {
+        color: var(--colors-blue-700);
+      }
+    </style>
   </head>
   <body>
     <main>
       <div>
         <h1>Panda Spec</h1>
-        <a href="../">Back to preview home</a>
+        <a class="back-link" href="../">Back to preview home</a>
       </div>
 
       <p>
@@ -18,17 +80,19 @@
         page is generated from the shared design-system Panda configuration.
       </p>
 
-      <table aria-label="Panda spec table">
-        <thead>
-          <tr>
-            <th>Spec File</th>
-            <th>Type</th>
-            <th>Entries</th>
-            <th>Sample</th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
+      <div class="table-wrap">
+        <table aria-label="Panda spec table">
+          <thead>
+            <tr>
+              <th>Spec File</th>
+              <th>Type</th>
+              <th>Entries</th>
+              <th>Sample</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
     </main>
 
     <script>

@@ -5,6 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UIKit Preview</title>
     <link rel="stylesheet" href="./design-system.css" />
+    <link rel="stylesheet" href="./preview.css" />
+    <style>
+      main {
+        width: min(880px, 92vw);
+        margin: 0 auto;
+        padding: 56px 0 72px;
+      }
+
+      h1 {
+        font-size: var(--font-sizes-4xl);
+      }
+
+      p {
+        margin: 12px 0 0;
+        max-width: 72ch;
+        font-size: var(--font-sizes-md);
+      }
+
+      ul {
+        margin: 28px 0 0;
+        padding: 0;
+        display: grid;
+        gap: 12px;
+      }
+
+      li {
+        list-style: none;
+      }
+
+      a {
+        display: block;
+        padding: 14px 16px;
+        border: 1px solid var(--colors-slate-300);
+        border-radius: var(--radii-lg);
+        background: var(--colors-white);
+        color: var(--colors-slate-900);
+        font-weight: var(--font-weights-medium);
+      }
+
+      a:hover {
+        border-color: var(--colors-slate-400);
+        background: var(--colors-slate-100);
+      }
+    </style>
   </head>
   <body>
     <main>
