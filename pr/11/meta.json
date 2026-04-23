@@ -1,0 +1,170 @@
+{
+  "about": {
+    "homepage": "https://www.ladle.dev",
+    "github": "https://github.com/tajo/ladle",
+    "version": 1
+  },
+  "stories": {
+    "playground--contrast-checker": {
+      "name": "Contrast checker",
+      "levels": [
+        "Playground"
+      ],
+      "locStart": 202,
+      "locEnd": 275,
+      "filePath": "src/stories/playground.stories.tsx",
+      "namedExport": "ContrastChecker",
+      "meta": {}
+    },
+    "playground--typography": {
+      "name": "Typography",
+      "levels": [
+        "Playground"
+      ],
+      "locStart": 172,
+      "locEnd": 200,
+      "filePath": "src/stories/playground.stories.tsx",
+      "namedExport": "Typography",
+      "meta": {}
+    },
+    "components--sidebar-layout--default": {
+      "name": "Default",
+      "levels": [
+        "Components",
+        "Sidebar layout"
+      ],
+      "locStart": 139,
+      "locEnd": 150,
+      "filePath": "src/stories/sidebar-layout.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "components--styled-select--default": {
+      "name": "Default",
+      "levels": [
+        "Components",
+        "Styled select"
+      ],
+      "locStart": 31,
+      "locEnd": 45,
+      "filePath": "src/stories/styled-select.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "components--styled-select--disabled": {
+      "name": "Disabled",
+      "levels": [
+        "Components",
+        "Styled select"
+      ],
+      "locStart": 47,
+      "locEnd": 60,
+      "filePath": "src/stories/styled-select.stories.tsx",
+      "namedExport": "Disabled",
+      "meta": {}
+    },
+    "components--switch--disabled": {
+      "name": "Disabled",
+      "levels": [
+        "Components",
+        "Switch"
+      ],
+      "locStart": 51,
+      "locEnd": 60,
+      "filePath": "src/stories/switch.stories.tsx",
+      "namedExport": "Disabled",
+      "meta": {}
+    },
+    "components--switch--off": {
+      "name": "Off",
+      "levels": [
+        "Components",
+        "Switch"
+      ],
+      "locStart": 37,
+      "locEnd": 42,
+      "filePath": "src/stories/switch.stories.tsx",
+      "namedExport": "Off",
+      "meta": {}
+    },
+    "components--switch--on": {
+      "name": "On",
+      "levels": [
+        "Components",
+        "Switch"
+      ],
+      "locStart": 44,
+      "locEnd": 49,
+      "filePath": "src/stories/switch.stories.tsx",
+      "namedExport": "On",
+      "meta": {}
+    },
+    "components--theme-toggle--default": {
+      "name": "Default",
+      "levels": [
+        "Components",
+        "Theme toggle"
+      ],
+      "locStart": 18,
+      "locEnd": 24,
+      "filePath": "src/stories/theme-toggle.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "tokens--colors": {
+      "name": "Colors",
+      "levels": [
+        "Tokens"
+      ],
+      "locStart": 221,
+      "locEnd": 255,
+      "filePath": "src/stories/tokens.stories.tsx",
+      "namedExport": "Colors",
+      "meta": {}
+    },
+    "tokens--overview": {
+      "name": "Overview",
+      "levels": [
+        "Tokens"
+      ],
+      "locStart": 174,
+      "locEnd": 219,
+      "filePath": "src/stories/tokens.stories.tsx",
+      "namedExport": "Overview",
+      "meta": {}
+    },
+    "tokens--semantic-tokens": {
+      "name": "Semantic tokens",
+      "levels": [
+        "Tokens"
+      ],
+      "locStart": 365,
+      "locEnd": 405,
+      "filePath": "src/stories/tokens.stories.tsx",
+      "namedExport": "SemanticTokens",
+      "meta": {}
+    },
+    "tokens--sizes": {
+      "name": "Sizes",
+      "levels": [
+        "Tokens"
+      ],
+      "locStart": 311,
+      "locEnd": 363,
+      "filePath": "src/stories/tokens.stories.tsx",
+      "namedExport": "Sizes",
+      "meta": {}
+    },
+    "tokens--spacing": {
+      "name": "Spacing",
+      "levels": [
+        "Tokens"
+      ],
+      "locStart": 257,
+      "locEnd": 309,
+      "filePath": "src/stories/tokens.stories.tsx",
+      "namedExport": "Spacing",
+      "meta": {}
+    }
+  }
+}
