@@ -46,52 +46,7 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-
-          TARGET_DIR="."
-          COMMIT_MSG="chore(preview): update main preview for ${SHA}"
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            TARGET_DIR="pr/${PR_NUMBER}"
-            COMMIT_MSG="chore(preview): update PR #${PR_NUMBER} for ${SHA}"
-          fi
-
-          WORKTREE_DIR="$(mktemp -d)"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
-            git fetch origin gh-pages
-            git worktree add "$WORKTREE_DIR" origin/gh-pages
-            cd "$WORKTREE_DIR"
-            git checkout -B gh-pages
-          else
-            git worktree add --detach "$WORKTREE_DIR"
-            cd "$WORKTREE_DIR"
-            git checkout --orphan gh-pages
-            git rm -rf . >/dev/null 2>&1 || true
-          fi
-
-          mkdir -p pr
-
-          if [ "$TARGET_DIR" = "." ]; then
-            rm -rf stories tokens index.html .nojekyll
-            cp -R "$GITHUB_WORKSPACE/packages/uikit-preview/dist/." .
-          else
-            rm -rf "$TARGET_DIR"
-            mkdir -p "$TARGET_DIR"
-            cp -R "$GITHUB_WORKSPACE/packages/uikit-preview/dist/." "$TARGET_DIR"
-          fi
-
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No preview changes to publish"
-            exit 0
-          fi
-
-          git commit -m "$COMMIT_MSG"
-          git push origin gh-pages
+        run: bash .github/scripts/publish-preview.sh
 
       - name: Comment PR with preview links
         if: github.event_name == 'pull_request'
@@ -100,7 +55,6 @@ jobs:
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PREVIEW_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/
-          STUDIO_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/studio/
           STORIES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/stories/
           TOKENS_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/tokens/
         run: |
@@ -113,7 +67,6 @@ jobs:
 
           - Home: ${PREVIEW_URL}
           - Stories: ${STORIES_URL}
-          - Panda Studio: ${STUDIO_URL}
           - Token Mapping: ${TOKENS_URL}
           EOF
           )
