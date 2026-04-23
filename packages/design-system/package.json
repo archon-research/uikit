@@ -16,6 +16,10 @@
     "./recipes": {
       "types": "./src/recipes/index.d.ts",
       "default": "./src/recipes/index.ts"
+    },
+    "./panda-preset": {
+      "types": "./src/panda-preset.d.ts",
+      "default": "./src/panda-preset.ts"
     }
   },
   "dependencies": {
