@@ -3,6 +3,10 @@ import { SidebarLayout, StyledSelect, ThemeProvider, ThemeToggle } from '@archon
 import '../../styled-system/styles.css';
 import { css } from '../../styled-system/css';
 
+export default {
+  title: 'Components/Sidebar Layout',
+};
+
 const shellClassName = css({
   height: '100vh',
   width: '100%',

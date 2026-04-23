@@ -3,6 +3,10 @@ import { ThemeProvider, ThemeToggle } from '@archon-research/design-system';
 import '../../styled-system/styles.css';
 import { css } from '../../styled-system/css';
 
+export default {
+  title: 'Components/Theme Toggle',
+};
+
 const storyFrameClassName = css({
   alignItems: 'center',
   bg: 'surface.default',

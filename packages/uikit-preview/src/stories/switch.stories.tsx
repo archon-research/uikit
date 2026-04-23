@@ -4,6 +4,10 @@ import '../../styled-system/styles.css';
 import { css } from '../../styled-system/css';
 import { toggleSwitch } from '../../styled-system/recipes';
 
+export default {
+  title: 'Components/Switch',
+};
+
 const frameClassName = css({
   alignItems: 'center',
   display: 'flex',

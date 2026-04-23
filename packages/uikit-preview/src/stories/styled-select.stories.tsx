@@ -3,6 +3,10 @@ import { StyledSelect } from '@archon-research/design-system';
 import '../../styled-system/styles.css';
 import { css } from '../../styled-system/css';
 
+export default {
+  title: 'Components/Styled Select',
+};
+
 const stackClassName = css({
   display: 'grid',
   gap: '5',
