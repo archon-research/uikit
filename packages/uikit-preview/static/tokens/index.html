@@ -9,8 +9,7 @@
         const readThemeMode = () => {
           const stored = window.localStorage.getItem('theme');
           const legacyStored = window.localStorage.getItem('archon-theme');
-          const studioStored = window.localStorage.getItem('panda:studio:theme');
-          const value = stored || legacyStored || studioStored;
+          const value = stored || legacyStored;
 
           if (value === 'light' || value === 'dark' || value === 'auto') {
             return value;

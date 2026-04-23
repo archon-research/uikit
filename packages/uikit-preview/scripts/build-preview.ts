@@ -2,20 +2,15 @@ import { execFileSync } from 'node:child_process';
 import {
   cpSync,
   mkdirSync,
-  readdirSync,
-  readFileSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from 'node:fs';
-import { dirname, relative, resolve } from 'node:path';
+import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const packageDir = resolve(scriptDir, '..');
 const distDir = resolve(packageDir, 'dist');
-const studioDir = resolve(distDir, 'studio');
-const backLinkSnippet = readFileSync(resolve(packageDir, 'static', 'back-link-snippet.html'), 'utf8');
 
 const run = (command: string, args: string[]) => {
   execFileSync(command, args, {
@@ -25,82 +20,10 @@ const run = (command: string, args: string[]) => {
   });
 };
 
-const visitFiles = (dirPath: string, visitor: (filePath: string) => void) => {
-  for (const entry of readdirSync(dirPath)) {
-    const entryPath = resolve(dirPath, entry);
-    const stats = statSync(entryPath);
-
-    if (stats.isDirectory()) {
-      visitFiles(entryPath, visitor);
-      continue;
-    }
-
-    visitor(entryPath);
-  }
-};
-
-const rewriteStudioAssetPaths = () => {
-  visitFiles(studioDir, (filePath) => {
-    if (!filePath.endsWith('.html')) {
-      return;
-    }
-
-    const prefix = relative(dirname(filePath), studioDir) || '.';
-    const content = readFileSync(filePath, 'utf8');
-    const rewritten = content
-      .replaceAll('href="/', `href="${prefix}/`)
-      .replaceAll("href='/", `href='${prefix}/`)
-      .replaceAll('src="/', `src="${prefix}/`)
-      .replaceAll("src='/", `src='${prefix}/`)
-      .replaceAll('component-url="/', `component-url="${prefix}/`)
-      .replaceAll('renderer-url="/', `renderer-url="${prefix}/`)
-      .replaceAll('before-hydration-url="/', `before-hydration-url="${prefix}/`)
-      .replaceAll('url(/', `url(${prefix}/`);
-
-    writeFileSync(filePath, rewritten);
-  });
-};
-
-const injectBackLink = (outputDir: string) => {
-  visitFiles(outputDir, (filePath) => {
-    if (!filePath.endsWith('.html')) {
-      return;
-    }
-
-    const content = readFileSync(filePath, 'utf8');
-
-    if (content.includes('data-uikit-preview-back-link')) {
-      return;
-    }
-
-    if (content.includes('</body>')) {
-      writeFileSync(filePath, content.replace('</body>', `\n${backLinkSnippet}\n</body>`));
-      return;
-    }
-
-    writeFileSync(filePath, `${content}\n${backLinkSnippet}\n`);
-  });
-};
-
 rmSync(distDir, { force: true, recursive: true });
 mkdirSync(distDir, { recursive: true });
 
 run('npm', ['run', 'generate']);
-
-run('npm', [
-  'exec',
-  '--',
-  'panda',
-  'studio',
-  '--build',
-  '--config',
-  'panda.config.ts',
-  '--outdir',
-  'dist/studio',
-]);
-
-rewriteStudioAssetPaths();
-injectBackLink(studioDir);
 
 run('npm', [
   'exec',

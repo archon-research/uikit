@@ -7,12 +7,10 @@
     "build": "tsx ./scripts/build-preview.ts",
     "clean": "rm -rf dist",
     "generate": "panda codegen --clean --config panda.config.ts && panda cssgen --config panda.config.ts --outfile styled-system/styles.css && panda spec --config panda.config.ts --outdir ./static/tokens/spec",
-    "dev:stories": "npm run generate && ladle serve --host 0.0.0.0 --port 61000",
-    "dev:studio": "panda studio --config panda.config.ts --port 61001"
+    "dev:stories": "npm run generate && ladle serve --host 0.0.0.0 --port 61000"
   },
   "dependencies": {
     "@archon-research/design-system": "*",
-    "@pandacss/studio": "^1.10.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

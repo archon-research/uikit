@@ -76,7 +76,7 @@ jobs:
           mkdir -p pr
 
           if [ "$TARGET_DIR" = "." ]; then
-            rm -rf studio stories tokens index.html .nojekyll
+            rm -rf stories tokens index.html .nojekyll
             cp -R "$GITHUB_WORKSPACE/packages/uikit-preview/dist/." .
           else
             rm -rf "$TARGET_DIR"
