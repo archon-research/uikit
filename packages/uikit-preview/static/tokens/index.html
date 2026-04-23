@@ -4,6 +4,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UIKit Panda Spec</title>
+    <script>
+      (() => {
+        const readThemeMode = () => {
+          const stored = window.localStorage.getItem('theme');
+          const legacyStored = window.localStorage.getItem('archon-theme');
+          const studioStored = window.localStorage.getItem('panda:studio:theme');
+          const value = stored || legacyStored || studioStored;
+
+          if (value === 'light' || value === 'dark' || value === 'auto') {
+            return value;
+          }
+
+          return 'auto';
+        };
+
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const mode = readThemeMode();
+        const effectiveTheme = mode === 'auto' ? (prefersDark ? 'dark' : 'light') : mode;
+
+        document.documentElement.dataset.theme = effectiveTheme;
+        document.documentElement.classList.toggle('dark', effectiveTheme === 'dark');
+      })();
+    </script>
     <link rel="stylesheet" href="../design-system.css" />
     <link rel="stylesheet" href="../preview.css" />
     <style>
@@ -23,6 +46,10 @@
         color: var(--colors-slate-700);
       }
 
+      :root[data-theme='dark'] .back-link {
+        color: var(--colors-slate-300);
+      }
+
       p {
         margin: 16px 0 0;
       }
@@ -33,6 +60,11 @@
         border-radius: var(--radii-lg);
         overflow: auto;
         background: var(--colors-white);
+      }
+
+      :root[data-theme='dark'] .table-wrap {
+        border-color: var(--colors-slate-700);
+        background: var(--colors-slate-900);
       }
 
       table {
@@ -55,8 +87,22 @@
         background: var(--colors-slate-100);
       }
 
+      :root[data-theme='dark'] th {
+        color: var(--colors-slate-300);
+        background: var(--colors-slate-800);
+      }
+
       td {
         font-size: var(--font-sizes-sm);
+      }
+
+      :root[data-theme='dark'] th,
+      :root[data-theme='dark'] td {
+        border-bottom-color: var(--colors-slate-700);
+      }
+
+      :root[data-theme='dark'] td {
+        color: var(--colors-slate-100);
       }
 
       tbody tr:last-child td {

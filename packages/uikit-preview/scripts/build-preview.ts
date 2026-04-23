@@ -15,6 +15,7 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 const packageDir = resolve(scriptDir, '..');
 const distDir = resolve(packageDir, 'dist');
 const studioDir = resolve(distDir, 'studio');
+const backLinkSnippet = readFileSync(resolve(packageDir, 'static', 'back-link-snippet.html'), 'utf8');
 
 const run = (command: string, args: string[]) => {
   execFileSync(command, args, {
@@ -60,6 +61,27 @@ const rewriteStudioAssetPaths = () => {
   });
 };
 
+const injectBackLink = (outputDir: string) => {
+  visitFiles(outputDir, (filePath) => {
+    if (!filePath.endsWith('.html')) {
+      return;
+    }
+
+    const content = readFileSync(filePath, 'utf8');
+
+    if (content.includes('data-uikit-preview-back-link')) {
+      return;
+    }
+
+    if (content.includes('</body>')) {
+      writeFileSync(filePath, content.replace('</body>', `\n${backLinkSnippet}\n</body>`));
+      return;
+    }
+
+    writeFileSync(filePath, `${content}\n${backLinkSnippet}\n`);
+  });
+};
+
 rmSync(distDir, { force: true, recursive: true });
 mkdirSync(distDir, { recursive: true });
 
@@ -78,6 +100,7 @@ run('npm', [
 ]);
 
 rewriteStudioAssetPaths();
+injectBackLink(studioDir);
 
 run('npm', [
   'exec',

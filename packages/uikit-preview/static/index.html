@@ -4,6 +4,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UIKit Preview</title>
+    <script>
+      (() => {
+        const readThemeMode = () => {
+          const stored = window.localStorage.getItem('theme');
+          const legacyStored = window.localStorage.getItem('archon-theme');
+          const studioStored = window.localStorage.getItem('panda:studio:theme');
+          const value = stored || legacyStored || studioStored;
+
+          if (value === 'light' || value === 'dark' || value === 'auto') {
+            return value;
+          }
+
+          return 'auto';
+        };
+
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const mode = readThemeMode();
+        const effectiveTheme = mode === 'auto' ? (prefersDark ? 'dark' : 'light') : mode;
+
+        document.documentElement.dataset.theme = effectiveTheme;
+        document.documentElement.classList.toggle('dark', effectiveTheme === 'dark');
+      })();
+    </script>
     <link rel="stylesheet" href="./design-system.css" />
     <link rel="stylesheet" href="./preview.css" />
     <style>
@@ -44,9 +67,20 @@
         font-weight: var(--font-weights-medium);
       }
 
+      :root[data-theme='dark'] a {
+        border-color: var(--colors-slate-700);
+        background: var(--colors-slate-900);
+        color: var(--colors-slate-100);
+      }
+
       a:hover {
         border-color: var(--colors-slate-400);
         background: var(--colors-slate-100);
+      }
+
+      :root[data-theme='dark'] a:hover {
+        border-color: var(--colors-slate-600);
+        background: var(--colors-slate-800);
       }
     </style>
   </head>

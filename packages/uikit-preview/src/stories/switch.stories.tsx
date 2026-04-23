@@ -8,6 +8,16 @@ const frameClassName = css({
   alignItems: 'center',
   display: 'flex',
   gap: '3',
+  minHeight: '40',
+  p: '6',
+  fontFamily: 'sans',
+});
+
+const labelClassName = css({
+  color: 'text.default',
+  fontSize: 'sm',
+  fontWeight: 'medium',
+  lineHeight: '1.4',
 });
 
 const renderSwitch = (props?: React.ComponentProps<typeof Switch.Root>) => {
@@ -23,14 +33,14 @@ const renderSwitch = (props?: React.ComponentProps<typeof Switch.Root>) => {
 export const Off = () => (
   <div className={frameClassName}>
     {renderSwitch({ 'aria-label': 'Notifications' })}
-    <span>Notifications off</span>
+    <span className={labelClassName}>Notifications off</span>
   </div>
 );
 
 export const On = () => (
   <div className={frameClassName}>
     {renderSwitch({ 'aria-label': 'Notifications', defaultChecked: true })}
-    <span>Notifications on</span>
+    <span className={labelClassName}>Notifications on</span>
   </div>
 );
 
@@ -41,6 +51,6 @@ export const Disabled = () => (
       defaultChecked: true,
       disabled: true,
     })}
-    <span>Disabled state</span>
+    <span className={labelClassName}>Disabled state</span>
   </div>
 );

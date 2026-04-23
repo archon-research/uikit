@@ -8,6 +8,8 @@ const stackClassName = css({
   gap: '5',
   maxWidth: 'sm',
   p: '6',
+  fontFamily: 'sans',
+  color: 'text.default',
 });
 
 const fieldClassName = css({
@@ -19,6 +21,7 @@ const labelClassName = css({
   color: 'text.muted',
   fontSize: 'sm',
   fontWeight: 'medium',
+  lineHeight: '1.4',
 });
 
 export const Default = () => (

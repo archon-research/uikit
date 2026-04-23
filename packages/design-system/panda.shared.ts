@@ -16,6 +16,31 @@ export const designSystemPandaConfig = {
   },
   theme: {
     extend: {
+      semanticTokens: {
+        colors: {
+          surface: {
+            default: {
+              value: { base: '{colors.white}', _dark: '{colors.neutral.900}' },
+            },
+            subtle: {
+              value: { base: '{colors.neutral.50}', _dark: '{colors.neutral.800}' },
+            },
+          },
+          text: {
+            default: {
+              value: { base: '{colors.neutral.900}', _dark: '{colors.neutral.100}' },
+            },
+            muted: {
+              value: { base: '{colors.neutral.500}', _dark: '{colors.neutral.400}' },
+            },
+          },
+          border: {
+            subtle: {
+              value: { base: '{colors.neutral.300}', _dark: '{colors.neutral.700}' },
+            },
+          },
+        },
+      },
       slotRecipes: {
         toggleSwitch: switchRecipe,
       },

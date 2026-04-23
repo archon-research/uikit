@@ -6,24 +6,28 @@ import { css } from '../../styled-system/css';
 const shellClassName = css({
   height: '100vh',
   width: '100%',
+  fontFamily: 'sans',
+  color: 'text.default',
 });
 
 const sidebarClassName = css({
   display: 'grid',
   gap: '4',
   p: '4',
+  fontSize: 'sm',
 });
 
 const sectionTitleClassName = css({
   color: 'text.default',
-  fontSize: 'sm',
+  fontSize: 'md',
   fontWeight: 'semibold',
+  lineHeight: '1.3',
 });
 
 const mutedTextClassName = css({
   color: 'text.muted',
   fontSize: 'sm',
-  lineHeight: '1.5',
+  lineHeight: '1.6',
 });
 
 const navListClassName = css({
@@ -36,6 +40,10 @@ const navItemClassName = css({
   borderRadius: 'md',
   borderStyle: 'solid',
   borderWidth: '1px',
+  color: 'text.default',
+  fontSize: 'md',
+  fontWeight: 'medium',
+  lineHeight: '1.4',
   px: '3',
   py: '2',
 });

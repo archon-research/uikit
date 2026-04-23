@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { ThemeContext, type ThemeMode } from './useTheme';
 
@@ -38,6 +38,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [systemPrefersDark, setSystemPrefersDark] = useState(
     readSystemPrefersDark,
   );
+  const isApplyingThemeRef = useRef(false);
 
   useEffect(() => {
     if (!isBrowser()) {
@@ -68,12 +69,51 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    isApplyingThemeRef.current = true;
     window.localStorage.setItem(STORAGE_KEY, mode);
     window.localStorage.setItem(LEGACY_STORAGE_KEY, mode);
 
+    const effectiveTheme = isDark ? 'dark' : 'light';
     document.documentElement.classList.toggle('dark', isDark);
-    document.documentElement.dataset.theme = mode;
+    document.documentElement.dataset.theme = effectiveTheme;
+
+    queueMicrotask(() => {
+      isApplyingThemeRef.current = false;
+    });
   }, [isDark, mode]);
+
+  useEffect(() => {
+    if (!isBrowser()) {
+      return;
+    }
+
+    const onExternalThemeChange = () => {
+      if (isApplyingThemeRef.current) {
+        return;
+      }
+
+      const documentTheme = document.documentElement.getAttribute('data-theme');
+      if (documentTheme === 'light' || documentTheme === 'dark') {
+        setModeState((current) => (current === documentTheme ? current : documentTheme));
+      }
+    };
+
+    const observer = new MutationObserver((records) => {
+      for (const record of records) {
+        if (record.type === 'attributes' && record.attributeName === 'data-theme') {
+          onExternalThemeChange();
+          break;
+        }
+      }
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   const value = useMemo(
     () => ({

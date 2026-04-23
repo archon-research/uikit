@@ -2,12 +2,21 @@
   color-scheme: light;
 }
 
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
   min-height: 100dvh;
   background: var(--colors-slate-50);
   color: var(--colors-slate-900);
   font-family: var(--fonts-sans);
+}
+
+:root[data-theme='dark'] body {
+  background: var(--colors-slate-950);
+  color: var(--colors-slate-100);
 }
 
 main {
@@ -24,6 +33,14 @@ p {
   color: var(--colors-slate-700);
 }
 
+:root[data-theme='dark'] p {
+  color: var(--colors-slate-300);
+}
+
 a {
   color: var(--colors-blue-700);
+}
+
+:root[data-theme='dark'] a {
+  color: var(--colors-blue-300);
 }
