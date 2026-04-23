@@ -55,8 +55,6 @@ jobs:
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PREVIEW_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/
-          STORIES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/stories/
-          TOKENS_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/tokens/
         run: |
           set -euo pipefail
 
@@ -65,9 +63,7 @@ jobs:
           ${MARKER}
           Preview is ready:
 
-          - Home: ${PREVIEW_URL}
-          - Stories: ${STORIES_URL}
-          - Token Mapping: ${TOKENS_URL}
+          - Preview: ${PREVIEW_URL}
           EOF
           )
 
