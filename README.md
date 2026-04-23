@@ -145,17 +145,18 @@ The hooks run repository-wide lint and format checks and also normalize trailing
 This repository includes a lightweight preview stack that avoids Storybook:
 
 - Ladle for interactive component stories
-- Panda Studio for token and theme inspection
-- A static Panda Spec JSON documentation page
+
+Live preview URL:
+
+- https://archon-research.github.io/uikit/
 
 The preview package consumes the shared Panda theme configuration from the
 design-system package rather than defining a separate theme.
 
-Run local preview surfaces:
+Run local preview:
 
 ```bash
 npm run preview:dev:stories
-npm run preview:dev:studio
 ```
 
 Build the static preview artifact:
@@ -168,9 +169,9 @@ Output is written to `packages/uikit-preview/dist`.
 
 Deployment model:
 
-- Main branch deploys to GitHub Pages root
+- Main branch deploys to GitHub Pages root (`/`)
 - Pull requests deploy to `pr/<number>/` paths on the `gh-pages` branch
-- PR comments are updated with preview links
+- PR comments are updated with the branch preview link
 - PR close triggers cleanup of the corresponding `pr/<number>/` folder
 
 ## Versioning
