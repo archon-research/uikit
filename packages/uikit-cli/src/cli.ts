@@ -174,6 +174,26 @@ function linkLocalPackages(
     return;
   }
 
+  const allNames = new Set<string>();
+  for (const names of neededByWorkspace.values()) {
+    for (const name of names) {
+      allNames.add(name);
+    }
+  }
+
+  const rootPackageArgs = [...allNames]
+    .map((name) => dirByName.get(name))
+    .filter((pkgDir): pkgDir is string => Boolean(pkgDir))
+    .map((pkgDir) => `"${pkgDir}"`)
+    .join(' ');
+
+  if (rootPackageArgs) {
+    run(
+      `npm link ${rootPackageArgs} --package-lock=false --save=false`,
+      consumerRoot,
+    );
+  }
+
   for (const [workspace, names] of neededByWorkspace.entries()) {
     const packageArgs = names
       .map((name) => dirByName.get(name))
@@ -199,6 +219,23 @@ function unlinkLocalPackages(
   if (neededByWorkspace.size === 0) {
     console.log('No local uikit packages referenced by this consumer workspaces.');
     return;
+  }
+
+  const allNames = new Set<string>();
+  for (const names of neededByWorkspace.values()) {
+    for (const name of names) {
+      allNames.add(name);
+    }
+  }
+
+  for (const name of allNames) {
+    const ok = tryRun(
+      `npm unlink "${name}" --package-lock=false --save=false`,
+      consumerRoot,
+    );
+    if (!ok) {
+      console.warn(`Unable to unlink ${name} at root; continuing.`);
+    }
   }
 
   for (const [workspace, names] of neededByWorkspace.entries()) {
@@ -296,6 +333,11 @@ try {
 
   unlinkLocalPackages(consumerRoot, neededByWorkspace);
 
+  let rootInstallOk = tryRun(
+    'npm_config_min_release_age=0 npm install',
+    consumerRoot,
+  );
+
   let installOk = true;
   for (const workspace of neededByWorkspace.keys()) {
     installOk =
@@ -306,7 +348,11 @@ try {
       installOk;
   }
 
-  if (!installOk || !areRegistryPackagesReady(consumerRoot, neededByWorkspace)) {
+  if (
+    !rootInstallOk ||
+    !installOk ||
+    !areRegistryPackagesReady(consumerRoot, neededByWorkspace)
+  ) {
     console.warn(
       '\nRegistry packages are not fully resolvable; falling back to local uikit linking.',
     );

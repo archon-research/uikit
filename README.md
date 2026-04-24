@@ -4,6 +4,8 @@ Shared frontend toolkit monorepo for TypeScript and React projects.
 
 It contains reusable configuration packages, a UI design-system package, and HTTP client utilities that can be consumed directly from source during local development.
 
+Live preview: https://archon-research.github.io/uikit/
+
 ## Repository layout
 
 ```text
@@ -12,6 +14,7 @@ packages/
   oxlint-config/    Shared Oxlint configs (base, react)
   oxfmt-config/     Shared Oxfmt config
   design-system/    Shared UI components and style recipes
+  uikit-preview/    Ladle preview site for components and tokens
   http-client-core/ OpenAPI + Zod based HTTP client helpers
   http-client-react/React Query integration on top of core client
   uikit-cli/        CLI for local package linking in consumer repos
@@ -23,6 +26,7 @@ packages/
 - `@archon-research/oxlint-config`
 - `@archon-research/oxfmt-config`
 - `@archon-research/design-system`
+- `@archon-research/uikit-preview`
 - `@archon-research/http-client-core`
 - `@archon-research/http-client-react`
 - `@archon-research/uikit-cli`
@@ -142,21 +146,16 @@ The hooks run repository-wide lint and format checks and also normalize trailing
 
 ## Preview site
 
-This repository includes a lightweight preview stack that avoids Storybook:
+This repository includes a lightweight preview stack using Ladle for interactive component stories.
 
-- Ladle for interactive component stories
+Live preview: https://archon-research.github.io/uikit/
 
-Live preview URL:
-
-- https://archon-research.github.io/uikit/
-
-The preview package consumes the shared Panda theme configuration from the
-design-system package rather than defining a separate theme.
+The preview package reuses the shared Panda theme configuration from the design-system package.
 
 Run local preview:
 
 ```bash
-npm run preview:dev:stories
+npm run preview:dev
 ```
 
 Build the static preview artifact:
