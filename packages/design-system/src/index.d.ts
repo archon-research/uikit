@@ -7,6 +7,8 @@ export { SkeletonRows } from './components/SkeletonRows';
 export { SkeletonStack } from './components/SkeletonStack';
 export { SurfaceMessage } from './components/SurfaceMessage';
 export { ThemeToggle } from './components/ThemeToggle';
+export { Button } from './components/Button';
+export { SearchInput } from './components/SearchInput';
 export { StyledSelect } from './components/StyledSelect';
 export { LoadingIndicator } from './components/LoadingIndicator';
 export { Tabs, Toggle, ToggleGroup } from '@base-ui/react';
