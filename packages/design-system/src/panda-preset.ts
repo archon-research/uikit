@@ -3,10 +3,12 @@ import { definePreset } from '@pandacss/dev';
 import { interactiveItemRecipe } from './recipes/interactiveItem.recipe';
 import { panelActionRecipe } from './recipes/panelAction.recipe';
 import { panelSectionRecipe } from './recipes/panelSection.recipe';
+import { segmentedControlRecipe } from './recipes/segmentedControl.recipe';
 import { sectionHeadingRecipe } from './recipes/sectionHeading.recipe';
 import { switchRecipe } from './recipes/switch.recipe';
 
 export const designSystemPreset = definePreset({
+  name: 'design-system',
   theme: {
     extend: {
       semanticTokens: {
@@ -84,6 +86,7 @@ export const designSystemPreset = definePreset({
         panelSection: panelSectionRecipe,
       },
       slotRecipes: {
+        segmentedControl: segmentedControlRecipe,
         toggleSwitch: switchRecipe,
       },
     },

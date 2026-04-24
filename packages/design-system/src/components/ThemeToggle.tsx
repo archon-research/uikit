@@ -3,9 +3,11 @@ import { type CSSProperties } from 'react';
 import { useTheme, type ThemeMode } from '../theme/useTheme';
 
 const containerStyle: CSSProperties = {
-  display: 'inline-flex',
+  display: 'flex',
   alignItems: 'center',
   gap: 6,
+  width: '100%',
+  boxSizing: 'border-box',
   padding: 4,
   borderRadius: 10,
   border: '1px solid var(--colors-border-subtle, #d0d5dd)',
@@ -15,6 +17,9 @@ const containerStyle: CSSProperties = {
 const buttonBaseStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
+  justifyContent: 'center',
+  flex: 1,
+  minWidth: 0,
   gap: 6,
   border: 0,
   borderRadius: 8,

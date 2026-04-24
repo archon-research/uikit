@@ -1,5 +1,7 @@
 import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 
+import { ResizeHandle } from '../components/ResizeHandle';
+
 type SidebarLayoutProps = {
   sidebar: ReactNode;
   main: ReactNode;
@@ -48,16 +50,6 @@ const sidebarBaseStyle: CSSProperties = {
   background: 'var(--colors-surface-default, #ffffff)',
 };
 
-const sidebarHandleStyle: CSSProperties = {
-  position: 'absolute',
-  top: 0,
-  right: 0,
-  width: 8,
-  height: '100%',
-  cursor: 'col-resize',
-  background: 'transparent',
-};
-
 const mainStyle: CSSProperties = {
   minWidth: 0,
   flex: 1,
@@ -95,19 +87,9 @@ const mainColumnStyle: CSSProperties = {
 
 const bottomPanelStyle: CSSProperties = {
   background: 'var(--colors-surface-default, #ffffff)',
+  borderTop: '1px solid var(--colors-border-subtle, #d0d5dd)',
   overflow: 'auto',
   minHeight: 0,
-};
-
-const bottomHandleStyle: CSSProperties = {
-  height: 8,
-  cursor: 'row-resize',
-  marginTop: -4,
-  marginBottom: -4,
-  position: 'relative',
-  zIndex: 1,
-  background:
-    'linear-gradient(to bottom, transparent calc(50% - 0.5px), var(--colors-border-subtle, #d0d5dd) calc(50% - 0.5px), var(--colors-border-subtle, #d0d5dd) calc(50% + 0.5px), transparent calc(50% + 0.5px))',
 };
 
 function isBrowser(): boolean {
@@ -271,11 +253,9 @@ export function SidebarLayout({
     <div style={rootStyle}>
       <aside style={{ ...sidebarBaseStyle, width: sidebarWidth }}>
         {sidebar}
-        <div
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Resize sidebar"
-          style={sidebarHandleStyle}
+        <ResizeHandle
+          axis="vertical"
+          label="Resize sidebar"
           onMouseDown={startSidebarDrag}
         />
       </aside>
@@ -288,12 +268,11 @@ export function SidebarLayout({
 
           {bottomPanel ? (
             <>
-              <div
-                role="separator"
-                aria-orientation="horizontal"
-                aria-label="Resize bottom panel"
-                style={bottomHandleStyle}
+              <ResizeHandle
+                axis="horizontal"
+                label="Resize bottom panel"
                 onMouseDown={startBottomDrag}
+                placement="block"
               />
               <section style={{ ...bottomPanelStyle, height: bottomPanelHeight }}>
                 {bottomPanel}
