@@ -1,6 +1,5 @@
 import { SkeletonStack } from '@archon-research/design-system';
 
-import '../../styled-system/styles.css';
 import { css } from '../../styled-system/css';
 
 export default {

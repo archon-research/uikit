@@ -1,6 +1,5 @@
 import { Switch } from '@archon-research/design-system';
 
-import '../../styled-system/styles.css';
 import { css } from '../../styled-system/css';
 import { toggleSwitch } from '../../styled-system/recipes';
 

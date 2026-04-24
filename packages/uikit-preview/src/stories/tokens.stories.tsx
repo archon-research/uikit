@@ -10,7 +10,6 @@ import conditionsSpec from '../../static/tokens/spec/conditions.json';
 import animationStylesSpec from '../../static/tokens/spec/animation-styles.json';
 import keyframesSpec from '../../static/tokens/spec/keyframes.json';
 import colorPaletteSpec from '../../static/tokens/spec/color-palette.json';
-import '../../styled-system/styles.css';
 import { css } from '../../styled-system/css';
 
 export default {
