@@ -5,6 +5,7 @@ EVENT_NAME="${EVENT_NAME:?EVENT_NAME is required}"
 SHA="${SHA:?SHA is required}"
 GITHUB_WORKSPACE="${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"
 PR_NUMBER="${PR_NUMBER:-}"
+MERGED_PR_NUMBER="${MERGED_PR_NUMBER:-}"
 
 TARGET_DIR="."
 COMMIT_MSG="chore(preview): update main preview for ${SHA}"
@@ -42,6 +43,10 @@ if [[ "$TARGET_DIR" == "." ]]; then
   # Keep the `pr` directory and replace everything else to avoid drift from stale hard-coded paths.
   find . -mindepth 1 -maxdepth 1 ! -name .git ! -name pr -exec rm -rf {} +
   cp -R "$GITHUB_WORKSPACE/packages/uikit-preview/dist/." .
+
+  if [[ -n "$MERGED_PR_NUMBER" ]]; then
+    rm -rf "pr/${MERGED_PR_NUMBER}"
+  fi
 else
   rm -rf "$TARGET_DIR"
   mkdir -p "$TARGET_DIR"
