@@ -1,0 +1,23 @@
+{
+  "name": "@archon-research/uikit-preview",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bash ./scripts/build-preview.sh",
+    "clean": "rm -rf dist",
+    "generate": "panda codegen --clean --config panda.config.ts && panda cssgen --config panda.config.ts --outfile styled-system/styles.css && panda spec --config panda.config.ts --outdir ./static/tokens/spec",
+    "dev:stories": "npm run generate && ladle serve --host 0.0.0.0 --port 61000"
+  },
+  "dependencies": {
+    "@archon-research/design-system": "*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "@archon-research/tsconfig": "*",
+    "@ladle/react": "^5.1.1",
+    "@pandacss/dev": "^1.10.0"
+  }
+}

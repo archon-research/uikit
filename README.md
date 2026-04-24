@@ -140,6 +140,40 @@ npm run hooks:pre-commit
 
 The hooks run repository-wide lint and format checks and also normalize trailing whitespace and end-of-file newlines on staged files.
 
+## Preview site
+
+This repository includes a lightweight preview stack that avoids Storybook:
+
+- Ladle for interactive component stories
+
+Live preview URL:
+
+- https://archon-research.github.io/uikit/
+
+The preview package consumes the shared Panda theme configuration from the
+design-system package rather than defining a separate theme.
+
+Run local preview:
+
+```bash
+npm run preview:dev:stories
+```
+
+Build the static preview artifact:
+
+```bash
+npm run preview:build
+```
+
+Output is written to `packages/uikit-preview/dist`.
+
+Deployment model:
+
+- Main branch deploys to GitHub Pages root (`/`)
+- Pull requests deploy to `pr/<number>/` paths on the `gh-pages` branch
+- PR comments are updated with the branch preview link
+- PR close triggers cleanup of the corresponding `pr/<number>/` folder
+
 ## Versioning
 
 The repository uses lockstep versioning across all workspace packages.

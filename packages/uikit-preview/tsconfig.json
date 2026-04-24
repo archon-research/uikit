@@ -1,0 +1,12 @@
+{
+  "extends": "@archon-research/tsconfig/react",
+  "compilerOptions": {
+    "types": ["node", "vite/client"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "scripts/**/*.ts",
+    "panda.config.ts"
+  ]
+}

@@ -5,3 +5,4 @@ node_modules/
 packages/*/dist/
 packages/*/styled-system/
 packages/*/.turbo/
+packages/uikit-preview/static/tokens/spec/

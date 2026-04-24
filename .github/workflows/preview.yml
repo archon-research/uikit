@@ -1,0 +1,84 @@
+name: preview
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: write
+  packages: read
+  pull-requests: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Read Node version from package.json
+        id: node-version
+        run: echo "value=$(jq -r '.volta.node // empty' package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: ${{ steps.node-version.outputs.value }}
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: '@archon-research'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build preview site
+        run: npm run preview:build
+
+      - name: Publish preview to gh-pages
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.sha }}
+        run: bash .github/scripts/publish-preview.sh
+
+      - name: Comment PR with preview links
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PREVIEW_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/
+        run: |
+          set -euo pipefail
+
+          MARKER="<!-- uikit-preview-links -->"
+          BODY=$(cat <<EOF
+          ${MARKER}
+          Preview is ready:
+
+          - Preview: ${PREVIEW_URL}
+          EOF
+          )
+
+          COMMENTS=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments")
+          EXISTING_ID=$(echo "$COMMENTS" | jq -r ".[] | select(.body | contains(\"${MARKER}\")) | .id" | head -n 1)
+
+          if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "null" ]; then
+            gh api \
+              "repos/${REPO}/issues/comments/${EXISTING_ID}" \
+              --method PATCH \
+              -f body="$BODY" >/dev/null
+          else
+            gh api \
+              "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+              --method POST \
+              -f body="$BODY" >/dev/null
+          fi
