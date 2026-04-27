@@ -19,14 +19,22 @@ jobs:
   publish:
     if: ${{ (github.event_name == 'release' && github.event.release.draft == true) || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
-    env:
-      RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event.inputs.release_tag }}
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Checkout release tag
+      - name: Resolve release metadata
+        id: release-meta
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: bash .github/scripts/resolve-release-metadata.sh
+
+      - name: Checkout publish ref
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          ref: ${{ env.RELEASE_TAG }}
+          ref: ${{ steps.release-meta.outputs.checkout_ref }}
 
       - name: Read Node version from package.json
         id: node-version
@@ -42,12 +50,9 @@ jobs:
         run: npm ci
 
       - name: Set workspace versions from release tag
+        env:
+          VERSION: ${{ steps.release-meta.outputs.version }}
         run: |
-          VERSION="${RELEASE_TAG#release-}"
-          if [ "$VERSION" = "$RELEASE_TAG" ]; then
-            echo "Unexpected release tag format: $RELEASE_TAG"
-            exit 1
-          fi
           npm version "$VERSION" --workspaces --no-git-tag-version --no-include-workspace-root
 
       - name: Prepare packages
@@ -60,6 +65,7 @@ jobs:
           NPM_CONFIG_ACCESS: public
           NPM_CONFIG_REGISTRY: https://npm.pkg.github.com
           NPM_CONFIG_SCOPE: '@archon-research'
+          NPM_CONFIG_TAG: ${{ steps.release-meta.outputs.npm_tag }}
 
       - name: Switch workspace publish registry to npmjs
         run: npm pkg delete publishConfig.registry --workspaces
@@ -71,6 +77,7 @@ jobs:
           NPM_CONFIG_ACCESS: public
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
           NPM_CONFIG_SCOPE: '@archon-research'
+          NPM_CONFIG_TAG: ${{ steps.release-meta.outputs.npm_tag }}
 
       - name: Pack tarballs for release assets
         run: |
@@ -82,13 +89,15 @@ jobs:
           done
 
       - name: Upload tarballs to release
+        if: steps.release-meta.outputs.is_dev != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "${{ env.RELEASE_TAG }}" dist-pack/*.tgz --clobber
+          gh release upload "${{ steps.release-meta.outputs.release_tag }}" dist-pack/*.tgz --clobber
 
       - name: Mark release as published
+        if: steps.release-meta.outputs.is_dev != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release edit "${{ env.RELEASE_TAG }}" --draft=false
+          gh release edit "${{ steps.release-meta.outputs.release_tag }}" --draft=false
