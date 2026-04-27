@@ -22,8 +22,7 @@
     "hooks:pre-commit": "lefthook run pre-commit",
     "prepare": "npm run prepare --workspaces --if-present",
     "release:dry-run": "semantic-release --dry-run --no-ci -p @semantic-release/commit-analyzer -p @semantic-release/release-notes-generator -p @semantic-release/exec -p @semantic-release/git",
-    "release:run": "semantic-release",
-    "publish:workspaces": "npm publish --workspaces --access public"
+    "release:run": "semantic-release"
   },
   "devDependencies": {
     "@semantic-release/exec": "^7.1.0",
