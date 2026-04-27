@@ -86,7 +86,9 @@ jobs:
         run: npm pkg delete publishConfig.registry --workspaces
 
       - name: Publish packages to npmjs
-        run: npm publish --workspaces --provenance
+        run: |
+          npm pkg set repository.url="https://github.com/${GITHUB_REPOSITORY}" --workspaces
+          npm publish --workspaces --provenance
         env:
           NPM_CONFIG_ACCESS: public
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
