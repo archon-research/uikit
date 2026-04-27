@@ -21,6 +21,15 @@ jobs:
     if: ${{ (github.event_name == 'release' && github.event.release.draft == true) || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout metadata script only
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          path: .meta
+          sparse-checkout: |
+            .github/scripts/resolve-release-metadata.sh
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+
       - name: Resolve release metadata
         id: release-meta
         env:
@@ -30,7 +39,7 @@ jobs:
           REF_NAME: ${{ github.ref_name }}
           SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
-        run: bash .github/scripts/resolve-release-metadata.sh
+        run: bash .meta/.github/scripts/resolve-release-metadata.sh
 
       - name: Checkout publish ref
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
