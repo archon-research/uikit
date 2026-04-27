@@ -1,53 +1,62 @@
 # @archon-research/uikit-cli
 
-CLI for managing local uikit package linking in consumer workspaces.
+CLI tool for local package linking during active development with consumer repositories.
 
 ## Installation
 
-Once published to GitHub Packages, install globally:
-
 ```bash
-npm install -g @archon-research/uikit-cli
-```
-
-For development, link locally:
-
-```bash
-cd /path/to/uikit/packages/uikit-cli
-npm link
+npm install --save-dev @archon-research/uikit-cli
 ```
 
 ## Usage
 
-### Link local uikit packages
+### Link uikit packages into a consumer repository
+
+From your consumer repository:
 
 ```bash
-uikit-cli link
+npm run uikit:link
 ```
 
-Automatically detects the consumer workspace root by walking up to the nearest `package.json` with a `workspaces` field. Links all `@archon-research/*` packages that the consumer depends on.
+This command links all `@archon-research/*` packages from your local uikit monorepo into your consumer project, allowing you to develop packages and see changes immediately.
 
-### Unlink local packages (restore registry versions)
+Add this script to your consumer's `package.json`:
 
-```bash
-uikit-cli unlink
+```json
+{
+  "scripts": {
+    "uikit:link": "uikit-cli link",
+    "uikit:unlink": "uikit-cli unlink"
+  }
+}
 ```
 
-Attempts to unlink all local uikit packages and restore registered versions. If packages are not yet published, keeps local links in place.
+### Restore registry versions
 
-### Working from any subdirectory
-
-The CLI works from any directory within a workspace:
+When co-development is complete, restore published versions from npm:
 
 ```bash
-cd my-consumer/src/explorer
-uikit-cli link  # auto-detects workspace root and links packages
+npm run uikit:unlink
 ```
 
 ## How it works
 
-1. **Auto-detection**: Walks up from current working directory to find the nearest `package.json` with a `workspaces` field
-2. **Discovery**: Queries locally available uikit packages and determines which ones are needed by consumer workspaces
+The CLI manages workspace package links by:
+
+1. Discovering linked `@archon-research` packages in your local uikit monorepo
+2. Creating file links in your consumer repository's `node_modules`
+3. Reversing the process with `unlink` to restore registry-installed packages
+
+The CLI automatically detects the consumer workspace root and all dependent packages, working from any directory within the workspace.
+
+## Requirements
+
+- Local clone of the uikit monorepo
+- Node.js and npm installed
+
+## See also
+
+- [Development guide](../../DEVELOPMENT.md#local-co-development-with-a-consumer-repository) for detailed local development workflow
 3. **Linking**: Uses `npm link` to establish local package resolution
 4. **Graceful fallback**: On unlink, checks if packages are published; if not, keeps local links to prevent breaking changes
 
