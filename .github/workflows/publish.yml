@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
   packages: write
 
 jobs:
@@ -71,9 +72,8 @@ jobs:
         run: npm pkg delete publishConfig.registry --workspaces
 
       - name: Publish packages to npmjs
-        run: npm publish --workspaces
+        run: npm publish --workspaces --provenance
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_ACCESS: public
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
           NPM_CONFIG_SCOPE: '@archon-research'
