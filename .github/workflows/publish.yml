@@ -69,7 +69,12 @@ jobs:
         run: npm run prepare
 
       - name: Publish packages to GitHub Packages
-        run: npm publish --workspaces
+        run: |
+          cat > "$RUNNER_TEMP/npmrc-gpr" <<EOF
+          @archon-research:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+          EOF
+          npm publish --workspaces --userconfig "$RUNNER_TEMP/npmrc-gpr"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_ACCESS: public
