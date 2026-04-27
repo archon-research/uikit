@@ -185,7 +185,7 @@ The bump workflow runs `semantic-release` with Conventional Commits.
 - `fix:` and other non-breaking changes => patch
 - `!` or `BREAKING CHANGE:` => major
 
-During release preparation, it runs `npm version ${nextRelease.version} --workspaces --no-git-tag-version --no-include-workspace-root` to keep workspace package versions in sync, commits those changes, tags with `release-<version>`, and opens a draft GitHub release.
+During release preparation, it runs `npm version ${nextRelease.version} --workspaces --no-git-tag-version` to keep workspace and repository root package versions in sync, commits those changes, tags with `release-<version>`, and opens a draft GitHub release.
 
 ## Release and publish
 
