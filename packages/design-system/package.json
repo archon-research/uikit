@@ -16,10 +16,14 @@
     "./recipes": {
       "types": "./src/recipes/index.d.ts",
       "default": "./src/recipes/index.ts"
+    },
+    "./panda-preset": {
+      "types": "./src/panda-preset.d.ts",
+      "default": "./src/panda-preset.ts"
     }
   },
   "dependencies": {
-    "@base-ui/react": "^1.3.0",
+    "@base-ui/react": "^1.4.1",
     "@pandacss/dev": "^1.9.1"
   },
   "peerDependencies": {

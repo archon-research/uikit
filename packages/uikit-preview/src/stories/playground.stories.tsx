@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react';
 
 import tokensSpec from '../../static/tokens/spec/tokens.json';
 import semanticTokensSpec from '../../static/tokens/spec/semantic-tokens.json';
-import '../../styled-system/styles.css';
 import { css } from '../../styled-system/css';
 
 export default {
