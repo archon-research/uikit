@@ -5,13 +5,73 @@
     "version": 1
   },
   "stories": {
+    "components--button--icon-only": {
+      "name": "Icon only",
+      "levels": [
+        "Components",
+        "Button"
+      ],
+      "locStart": 82,
+      "locEnd": 99,
+      "filePath": "src/stories/button.stories.tsx",
+      "namedExport": "IconOnly",
+      "meta": {}
+    },
+    "components--button--item": {
+      "name": "Item",
+      "levels": [
+        "Components",
+        "Button"
+      ],
+      "locStart": 51,
+      "locEnd": 80,
+      "filePath": "src/stories/button.stories.tsx",
+      "namedExport": "Item",
+      "meta": {}
+    },
+    "components--button--panel": {
+      "name": "Panel",
+      "levels": [
+        "Components",
+        "Button"
+      ],
+      "locStart": 30,
+      "locEnd": 49,
+      "filePath": "src/stories/button.stories.tsx",
+      "namedExport": "Panel",
+      "meta": {}
+    },
+    "components--loading-indicator--default": {
+      "name": "Default",
+      "levels": [
+        "Components",
+        "Loading indicator"
+      ],
+      "locStart": 23,
+      "locEnd": 27,
+      "filePath": "src/stories/loading-indicator.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "components--loading-indicator--in-context": {
+      "name": "In context",
+      "levels": [
+        "Components",
+        "Loading indicator"
+      ],
+      "locStart": 29,
+      "locEnd": 38,
+      "filePath": "src/stories/loading-indicator.stories.tsx",
+      "namedExport": "InContext",
+      "meta": {}
+    },
     "playground--contrast-checker": {
       "name": "Contrast checker",
       "levels": [
         "Playground"
       ],
-      "locStart": 202,
-      "locEnd": 275,
+      "locStart": 201,
+      "locEnd": 274,
       "filePath": "src/stories/playground.stories.tsx",
       "namedExport": "ContrastChecker",
       "meta": {}
@@ -21,10 +81,94 @@
       "levels": [
         "Playground"
       ],
-      "locStart": 172,
-      "locEnd": 200,
+      "locStart": 171,
+      "locEnd": 199,
       "filePath": "src/stories/playground.stories.tsx",
       "namedExport": "Typography",
+      "meta": {}
+    },
+    "components--resize-handle--horizontal-block": {
+      "name": "Horizontal block",
+      "levels": [
+        "Components",
+        "Resize handle"
+      ],
+      "locStart": 59,
+      "locEnd": 73,
+      "filePath": "src/stories/resize-handle.stories.tsx",
+      "namedExport": "HorizontalBlock",
+      "meta": {}
+    },
+    "components--resize-handle--horizontal-overlay": {
+      "name": "Horizontal overlay",
+      "levels": [
+        "Components",
+        "Resize handle"
+      ],
+      "locStart": 75,
+      "locEnd": 89,
+      "filePath": "src/stories/resize-handle.stories.tsx",
+      "namedExport": "HorizontalOverlay",
+      "meta": {}
+    },
+    "components--resize-handle--vertical-overlay": {
+      "name": "Vertical overlay",
+      "levels": [
+        "Components",
+        "Resize handle"
+      ],
+      "locStart": 48,
+      "locEnd": 57,
+      "filePath": "src/stories/resize-handle.stories.tsx",
+      "namedExport": "VerticalOverlay",
+      "meta": {}
+    },
+    "components--search-input--default": {
+      "name": "Default",
+      "levels": [
+        "Components",
+        "Search input"
+      ],
+      "locStart": 42,
+      "locEnd": 61,
+      "filePath": "src/stories/search-input.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "components--search-input--disabled": {
+      "name": "Disabled",
+      "levels": [
+        "Components",
+        "Search input"
+      ],
+      "locStart": 92,
+      "locEnd": 106,
+      "filePath": "src/stories/search-input.stories.tsx",
+      "namedExport": "Disabled",
+      "meta": {}
+    },
+    "components--search-input--loading": {
+      "name": "Loading",
+      "levels": [
+        "Components",
+        "Search input"
+      ],
+      "locStart": 108,
+      "locEnd": 128,
+      "filePath": "src/stories/search-input.stories.tsx",
+      "namedExport": "Loading",
+      "meta": {}
+    },
+    "components--search-input--with-object-options": {
+      "name": "With object options",
+      "levels": [
+        "Components",
+        "Search input"
+      ],
+      "locStart": 63,
+      "locEnd": 90,
+      "filePath": "src/stories/search-input.stories.tsx",
+      "namedExport": "WithObjectOptions",
       "meta": {}
     },
     "components--sidebar-layout--default": {
@@ -33,10 +177,58 @@
         "Components",
         "Sidebar layout"
       ],
-      "locStart": 139,
-      "locEnd": 150,
+      "locStart": 138,
+      "locEnd": 149,
       "filePath": "src/stories/sidebar-layout.stories.tsx",
       "namedExport": "Default",
+      "meta": {}
+    },
+    "components--skeleton-rows--compact": {
+      "name": "Compact",
+      "levels": [
+        "Components",
+        "Skeleton rows"
+      ],
+      "locStart": 55,
+      "locEnd": 68,
+      "filePath": "src/stories/skeleton-rows.stories.tsx",
+      "namedExport": "Compact",
+      "meta": {}
+    },
+    "components--skeleton-rows--default": {
+      "name": "Default",
+      "levels": [
+        "Components",
+        "Skeleton rows"
+      ],
+      "locStart": 40,
+      "locEnd": 53,
+      "filePath": "src/stories/skeleton-rows.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "components--skeleton-stack--default": {
+      "name": "Default",
+      "levels": [
+        "Components",
+        "Skeleton stack"
+      ],
+      "locStart": 34,
+      "locEnd": 41,
+      "filePath": "src/stories/skeleton-stack.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "components--skeleton-stack--dense": {
+      "name": "Dense",
+      "levels": [
+        "Components",
+        "Skeleton stack"
+      ],
+      "locStart": 43,
+      "locEnd": 50,
+      "filePath": "src/stories/skeleton-stack.stories.tsx",
+      "namedExport": "Dense",
       "meta": {}
     },
     "components--styled-select--default": {
@@ -45,8 +237,8 @@
         "Components",
         "Styled select"
       ],
-      "locStart": 31,
-      "locEnd": 45,
+      "locStart": 30,
+      "locEnd": 44,
       "filePath": "src/stories/styled-select.stories.tsx",
       "namedExport": "Default",
       "meta": {}
@@ -57,10 +249,46 @@
         "Components",
         "Styled select"
       ],
-      "locStart": 47,
-      "locEnd": 60,
+      "locStart": 46,
+      "locEnd": 59,
       "filePath": "src/stories/styled-select.stories.tsx",
       "namedExport": "Disabled",
+      "meta": {}
+    },
+    "components--surface-message--dashed-with-actions": {
+      "name": "Dashed with actions",
+      "levels": [
+        "Components",
+        "Surface message"
+      ],
+      "locStart": 55,
+      "locEnd": 72,
+      "filePath": "src/stories/surface-message.stories.tsx",
+      "namedExport": "DashedWithActions",
+      "meta": {}
+    },
+    "components--surface-message--default": {
+      "name": "Default",
+      "levels": [
+        "Components",
+        "Surface message"
+      ],
+      "locStart": 36,
+      "locEnd": 43,
+      "filePath": "src/stories/surface-message.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "components--surface-message--muted": {
+      "name": "Muted",
+      "levels": [
+        "Components",
+        "Surface message"
+      ],
+      "locStart": 45,
+      "locEnd": 53,
+      "filePath": "src/stories/surface-message.stories.tsx",
+      "namedExport": "Muted",
       "meta": {}
     },
     "components--switch--disabled": {
@@ -69,8 +297,8 @@
         "Components",
         "Switch"
       ],
-      "locStart": 51,
-      "locEnd": 60,
+      "locStart": 50,
+      "locEnd": 59,
       "filePath": "src/stories/switch.stories.tsx",
       "namedExport": "Disabled",
       "meta": {}
@@ -81,8 +309,8 @@
         "Components",
         "Switch"
       ],
-      "locStart": 37,
-      "locEnd": 42,
+      "locStart": 36,
+      "locEnd": 41,
       "filePath": "src/stories/switch.stories.tsx",
       "namedExport": "Off",
       "meta": {}
@@ -93,8 +321,8 @@
         "Components",
         "Switch"
       ],
-      "locStart": 44,
-      "locEnd": 49,
+      "locStart": 43,
+      "locEnd": 48,
       "filePath": "src/stories/switch.stories.tsx",
       "namedExport": "On",
       "meta": {}
@@ -105,8 +333,8 @@
         "Components",
         "Theme toggle"
       ],
-      "locStart": 18,
-      "locEnd": 24,
+      "locStart": 17,
+      "locEnd": 23,
       "filePath": "src/stories/theme-toggle.stories.tsx",
       "namedExport": "Default",
       "meta": {}
@@ -116,8 +344,8 @@
       "levels": [
         "Tokens"
       ],
-      "locStart": 221,
-      "locEnd": 255,
+      "locStart": 220,
+      "locEnd": 254,
       "filePath": "src/stories/tokens.stories.tsx",
       "namedExport": "Colors",
       "meta": {}
@@ -127,8 +355,8 @@
       "levels": [
         "Tokens"
       ],
-      "locStart": 174,
-      "locEnd": 219,
+      "locStart": 173,
+      "locEnd": 218,
       "filePath": "src/stories/tokens.stories.tsx",
       "namedExport": "Overview",
       "meta": {}
@@ -138,8 +366,8 @@
       "levels": [
         "Tokens"
       ],
-      "locStart": 365,
-      "locEnd": 405,
+      "locStart": 364,
+      "locEnd": 404,
       "filePath": "src/stories/tokens.stories.tsx",
       "namedExport": "SemanticTokens",
       "meta": {}
@@ -149,8 +377,8 @@
       "levels": [
         "Tokens"
       ],
-      "locStart": 311,
-      "locEnd": 363,
+      "locStart": 310,
+      "locEnd": 362,
       "filePath": "src/stories/tokens.stories.tsx",
       "namedExport": "Sizes",
       "meta": {}
@@ -160,8 +388,8 @@
       "levels": [
         "Tokens"
       ],
-      "locStart": 257,
-      "locEnd": 309,
+      "locStart": 256,
+      "locEnd": 308,
       "filePath": "src/stories/tokens.stories.tsx",
       "namedExport": "Spacing",
       "meta": {}
