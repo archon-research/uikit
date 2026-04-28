@@ -13,20 +13,38 @@ on:
 
 permissions:
   contents: write
+  id-token: write
   packages: write
 
 jobs:
   publish:
     if: ${{ (github.event_name == 'release' && github.event.release.draft == true) || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
-    env:
-      RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event.inputs.release_tag }}
-      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Checkout release tag
+      - name: Checkout metadata script only
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          ref: ${{ env.RELEASE_TAG }}
+          path: .meta
+          sparse-checkout: |
+            .github/scripts/resolve-release-metadata.sh
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+
+      - name: Resolve release metadata
+        id: release-meta
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: bash .meta/.github/scripts/resolve-release-metadata.sh
+
+      - name: Checkout publish ref
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ steps.release-meta.outputs.checkout_ref }}
 
       - name: Read Node version from package.json
         id: node-version
@@ -37,28 +55,45 @@ jobs:
         with:
           node-version: ${{ steps.node-version.outputs.value }}
           cache: npm
-          registry-url: https://npm.pkg.github.com
-          scope: '@archon-research'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Set workspace versions from release tag
+        env:
+          VERSION: ${{ steps.release-meta.outputs.version }}
         run: |
-          VERSION="${RELEASE_TAG#release-}"
-          if [ "$VERSION" = "$RELEASE_TAG" ]; then
-            echo "Unexpected release tag format: $RELEASE_TAG"
-            exit 1
-          fi
-          npm version "$VERSION" --workspaces --no-git-tag-version --no-include-workspace-root
+          npm version "$VERSION" --workspaces --no-git-tag-version
 
       - name: Prepare packages
         run: npm run prepare
 
       - name: Publish packages to GitHub Packages
-        run: npm run publish:workspaces
+        run: |
+          cat > "$RUNNER_TEMP/npmrc-gpr" <<EOF
+          @archon-research:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+          EOF
+          npm publish --workspaces --userconfig "$RUNNER_TEMP/npmrc-gpr"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_ACCESS: public
+          NPM_CONFIG_REGISTRY: https://npm.pkg.github.com
+          NPM_CONFIG_SCOPE: '@archon-research'
+          NPM_CONFIG_TAG: ${{ steps.release-meta.outputs.npm_tag }}
+
+      - name: Switch workspace publish registry to npmjs
+        run: npm pkg delete publishConfig.registry --workspaces
+
+      - name: Publish packages to npmjs
+        run: |
+          npm pkg set repository.url="https://github.com/${GITHUB_REPOSITORY}" --workspaces
+          npm publish --workspaces --provenance
+        env:
+          NPM_CONFIG_ACCESS: public
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+          NPM_CONFIG_SCOPE: '@archon-research'
+          NPM_CONFIG_TAG: ${{ steps.release-meta.outputs.npm_tag }}
 
       - name: Pack tarballs for release assets
         run: |
@@ -70,13 +105,15 @@ jobs:
           done
 
       - name: Upload tarballs to release
+        if: steps.release-meta.outputs.is_dev != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "${{ env.RELEASE_TAG }}" dist-pack/*.tgz --clobber
+          gh release upload "${{ steps.release-meta.outputs.release_tag }}" dist-pack/*.tgz --clobber
 
       - name: Mark release as published
+        if: steps.release-meta.outputs.is_dev != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release edit "${{ env.RELEASE_TAG }}" --draft=false
+          gh release edit "${{ steps.release-meta.outputs.release_tag }}" --draft=false

@@ -12,7 +12,7 @@
     ".": "./src/index.tsx"
   },
   "dependencies": {
-    "@archon-research/http-client-core": "0.0.0",
+    "@archon-research/http-client-core": "*",
     "@tanstack/react-query": "^5.96.2"
   },
   "peerDependencies": {

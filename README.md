@@ -35,176 +35,33 @@ If you are adapting this template for another organization, you can replace the 
 
 ## Installation
 
+Install packages from npm:
+
 ```bash
-git clone <your-repo-url>
-cd uikit
-npm ci
+npm install @archon-research/tsconfig @archon-research/oxlint-config @archon-research/oxfmt-config @archon-research/design-system @archon-research/http-client-core @archon-research/http-client-react @archon-research/uikit-cli
 ```
+
+Each package has its own npm page with detailed documentation and usage examples.
+
+### Installation from source (development)
+
+To install and contribute to this monorepo from GitHub source, see [DEVELOPMENT.md](./DEVELOPMENT.md).
+
+Note: Installing from GitHub source requires authentication to GitHub Packages via a personal access token (PAT). See [DEVELOPMENT.md](./DEVELOPMENT.md) for setup details.
 
 ## Usage
 
-### Run quality checks
+### Using packages from npm
 
-```bash
-# Lint all workspaces
-npm run lint
+See the individual package READMEs for specific usage examples:
+- [tsconfig](./packages/tsconfig/README.md)
+- [oxlint-config](./packages/oxlint-config/README.md)
+- [oxfmt-config](./packages/oxfmt-config/README.md)
+- [design-system](./packages/design-system/README.md)
+- [http-client-core](./packages/http-client-core/README.md)
+- [http-client-react](./packages/http-client-react/README.md)
+- [uikit-cli](./packages/uikit-cli/README.md)
 
-# Auto-fix lint issues where possible
-npm run lint:fix
+## Development
 
-# Check formatting
-npm run format:check
-
-# Apply formatting
-npm run format
-```
-
-### Use shared toolchain configs in a consumer workspace
-
-```ts
-// oxlint.config.ts
-import reactConfig from '@archon-research/oxlint-config/react';
-import { defineConfig } from 'oxlint';
-
-export default defineConfig({
-  ...reactConfig,
-});
-```
-
-```ts
-// oxfmt.config.ts
-import baseConfig from '@archon-research/oxfmt-config';
-import { defineConfig } from 'oxfmt';
-
-export default defineConfig({
-  ...baseConfig,
-});
-```
-
-### Local co-development with a consumer repository
-
-Use workspace dependencies inside this repository and link packages into a consumer repository during active development.
-
-```bash
-# from consumer repo
-npm run uikit:link
-
-# later, restore registry versions where available
-npm run uikit:unlink
-```
-
-## How it works
-
-1. Workspaces under `packages/*` are resolved through npm workspaces.
-2. Shared config packages (`tsconfig`, `oxlint-config`, `oxfmt-config`) provide reusable defaults for consumer apps.
-3. Runtime packages (`design-system`, `http-client-core`, `http-client-react`) are consumed directly from source in local development.
-4. `uikit-cli` links local package builds into consumer repositories to support fast co-development loops.
-
-## Key components and dependencies
-
-### Design system
-
-- Package: `@archon-research/design-system`
-- Purpose: Shared UI primitives and recipes
-- Key dependencies: `@base-ui/react`, `@pandacss/dev`
-
-### HTTP client core
-
-- Package: `@archon-research/http-client-core`
-- Purpose: Typed API client helpers and response validation
-- Key dependencies: `openapi-fetch`, `zod`
-- Peer dependency: `openapi-typescript`
-
-### HTTP client React bindings
-
-- Package: `@archon-research/http-client-react`
-- Purpose: React Query provider and hooks integration
-- Key dependencies: `@tanstack/react-query`, `@archon-research/http-client-core`
-- Peer dependency: `react`
-
-### Tooling config packages
-
-- `@archon-research/tsconfig` exports shared TS config presets
-- `@archon-research/oxlint-config` exports `base` and `react` lint presets
-- `@archon-research/oxfmt-config` exports a shared formatter preset
-
-## Pre-commit hooks
-
-Install git hooks:
-
-```bash
-npm run install-hooks
-```
-
-Run pre-commit checks manually:
-
-```bash
-npm run hooks:pre-commit
-```
-
-The hooks run repository-wide lint and format checks and also normalize trailing whitespace and end-of-file newlines on staged files.
-
-## Preview site
-
-This repository includes a lightweight preview stack using Ladle for interactive component stories.
-
-Live preview: https://archon-research.github.io/uikit/
-
-The preview package reuses the shared Panda theme configuration from the design-system package.
-
-Run local preview:
-
-```bash
-npm run preview:dev
-```
-
-Build the static preview artifact:
-
-```bash
-npm run preview:build
-```
-
-Output is written to `packages/uikit-preview/dist`.
-
-Deployment model:
-
-- Main branch deploys to GitHub Pages root (`/`)
-- Pull requests deploy to `pr/<number>/` paths on the `gh-pages` branch
-- PR comments are updated with the branch preview link
-- PR close triggers cleanup of the corresponding `pr/<number>/` folder
-
-## Versioning
-
-The repository uses lockstep versioning across all workspace packages.
-
-The bump workflow runs `semantic-release` with Conventional Commits.
-
-`semantic-release` decides semantic version bump type from commit messages:
-
-- `feat:` => minor
-- `fix:` and other non-breaking changes => patch
-- `!` or `BREAKING CHANGE:` => major
-
-During release preparation, it runs `npm version ${nextRelease.version} --workspaces --no-git-tag-version --no-include-workspace-root` to keep workspace package versions in sync, commits those changes, tags with `release-<version>`, and opens a draft GitHub release.
-
-## Release and publish
-
-Preview release behavior without publishing:
-
-```bash
-npm run release:dry-run
-```
-
-Prepare publishable workspace artifacts:
-
-```bash
-npm run prepare
-```
-
-Publish workspace packages:
-
-```bash
-npm run publish:workspaces
-```
-
-By default this repository is configured for GitHub Packages, but the same workflow works with npmjs or another registry by changing `publishConfig` and auth setup.
+For local development, contributing to packages, running quality checks, and publishing, see [DEVELOPMENT.md](./DEVELOPMENT.md).
