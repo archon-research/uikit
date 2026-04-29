@@ -6,6 +6,7 @@
   "scripts": {
     "build": "bash ./scripts/build-preview.sh",
     "clean": "rm -rf dist",
+    "type:check": "npm run generate && tsgo -p tsconfig.json --noEmit",
     "generate": "panda codegen --clean --config panda.config.ts && panda cssgen --config panda.config.ts --outfile styled-system/styles.css && panda spec --config panda.config.ts --outdir ./static/tokens/spec",
     "dev": "npm run generate && ladle serve --host 0.0.0.0 --port 61000"
   },

@@ -22,6 +22,9 @@
       "default": "./src/panda-preset.ts"
     }
   },
+  "scripts": {
+    "type:check": "[ ! -f tsconfig.json ] || tsgo -p tsconfig.json --noEmit"
+  },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
     "@pandacss/dev": "^1.9.1"

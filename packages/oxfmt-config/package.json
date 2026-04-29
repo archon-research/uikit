@@ -9,6 +9,9 @@
   "files": [
     "index.mjs"
   ],
+  "scripts": {
+    "type:check": "[ ! -f tsconfig.json ] || tsgo -p tsconfig.json --noEmit"
+  },
   "exports": {
     ".": "./index.mjs"
   }

@@ -20,7 +20,7 @@ type NormalizedOption = {
 
 type SearchInputProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
-  'value' | 'defaultValue' | 'onChange'
+  'value' | 'defaultValue' | 'onChange' | 'autoComplete'
 > & {
   value?: string;
   defaultValue?: string;

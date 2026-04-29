@@ -10,6 +10,9 @@
     "base.mjs",
     "react.mjs"
   ],
+  "scripts": {
+    "type:check": "[ ! -f tsconfig.json ] || tsgo -p tsconfig.json --noEmit"
+  },
   "exports": {
     "./base": "./base.mjs",
     "./react": "./react.mjs"
