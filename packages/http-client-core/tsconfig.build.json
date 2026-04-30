@@ -1,0 +1,11 @@
+{
+  "extends": "@archon-research/tsconfig/node",
+  "compilerOptions": {
+    "allowImportingTsExtensions": false,
+    "types": ["node"],
+    "noEmit": false,
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["bin/**/*.ts"]
+}

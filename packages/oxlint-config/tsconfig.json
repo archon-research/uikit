@@ -1,0 +1,10 @@
+{
+  "extends": "@archon-research/tsconfig/node",
+  "compilerOptions": {
+    "allowImportingTsExtensions": false
+  },
+  "include": [
+    "base.ts",
+    "react.ts"
+  ]
+}

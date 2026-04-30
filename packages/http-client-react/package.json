@@ -12,7 +12,7 @@
     ".": "./src/index.tsx"
   },
   "scripts": {
-    "type:check": "[ ! -f tsconfig.json ] || tsgo -p tsconfig.json --noEmit"
+    "type:check": "tsgo -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@archon-research/http-client-core": "*",

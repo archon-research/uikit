@@ -11,9 +11,6 @@
     "react.json",
     "node.json"
   ],
-  "scripts": {
-    "type:check": "[ ! -f tsconfig.json ] || tsgo -p tsconfig.json --noEmit"
-  },
   "exports": {
     "./base": "./base.json",
     "./react": "./react.json",

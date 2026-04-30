@@ -9,13 +9,16 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "bin": {
-    "uikit-openapi-generate": "./bin/generate-openapi.mjs"
+    "uikit-openapi-generate": "./dist/bin/generate-openapi.js"
   },
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
-    "type:check": "[ ! -f tsconfig.json ] || tsgo -p tsconfig.json --noEmit"
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build",
+    "type:check": "tsgo -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "openapi-fetch": "^0.17.0",
@@ -23,5 +26,8 @@
   },
   "peerDependencies": {
     "openapi-typescript": "^7.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2"
   }
 }

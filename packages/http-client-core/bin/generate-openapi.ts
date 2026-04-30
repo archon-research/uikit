@@ -4,19 +4,23 @@ import { execSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-function parseArg(name, fallback = undefined) {
+function parseArg(name: string, fallback?: string): string | undefined {
   const prefix = `--${name}=`;
   const inline = process.argv.find((arg) => arg.startsWith(prefix));
-  if (inline) return inline.slice(prefix.length);
+  if (inline) {
+    return inline.slice(prefix.length);
+  }
 
   const idx = process.argv.indexOf(`--${name}`);
-  if (idx >= 0 && process.argv[idx + 1]) return process.argv[idx + 1];
+  if (idx >= 0 && process.argv[idx + 1]) {
+    return process.argv[idx + 1];
+  }
 
   return fallback;
 }
 
 const schema = parseArg('schema', process.env.OPENAPI_FILE);
-const output = parseArg('output', 'generated/openapi-types.ts');
+const output = parseArg('output', 'generated/openapi-types.ts') ?? 'generated/openapi-types.ts';
 
 if (!schema) {
   console.error('Missing schema path. Use --schema <path-to-openapi-json>.');
