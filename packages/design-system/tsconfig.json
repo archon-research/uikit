@@ -1,0 +1,9 @@
+{
+  "extends": "@archon-research/tsconfig/react",
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "panda.config.ts",
+    "panda.shared.ts"
+  ]
+}

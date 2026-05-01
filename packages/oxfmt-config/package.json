@@ -7,9 +7,12 @@
   },
   "type": "module",
   "files": [
-    "index.mjs"
+    "index.ts"
   ],
+  "scripts": {
+    "type:check": "tsgo -p tsconfig.json --noEmit"
+  },
   "exports": {
-    ".": "./index.mjs"
+    ".": "./index.ts"
   }
 }

@@ -7,11 +7,14 @@
   },
   "type": "module",
   "files": [
-    "base.mjs",
-    "react.mjs"
+    "base.ts",
+    "react.ts"
   ],
+  "scripts": {
+    "type:check": "tsgo -p tsconfig.json --noEmit"
+  },
   "exports": {
-    "./base": "./base.mjs",
-    "./react": "./react.mjs"
+    "./base": "./base.ts",
+    "./react": "./react.ts"
   }
 }

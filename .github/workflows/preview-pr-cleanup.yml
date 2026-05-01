@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   cleanup:
-    if: github.event.pull_request.merged == false
     runs-on: ubuntu-latest
     concurrency:
       group: gh-pages-branch-mutations

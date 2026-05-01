@@ -12,7 +12,6 @@ export const designSystemPandaConfig = {
   },
   studio: {
     logo: 'UI',
-    title: 'UIKit Design System',
   },
   theme: {
     extend: {

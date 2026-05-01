@@ -1,0 +1,4 @@
+{
+  "extends": "@archon-research/tsconfig/node",
+  "include": ["**/*.ts"]
+}

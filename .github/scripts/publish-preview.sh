@@ -5,10 +5,10 @@ EVENT_NAME="${EVENT_NAME:?EVENT_NAME is required}"
 SHA="${SHA:?SHA is required}"
 GITHUB_WORKSPACE="${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"
 PR_NUMBER="${PR_NUMBER:-}"
-MERGED_PR_NUMBER="${MERGED_PR_NUMBER:-}"
 
 TARGET_DIR="."
 COMMIT_MSG="chore(preview): update main preview for ${SHA}"
+
 if [[ "$EVENT_NAME" == "pull_request" ]]; then
   if [[ -z "$PR_NUMBER" ]]; then
     echo "PR_NUMBER is required for pull_request events"
@@ -40,13 +40,21 @@ fi
 mkdir -p pr
 
 if [[ "$TARGET_DIR" == "." ]]; then
-  # Keep the `pr` directory and replace everything else to avoid drift from stale hard-coded paths.
+  # Keep the pr directory and replace everything else to avoid drift from stale paths.
+  # First, backup existing PR directories
+  PR_BACKUP_DIR="$(mktemp -d)"
+  if [[ -d pr ]] && [[ -n "$(ls -A pr 2>/dev/null)" ]]; then
+    cp -R pr/. "$PR_BACKUP_DIR/"
+  fi
+
   find . -mindepth 1 -maxdepth 1 ! -name .git ! -name pr -exec rm -rf {} +
   cp -R "$GITHUB_WORKSPACE/packages/uikit-preview/dist/." .
 
-  if [[ -n "$MERGED_PR_NUMBER" ]]; then
-    rm -rf "pr/${MERGED_PR_NUMBER}"
+  # Restore PR directories
+  if [[ -n "$(ls -A "$PR_BACKUP_DIR" 2>/dev/null)" ]]; then
+    cp -R "$PR_BACKUP_DIR/." pr/
   fi
+  rm -rf "$PR_BACKUP_DIR"
 else
   rm -rf "$TARGET_DIR"
   mkdir -p "$TARGET_DIR"
