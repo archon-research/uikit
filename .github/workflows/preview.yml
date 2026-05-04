@@ -100,7 +100,7 @@ jobs:
         run: bash .github/scripts/publish-preview.sh
 
       - name: Comment PR with preview links
-        if: needs.resolve-preview-context.outputs.comment_pr_number != ''
+        if: needs.resolve-preview-context.outputs.comment_pr_number != '' && github.event.action == 'opened'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
@@ -118,20 +118,10 @@ jobs:
           EOF
           )
 
-          COMMENTS=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments")
-          EXISTING_ID=$(echo "$COMMENTS" | jq -r ".[] | select(.body | contains(\"${MARKER}\")) | .id" | head -n 1)
-
-          if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "null" ]; then
-            gh api \
-              "repos/${REPO}/issues/comments/${EXISTING_ID}" \
-              --method PATCH \
-              -f body="$BODY" >/dev/null
-          else
-            gh api \
-              "repos/${REPO}/issues/${PR_NUMBER}/comments" \
-              --method POST \
-              -f body="$BODY" >/dev/null
-          fi
+          gh api \
+            "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --method POST \
+            -f body="$BODY" >/dev/null
 
   cleanup:
     if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged != true
