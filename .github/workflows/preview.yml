@@ -9,6 +9,7 @@ on:
       - opened
       - reopened
       - synchronize
+      - closed
 
 permissions:
   contents: write
@@ -16,14 +17,63 @@ permissions:
   pull-requests: write
 
 jobs:
+  resolve-preview-context:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action != 'closed' || github.event.pull_request.merged == true))
+    runs-on: ubuntu-latest
+    outputs:
+      checkout_ref: ${{ steps.context.outputs.checkout_ref }}
+      cleanup_pr_number: ${{ steps.context.outputs.cleanup_pr_number }}
+      comment_pr_number: ${{ steps.context.outputs.comment_pr_number }}
+      publish_event_name: ${{ steps.context.outputs.publish_event_name }}
+      publish_pr_number: ${{ steps.context.outputs.publish_pr_number }}
+      publish_sha: ${{ steps.context.outputs.publish_sha }}
+      should_run: ${{ steps.context.outputs.should_run }}
+    steps:
+      - name: Resolve preview context
+        id: context
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          PR_ACTION: ${{ github.event.action }}
+          PR_MERGED: ${{ github.event.pull_request.merged }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.sha }}
+        run: |
+          should_run=true
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            if [[ "$PR_ACTION" == "closed" && "$PR_MERGED" == "true" ]]; then
+              checkout_ref="$MERGE_COMMIT_SHA"
+              publish_event_name="push"
+              publish_sha="$MERGE_COMMIT_SHA"
+              cleanup_pr_number="$PR_NUMBER"
+            else
+              publish_pr_number="$PR_NUMBER"
+              comment_pr_number="$PR_NUMBER"
+            fi
+          fi
+
+          echo "should_run=${should_run:-true}" >> "$GITHUB_OUTPUT"
+          echo "checkout_ref=${checkout_ref:-$SHA}" >> "$GITHUB_OUTPUT"
+          echo "publish_event_name=${publish_event_name:-$EVENT_NAME}" >> "$GITHUB_OUTPUT"
+          echo "publish_sha=${publish_sha:-$SHA}" >> "$GITHUB_OUTPUT"
+          echo "publish_pr_number=${publish_pr_number:-}" >> "$GITHUB_OUTPUT"
+          echo "cleanup_pr_number=${cleanup_pr_number:-}" >> "$GITHUB_OUTPUT"
+          echo "comment_pr_number=${comment_pr_number:-}" >> "$GITHUB_OUTPUT"
+
   build-and-deploy:
+    needs: resolve-preview-context
+    if: needs.resolve-preview-context.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     concurrency:
       group: gh-pages-branch-mutations
       cancel-in-progress: false
     steps:
+
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ needs.resolve-preview-context.outputs.checkout_ref }}
 
       - name: Read Node version from package.json
         id: node-version
@@ -43,18 +93,19 @@ jobs:
 
       - name: Publish preview to gh-pages
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          SHA: ${{ github.sha }}
+          CLEANUP_PR_NUMBER: ${{ needs.resolve-preview-context.outputs.cleanup_pr_number }}
+          EVENT_NAME: ${{ needs.resolve-preview-context.outputs.publish_event_name }}
+          PR_NUMBER: ${{ needs.resolve-preview-context.outputs.publish_pr_number }}
+          SHA: ${{ needs.resolve-preview-context.outputs.publish_sha }}
         run: bash .github/scripts/publish-preview.sh
 
       - name: Comment PR with preview links
-        if: github.event_name == 'pull_request'
+        if: needs.resolve-preview-context.outputs.comment_pr_number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PREVIEW_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ github.event.pull_request.number }}/
+          PR_NUMBER: ${{ needs.resolve-preview-context.outputs.comment_pr_number }}
+          PREVIEW_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ needs.resolve-preview-context.outputs.comment_pr_number }}/
         run: |
           set -euo pipefail
 
@@ -81,3 +132,18 @@ jobs:
               --method POST \
               -f body="$BODY" >/dev/null
           fi
+
+  cleanup:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged != true
+    runs-on: ubuntu-latest
+    concurrency:
+      group: gh-pages-branch-mutations
+      cancel-in-progress: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Remove PR preview path from gh-pages
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: bash .github/scripts/cleanup-pr-preview.sh
