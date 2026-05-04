@@ -1,6 +1,5 @@
 {
   "name": "@archon-research/uikit",
-  "version": "0.1.0",
   "private": true,
   "type": "module",
   "packageManager": "npm@11.2.0",

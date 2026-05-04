@@ -126,13 +126,17 @@ The repository uses lockstep versioning across all workspace packages.
 
 The bump workflow runs `semantic-release` with Conventional Commits.
 
+Git tags and GitHub releases are the source of truth for released versions.
+
 `semantic-release` decides semantic version bump type from commit messages:
 
 - `feat:` => minor
 - `fix:` and other non-breaking changes => patch
 - `!` or `BREAKING CHANGE:` => major
 
-During release preparation, it runs `npm version ${nextRelease.version} --workspaces --no-git-tag-version` to keep workspace and repository root package versions in sync, commits those changes, tags with `release-<version>`, and opens a draft GitHub release.
+During release preparation, it runs `npm version ${nextRelease.version} --workspaces --no-git-tag-version` to align in-memory workspace versions for packaging and publishing. Those version edits are not committed back to the repository.
+
+`semantic-release` creates the `release-<version>` tag and draft GitHub release, and then the publish workflow publishes from that release metadata.
 
 ## Release and publish
 
