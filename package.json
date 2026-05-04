@@ -12,6 +12,7 @@
   },
   "scripts": {
     "clean": "npm run clean --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "type:check": "npm run type:check --workspaces --if-present",
     "lint:fix": "npm run lint:fix --workspaces --if-present",
