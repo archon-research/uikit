@@ -17,7 +17,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "npm version ${nextRelease.version} --workspaces --no-git-tag-version --no-include-workspace-root && echo \"release_version=${nextRelease.version}\" >> \"$GITHUB_OUTPUT\" && { echo 'release_notes<<EOF'; echo \"${nextRelease.notes}\"; echo 'EOF'; } >> \"$GITHUB_OUTPUT\""
+        "prepareCmd": "npm version ${nextRelease.version} --workspaces --no-git-tag-version --no-include-workspace-root && echo \"release_version=${nextRelease.version}\" >> \"$GITHUB_OUTPUT\""
       }
     ],
     [

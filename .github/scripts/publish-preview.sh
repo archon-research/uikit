@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+CLEANUP_PR_NUMBER="${CLEANUP_PR_NUMBER:-}"
 EVENT_NAME="${EVENT_NAME:?EVENT_NAME is required}"
 SHA="${SHA:?SHA is required}"
 GITHUB_WORKSPACE="${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"
@@ -49,6 +50,10 @@ if [[ "$TARGET_DIR" == "." ]]; then
 
   find . -mindepth 1 -maxdepth 1 ! -name .git ! -name pr -exec rm -rf {} +
   cp -R "$GITHUB_WORKSPACE/packages/uikit-preview/dist/." .
+
+  if [[ -n "$CLEANUP_PR_NUMBER" ]]; then
+    rm -rf "$PR_BACKUP_DIR/$CLEANUP_PR_NUMBER"
+  fi
 
   # Restore PR directories
   if [[ -n "$(ls -A "$PR_BACKUP_DIR" 2>/dev/null)" ]]; then

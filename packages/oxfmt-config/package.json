@@ -1,18 +1,24 @@
 {
   "name": "@archon-research/oxfmt-config",
-  "version": "0.2.1",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "type": "module",
   "files": [
+    "dist",
     "index.ts"
   ],
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build",
     "type:check": "tsgo -p tsconfig.json --noEmit"
   },
   "exports": {
-    ".": "./index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

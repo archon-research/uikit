@@ -1,20 +1,29 @@
 {
   "name": "@archon-research/oxlint-config",
-  "version": "0.2.1",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "type": "module",
   "files": [
+    "dist",
     "base.ts",
     "react.ts"
   ],
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build",
     "type:check": "tsgo -p tsconfig.json --noEmit"
   },
   "exports": {
-    "./base": "./base.ts",
-    "./react": "./react.ts"
+    "./base": {
+      "types": "./dist/base.d.ts",
+      "default": "./dist/base.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    }
   }
 }
