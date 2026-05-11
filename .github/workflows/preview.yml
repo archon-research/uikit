@@ -8,6 +8,7 @@ on:
     types:
       - opened
       - reopened
+      - ready_for_review
       - synchronize
       - closed
 
@@ -43,9 +44,9 @@ jobs:
 
           if [[ "$EVENT_NAME" == "pull_request" ]]; then
             if [[ "$PR_ACTION" == "closed" && "$PR_MERGED" == "true" ]]; then
-              checkout_ref="$MERGE_COMMIT_SHA"
+              checkout_ref="${MERGE_COMMIT_SHA:-$SHA}"
               publish_event_name="push"
-              publish_sha="$MERGE_COMMIT_SHA"
+              publish_sha="${MERGE_COMMIT_SHA:-$SHA}"
               cleanup_pr_number="$PR_NUMBER"
             else
               publish_pr_number="$PR_NUMBER"
@@ -100,7 +101,7 @@ jobs:
         run: bash .github/scripts/publish-preview.sh
 
       - name: Comment PR with preview links
-        if: needs.resolve-preview-context.outputs.comment_pr_number != '' && github.event.action == 'opened'
+        if: needs.resolve-preview-context.outputs.comment_pr_number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
@@ -118,10 +119,21 @@ jobs:
           EOF
           )
 
-          gh api \
-            "repos/${REPO}/issues/${PR_NUMBER}/comments" \
-            --method POST \
-            -f body="$BODY" >/dev/null
+          EXISTING_ID=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --jq ".[] | select(.body | contains(\"${MARKER}\")) | .id" \
+            | head -n1 || true)
+
+          if [[ -n "${EXISTING_ID}" ]]; then
+            gh api \
+              "repos/${REPO}/issues/comments/${EXISTING_ID}" \
+              --method PATCH \
+              -f body="$BODY" >/dev/null
+          else
+            gh api \
+              "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+              --method POST \
+              -f body="$BODY" >/dev/null
+          fi
 
   cleanup:
     if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged != true
