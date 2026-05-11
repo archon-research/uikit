@@ -1,0 +1,27 @@
+name: Renovate
+
+on:
+  schedule:
+    # Weekly on Monday at 10:00 UTC (matches original dependabot schedule)
+    - cron: '0 10 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: renovate
+  cancel-in-progress: false
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@v46.1.10
+        env:
+          RENOVATE_AUTODISCOVER: "false"
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+        with:
+          configurationFile: renovate.json5
+          token: ${{ secrets.GITHUB_TOKEN }}

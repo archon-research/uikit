@@ -1,0 +1,35 @@
+// Renovate configuration
+// Supply chain security: all dependencies must be ≥7 days old
+{
+  extends: [
+    "config:recommended",
+  ],
+  autodiscover: false,
+  timezone: "Europe/Berlin",
+  minimumReleaseAge: "7 days",
+  separateMajorMinor: true,
+  packageRules: [
+    {
+      matchPackageNames: ["esbuild", "@esbuild/linux-x64"],
+      groupName: "esbuild",
+    },
+    {
+      matchPackageNames: ["@typescript/native-preview", "@typescript/native-preview-linux-x64"],
+      groupName: "typescript-native-preview",
+    },
+    {
+      // Node dependencies - minor and patch only
+      matchDatasources: ["npm"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "npm-minor-patch",
+    },
+    {
+      // GitHub Actions - minor and patch only
+      matchDatasources: ["github-actions"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "actions-minor-patch",
+    },
+  ],
+  // Open all PRs as drafts for supply chain review
+  draftPR: true,
+}
