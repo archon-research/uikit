@@ -43,9 +43,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm exec semantic-release
 
+      - name: Resolve created release tag
+        id: release-tag
+        run: |
+          set -euo pipefail
+
+          RELEASE_TAG=$(git tag --points-at HEAD 'release-*' | sort -V | tail -n1 || true)
+          echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
+
       - name: Trigger publish workflow
-        if: steps.release.outputs.release_version != ''
+        if: steps.release-tag.outputs.release_tag != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh workflow run publish.yml -f release_tag="release-${{ steps.release.outputs.release_version }}"
+          gh workflow run publish.yml -f release_tag="${{ steps.release-tag.outputs.release_tag }}"
