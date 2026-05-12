@@ -7,3 +7,5 @@ packages/*/styled-system/
 packages/*/.turbo/
 packages/uikit-preview/static/tokens/spec/
 *.env
+.envrc
+.direnv

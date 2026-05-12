@@ -19,11 +19,10 @@ permissions:
 
 jobs:
   resolve-preview-context:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action != 'closed' || github.event.pull_request.merged == true))
+    # Only build previews on push to main or open/active PRs (not closed)
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     outputs:
-      checkout_ref: ${{ steps.context.outputs.checkout_ref }}
-      cleanup_pr_number: ${{ steps.context.outputs.cleanup_pr_number }}
       comment_pr_number: ${{ steps.context.outputs.comment_pr_number }}
       publish_event_name: ${{ steps.context.outputs.publish_event_name }}
       publish_pr_number: ${{ steps.context.outputs.publish_pr_number }}
@@ -34,32 +33,20 @@ jobs:
         id: context
         env:
           EVENT_NAME: ${{ github.event_name }}
-          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
-          PR_ACTION: ${{ github.event.action }}
-          PR_MERGED: ${{ github.event.pull_request.merged }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           SHA: ${{ github.sha }}
         run: |
           should_run=true
 
           if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            if [[ "$PR_ACTION" == "closed" && "$PR_MERGED" == "true" ]]; then
-              checkout_ref="${MERGE_COMMIT_SHA:-$SHA}"
-              publish_event_name="push"
-              publish_sha="${MERGE_COMMIT_SHA:-$SHA}"
-              cleanup_pr_number="$PR_NUMBER"
-            else
-              publish_pr_number="$PR_NUMBER"
-              comment_pr_number="$PR_NUMBER"
-            fi
+            publish_pr_number="$PR_NUMBER"
+            comment_pr_number="$PR_NUMBER"
           fi
 
           echo "should_run=${should_run:-true}" >> "$GITHUB_OUTPUT"
-          echo "checkout_ref=${checkout_ref:-$SHA}" >> "$GITHUB_OUTPUT"
-          echo "publish_event_name=${publish_event_name:-$EVENT_NAME}" >> "$GITHUB_OUTPUT"
-          echo "publish_sha=${publish_sha:-$SHA}" >> "$GITHUB_OUTPUT"
+          echo "publish_event_name=${EVENT_NAME}" >> "$GITHUB_OUTPUT"
+          echo "publish_sha=${SHA}" >> "$GITHUB_OUTPUT"
           echo "publish_pr_number=${publish_pr_number:-}" >> "$GITHUB_OUTPUT"
-          echo "cleanup_pr_number=${cleanup_pr_number:-}" >> "$GITHUB_OUTPUT"
           echo "comment_pr_number=${comment_pr_number:-}" >> "$GITHUB_OUTPUT"
 
   build-and-deploy:
@@ -73,8 +60,6 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          ref: ${{ needs.resolve-preview-context.outputs.checkout_ref }}
 
       - name: Read Node version from package.json
         id: node-version
@@ -94,7 +79,6 @@ jobs:
 
       - name: Publish preview to gh-pages
         env:
-          CLEANUP_PR_NUMBER: ${{ needs.resolve-preview-context.outputs.cleanup_pr_number }}
           EVENT_NAME: ${{ needs.resolve-preview-context.outputs.publish_event_name }}
           PR_NUMBER: ${{ needs.resolve-preview-context.outputs.publish_pr_number }}
           SHA: ${{ needs.resolve-preview-context.outputs.publish_sha }}
@@ -136,7 +120,8 @@ jobs:
           fi
 
   cleanup:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged != true
+    # Run for all closed PRs (merged or not) — concurrency group prevents races with build-and-deploy
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     concurrency:
       group: gh-pages-branch-mutations
