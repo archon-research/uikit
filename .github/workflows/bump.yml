@@ -43,17 +43,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm exec semantic-release
 
-      - name: Resolve created release tag
-        id: release-tag
-        run: |
-          set -euo pipefail
-
-          RELEASE_TAG=$(git tag --points-at HEAD 'release-*' | sort -V | tail -n1 || true)
-          echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
-
       - name: Trigger publish workflow
-        if: steps.release-tag.outputs.release_tag != ''
+        if: steps.release.outputs.release_version != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh workflow run publish.yml -f release_tag="${{ steps.release-tag.outputs.release_tag }}"
+          gh workflow run publish.yml -f release_tag="release-${{ steps.release.outputs.release_version }}"
+
+      - name: No release generated
+        if: steps.release.outputs.release_version == ''
+        run: echo "semantic-release did not create a new version; publish workflow not triggered."
