@@ -40,69 +40,94 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <div style={{ ...rootStyle, padding: 24 }}>
-      <div style={{ display: 'grid', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <div
           style={{
-            display: 'inline-flex',
-            width: 'fit-content',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: 'inline-grid',
+            placeItems: 'center',
+            width: 28,
+            height: 28,
             borderRadius: 9999,
             background: 'var(--colors-surface-default, #ffffff)',
             color: 'var(--colors-text-muted, #667085)',
-            padding: 8,
-            fontSize: 14,
-            lineHeight: 1,
           }}
         >
-          !
-        </div>
-        <div>
-          <h3 style={titleStyle}>{title}</h3>
-          <p style={bodyStyle}>{description}</p>
-        </div>
-        {errorMessage ? (
-          <div
+          <span
+            aria-hidden="true"
             style={{
-              borderRadius: 8,
-              background: 'var(--colors-surface-default, #ffffff)',
-              padding: 12,
+              display: 'inline-flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 2,
+              transform: 'translateY(1px)',
             }}
           >
-            <p
+            <span
               style={{
-                margin: 0,
-                fontSize: 12,
-                fontFamily:
-                  'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                color: 'var(--colors-text-muted, #667085)',
-                wordBreak: 'break-word',
+                width: 2,
+                height: 7,
+                borderRadius: 9999,
+                background: 'currentColor',
               }}
-            >
-              {errorMessage}
-            </p>
-          </div>
-        ) : null}
-        {onRetry ? (
-          <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: 8 }}>
-            <button
-              type="button"
-              onClick={onRetry}
+            />
+            <span
+              style={{
+                width: 2,
+                height: 2,
+                borderRadius: 9999,
+                background: 'currentColor',
+              }}
+            />
+          </span>
+        </div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <h3 style={titleStyle}>{title}</h3>
+          <p style={bodyStyle}>{description}</p>
+          {errorMessage ? (
+            <div
               style={{
                 borderRadius: 8,
-                background: 'var(--colors-interactive-accent, #2563eb)',
-                padding: '8px 16px',
-                fontSize: 14,
-                fontWeight: 600,
-                color: '#ffffff',
-                cursor: 'pointer',
-                border: 'none',
+                background: 'var(--colors-surface-default, #ffffff)',
+                padding: 12,
+                marginTop: 12,
               }}
             >
-              {retryLabel}
-            </button>
-          </div>
-        ) : null}
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 12,
+                  fontFamily:
+                    'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                  color: 'var(--colors-text-muted, #667085)',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {errorMessage}
+              </p>
+            </div>
+          ) : null}
+          {onRetry ? (
+            <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: 8 }}>
+              <button
+                type="button"
+                onClick={onRetry}
+                style={{
+                  borderRadius: 8,
+                  background: 'var(--colors-interactive-accent, #2563eb)',
+                  padding: '8px 16px',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  border: 'none',
+                }}
+              >
+                {retryLabel}
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
