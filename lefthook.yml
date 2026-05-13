@@ -11,7 +11,11 @@ pre-commit:
       run: |
         files=$(echo {staged_files} | tr ' ' '\n' || true)
         if [ -n "$files" ]; then
-          echo "$files" | xargs sed -i '' 's/[[:space:]]*$//'
+          echo "$files" | while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              perl -i -pe 's/[ \t]+$//g' "$file"
+            fi
+          done
         fi
 
     end-of-file-fixer:

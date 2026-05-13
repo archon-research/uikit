@@ -184,7 +184,9 @@ export function SearchInput({
       mode="list"
       autoHighlight="always"
       openOnInputClick
-      itemToStringValue={(item) => (item as NormalizedOption).label}
+      itemToStringValue={(item: unknown) =>
+        (item as NormalizedOption).label
+      }
       onValueChange={handleValueChange}
     >
       <Autocomplete.InputGroup className={className} style={wrapperStyle}>
@@ -211,7 +213,7 @@ export function SearchInput({
             </Autocomplete.Empty>
 
             <Autocomplete.List>
-              {(item) => {
+              {(item: unknown) => {
                 const option = item as NormalizedOption;
 
                 return (

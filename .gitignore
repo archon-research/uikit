@@ -6,4 +6,9 @@ packages/*/dist/
 packages/*/styled-system/
 packages/*/.turbo/
 packages/uikit-preview/static/tokens/spec/
+packages/uikit-preview/build/
+packages/uikit-preview/playwright-report/
+packages/uikit-preview/test-results/
 *.env
+.envrc
+.direnv

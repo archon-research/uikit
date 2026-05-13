@@ -49,3 +49,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh workflow run publish.yml -f release_tag="release-${{ steps.release.outputs.release_version }}"
+
+      - name: No release generated
+        if: steps.release.outputs.release_version == ''
+        run: echo "semantic-release did not create a new version; publish workflow not triggered."
