@@ -7,7 +7,11 @@
     "clean": "rm -rf dist",
     "type:check": "npm run generate && tsgo -p tsconfig.json --noEmit",
     "generate": "panda codegen --clean --config panda.config.ts && panda cssgen --config panda.config.ts --outfile styled-system/styles.css && panda spec --config panda.config.ts --outdir ./static/tokens/spec",
-    "dev": "npm run generate && ladle serve --host 0.0.0.0 --port 61000"
+    "dev": "npm run generate && ladle serve --host 0.0.0.0 --port 61000",
+    "snapshot:build": "npm run generate && ladle build",
+    "snapshot:serve": "ladle preview --host 127.0.0.1 --port 61000",
+    "snapshot:test": "playwright test",
+    "snapshot:update": "playwright test --update-snapshots"
   },
   "dependencies": {
     "@archon-research/design-system": "*",
@@ -18,6 +22,7 @@
     "@types/node": "^24.7.2",
     "@archon-research/tsconfig": "*",
     "@ladle/react": "^5.1.1",
-    "@pandacss/dev": "^1.10.0"
+    "@pandacss/dev": "^1.10.0",
+    "@playwright/test": "^1.54.2"
   }
 }
