@@ -10,12 +10,23 @@ npm install --save-dev @archon-research/uikit-cli
 
 ## Usage
 
+### Register local uikit packages for downstream consumers
+
+From the uikit repository:
+
+```bash
+uikit-cli register
+```
+
+This registers local public `@archon-research/*` packages globally via `npm link`, so downstream
+consumer repositories can link by package name without needing package paths.
+
 ### Link uikit packages into a consumer repository
 
 From your consumer repository:
 
 ```bash
-npm run uikit:link
+uikit-cli link
 ```
 
 This command links all `@archon-research/*` packages from your local uikit monorepo into your consumer project, allowing you to develop packages and see changes immediately.
@@ -36,18 +47,20 @@ Add this script to your consumer's `package.json`:
 When co-development is complete, restore published versions from npm:
 
 ```bash
-npm run uikit:unlink
+uikit-cli unlink
 ```
 
 ## How it works
 
-The CLI manages workspace package links by:
+The CLI manages local development links by:
 
-1. Discovering linked `@archon-research` packages in your local uikit monorepo
-2. Creating file links in your consumer repository's `node_modules`
-3. Reversing the process with `unlink` to restore registry-installed packages
+1. Auto-registering local `@archon-research/*` packages from your uikit checkout
+2. Linking only consumer workspaces that actually depend on those packages
+3. Reversing links with `unlink`, restoring registry installs when available
 
 The CLI automatically detects the consumer workspace root and all dependent packages, working from any directory within the workspace.
+
+The CLI auto-discovers the local uikit monorepo for typical sibling-checkout layouts.
 
 ## Requirements
 
@@ -57,19 +70,20 @@ The CLI automatically detects the consumer workspace root and all dependent pack
 ## See also
 
 - [Development guide](../../DEVELOPMENT.md#local-co-development-with-a-consumer-repository) for detailed local development workflow
-3. **Linking**: Uses `npm link` to establish local package resolution
-4. **Graceful fallback**: On unlink, checks if packages are published; if not, keeps local links to prevent breaking changes
 
 ## Development workflow
 
 In a synome workspace:
 
 ```bash
+# Optional: run once in uikit repo to pre-register packages
+uikit-cli register
+
 # Link uikit packages for local development
-npm run uikit:link
+uikit-cli link
 
 # Later, restore registry versions (or keep local links if not published)
-npm run uikit:unlink
+uikit-cli unlink
 ```
 
 ## Scripts in synome package.json

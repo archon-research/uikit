@@ -1,5 +1,6 @@
 {
   "name": "@archon-research/uikit-cli",
+  "version": "0.0.0",
   "type": "module",
   "description": "CLI for managing local uikit package linking in consumer workspaces",
   "scripts": {

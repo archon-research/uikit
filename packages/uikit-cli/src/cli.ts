@@ -1,14 +1,24 @@
 #!/usr/bin/env node
 
 import { execSync } from 'node:child_process';
-import { readFileSync, readdirSync } from 'node:fs';
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+} from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-type LinkMode = 'link' | 'unlink';
+type CliMode = 'link' | 'unlink' | 'register';
 
 type WorkspaceInfo = {
   name?: string;
+  private?: boolean;
   path: string;
   location: string;
   dependencies?: Record<string, string>;
@@ -19,6 +29,12 @@ type WorkspaceInfo = {
 
 type RootPackageJson = {
   workspaces?: string[] | { packages?: string[] };
+};
+
+type CliOptions = {
+  mode: CliMode;
+  consumerRoot: string | null;
+  uikitRoot: string;
 };
 
 function run(command: string, cwd: string): void {
@@ -39,6 +55,73 @@ function tryRun(command: string, cwd: string, quiet = false): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+function removeWorkspaceShadowInstall(
+  consumerRoot: string,
+  workspace: string,
+  packageName: string,
+): void {
+  const packagePath = path.join(
+    consumerRoot,
+    workspace,
+    'node_modules',
+    packageName,
+  );
+
+  if (!existsSync(packagePath)) {
+    return;
+  }
+
+  try {
+    const stats = lstatSync(packagePath);
+    if (stats.isSymbolicLink()) {
+      return;
+    }
+
+    // Remove workspace-local regular install so Node resolves to linked root package.
+    rmSync(packagePath, { recursive: true, force: true });
+    console.log(
+      `Removed shadow install at ${workspace}/node_modules/${packageName} to preserve local links.`,
+    );
+  } catch {
+    // Best effort cleanup; linking may still succeed via root resolution.
+  }
+}
+
+function ensureLinkedPath(
+  consumerRoot: string,
+  packageName: string,
+  expectedTarget: string,
+): void {
+  const packagePath = path.join(consumerRoot, 'node_modules', packageName);
+
+  try {
+    const stats = lstatSync(packagePath);
+    if (stats.isSymbolicLink() && realpathSync(packagePath) === expectedTarget) {
+      return;
+    }
+    rmSync(packagePath, { recursive: true, force: true });
+  } catch {
+    // Path may not exist yet; continue and create symlink.
+  }
+
+  mkdirSync(path.dirname(packagePath), { recursive: true });
+  symlinkSync(expectedTarget, packagePath, 'dir');
+}
+
+function clearWorkspaceViteCache(consumerRoot: string, workspace: string): void {
+  const viteCachePath = path.join(consumerRoot, workspace, 'node_modules', '.vite');
+  if (!existsSync(viteCachePath)) {
+    return;
+  }
+
+  try {
+    rmSync(viteCachePath, { recursive: true, force: true });
+    console.log(`Cleared Vite cache at ${workspace}/node_modules/.vite.`);
+  } catch {
+    // Best-effort cache cleanup; linking still succeeds without this.
   }
 }
 
@@ -113,24 +196,178 @@ function findConsumerRoot(startDir: string): string {
   }
 }
 
-function parseArgs(argv: string[]): { mode: LinkMode; consumerRoot: string } {
+function findUIKitRoot(startDir: string): string | null {
+  let current = startDir;
+
+  while (true) {
+    if (isValidUIKitRoot(current)) {
+      return current;
+    }
+
+    const parent = path.dirname(current);
+    if (parent === current) {
+      return null;
+    }
+    current = parent;
+  }
+}
+
+function isValidUIKitRoot(rootDir: string): boolean {
+  try {
+    const pkgPath = path.join(rootDir, 'package.json');
+    const pkg = readJson<{ workspaces?: unknown }>(pkgPath);
+    if (!pkg.workspaces) {
+      return false;
+    }
+
+    const workspaces = loadWorkspaces(rootDir);
+    return workspaces.some(
+      (ws) => ws.name === '@archon-research/design-system',
+    );
+  } catch {
+    return false;
+  }
+}
+
+function findUIKitRootFromConsumer(consumerRoot: string): string | null {
+  const candidateNames = ['uikit'];
+  let current = consumerRoot;
+
+  while (true) {
+    for (const candidateName of candidateNames) {
+      const candidate = path.join(current, candidateName);
+      if (isValidUIKitRoot(candidate)) {
+        return candidate;
+      }
+    }
+
+    const parent = path.dirname(current);
+    if (parent === current) {
+      return null;
+    }
+    current = parent;
+  }
+}
+
+function resolveUIKitRoot(
+  explicitUIKitRoot: string | null,
+  consumerRoot: string | null,
+): string {
+  if (explicitUIKitRoot) {
+    const resolved = path.resolve(process.cwd(), explicitUIKitRoot);
+    if (!isValidUIKitRoot(resolved)) {
+      throw new Error(
+        `Invalid uikit root: ${resolved}. Expected a workspace root containing @archon-research/design-system.`,
+      );
+    }
+    return resolved;
+  }
+
+  const scriptRelativeRoot = path.resolve(scriptDir, '../../..');
+  if (isValidUIKitRoot(scriptRelativeRoot)) {
+    return scriptRelativeRoot;
+  }
+
+  if (consumerRoot) {
+    const discovered = findUIKitRootFromConsumer(consumerRoot);
+    if (discovered) {
+      return discovered;
+    }
+  }
+
+  const fromCwd = findUIKitRoot(process.cwd());
+  if (fromCwd) {
+    return fromCwd;
+  }
+
+  throw new Error(
+    'Could not locate local uikit workspace automatically. Run from a consumer workspace near your uikit checkout, or pass --uikit-root / set UIKIT_ROOT.',
+  );
+}
+
+function parseArgs(argv: string[]): CliOptions {
   const args = argv.slice(2);
-  const mode: LinkMode = args[0] === 'unlink' ? 'unlink' : 'link';
+  const command = args[0];
+  let mode: CliMode;
+  if (!command || command === 'link') {
+    mode = 'link';
+  } else if (command === 'unlink') {
+    mode = 'unlink';
+  } else if (command === 'register') {
+    mode = 'register';
+  } else {
+    throw new Error(
+      `Unknown command: ${command}. Expected one of: link, unlink, register.`,
+    );
+  }
 
   let consumerRoot: string | null = null;
+  let uikitRoot: string | null = process.env.UIKIT_ROOT ?? null;
   for (let i = 1; i < args.length; i += 1) {
     const arg = args[i];
     if (arg === '--consumer-root' && args[i + 1]) {
       consumerRoot = path.resolve(process.cwd(), args[i + 1]);
       i += 1;
+      continue;
+    }
+    if (arg === '--uikit-root' && args[i + 1]) {
+      uikitRoot = args[i + 1];
+      i += 1;
     }
   }
 
-  if (!consumerRoot) {
+  if (mode !== 'register' && !consumerRoot) {
     consumerRoot = findConsumerRoot(process.cwd());
   }
 
-  return { mode, consumerRoot };
+  return {
+    mode,
+    consumerRoot,
+    uikitRoot: resolveUIKitRoot(uikitRoot, consumerRoot),
+  };
+}
+
+function registerLocalPackages(
+  uikitRoot: string,
+  supportedNames?: Set<string>,
+): void {
+  const uikitWorkspaces = loadWorkspaces(uikitRoot);
+  const uikitPackages = uikitWorkspaces.filter(
+    (ws) =>
+      String(ws.name ?? '').startsWith('@archon-research/') &&
+      !ws.private &&
+      (!supportedNames || supportedNames.has(String(ws.name))),
+  );
+
+  if (uikitPackages.length === 0) {
+    console.log('No public @archon-research packages found in this uikit workspace.');
+    return;
+  }
+
+  for (const pkg of uikitPackages) {
+    if (!pkg.name) {
+      continue;
+    }
+
+    // Ensure CLI bin target exists before linking globally.
+    if (
+      pkg.name === '@archon-research/uikit-cli' &&
+      !existsSync(path.join(pkg.path, 'dist', 'cli.js'))
+    ) {
+      run('npm run build', pkg.path);
+    }
+
+    run('npm link', pkg.path);
+  }
+
+  console.log('\nRegistered local uikit packages for downstream consumers.');
+}
+
+function linkCliIntoConsumer(consumerRoot: string): void {
+  run(
+    'npm link "@archon-research/uikit-cli" --package-lock=false --save=false',
+    consumerRoot,
+  );
 }
 
 function collectWorkspaceRequirements(
@@ -181,11 +418,7 @@ function linkLocalPackages(
     }
   }
 
-  const rootPackageArgs = [...allNames]
-    .map((name) => dirByName.get(name))
-    .filter((pkgDir): pkgDir is string => Boolean(pkgDir))
-    .map((pkgDir) => `"${pkgDir}"`)
-    .join(' ');
+  const rootPackageArgs = [...allNames].map((name) => `"${name}"`).join(' ');
 
   if (rootPackageArgs) {
     run(
@@ -194,12 +427,17 @@ function linkLocalPackages(
     );
   }
 
+  // npm can materialize regular installs in some workspace setups; enforce root links.
+  for (const name of allNames) {
+    const target = dirByName.get(name);
+    if (!target) {
+      continue;
+    }
+    ensureLinkedPath(consumerRoot, name, target);
+  }
+
   for (const [workspace, names] of neededByWorkspace.entries()) {
-    const packageArgs = names
-      .map((name) => dirByName.get(name))
-      .filter((pkgDir): pkgDir is string => Boolean(pkgDir))
-      .map((pkgDir) => `"${pkgDir}"`)
-      .join(' ');
+    const packageArgs = names.map((name) => `"${name}"`).join(' ');
 
     if (!packageArgs) {
       continue;
@@ -209,6 +447,14 @@ function linkLocalPackages(
       `npm link ${packageArgs} --workspace "${workspace}" --package-lock=false --save=false`,
       consumerRoot,
     );
+
+    // npm --workspace link can leave a regular install in some workspace layouts.
+    // Removing workspace shadow installs keeps resolution aligned to linked root packages.
+    for (const name of names) {
+      removeWorkspaceShadowInstall(consumerRoot, workspace, name);
+    }
+
+    clearWorkspaceViteCache(consumerRoot, workspace);
   }
 }
 
@@ -239,6 +485,7 @@ function unlinkLocalPackages(
   }
 
   for (const [workspace, names] of neededByWorkspace.entries()) {
+    const workspaceDir = path.join(consumerRoot, workspace);
     for (const name of names) {
       const ok = tryRun(
         `npm unlink "${name}" --workspace "${workspace}" --package-lock=false --save=false`,
@@ -249,7 +496,21 @@ function unlinkLocalPackages(
           `Unable to unlink ${name} in ${workspace}; continuing with restore flow.`,
         );
       }
+
+      // Fallback for cases where --workspace unlink does not clear workspace-local links.
+      const fallbackOk = tryRun(
+        `npm unlink "${name}" --package-lock=false --save=false`,
+        workspaceDir,
+        true,
+      );
+      if (!fallbackOk) {
+        console.warn(
+          `Unable to unlink ${name} directly in ${workspace}; continuing with restore flow.`,
+        );
+      }
     }
+
+    clearWorkspaceViteCache(consumerRoot, workspace);
   }
 }
 
@@ -295,10 +556,18 @@ function arePackagesPublished(
 }
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const uikitRoot = path.resolve(scriptDir, '../../..');
 
 try {
-  const { mode, consumerRoot } = parseArgs(process.argv);
+  const { mode, consumerRoot, uikitRoot } = parseArgs(process.argv);
+
+  if (mode === 'register') {
+    registerLocalPackages(uikitRoot);
+    process.exit(0);
+  }
+
+  if (!consumerRoot) {
+    throw new Error('Consumer root is required for link/unlink operations.');
+  }
 
   const uikitWorkspaces = loadWorkspaces(uikitRoot);
   const consumerWorkspaces = loadWorkspaces(consumerRoot);
@@ -315,6 +584,9 @@ try {
     consumerWorkspaces,
     supportedNames,
   );
+
+  registerLocalPackages(uikitRoot, supportedNames);
+  linkCliIntoConsumer(consumerRoot);
 
   if (mode === 'link') {
     linkLocalPackages(consumerRoot, neededByWorkspace, dirByName);
@@ -358,6 +630,9 @@ try {
     );
     linkLocalPackages(consumerRoot, neededByWorkspace, dirByName);
   }
+
+  // Keep consumer on the local CLI implementation so repeated link/unlink stays stable.
+  linkCliIntoConsumer(consumerRoot);
 
   console.log('\nUnlinked local uikit packages and restored consumer dependencies.');
 } catch (error) {
