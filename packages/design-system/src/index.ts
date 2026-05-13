@@ -16,5 +16,7 @@ export { ErrorState } from './components/ErrorState';
 export { ErrorBoundary } from './components/ErrorBoundary';
 export { AsyncStateRenderer } from './components/AsyncStateRenderer';
 export * from './components/data-table';
+export { Tooltip } from '@base-ui/react/tooltip';
+export type { CellContext, ColumnDef, SortingState } from '@tanstack/react-table';
 export { Tabs, Toggle, ToggleGroup } from '@base-ui/react';
 export { Switch } from '@base-ui/react/switch';
