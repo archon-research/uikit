@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Release tag to publish (for example release-1.2.3)
+        description: Existing release tag to publish (for example release-0.3.0-dev.1)
         required: true
         type: string
 
@@ -36,9 +36,6 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           RELEASE_EVENT_TAG: ${{ github.event.release.tag_name }}
           INPUT_RELEASE_TAG: ${{ github.event.inputs.release_tag }}
-          REF_NAME: ${{ github.ref_name }}
-          SHA: ${{ github.sha }}
-          RUN_ID: ${{ github.run_id }}
         run: bash .meta/.github/scripts/resolve-release-metadata.sh
 
       - name: Checkout publish ref

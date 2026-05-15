@@ -47,8 +47,9 @@ jobs:
         if: steps.release.outputs.release_version != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_REF: ${{ github.ref_name }}
         run: |
-          gh workflow run publish.yml -f release_tag="release-${{ steps.release.outputs.release_version }}"
+          gh workflow run publish.yml --ref "$WORKFLOW_REF" -f release_tag="release-${{ steps.release.outputs.release_version }}"
 
       - name: No release generated
         if: steps.release.outputs.release_version == ''
