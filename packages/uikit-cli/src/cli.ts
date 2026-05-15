@@ -14,7 +14,7 @@ import {
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-type CliMode = 'link' | 'unlink' | 'register';
+type CliMode = 'link' | 'unlink' | 'register' | 'lint' | 'format';
 
 type WorkspaceInfo = {
   name?: string;
@@ -35,7 +35,15 @@ type CliOptions = {
   mode: CliMode;
   consumerRoot: string | null;
   uikitRoot: string;
+  commandArgs: string[];
 };
+
+const OXLINT_VERSION = '1.62.0';
+const OXFMT_VERSION = '0.47.0';
+
+function shellEscape(value: string): string {
+  return `'${value.replace(/'/g, `'"'"'`)}'`;
+}
 
 function run(command: string, cwd: string): void {
   console.log(`> (${cwd}) ${command}`);
@@ -295,11 +303,17 @@ function parseArgs(argv: string[]): CliOptions {
     mode = 'unlink';
   } else if (command === 'register') {
     mode = 'register';
+  } else if (command === 'lint') {
+    mode = 'lint';
+  } else if (command === 'format') {
+    mode = 'format';
   } else {
     throw new Error(
-      `Unknown command: ${command}. Expected one of: link, unlink, register.`,
+      `Unknown command: ${command}. Expected one of: link, unlink, register, lint, format.`,
     );
   }
+
+  const commandArgs = args.slice(1);
 
   let consumerRoot: string | null = null;
   let uikitRoot: string | null = process.env.UIKIT_ROOT ?? null;
@@ -316,15 +330,64 @@ function parseArgs(argv: string[]): CliOptions {
     }
   }
 
-  if (mode !== 'register' && !consumerRoot) {
+  if (
+    mode !== 'register' &&
+    mode !== 'lint' &&
+    mode !== 'format' &&
+    !consumerRoot
+  ) {
     consumerRoot = findConsumerRoot(process.cwd());
+  }
+
+  if (mode === 'lint' || mode === 'format') {
+    return {
+      mode,
+      consumerRoot: null,
+      uikitRoot: '',
+      commandArgs,
+    };
   }
 
   return {
     mode,
     consumerRoot,
     uikitRoot: resolveUIKitRoot(uikitRoot, consumerRoot),
+    commandArgs,
   };
+}
+
+function runLint(commandArgs: string[]): void {
+  const forwarded = commandArgs.map(shellEscape).join(' ');
+  run(
+    `npm exec --yes --package oxlint@${OXLINT_VERSION} -- oxlint ${forwarded}`.trim(),
+    process.cwd(),
+  );
+}
+
+function hasConfigFlag(args: string[]): boolean {
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+    if (arg === '-c' || arg === '--config' || arg.startsWith('--config=')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function runFormat(commandArgs: string[]): void {
+  const args = [...commandArgs];
+  const defaultConfig = './.oxfmtrc.ts';
+
+  if (!hasConfigFlag(args) && existsSync(path.join(process.cwd(), '.oxfmtrc.ts'))) {
+    args.unshift(defaultConfig);
+    args.unshift('-c');
+  }
+
+  const forwarded = args.map(shellEscape).join(' ');
+  run(
+    `npm exec --yes --package oxfmt@${OXFMT_VERSION} -- oxfmt ${forwarded}`.trim(),
+    process.cwd(),
+  );
 }
 
 function registerLocalPackages(
@@ -558,7 +621,17 @@ function arePackagesPublished(
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 
 try {
-  const { mode, consumerRoot, uikitRoot } = parseArgs(process.argv);
+  const { mode, consumerRoot, uikitRoot, commandArgs } = parseArgs(process.argv);
+
+  if (mode === 'lint') {
+    runLint(commandArgs);
+    process.exit(0);
+  }
+
+  if (mode === 'format') {
+    runFormat(commandArgs);
+    process.exit(0);
+  }
 
   if (mode === 'register') {
     registerLocalPackages(uikitRoot);

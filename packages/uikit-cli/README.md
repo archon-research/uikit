@@ -10,6 +10,18 @@ npm install --save-dev @archon-research/uikit-cli
 
 ## Usage
 
+### Run lint and format tools without downstream installs
+
+From any consumer workspace:
+
+```bash
+uikit-cli lint -c ./.oxlintrc.ts src panda.config.ts vite.config.ts
+uikit-cli format -c ./.oxfmtrc.ts --write "src/**/*.ts" "src/**/*.tsx" panda.config.ts vite.config.ts
+```
+
+The CLI runs pinned `oxlint` and `oxfmt` versions internally, so downstream workspaces do not
+need to declare those tool packages directly.
+
 ### Register local uikit packages for downstream consumers
 
 From the uikit repository:
