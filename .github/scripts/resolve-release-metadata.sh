@@ -32,6 +32,12 @@ NPM_TAG="latest"
 IS_DEV="false"
 CHECKOUT_REF="$BASE_TAG"
 
+# Any prerelease version (for example 1.2.3-dev.1) is published to the dev channel.
+if [[ "$BASE_VERSION" == *-* ]]; then
+  NPM_TAG="dev"
+  IS_DEV="true"
+fi
+
 if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$REF_NAME" != "main" ]; then
   VERSION="${BASE_VERSION}-dev${RUN_ID}"
   RELEASE_TAG="release-${VERSION}"
