@@ -1,5 +1,11 @@
 {
-  "branches": ["main"],
+  "branches": [
+    "main",
+    {
+      "name": "!main",
+      "prerelease": "${name.replace(/[^A-Za-z0-9-]/g, '-')}"
+    }
+  ],
   "tagFormat": "release-${version}",
   "plugins": [
     [

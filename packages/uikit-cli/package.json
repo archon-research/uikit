@@ -1,15 +1,17 @@
 {
   "name": "@archon-research/uikit-cli",
+  "version": "0.0.0",
   "type": "module",
   "description": "CLI for managing local uikit package linking in consumer workspaces",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsgo -b && npm run wrapper",
+    "wrapper": "./scripts/create-wrapper.sh",
     "clean": "rm -rf dist",
     "type:check": "tsgo -p tsconfig.json --noEmit",
     "prepare": "npm run build"
   },
   "bin": {
-    "uikit-cli": "./dist/cli.js"
+    "uikit-cli": "./dist/cli.sh"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
