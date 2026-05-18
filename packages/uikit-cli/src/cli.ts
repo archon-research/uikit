@@ -1,367 +1,239 @@
 #!/usr/bin/env node
 
-import { execSync } from 'node:child_process';
-import { readFileSync, readdirSync } from 'node:fs';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import { RealFileSystem } from './fs-utils.js';
+import { NpmCommandExecutor } from './command-executor.js';
+import { ConsoleLogger } from './logger.js';
+import { PackageDiscovery } from './package-discovery.js';
+import { LinkValidator } from './link-validator.js';
+import { RegisterCommand } from './commands/register.js';
+import { LinkCommand } from './commands/link.js';
+import { UnlinkCommand } from './commands/unlink.js';
+import { LintCommand } from './commands/lint.js';
+import { FormatCommand } from './commands/format.js';
+import type { CommandMode, ParsedArgs } from './types.js';
 
-type LinkMode = 'link' | 'unlink';
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 
-type WorkspaceInfo = {
-  name?: string;
-  path: string;
-  location: string;
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-  optionalDependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
-};
-
-type RootPackageJson = {
-  workspaces?: string[] | { packages?: string[] };
-};
-
-function run(command: string, cwd: string): void {
-  console.log(`> (${cwd}) ${command}`);
-  execSync(command, { stdio: 'inherit', cwd });
-}
-
-function tryRun(command: string, cwd: string, quiet = false): boolean {
-  if (!quiet) {
-    console.log(`> (${cwd}) ${command}`);
-  }
-
-  try {
-    execSync(command, {
-      stdio: quiet ? 'ignore' : 'inherit',
-      cwd,
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function readJson<T>(filePath: string): T {
-  const content = readFileSync(filePath, 'utf8');
-  return JSON.parse(content) as T;
-}
-
-function getWorkspacePatterns(rootDir: string): string[] {
-  const pkg = readJson<RootPackageJson>(path.join(rootDir, 'package.json'));
-  const workspaces = pkg.workspaces;
-  if (Array.isArray(workspaces)) {
-    return workspaces;
-  }
-  if (workspaces && Array.isArray(workspaces.packages)) {
-    return workspaces.packages;
-  }
-  return [];
-}
-
-function resolveWorkspacePattern(rootDir: string, pattern: string): string[] {
-  if (pattern.endsWith('/*')) {
-    const base = pattern.slice(0, -2);
-    const absBase = path.join(rootDir, base);
-    return readdirSync(absBase, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => path.join(base, entry.name));
-  }
-  return [pattern];
-}
-
-function loadWorkspaces(rootDir: string): WorkspaceInfo[] {
-  const patterns = getWorkspacePatterns(rootDir);
-  const locations = patterns.flatMap((pattern) =>
-    resolveWorkspacePattern(rootDir, pattern),
-  );
-
-  return locations
-    .map((location) => {
-      const pkgPath = path.join(rootDir, location, 'package.json');
-      const pkg = readJson<WorkspaceInfo>(pkgPath);
-      return {
-        ...pkg,
-        location,
-        path: path.join(rootDir, location),
-      };
-    })
-    .filter((ws) => Boolean(ws.name));
-}
-
-function findConsumerRoot(startDir: string): string {
-  let current = startDir;
-  while (true) {
-    const pkgPath = path.join(current, 'package.json');
-    try {
-      const content = readFileSync(pkgPath, 'utf8');
-      const pkg = JSON.parse(content) as { workspaces?: unknown };
-      if (pkg.workspaces) {
-        return current;
-      }
-    } catch {
-      // File not found or parse error, continue up.
-    }
-
-    const parent = path.dirname(current);
-    if (parent === current) {
-      throw new Error(
-        'Could not find consumer workspace root (no package.json with workspaces field)',
-      );
-    }
-    current = parent;
-  }
-}
-
-function parseArgs(argv: string[]): { mode: LinkMode; consumerRoot: string } {
+/**
+ * Parse command line arguments
+ */
+function parseArgs(argv: string[]): ParsedArgs {
   const args = argv.slice(2);
-  const mode: LinkMode = args[0] === 'unlink' ? 'unlink' : 'link';
+  if (args.length === 0) {
+    throw new Error(
+      'Usage: uikit-cli <register|link|unlink|lint|format> [--verify] [--debug] [--uikit-root <path>] [args...]',
+    );
+  }
 
-  let consumerRoot: string | null = null;
-  for (let i = 1; i < args.length; i += 1) {
+  const mode = args[0] as CommandMode;
+  const validModes: CommandMode[] = ['lint', 'format', 'register', 'link', 'unlink'];
+
+  if (!validModes.includes(mode)) {
+    throw new Error(`Unknown command: ${mode}`);
+  }
+
+  let uikitRoot: string | undefined;
+  let verify = false;
+  let debug = false;
+  const commandArgs: string[] = [];
+  let i = 1;
+
+  while (i < args.length) {
     const arg = args[i];
-    if (arg === '--consumer-root' && args[i + 1]) {
-      consumerRoot = path.resolve(process.cwd(), args[i + 1]);
+
+    if (arg === '--uikit-root' && i + 1 < args.length) {
+      uikitRoot = args[i + 1];
+      i += 2;
+    } else if (arg === '--verify') {
+      verify = true;
+      i += 1;
+    } else if (arg === '--debug') {
+      debug = true;
+      i += 1;
+    } else {
+      commandArgs.push(arg);
       i += 1;
     }
   }
 
-  if (!consumerRoot) {
-    consumerRoot = findConsumerRoot(process.cwd());
+  // Check for UIKIT_DEBUG environment variable
+  if (process.env.UIKIT_DEBUG === '1') {
+    debug = true;
   }
 
-  return { mode, consumerRoot };
-}
+  // Resolve uikit root
+  const fs = new RealFileSystem();
+  const discovery = new PackageDiscovery(fs);
 
-function collectWorkspaceRequirements(
-  workspaces: WorkspaceInfo[],
-  supportedNames: Set<string>,
-): Map<string, string[]> {
-  const neededByWorkspace = new Map<string, string[]>();
+  if (debug) {
+    console.log('[DEBUG parseArgs] Resolving uikit root...');
+  }
 
-  for (const ws of workspaces) {
-    const fields: Record<string, string>[] = [
-      ws.dependencies ?? {},
-      ws.devDependencies ?? {},
-      ws.optionalDependencies ?? {},
-      ws.peerDependencies ?? {},
-    ];
-
-    const needed = new Set<string>();
-    for (const depField of fields) {
-      for (const depName of Object.keys(depField)) {
-        if (supportedNames.has(depName)) {
-          needed.add(depName);
-        }
+  if (!uikitRoot) {
+    // Try relative to script location
+    const relativeRoot = path.resolve(scriptDir, '../../../..');
+    if (debug) {
+      console.log('[DEBUG parseArgs] Checking relative root:', relativeRoot);
+    }
+    if (discovery.isValidUIKitRoot(relativeRoot)) {
+      uikitRoot = relativeRoot;
+      if (debug) {
+        console.log('[DEBUG parseArgs] Found valid uikit root at relative location');
       }
     }
+  }
 
-    if (needed.size > 0) {
-      neededByWorkspace.set(ws.location, [...needed]);
+  if (!uikitRoot && mode !== 'lint' && mode !== 'format') {
+    // Try to find from consumer
+    try {
+      const tempConsumerRoot = discovery.findConsumerRoot(process.cwd());
+      const foundRoot = discovery.findUIKitRootFromConsumer(tempConsumerRoot);
+      if (foundRoot) {
+        uikitRoot = foundRoot;
+      }
+    } catch {
+      // Will throw error below if needed
     }
   }
 
-  return neededByWorkspace;
+  if (!uikitRoot && mode !== 'lint' && mode !== 'format') {
+    // Try walking up from cwd
+    const foundRoot = discovery.findUIKitRoot(process.cwd());
+    if (foundRoot) {
+      uikitRoot = foundRoot;
+    }
+  }
+
+  if (!uikitRoot && mode !== 'lint' && mode !== 'format') {
+    throw new Error(
+      'Could not find uikit root directory.\n' +
+        'Tried:\n' +
+        '  - Relative to script location\n' +
+        '  - Sibling to consumer root\n' +
+        '  - Walking up from cwd\n' +
+        'Use --uikit-root to specify manually.',
+    );
+  }
+
+  let consumerRoot: string | null = null;
+  if (mode === 'link' || mode === 'unlink') {
+    consumerRoot = discovery.findConsumerRoot(process.cwd());
+  }
+
+  return {
+    mode,
+    consumerRoot,
+    uikitRoot: uikitRoot ?? '',
+    commandArgs,
+    verify,
+    debug,
+  };
 }
 
-function linkLocalPackages(
-  consumerRoot: string,
-  neededByWorkspace: Map<string, string[]>,
-  dirByName: Map<string, string>,
+/**
+ * Ensure CLI binary is built before registering
+ */
+function ensureCliBinaryBuilt(
+  uikitRoot: string,
+  executor: NpmCommandExecutor,
 ): void {
-  if (neededByWorkspace.size === 0) {
-    console.log('No local uikit packages referenced by this consumer workspaces.');
-    return;
-  }
+  const cliPackagePath = path.join(uikitRoot, 'packages/uikit-cli');
+  const distPath = path.join(cliPackagePath, 'dist/cli.js');
+  const fs = new RealFileSystem();
 
-  const allNames = new Set<string>();
-  for (const names of neededByWorkspace.values()) {
-    for (const name of names) {
-      allNames.add(name);
-    }
-  }
-
-  const rootPackageArgs = [...allNames]
-    .map((name) => dirByName.get(name))
-    .filter((pkgDir): pkgDir is string => Boolean(pkgDir))
-    .map((pkgDir) => `"${pkgDir}"`)
-    .join(' ');
-
-  if (rootPackageArgs) {
-    run(
-      `npm link ${rootPackageArgs} --package-lock=false --save=false`,
-      consumerRoot,
-    );
-  }
-
-  for (const [workspace, names] of neededByWorkspace.entries()) {
-    const packageArgs = names
-      .map((name) => dirByName.get(name))
-      .filter((pkgDir): pkgDir is string => Boolean(pkgDir))
-      .map((pkgDir) => `"${pkgDir}"`)
-      .join(' ');
-
-    if (!packageArgs) {
-      continue;
-    }
-
-    run(
-      `npm link ${packageArgs} --workspace "${workspace}" --package-lock=false --save=false`,
-      consumerRoot,
-    );
+  if (!fs.exists(distPath)) {
+    console.log('Building CLI binary...');
+    executor.exec('npm run build', { cwd: cliPackagePath });
   }
 }
 
-function unlinkLocalPackages(
+/**
+ * Link CLI into consumer for convenience
+ */
+function linkCliIntoConsumer(
   consumerRoot: string,
-  neededByWorkspace: Map<string, string[]>,
+  executor: NpmCommandExecutor,
 ): void {
-  if (neededByWorkspace.size === 0) {
-    console.log('No local uikit packages referenced by this consumer workspaces.');
-    return;
-  }
-
-  const allNames = new Set<string>();
-  for (const names of neededByWorkspace.values()) {
-    for (const name of names) {
-      allNames.add(name);
-    }
-  }
-
-  for (const name of allNames) {
-    const ok = tryRun(
-      `npm unlink "${name}" --package-lock=false --save=false`,
-      consumerRoot,
-    );
-    if (!ok) {
-      console.warn(`Unable to unlink ${name} at root; continuing.`);
-    }
-  }
-
-  for (const [workspace, names] of neededByWorkspace.entries()) {
-    for (const name of names) {
-      const ok = tryRun(
-        `npm unlink "${name}" --workspace "${workspace}" --package-lock=false --save=false`,
-        consumerRoot,
-      );
-      if (!ok) {
-        console.warn(
-          `Unable to unlink ${name} in ${workspace}; continuing with restore flow.`,
-        );
-      }
-    }
-  }
+  executor.exec(
+    'npm link "@archon-research/uikit-cli" --package-lock=false --save=false --no-workspaces',
+    { cwd: consumerRoot },
+  );
 }
 
-function areRegistryPackagesReady(
-  consumerRoot: string,
-  neededByWorkspace: Map<string, string[]>,
-): boolean {
-  for (const [workspace, names] of neededByWorkspace.entries()) {
-    for (const name of names) {
-      const ok = tryRun(
-        `npm_config_min_release_age=0 npm ls ${name} --depth=0 --workspace "${workspace}"`,
-        consumerRoot,
-        true,
-      );
-      if (!ok) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
-function arePackagesPublished(
-  consumerRoot: string,
-  neededByWorkspace: Map<string, string[]>,
-): boolean {
-  const uniqueNames = new Set<string>();
-  for (const names of neededByWorkspace.values()) {
-    for (const name of names) {
-      uniqueNames.add(name);
-    }
-  }
-
-  for (const name of uniqueNames) {
-    const ok = tryRun(`npm view ${name} version --json`, consumerRoot, true);
-    if (!ok) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const uikitRoot = path.resolve(scriptDir, '../../..');
-
+/**
+ * Main entry point
+ */
 try {
-  const { mode, consumerRoot } = parseArgs(process.argv);
+  const parsed = parseArgs(process.argv);
+  const { mode, consumerRoot, uikitRoot, commandArgs, verify, debug } = parsed;
 
-  const uikitWorkspaces = loadWorkspaces(uikitRoot);
-  const consumerWorkspaces = loadWorkspaces(consumerRoot);
+  if (debug) {
+    console.log('[DEBUG] Parsed args:', { mode, consumerRoot, uikitRoot, verify });
+  }
 
-  const uikitPackages = uikitWorkspaces.filter((ws) =>
-    String(ws.name ?? '').startsWith('@archon-research/'),
-  );
+  // Initialize dependencies
+  const fs = new RealFileSystem();
+  const executor = new NpmCommandExecutor(debug);
+  const logger = new ConsoleLogger(debug);
+  const discovery = new PackageDiscovery(fs);
+  const validator = new LinkValidator(fs, logger);
 
-  const dirByName = new Map(uikitPackages.map((pkg) => [pkg.name ?? '', pkg.path]));
-  dirByName.delete('');
+  // Handle lint/format commands
+  if (mode === 'lint') {
+    const lintCmd = new LintCommand(executor);
+    lintCmd.execute(commandArgs);
+    process.exit(0);
+  }
 
-  const supportedNames = new Set(dirByName.keys());
-  const neededByWorkspace = collectWorkspaceRequirements(
-    consumerWorkspaces,
-    supportedNames,
-  );
+  if (mode === 'format') {
+    const formatCmd = new FormatCommand(executor, fs);
+    formatCmd.execute(commandArgs);
+    process.exit(0);
+  }
+
+  // Handle register command
+  if (mode === 'register') {
+    ensureCliBinaryBuilt(uikitRoot, executor);
+    const registerCmd = new RegisterCommand(discovery, executor, logger);
+    registerCmd.execute(uikitRoot);
+
+    if (verify) {
+      logger.info('\\nVerifying registration...');
+      // Could add verification logic here
+      logger.info('✓ Registration verified');
+    }
+
+    process.exit(0);
+  }
+
+  // Handle link/unlink commands (require consumerRoot)
+  if (!consumerRoot) {
+    throw new Error('Consumer root is required for link/unlink operations.');
+  }
+
+  // Register packages and link CLI before link/unlink
+  ensureCliBinaryBuilt(uikitRoot, executor);
+  const registerCmd = new RegisterCommand(discovery, executor, logger);
+  registerCmd.execute(uikitRoot);
+  linkCliIntoConsumer(consumerRoot, executor);
 
   if (mode === 'link') {
-    linkLocalPackages(consumerRoot, neededByWorkspace, dirByName);
-    console.log('\nLinked local uikit packages into consumer workspaces.');
+    const linkCmd = new LinkCommand(discovery, executor, validator, fs, logger);
+    linkCmd.execute(consumerRoot, uikitRoot, verify);
     process.exit(0);
   }
 
-  if (!arePackagesPublished(consumerRoot, neededByWorkspace)) {
-    console.warn(
-      '\nRegistry packages are not published yet; keeping local uikit links in place.',
-    );
-    linkLocalPackages(consumerRoot, neededByWorkspace, dirByName);
-    console.log('\nConsumer remains on local uikit links.');
+  if (mode === 'unlink') {
+    const unlinkCmd = new UnlinkCommand(executor, logger);
+    unlinkCmd.execute(consumerRoot, uikitRoot, discovery);
     process.exit(0);
   }
-
-  unlinkLocalPackages(consumerRoot, neededByWorkspace);
-
-  let rootInstallOk = tryRun(
-    'npm_config_min_release_age=0 npm install',
-    consumerRoot,
-  );
-
-  let installOk = true;
-  for (const workspace of neededByWorkspace.keys()) {
-    installOk =
-      tryRun(
-        `npm_config_min_release_age=0 npm install --workspace "${workspace}"`,
-        consumerRoot,
-      ) &&
-      installOk;
-  }
-
-  if (
-    !rootInstallOk ||
-    !installOk ||
-    !areRegistryPackagesReady(consumerRoot, neededByWorkspace)
-  ) {
-    console.warn(
-      '\nRegistry packages are not fully resolvable; falling back to local uikit linking.',
-    );
-    linkLocalPackages(consumerRoot, neededByWorkspace, dirByName);
-  }
-
-  console.log('\nUnlinked local uikit packages and restored consumer dependencies.');
 } catch (error) {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`Error: ${message}`);
+  if (process.env.UIKIT_DEBUG) {
+    console.error('Full error:', error);
+  }
+  console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 }

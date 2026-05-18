@@ -12,3 +12,4 @@ packages/uikit-preview/test-results/
 *.env
 .envrc
 .direnv
+*.tsbuildinfo
