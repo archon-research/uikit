@@ -1,5 +1,6 @@
 import type { CommandExecutor } from '../command-executor.js';
 import type { Logger } from '../logger.js';
+import type { PackageDiscovery } from '../package-discovery.js';
 
 /**
  * Unlink command - simplified version without registry checks
@@ -15,9 +16,39 @@ export class UnlinkCommand {
 
   execute(
     consumerRoot: string,
-    packages: string[],
-    workspaces: string[],
+    uikitRoot: string,
+    discovery: PackageDiscovery,
   ): void {
+    // Load workspaces and determine requirements
+    const uikitWorkspaces = discovery.loadWorkspaces(uikitRoot);
+    const consumerWorkspaces = discovery.loadWorkspaces(consumerRoot);
+
+    const uikitPackages = uikitWorkspaces.filter((ws) =>
+      String(ws.name ?? '').startsWith('@archon-research/'),
+    );
+
+    const supportedNames = new Set(
+      uikitPackages.map((pkg) => pkg.name ?? '').filter((name) => name !== ''),
+    );
+
+    // Collect workspace requirements
+    const neededByWorkspace = new Map<string, string[]>();
+    const allPackages = new Set<string>();
+    for (const ws of consumerWorkspaces) {
+      const needed = new Set<string>();
+      for (const depName of Object.keys(ws.dependencies)) {
+        if (supportedNames.has(depName)) {
+          needed.add(depName);
+          allPackages.add(depName);
+        }
+      }
+      if (needed.size > 0) {
+        neededByWorkspace.set(ws.location, [...needed]);
+      }
+    }
+
+    const packages = [...allPackages];
+    const workspaces = [...neededByWorkspace.keys()];
     this.logger.debug('Starting unlink command', {
       consumerRoot,
       packageCount: packages.length,

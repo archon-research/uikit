@@ -176,7 +176,7 @@ export class PackageDiscovery {
 
         const entries = this.fs.readDir(basePath);
         return entries
-          .filter((entry) => !entry.startsWith('.'))
+          .filter((entry) => !entry.startsWith('.') && entry !== 'node_modules')
           .map((entry) => path.join(basePath, entry))
           .filter((p) => this.fs.isDirectory(p));
       }

@@ -1,6 +1,5 @@
 import type { CommandExecutor } from '../command-executor.js';
-
-const OXLINT_VERSION = '1.62.0';
+import { shellEscape } from '../shell-utils.js';
 
 /**
  * Lint command - forwards to oxlint
@@ -13,17 +12,10 @@ export class LintCommand {
   }
 
   execute(args: string[]): void {
-    const escapedArgs = args.map((arg) => this.shellEscape(arg)).join(' ');
+    const escapedArgs = args.map((arg) => shellEscape(arg)).join(' ');
     this.executor.exec(
-      `npm exec --yes --package oxlint@${OXLINT_VERSION} -- oxlint ${escapedArgs}`.trim(),
+      `npm exec -- oxlint ${escapedArgs}`.trim(),
       { cwd: process.cwd() },
     );
-  }
-
-  private shellEscape(arg: string): string {
-    if (/^[a-zA-Z0-9_\-./:=]+$/.test(arg)) {
-      return arg;
-    }
-    return `'${arg.replace(/'/g, "'\\''")}'`;
   }
 }

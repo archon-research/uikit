@@ -212,43 +212,10 @@ try {
     throw new Error('Consumer root is required for link/unlink operations.');
   }
 
-  if (debug) {
-    logger.debug('Loading uikit workspaces...', { uikitRoot });
-  }
-  const uikitWorkspaces = discovery.loadWorkspaces(uikitRoot);
-
-  if (debug) {
-    logger.debug('Loading consumer workspaces...', { consumerRoot });
-  }
-  const consumerWorkspaces = discovery.loadWorkspaces(consumerRoot);
-
-  const uikitPackages = uikitWorkspaces.filter((ws) =>
-    String(ws.name ?? '').startsWith('@archon-research/'),
-  );
-
-  const dirByName = new Map(uikitPackages.map((pkg) => [pkg.name ?? '', pkg.path]));
-  dirByName.delete('');
-
-  const supportedNames = new Set(dirByName.keys());
-
-  // Collect workspace requirements
-  const neededByWorkspace = new Map<string, string[]>();
-  for (const ws of consumerWorkspaces) {
-    const needed = new Set<string>();
-    for (const depName of Object.keys(ws.dependencies)) {
-      if (supportedNames.has(depName)) {
-        needed.add(depName);
-      }
-    }
-    if (needed.size > 0) {
-      neededByWorkspace.set(ws.location, [...needed]);
-    }
-  }
-
-  // Register packages and link CLI
+  // Register packages and link CLI before link/unlink
   ensureCliBinaryBuilt(uikitRoot, executor);
   const registerCmd = new RegisterCommand(discovery, executor, logger);
-  registerCmd.execute(uikitRoot, supportedNames);
+  registerCmd.execute(uikitRoot);
   linkCliIntoConsumer(consumerRoot, executor);
 
   if (mode === 'link') {
@@ -258,18 +225,14 @@ try {
   }
 
   if (mode === 'unlink') {
-    const allNames = new Set<string>();
-    for (const names of neededByWorkspace.values()) {
-      for (const name of names) {
-        allNames.add(name);
-      }
-    }
-
     const unlinkCmd = new UnlinkCommand(executor, logger);
-    unlinkCmd.execute(consumerRoot, [...allNames], [...neededByWorkspace.keys()]);
+    unlinkCmd.execute(consumerRoot, uikitRoot, discovery);
     process.exit(0);
   }
 } catch (error) {
+  if (process.env.UIKIT_DEBUG) {
+    console.error('Full error:', error);
+  }
   console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 }

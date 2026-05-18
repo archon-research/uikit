@@ -39,11 +39,16 @@ export class RealFileSystem implements FileSystemOps {
   }
 
   readJson<T>(path: string): T {
-    if (process.env.UIKIT_DEBUG) {
-      console.log('[DEBUG readJson]', path);
+    try {
+      if (process.env.UIKIT_DEBUG) {
+        console.log('[DEBUG readJson]', path);
+      }
+      const content = this.readFile(path);
+      return JSON.parse(content) as T;
+    } catch (error) {
+      console.error('[readJson ERROR] Failed to read:', path);
+      throw error;
     }
-    const content = this.readFile(path);
-    return JSON.parse(content) as T;
   }
 
   realpath(path: string): string {

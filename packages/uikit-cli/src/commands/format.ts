@@ -1,8 +1,7 @@
 import path from 'node:path';
 import type { CommandExecutor } from '../command-executor.js';
 import type { FileSystemOps } from '../fs-utils.js';
-
-const OXFMT_VERSION = '0.47.0';
+import { shellEscape } from '../shell-utils.js';
 
 /**
  * Format command - forwards to oxfmt with config detection
@@ -32,9 +31,9 @@ export class FormatCommand {
       }
     }
 
-    const escapedArgs = modifiedArgs.map((arg) => this.shellEscape(arg)).join(' ');
+    const escapedArgs = modifiedArgs.map((arg) => shellEscape(arg)).join(' ');
     this.executor.exec(
-      `npm exec --yes --package oxfmt@${OXFMT_VERSION} -- oxfmt ${escapedArgs}`.trim(),
+      `npm exec -- oxfmt ${escapedArgs}`.trim(),
       { cwd: process.cwd() },
     );
   }
@@ -47,12 +46,5 @@ export class FormatCommand {
       }
     }
     return false;
-  }
-
-  private shellEscape(arg: string): string {
-    if (/^[a-zA-Z0-9_\-./:=]+$/.test(arg)) {
-      return arg;
-    }
-    return `'${arg.replace(/'/g, "'\\''")}'`;
   }
 }

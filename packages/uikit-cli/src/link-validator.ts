@@ -49,39 +49,6 @@ export class LinkValidator {
   }
 
   /**
-   * Get all currently linked packages in consumer
-   */
-  getLinkedPackages(consumerRoot: string): Map<string, string> {
-    const links = new Map<string, string>();
-    const nodeModules = path.join(consumerRoot, 'node_modules');
-
-    if (!this.fs.exists(nodeModules)) {
-      return links;
-    }
-
-    // Check @archon-research scope
-    const scopeDir = path.join(nodeModules, '@archon-research');
-    if (!this.fs.exists(scopeDir)) {
-      return links;
-    }
-
-    const packages = this.fs.readDir(scopeDir);
-    for (const pkg of packages) {
-      const pkgPath = path.join(scopeDir, pkg);
-      if (this.fs.isSymlink(pkgPath)) {
-        try {
-          const target = this.fs.realpath(pkgPath);
-          links.set(`@archon-research/${pkg}`, target);
-        } catch {
-          // Skip broken symlinks
-        }
-      }
-    }
-
-    return links;
-  }
-
-  /**
    * Validate a single symlink
    */
   validateSymlink(linkPath: string, expectedTarget: string): SymlinkStatus {
