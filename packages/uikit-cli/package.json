@@ -5,7 +5,7 @@
   "description": "CLI for managing local uikit package linking in consumer workspaces",
   "scripts": {
     "build": "tsgo -b && npm run wrapper",
-    "wrapper": "printf '#!/usr/bin/env sh\\n# Use --preserve-symlinks to fix ES module resolution with npm link\\n# Follow symlink to find the actual script location\\nif [ -L \"$0\" ]; then\\n  SCRIPT=\"$(readlink -f \"$0\" 2>/dev/null || readlink \"$0\")\"\\nelse\\n  SCRIPT=\"$0\"\\nfi\\nSCRIPT_DIR=\"$(cd \"$(dirname \"$SCRIPT\")\" && pwd)\"\\nexec node --preserve-symlinks \"$SCRIPT_DIR/cli.js\" \"$@\"\\n' > dist/cli.sh && chmod +x dist/cli.sh",
+    "wrapper": "./scripts/create-wrapper.sh",
     "clean": "rm -rf dist",
     "type:check": "tsgo -p tsconfig.json --noEmit",
     "prepare": "npm run build"
