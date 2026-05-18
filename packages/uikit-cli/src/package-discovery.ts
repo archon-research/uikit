@@ -109,11 +109,21 @@ export class PackageDiscovery {
     const patterns = this.getWorkspacePatterns(rootDir);
     const workspaces: WorkspaceInfo[] = [];
 
+    if (process.env.UIKIT_DEBUG) {
+      console.log('[DEBUG loadWorkspaces] rootDir:', rootDir, 'patterns:', patterns);
+    }
+
     for (const pattern of patterns) {
       const resolved = this.resolveWorkspacePattern(rootDir, pattern);
+      if (process.env.UIKIT_DEBUG) {
+        console.log('[DEBUG loadWorkspaces] pattern:', pattern, 'resolved to:', resolved);
+      }
       for (const dir of resolved) {
         const pkgPath = path.join(dir, 'package.json');
         if (!this.fs.exists(pkgPath)) {
+          if (process.env.UIKIT_DEBUG) {
+            console.log('[DEBUG loadWorkspaces] Skipping (no package.json):', dir);
+          }
           continue;
         }
 

@@ -156,9 +156,10 @@ function linkCliIntoConsumer(
   consumerRoot: string,
   executor: NpmCommandExecutor,
 ): void {
-  executor.exec('npm link "@archon-research/uikit-cli" --package-lock=false --save=false', {
-    cwd: consumerRoot,
-  });
+  executor.exec(
+    'npm link "@archon-research/uikit-cli" --package-lock=false --save=false --no-workspaces',
+    { cwd: consumerRoot },
+  );
 }
 
 /**
