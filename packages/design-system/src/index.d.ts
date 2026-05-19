@@ -9,7 +9,12 @@ export { SurfaceMessage } from './components/SurfaceMessage';
 export { ThemeToggle } from './components/ThemeToggle';
 export { Button } from './components/Button';
 export { SearchInput } from './components/SearchInput';
-export { StyledSelect } from './components/StyledSelect';
+export {
+	Select,
+	StyledSelect,
+	type SelectProps,
+	type StyledSelectProps,
+} from './components/StyledSelect';
 export { LoadingIndicator } from './components/LoadingIndicator';
 export { EmptyState } from './components/EmptyState';
 export { ErrorState } from './components/ErrorState';

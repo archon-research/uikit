@@ -1,9 +1,9 @@
-import { StyledSelect } from '@archon-research/design-system';
+import { Select } from '@archon-research/design-system';
 
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Molecules/Styled Select',
+  title: 'Molecules/Select',
 };
 
 const stackClassName = css({
@@ -33,12 +33,12 @@ export const Default = () => (
       <label className={labelClassName} htmlFor="project-status">
         Project status
       </label>
-      <StyledSelect defaultValue="active" id="project-status">
+      <Select defaultValue="active" id="project-status">
         <option value="draft">Draft</option>
         <option value="active">Active</option>
         <option value="paused">Paused</option>
         <option value="archived">Archived</option>
-      </StyledSelect>
+      </Select>
     </div>
   </div>
 );
@@ -49,11 +49,11 @@ export const Disabled = () => (
       <label className={labelClassName} htmlFor="release-channel">
         Release channel
       </label>
-      <StyledSelect defaultValue="stable" disabled id="release-channel">
+      <Select defaultValue="stable" disabled id="release-channel">
         <option value="stable">Stable</option>
         <option value="beta">Beta</option>
         <option value="canary">Canary</option>
-      </StyledSelect>
+      </Select>
     </div>
   </div>
 );
