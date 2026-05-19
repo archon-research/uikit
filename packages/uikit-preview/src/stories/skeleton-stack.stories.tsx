@@ -3,7 +3,7 @@ import { SkeletonStack } from '@archon-research/design-system';
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Components/Skeleton Stack',
+  title: 'Molecules/Skeleton Stack',
 };
 
 const stackClassName = css({

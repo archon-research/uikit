@@ -3,7 +3,7 @@ import { LoadingIndicator } from '@archon-research/design-system';
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Components/Loading Indicator',
+  title: 'Atoms/Loading Indicator',
 };
 
 const frameClassName = css({

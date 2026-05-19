@@ -3,7 +3,7 @@ import { StyledSelect } from '@archon-research/design-system';
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Components/Styled Select',
+  title: 'Molecules/Styled Select',
 };
 
 const stackClassName = css({

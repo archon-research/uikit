@@ -5,7 +5,7 @@ import { SearchInput } from '@archon-research/design-system';
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Components/Search Input',
+  title: 'Molecules/Search Input',
 };
 
 const stackClassName = css({

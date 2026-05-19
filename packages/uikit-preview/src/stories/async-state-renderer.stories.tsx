@@ -8,7 +8,7 @@ import {
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Components/Async State Renderer',
+  title: 'Organisms/Async State Renderer',
 };
 
 const wrapperClassName = css({

@@ -3,7 +3,7 @@ import { ErrorState } from '@archon-research/design-system';
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Components/Error State',
+  title: 'Organisms/Error State',
 };
 
 const wrapperClassName = css({

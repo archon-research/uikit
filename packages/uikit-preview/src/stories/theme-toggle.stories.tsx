@@ -3,7 +3,7 @@ import { ThemeProvider, ThemeToggle } from '@archon-research/design-system';
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Components/Theme Toggle',
+  title: 'Molecules/Theme Toggle',
 };
 
 const storyFrameClassName = css({

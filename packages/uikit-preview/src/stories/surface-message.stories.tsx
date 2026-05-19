@@ -3,7 +3,7 @@ import { SurfaceMessage } from '@archon-research/design-system';
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Components/Surface Message',
+  title: 'Molecules/Surface Message',
 };
 
 const stackClassName = css({

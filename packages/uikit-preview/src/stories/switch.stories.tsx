@@ -4,7 +4,7 @@ import { css } from '../../styled-system/css';
 import { toggleSwitch } from '../../styled-system/recipes';
 
 export default {
-  title: 'Components/Switch',
+  title: 'Atoms/Switch',
 };
 
 const frameClassName = css({

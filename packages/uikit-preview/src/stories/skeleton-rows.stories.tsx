@@ -3,7 +3,7 @@ import { SkeletonRows } from '@archon-research/design-system';
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Components/Skeleton Rows',
+  title: 'Molecules/Skeleton Rows',
 };
 
 const frameClassName = css({

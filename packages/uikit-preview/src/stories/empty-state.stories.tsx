@@ -3,7 +3,7 @@ import { EmptyState } from '@archon-research/design-system';
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Components/Empty State',
+  title: 'Organisms/Empty State',
 };
 
 const wrapperClassName = css({

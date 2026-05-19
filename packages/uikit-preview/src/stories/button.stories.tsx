@@ -3,7 +3,7 @@ import { Button } from '@archon-research/design-system';
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Components/Button',
+  title: 'Atoms/Button',
 };
 
 const frameClassName = css({

@@ -3,7 +3,7 @@ import { ResizeHandle } from '@archon-research/design-system';
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Components/Resize Handle',
+  title: 'Atoms/Resize Handle',
 };
 
 const canvasClassName = css({

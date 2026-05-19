@@ -42,7 +42,7 @@ const columns = [
 ];
 
 export default {
-  title: 'Components/Data Table',
+  title: 'Organisms/Data Table',
 };
 
 const wrapperClassName = css({

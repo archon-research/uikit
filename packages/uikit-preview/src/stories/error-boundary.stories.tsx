@@ -3,7 +3,7 @@ import { ErrorBoundary } from '@archon-research/design-system';
 import { css } from '../../styled-system/css';
 
 export default {
-  title: 'Components/Error Boundary',
+  title: 'Organisms/Error Boundary',
 };
 
 const wrapperClassName = css({
