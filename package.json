@@ -19,6 +19,7 @@
     "format:check": "npm run format:check --workspaces --if-present",
     "preview:build": "npm run build --workspace @archon-research/uikit-preview",
     "preview:dev": "npm run dev --workspace @archon-research/uikit-preview",
+    "migration:audit-imports": "rg -n -g '*.{ts,tsx,js,jsx,mjs,cjs}' --glob '!packages/design-system/**' --glob '!packages/oxlint-config/**' --glob '!**/dist/**' --glob '!**/node_modules/**' \"@base-ui/react|@ark-ui/react\" packages",
     "uikit:register-links": "uikit-cli register",
     "install-hooks": "lefthook install",
     "hooks:pre-commit": "lefthook run pre-commit",
