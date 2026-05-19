@@ -33,7 +33,7 @@ export { ErrorState } from './components/ErrorState';
 export { ErrorBoundary } from './components/ErrorBoundary';
 export { AsyncStateRenderer } from './components/AsyncStateRenderer';
 export * from './components/data-table';
-export { Tooltip } from '@base-ui/react/tooltip';
+export { Tooltip } from '@ark-ui/react/tooltip';
 export type { CellContext, ColumnDef, SortingState } from '@tanstack/react-table';
 export { Tabs } from '@ark-ui/react/tabs';
 export { Toggle } from '@ark-ui/react/toggle';

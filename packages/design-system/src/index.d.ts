@@ -36,7 +36,7 @@ export { DataTable } from './components/data-table';
 export { useDataTable, useUrlSyncedTableStateAdapter } from './components/data-table';
 export * from './components/data-table/types';
 export * from './components/data-table/utils';
-export { Tooltip } from '@base-ui/react/tooltip';
+export { Tooltip } from '@ark-ui/react/tooltip';
 export type { CellContext, ColumnDef, SortingState } from '@tanstack/react-table';
 export { Tabs } from '@ark-ui/react/tabs';
 export { Toggle } from '@ark-ui/react/toggle';
