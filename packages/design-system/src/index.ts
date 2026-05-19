@@ -35,5 +35,7 @@ export { AsyncStateRenderer } from './components/AsyncStateRenderer';
 export * from './components/data-table';
 export { Tooltip } from '@base-ui/react/tooltip';
 export type { CellContext, ColumnDef, SortingState } from '@tanstack/react-table';
-export { Tabs, Toggle, ToggleGroup } from '@base-ui/react';
+export { Tabs } from '@ark-ui/react/tabs';
+export { Toggle } from '@ark-ui/react/toggle';
+export { ToggleGroup } from '@ark-ui/react/toggle-group';
 export { Switch } from '@ark-ui/react/switch';
