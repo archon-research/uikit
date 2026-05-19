@@ -5,7 +5,19 @@ export { useTheme, type ThemeContextValue, type ThemeMode } from './theme/useThe
 export { ResizeHandle } from './components/ResizeHandle';
 export { SkeletonRows } from './components/SkeletonRows';
 export { SkeletonStack } from './components/SkeletonStack';
-export { SurfaceMessage } from './components/SurfaceMessage';
+export {
+	SurfaceMessage,
+	SurfaceMessageRoot,
+	SurfaceMessageTitle,
+	SurfaceMessageBody,
+	SurfaceMessageActions,
+	type SurfaceMessageProps,
+	type SurfaceMessageRootProps,
+	type SurfaceMessageTitleProps,
+	type SurfaceMessageBodyProps,
+	type SurfaceMessageActionsProps,
+	type SurfaceMessageTone,
+} from './components/SurfaceMessage';
 export { ThemeToggle } from './components/ThemeToggle';
 export { Button } from './components/Button';
 export { SearchInput } from './components/SearchInput';
@@ -24,4 +36,4 @@ export * from './components/data-table';
 export { Tooltip } from '@base-ui/react/tooltip';
 export type { CellContext, ColumnDef, SortingState } from '@tanstack/react-table';
 export { Tabs, Toggle, ToggleGroup } from '@base-ui/react';
-export { Switch } from '@base-ui/react/switch';
+export { Switch } from '@ark-ui/react/switch';
