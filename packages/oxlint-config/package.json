@@ -8,7 +8,8 @@
   "files": [
     "dist",
     "base.ts",
-    "react.ts"
+    "react.ts",
+    "design-system-boundaries.ts"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -24,6 +25,10 @@
     "./react": {
       "types": "./dist/react.d.ts",
       "default": "./dist/react.js"
+    },
+    "./design-system-boundaries": {
+      "types": "./dist/design-system-boundaries.d.ts",
+      "default": "./dist/design-system-boundaries.js"
     }
   }
 }

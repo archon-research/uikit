@@ -34,7 +34,19 @@ export default defineConfig({
 });
 ```
 
+### React projects with design-system import governance
+
+```typescript
+import boundariesConfig from '@archon-research/oxlint-config/design-system-boundaries';
+import { defineConfig } from 'oxlint';
+
+export default defineConfig({
+  ...boundariesConfig,
+});
+```
+
 ## Included presets
 
 - **base** (default) - General linting rules
 - **react** - Additional rules for React projects
+- **design-system-boundaries** - React rules plus warnings for direct `@base-ui/react` and `@ark-ui/react` imports
