@@ -1,6 +1,12 @@
-import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
-
-import { ResizeHandle } from '../components/ResizeHandle';
+import { Splitter } from '@ark-ui/react/splitter';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 
 type SidebarLayoutProps = {
   sidebar: ReactNode;
@@ -17,11 +23,6 @@ type SidebarLayoutProps = {
   bottomPanelStorageKey?: string;
 };
 
-type DragState = {
-  startPosition: number;
-  startSize: number;
-};
-
 const DEFAULT_SIDEBAR_WIDTH = 320;
 const DEFAULT_MIN_SIDEBAR_WIDTH = 200;
 const DEFAULT_MAX_SIDEBAR_WIDTH = 600;
@@ -29,22 +30,29 @@ const DEFAULT_MAX_SIDEBAR_WIDTH = 600;
 const DEFAULT_BOTTOM_HEIGHT = 280;
 const DEFAULT_MIN_BOTTOM_HEIGHT = 120;
 const DEFAULT_MAX_BOTTOM_HEIGHT = 600;
+const TOP_BAR_MIN_HEIGHT = 64;
 
 const SIDEBAR_STORAGE_KEY = 'sidebar-width';
 const BOTTOM_STORAGE_KEY = 'bottom-panel-height';
 
 const rootStyle: CSSProperties = {
-  display: 'flex',
   width: '100%',
   height: '100vh',
   minWidth: 0,
   overflow: 'hidden',
 };
 
+const horizontalSplitterStyle: CSSProperties = {
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  minWidth: 0,
+  minHeight: 0,
+};
+
 const sidebarBaseStyle: CSSProperties = {
-  position: 'relative',
-  flexShrink: 0,
-  height: '100vh',
+  minWidth: 0,
+  minHeight: 0,
   overflow: 'auto',
   borderRight: '1px solid var(--colors-border-subtle, #d0d5dd)',
   background: 'var(--colors-surface-default, #ffffff)',
@@ -52,8 +60,8 @@ const sidebarBaseStyle: CSSProperties = {
 
 const mainStyle: CSSProperties = {
   minWidth: 0,
-  flex: 1,
-  height: '100vh',
+  minHeight: 0,
+  height: '100%',
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',
@@ -66,7 +74,7 @@ const topBarStyle: CSSProperties = {
   display: 'flex',
   justifyContent: 'flex-end',
   alignItems: 'center',
-  minHeight: 64,
+  minHeight: TOP_BAR_MIN_HEIGHT,
 };
 
 const contentStyle: CSSProperties = {
@@ -80,9 +88,16 @@ const mainColumnStyle: CSSProperties = {
   minWidth: 0,
   minHeight: 0,
   flex: 1,
+  overflow: 'hidden',
+};
+
+const verticalSplitterStyle: CSSProperties = {
+  width: '100%',
+  height: '100%',
   display: 'flex',
   flexDirection: 'column',
-  overflow: 'hidden',
+  minWidth: 0,
+  minHeight: 0,
 };
 
 const bottomPanelStyle: CSSProperties = {
@@ -90,6 +105,50 @@ const bottomPanelStyle: CSSProperties = {
   borderTop: '1px solid var(--colors-border-subtle, #d0d5dd)',
   overflow: 'auto',
   minHeight: 0,
+};
+
+const verticalResizeTriggerStyle: CSSProperties = {
+  position: 'relative',
+  width: 8,
+  marginLeft: -4,
+  marginRight: -4,
+  background: 'transparent',
+  border: 'none',
+  padding: 0,
+  cursor: 'col-resize',
+  zIndex: 1,
+};
+
+const horizontalResizeTriggerStyle: CSSProperties = {
+  position: 'relative',
+  height: 8,
+  marginTop: -4,
+  marginBottom: -4,
+  background: 'transparent',
+  border: 'none',
+  padding: 0,
+  cursor: 'row-resize',
+  zIndex: 1,
+};
+
+const verticalResizeIndicatorStyle: CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  left: '50%',
+  width: 1,
+  transform: 'translateX(-50%)',
+  background: 'var(--colors-border-subtle, #d0d5dd)',
+};
+
+const horizontalResizeIndicatorStyle: CSSProperties = {
+  position: 'absolute',
+  left: 0,
+  right: 0,
+  top: '50%',
+  height: 1,
+  transform: 'translateY(-50%)',
+  background: 'var(--colors-border-subtle, #d0d5dd)',
 };
 
 function isBrowser(): boolean {
@@ -118,6 +177,18 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
+function toPercent(value: number, total: number): number {
+  if (total <= 0) {
+    return 0;
+  }
+
+  return (value / total) * 100;
+}
+
+function toPixels(value: number, total: number): number {
+  return (value / 100) * total;
+}
+
 export function SidebarLayout({
   sidebar,
   main,
@@ -132,6 +203,9 @@ export function SidebarLayout({
   sidebarStorageKey = SIDEBAR_STORAGE_KEY,
   bottomPanelStorageKey = BOTTOM_STORAGE_KEY,
 }: SidebarLayoutProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const mainColumnRef = useRef<HTMLDivElement>(null);
+
   const [sidebarWidth, setSidebarWidth] = useState(() =>
     clamp(
       readNumberFromStorage(sidebarStorageKey, defaultSidebarWidth),
@@ -148,139 +222,204 @@ export function SidebarLayout({
     ),
   );
 
-  const [sidebarDrag, setSidebarDrag] = useState<DragState | null>(null);
-  const [bottomDrag, setBottomDrag] = useState<DragState | null>(null);
+  const [rootWidth, setRootWidth] = useState(() =>
+    isBrowser() ? window.innerWidth : 1280,
+  );
+
+  const [mainColumnHeight, setMainColumnHeight] = useState(() =>
+    isBrowser() ? window.innerHeight : 720,
+  );
 
   useEffect(() => {
     if (!isBrowser()) {
       return;
     }
 
-    if (sidebarDrag === null) {
-      return;
+    const updateRootWidth = () => {
+      const measured = rootRef.current?.clientWidth ?? 0;
+      setRootWidth(measured > 0 ? measured : window.innerWidth);
+    };
+
+    updateRootWidth();
+
+    const resizeObserver =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(updateRootWidth)
+        : null;
+
+    if (resizeObserver && rootRef.current) {
+      resizeObserver.observe(rootRef.current);
     }
 
-    const handleMouseMove = (event: globalThis.MouseEvent) => {
-      const delta = event.clientX - sidebarDrag.startPosition;
-      const next = clamp(
-        sidebarDrag.startSize + delta,
-        minSidebarWidth,
-        maxSidebarWidth,
-      );
-      setSidebarWidth(next);
-    };
-
-    const handleMouseUp = () => {
-      window.localStorage.setItem(sidebarStorageKey, String(sidebarWidth));
-      setSidebarDrag(null);
-    };
-
-    document.body.style.userSelect = 'none';
-    document.body.style.cursor = 'col-resize';
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp, { once: true });
+    window.addEventListener('resize', updateRootWidth);
 
     return () => {
-      document.body.style.userSelect = '';
-      document.body.style.cursor = '';
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('resize', updateRootWidth);
+      resizeObserver?.disconnect();
     };
-  }, [sidebarDrag, maxSidebarWidth, minSidebarWidth, sidebarStorageKey, sidebarWidth]);
+  }, []);
 
   useEffect(() => {
     if (!isBrowser()) {
       return;
     }
 
-    if (bottomDrag === null) {
-      return;
+    const updateMainColumnHeight = () => {
+      const measured = mainColumnRef.current?.clientHeight ?? 0;
+      const fallback = topBar
+        ? window.innerHeight - TOP_BAR_MIN_HEIGHT
+        : window.innerHeight;
+      setMainColumnHeight(
+        measured > 0 ? measured : fallback,
+      );
+    };
+
+    updateMainColumnHeight();
+
+    const resizeObserver =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(updateMainColumnHeight)
+        : null;
+
+    if (resizeObserver && mainColumnRef.current) {
+      resizeObserver.observe(mainColumnRef.current);
     }
 
-    const handleMouseMove = (event: globalThis.MouseEvent) => {
-      const delta = bottomDrag.startPosition - event.clientY;
-      const next = clamp(
-        bottomDrag.startSize + delta,
-        minBottomPanelHeight,
-        maxBottomPanelHeight,
-      );
-      setBottomPanelHeight(next);
-    };
-
-    const handleMouseUp = () => {
-      window.localStorage.setItem(bottomPanelStorageKey, String(bottomPanelHeight));
-      setBottomDrag(null);
-    };
-
-    document.body.style.userSelect = 'none';
-    document.body.style.cursor = 'row-resize';
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp, { once: true });
+    window.addEventListener('resize', updateMainColumnHeight);
 
     return () => {
-      document.body.style.userSelect = '';
-      document.body.style.cursor = '';
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('resize', updateMainColumnHeight);
+      resizeObserver?.disconnect();
     };
-  }, [
-    bottomDrag,
-    maxBottomPanelHeight,
-    minBottomPanelHeight,
-    bottomPanelStorageKey,
+  }, [topBar]);
+
+  const safeRootWidth = Math.max(rootWidth, 1);
+  const safeMainColumnHeight = Math.max(mainColumnHeight, 1);
+
+  const sidebarWidthClamped = clamp(sidebarWidth, minSidebarWidth, maxSidebarWidth);
+  const bottomPanelHeightClamped = clamp(
     bottomPanelHeight,
-  ]);
+    minBottomPanelHeight,
+    maxBottomPanelHeight,
+  );
 
-  const startSidebarDrag = (event: MouseEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setSidebarDrag({
-      startPosition: event.clientX,
-      startSize: sidebarWidth,
-    });
-  };
+  const sidebarPanelMin = toPercent(minSidebarWidth, safeRootWidth);
+  const sidebarPanelMax = toPercent(maxSidebarWidth, safeRootWidth);
+  const sidebarPanelSize = toPercent(sidebarWidthClamped, safeRootWidth);
 
-  const startBottomDrag = (event: MouseEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setBottomDrag({
-      startPosition: event.clientY,
-      startSize: bottomPanelHeight,
-    });
-  };
+  const bottomPanelMin = toPercent(minBottomPanelHeight, safeMainColumnHeight);
+  const bottomPanelMax = toPercent(maxBottomPanelHeight, safeMainColumnHeight);
+  const bottomPanelSize = toPercent(bottomPanelHeightClamped, safeMainColumnHeight);
+
+  const horizontalPanels = useMemo(
+    () => [
+      {
+        id: 'sidebar',
+        minSize: sidebarPanelMin,
+        maxSize: sidebarPanelMax,
+      },
+      {
+        id: 'main',
+        minSize: Math.max(0, 100 - sidebarPanelMax),
+        maxSize: Math.max(0, 100 - sidebarPanelMin),
+      },
+    ],
+    [sidebarPanelMax, sidebarPanelMin],
+  );
 
   return (
-    <div style={rootStyle}>
-      <aside style={{ ...sidebarBaseStyle, width: sidebarWidth }}>
-        {sidebar}
-        <ResizeHandle
-          axis="vertical"
-          label="Resize sidebar"
-          onMouseDown={startSidebarDrag}
-        />
-      </aside>
+    <div ref={rootRef} style={rootStyle}>
+      <Splitter.Root
+        orientation="horizontal"
+        panels={horizontalPanels}
+        size={[sidebarPanelSize, 100 - sidebarPanelSize]}
+        style={horizontalSplitterStyle}
+        onResizeEnd={({ size }) => {
+          const nextSidebar = clamp(
+            toPixels(size[0] ?? sidebarPanelSize, safeRootWidth),
+            minSidebarWidth,
+            maxSidebarWidth,
+          );
 
-      <main style={mainStyle}>
-        {topBar ? <header style={topBarStyle}>{topBar}</header> : null}
+          setSidebarWidth(nextSidebar);
+          if (isBrowser()) {
+            window.localStorage.setItem(sidebarStorageKey, String(nextSidebar));
+          }
+        }}
+      >
+        <Splitter.Panel id="sidebar" style={sidebarBaseStyle}>
+          {sidebar}
+        </Splitter.Panel>
 
-        <div style={mainColumnStyle}>
-          <div style={contentStyle}>{main}</div>
+        <Splitter.ResizeTrigger
+          id="sidebar:main"
+          aria-label="Resize sidebar"
+          style={verticalResizeTriggerStyle}
+        >
+          <Splitter.ResizeTriggerIndicator style={verticalResizeIndicatorStyle} />
+        </Splitter.ResizeTrigger>
 
-          {bottomPanel ? (
-            <>
-              <ResizeHandle
-                axis="horizontal"
-                label="Resize bottom panel"
-                onMouseDown={startBottomDrag}
-                placement="block"
-              />
-              <section style={{ ...bottomPanelStyle, height: bottomPanelHeight }}>
-                {bottomPanel}
-              </section>
-            </>
-          ) : null}
-        </div>
-      </main>
+        <Splitter.Panel id="main" style={mainStyle}>
+          {topBar ? <header style={topBarStyle}>{topBar}</header> : null}
+
+          <div ref={mainColumnRef} style={mainColumnStyle}>
+            {bottomPanel ? (
+              <Splitter.Root
+                orientation="vertical"
+                panels={[
+                  {
+                    id: 'content',
+                    minSize: Math.max(0, 100 - bottomPanelMax),
+                    maxSize: Math.max(0, 100 - bottomPanelMin),
+                    order: 0,
+                  },
+                  {
+                    id: 'bottom',
+                    minSize: bottomPanelMin,
+                    maxSize: bottomPanelMax,
+                    order: 1,
+                  },
+                ]}
+                size={[100 - bottomPanelSize, bottomPanelSize]}
+                style={verticalSplitterStyle}
+                onResizeEnd={({ size }) => {
+                  const nextBottom = clamp(
+                    toPixels(size[1] ?? bottomPanelSize, safeMainColumnHeight),
+                    minBottomPanelHeight,
+                    maxBottomPanelHeight,
+                  );
+
+                  setBottomPanelHeight(nextBottom);
+                  if (isBrowser()) {
+                    window.localStorage.setItem(
+                      bottomPanelStorageKey,
+                      String(nextBottom),
+                    );
+                  }
+                }}
+              >
+                <Splitter.Panel id="content" style={contentStyle}>
+                  {main}
+                </Splitter.Panel>
+
+                <Splitter.ResizeTrigger
+                  id="content:bottom"
+                  aria-label="Resize bottom panel"
+                  style={horizontalResizeTriggerStyle}
+                >
+                  <Splitter.ResizeTriggerIndicator style={horizontalResizeIndicatorStyle} />
+                </Splitter.ResizeTrigger>
+
+                <Splitter.Panel id="bottom" style={bottomPanelStyle}>
+                  {bottomPanel}
+                </Splitter.Panel>
+              </Splitter.Root>
+            ) : (
+              <div style={contentStyle}>{main}</div>
+            )}
+          </div>
+        </Splitter.Panel>
+      </Splitter.Root>
     </div>
   );
 }
