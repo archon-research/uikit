@@ -1,9 +1,7 @@
-const baseConfig = {
+export default {
   plugins: ['typescript'],
   categories: {
     correctness: 'warn',
     suspicious: 'warn',
   },
 };
-
-export default baseConfig;

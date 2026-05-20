@@ -1,5 +1,12 @@
-import { Splitter } from "@ark-ui/react/splitter";
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Splitter } from '@ark-ui/react/splitter';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 
 type SidebarLayoutProps = {
   sidebar: ReactNode;
@@ -25,20 +32,20 @@ const DEFAULT_MIN_BOTTOM_HEIGHT = 120;
 const DEFAULT_MAX_BOTTOM_HEIGHT = 600;
 const TOP_BAR_MIN_HEIGHT = 64;
 
-const SIDEBAR_STORAGE_KEY = "sidebar-width";
-const BOTTOM_STORAGE_KEY = "bottom-panel-height";
+const SIDEBAR_STORAGE_KEY = 'sidebar-width';
+const BOTTOM_STORAGE_KEY = 'bottom-panel-height';
 
 const rootStyle: CSSProperties = {
-  width: "100%",
-  height: "100vh",
+  width: '100%',
+  height: '100vh',
   minWidth: 0,
-  overflow: "hidden",
+  overflow: 'hidden',
 };
 
 const horizontalSplitterStyle: CSSProperties = {
-  width: "100%",
-  height: "100%",
-  display: "flex",
+  width: '100%',
+  height: '100%',
+  display: 'flex',
   minWidth: 0,
   minHeight: 0,
 };
@@ -46,27 +53,27 @@ const horizontalSplitterStyle: CSSProperties = {
 const sidebarBaseStyle: CSSProperties = {
   minWidth: 0,
   minHeight: 0,
-  overflow: "auto",
-  borderRight: "1px solid var(--colors-border-subtle, #d0d5dd)",
-  background: "var(--colors-surface-default, #ffffff)",
+  overflow: 'auto',
+  borderRight: '1px solid var(--colors-border-subtle, #d0d5dd)',
+  background: 'var(--colors-surface-default, #ffffff)',
 };
 
 const mainStyle: CSSProperties = {
   minWidth: 0,
   minHeight: 0,
-  height: "100%",
-  overflow: "hidden",
-  display: "flex",
-  flexDirection: "column",
+  height: '100%',
+  overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
 };
 
 const topBarStyle: CSSProperties = {
-  padding: "12px 16px",
-  borderBottom: "1px solid var(--colors-border-subtle, #d0d5dd)",
-  background: "var(--colors-surface-default, #ffffff)",
-  display: "flex",
-  justifyContent: "flex-end",
-  alignItems: "center",
+  padding: '12px 16px',
+  borderBottom: '1px solid var(--colors-border-subtle, #d0d5dd)',
+  background: 'var(--colors-surface-default, #ffffff)',
+  display: 'flex',
+  justifyContent: 'flex-end',
+  alignItems: 'center',
   minHeight: TOP_BAR_MIN_HEIGHT,
 };
 
@@ -74,78 +81,78 @@ const contentStyle: CSSProperties = {
   minWidth: 0,
   minHeight: 0,
   flex: 1,
-  overflow: "auto",
+  overflow: 'auto',
 };
 
 const mainColumnStyle: CSSProperties = {
   minWidth: 0,
   minHeight: 0,
   flex: 1,
-  overflow: "hidden",
+  overflow: 'hidden',
 };
 
 const verticalSplitterStyle: CSSProperties = {
-  width: "100%",
-  height: "100%",
-  display: "flex",
-  flexDirection: "column",
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
   minWidth: 0,
   minHeight: 0,
 };
 
 const bottomPanelStyle: CSSProperties = {
-  background: "var(--colors-surface-default, #ffffff)",
-  borderTop: "1px solid var(--colors-border-subtle, #d0d5dd)",
-  overflow: "auto",
+  background: 'var(--colors-surface-default, #ffffff)',
+  borderTop: '1px solid var(--colors-border-subtle, #d0d5dd)',
+  overflow: 'auto',
   minHeight: 0,
 };
 
 const verticalResizeTriggerStyle: CSSProperties = {
-  position: "relative",
+  position: 'relative',
   width: 8,
   marginLeft: -4,
   marginRight: -4,
-  background: "transparent",
-  border: "none",
+  background: 'transparent',
+  border: 'none',
   padding: 0,
-  cursor: "col-resize",
+  cursor: 'col-resize',
   zIndex: 1,
 };
 
 const horizontalResizeTriggerStyle: CSSProperties = {
-  position: "relative",
+  position: 'relative',
   height: 8,
   marginTop: -4,
   marginBottom: -4,
-  background: "transparent",
-  border: "none",
+  background: 'transparent',
+  border: 'none',
   padding: 0,
-  cursor: "row-resize",
+  cursor: 'row-resize',
   zIndex: 1,
 };
 
 const verticalResizeIndicatorStyle: CSSProperties = {
-  position: "absolute",
+  position: 'absolute',
   top: 0,
   bottom: 0,
-  left: "50%",
+  left: '50%',
   width: 1,
-  transform: "translateX(-50%)",
-  background: "var(--colors-border-subtle, #d0d5dd)",
+  transform: 'translateX(-50%)',
+  background: 'var(--colors-border-subtle, #d0d5dd)',
 };
 
 const horizontalResizeIndicatorStyle: CSSProperties = {
-  position: "absolute",
+  position: 'absolute',
   left: 0,
   right: 0,
-  top: "50%",
+  top: '50%',
   height: 1,
-  transform: "translateY(-50%)",
-  background: "var(--colors-border-subtle, #d0d5dd)",
+  transform: 'translateY(-50%)',
+  background: 'var(--colors-border-subtle, #d0d5dd)',
 };
 
 function isBrowser(): boolean {
-  return typeof window !== "undefined";
+  return typeof window !== 'undefined';
 }
 
 function readNumberFromStorage(key: string, fallback: number): number {
@@ -215,7 +222,9 @@ export function SidebarLayout({
     ),
   );
 
-  const [rootWidth, setRootWidth] = useState(() => (isBrowser() ? window.innerWidth : 1280));
+  const [rootWidth, setRootWidth] = useState(() =>
+    isBrowser() ? window.innerWidth : 1280,
+  );
 
   const [mainColumnHeight, setMainColumnHeight] = useState(() =>
     isBrowser() ? window.innerHeight : 720,
@@ -234,16 +243,18 @@ export function SidebarLayout({
     updateRootWidth();
 
     const resizeObserver =
-      typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateRootWidth) : null;
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(updateRootWidth)
+        : null;
 
     if (resizeObserver && rootRef.current) {
       resizeObserver.observe(rootRef.current);
     }
 
-    window.addEventListener("resize", updateRootWidth);
+    window.addEventListener('resize', updateRootWidth);
 
     return () => {
-      window.removeEventListener("resize", updateRootWidth);
+      window.removeEventListener('resize', updateRootWidth);
       resizeObserver?.disconnect();
     };
   }, []);
@@ -255,23 +266,27 @@ export function SidebarLayout({
 
     const updateMainColumnHeight = () => {
       const measured = mainColumnRef.current?.clientHeight ?? 0;
-      const fallback = topBar ? window.innerHeight - TOP_BAR_MIN_HEIGHT : window.innerHeight;
+      const fallback = topBar
+        ? window.innerHeight - TOP_BAR_MIN_HEIGHT
+        : window.innerHeight;
       setMainColumnHeight(measured > 0 ? measured : fallback);
     };
 
     updateMainColumnHeight();
 
     const resizeObserver =
-      typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateMainColumnHeight) : null;
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(updateMainColumnHeight)
+        : null;
 
     if (resizeObserver && mainColumnRef.current) {
       resizeObserver.observe(mainColumnRef.current);
     }
 
-    window.addEventListener("resize", updateMainColumnHeight);
+    window.addEventListener('resize', updateMainColumnHeight);
 
     return () => {
-      window.removeEventListener("resize", updateMainColumnHeight);
+      window.removeEventListener('resize', updateMainColumnHeight);
       resizeObserver?.disconnect();
     };
   }, [topBar]);
@@ -279,7 +294,11 @@ export function SidebarLayout({
   const safeRootWidth = Math.max(rootWidth, 1);
   const safeMainColumnHeight = Math.max(mainColumnHeight, 1);
 
-  const sidebarWidthClamped = clamp(sidebarWidth, minSidebarWidth, maxSidebarWidth);
+  const sidebarWidthClamped = clamp(
+    sidebarWidth,
+    minSidebarWidth,
+    maxSidebarWidth,
+  );
   const bottomPanelHeightClamped = clamp(
     bottomPanelHeight,
     minBottomPanelHeight,
@@ -292,17 +311,20 @@ export function SidebarLayout({
 
   const bottomPanelMin = toPercent(minBottomPanelHeight, safeMainColumnHeight);
   const bottomPanelMax = toPercent(maxBottomPanelHeight, safeMainColumnHeight);
-  const bottomPanelSize = toPercent(bottomPanelHeightClamped, safeMainColumnHeight);
+  const bottomPanelSize = toPercent(
+    bottomPanelHeightClamped,
+    safeMainColumnHeight,
+  );
 
   const horizontalPanels = useMemo(
     () => [
       {
-        id: "sidebar",
+        id: 'sidebar',
         minSize: sidebarPanelMin,
         maxSize: sidebarPanelMax,
       },
       {
-        id: "main",
+        id: 'main',
         minSize: Math.max(0, 100 - sidebarPanelMax),
         maxSize: Math.max(0, 100 - sidebarPanelMin),
       },
@@ -360,13 +382,13 @@ export function SidebarLayout({
                 orientation="vertical"
                 panels={[
                   {
-                    id: "content",
+                    id: 'content',
                     minSize: Math.max(0, 100 - bottomPanelMax),
                     maxSize: Math.max(0, 100 - bottomPanelMin),
                     order: 0,
                   },
                   {
-                    id: "bottom",
+                    id: 'bottom',
                     minSize: bottomPanelMin,
                     maxSize: bottomPanelMax,
                     order: 1,
@@ -383,7 +405,10 @@ export function SidebarLayout({
 
                   setBottomPanelHeight(nextBottom);
                   if (isBrowser()) {
-                    window.localStorage.setItem(bottomPanelStorageKey, String(nextBottom));
+                    window.localStorage.setItem(
+                      bottomPanelStorageKey,
+                      String(nextBottom),
+                    );
                   }
                 }}
               >

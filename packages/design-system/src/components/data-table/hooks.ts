@@ -8,11 +8,19 @@ import {
   type OnChangeFn,
   type SortingState,
   type Table,
-} from "@tanstack/react-table";
-import * as React from "react";
+} from '@tanstack/react-table';
+import * as React from 'react';
 
-import type { DataTableConfig, UrlSyncedTableStateAdapter, UseUrlSyncedTableReturn } from "./types";
-import { deserializeSorting, serializeSorting, validateSortingState } from "./utils";
+import type {
+  DataTableConfig,
+  UrlSyncedTableStateAdapter,
+  UseUrlSyncedTableReturn,
+} from './types';
+import {
+  deserializeSorting,
+  serializeSorting,
+  validateSortingState,
+} from './utils';
 
 export function useDataTable<T>(
   data: T[],
@@ -22,15 +30,18 @@ export function useDataTable<T>(
   const [internalSorting, setInternalSorting] = React.useState<SortingState>(
     config.defaultSorting ?? [],
   );
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [internalGlobalFilter, setInternalGlobalFilter] = React.useState("");
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    [],
+  );
+  const [internalGlobalFilter, setInternalGlobalFilter] = React.useState('');
 
   const sorting = config.sorting ?? internalSorting;
   const globalFilter = config.globalFilter ?? internalGlobalFilter;
 
   const handleSortingChange: OnChangeFn<SortingState> =
     config.onSortingChange ?? setInternalSorting;
-  const handleGlobalFilterChange = config.onGlobalFilterChange ?? setInternalGlobalFilter;
+  const handleGlobalFilterChange =
+    config.onGlobalFilterChange ?? setInternalGlobalFilter;
 
   return useReactTable({
     data,
@@ -46,7 +57,7 @@ export function useDataTable<T>(
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    globalFilterFn: "includesString",
+    globalFilterFn: 'includesString',
     enableSorting: config.enableSorting,
     enableGlobalFilter: config.enableSearch,
   });
@@ -59,12 +70,12 @@ export function useUrlSyncedTableStateAdapter(
     return validateSortingState(deserializeSorting(adapter.sortParam));
   }, [adapter.sortParam]);
 
-  const globalFilter = adapter.searchParam ?? "";
+  const globalFilter = adapter.searchParam ?? '';
 
   const handleSetSorting = React.useCallback(
     (nextSorting: SortingState | ((old: SortingState) => SortingState)) => {
       const resolvedSorting =
-        typeof nextSorting === "function" ? nextSorting(sorting) : nextSorting;
+        typeof nextSorting === 'function' ? nextSorting(sorting) : nextSorting;
       const serializedSorting = serializeSorting(resolvedSorting);
       adapter.setSortParam(serializedSorting || null);
     },

@@ -2,7 +2,7 @@ const formatConfig = {
   printWidth: 80,
   singleQuote: true,
   semi: true,
-  trailingComma: "all",
+  trailingComma: 'all',
   sortImports: {
     enabled: true,
   },

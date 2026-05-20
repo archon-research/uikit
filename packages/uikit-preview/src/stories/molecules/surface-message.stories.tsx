@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 import {
   Button,
   SurfaceMessageActions,
@@ -7,21 +5,22 @@ import {
   SurfaceMessageRoot,
   SurfaceMessageTitle,
   type SurfaceMessageTone,
-} from "@archon-research/design-system";
+} from '@archon-research/design-system';
+import type { ReactNode } from 'react';
 
-import { css } from "../../../styled-system/css";
-import { surfaceMessage } from "../../../styled-system/recipes";
+import { css } from '../../../styled-system/css';
+import { surfaceMessage } from '../../../styled-system/recipes';
 
 export default {
-  title: "Molecules/Surface Message",
+  title: 'Molecules/Surface Message',
 };
 
 const stackClassName = css({
-  display: "grid",
-  gap: "4",
-  p: "6",
-  maxWidth: "2xl",
-  fontFamily: "sans",
+  display: 'grid',
+  gap: '4',
+  p: '6',
+  maxWidth: '2xl',
+  fontFamily: 'sans',
 });
 
 type StoryMessageProps = {
@@ -31,15 +30,24 @@ type StoryMessageProps = {
   actions?: ReactNode;
 };
 
-const renderMessage = ({ title, body, tone = "default", actions }: StoryMessageProps) => {
+const renderMessage = ({
+  title,
+  body,
+  tone = 'default',
+  actions,
+}: StoryMessageProps) => {
   const classes = surfaceMessage({ tone });
 
   return (
     <SurfaceMessageRoot tone={tone} className={classes.root}>
-      <SurfaceMessageTitle className={classes.title}>{title}</SurfaceMessageTitle>
+      <SurfaceMessageTitle className={classes.title}>
+        {title}
+      </SurfaceMessageTitle>
       <SurfaceMessageBody className={classes.body}>{body}</SurfaceMessageBody>
       {actions ? (
-        <SurfaceMessageActions className={classes.actions}>{actions}</SurfaceMessageActions>
+        <SurfaceMessageActions className={classes.actions}>
+          {actions}
+        </SurfaceMessageActions>
       ) : null}
     </SurfaceMessageRoot>
   );
@@ -48,8 +56,8 @@ const renderMessage = ({ title, body, tone = "default", actions }: StoryMessageP
 export const Default = () => (
   <div className={stackClassName}>
     {renderMessage({
-      title: "No releases found",
-      body: "Create your first release to begin tracking deployment state.",
+      title: 'No releases found',
+      body: 'Create your first release to begin tracking deployment state.',
     })}
   </div>
 );
@@ -57,9 +65,9 @@ export const Default = () => (
 export const Muted = () => (
   <div className={stackClassName}>
     {renderMessage({
-      title: "No recent activity",
-      body: "Events will appear here once collaborators start updating the project.",
-      tone: "muted",
+      title: 'No recent activity',
+      body: 'Events will appear here once collaborators start updating the project.',
+      tone: 'muted',
     })}
   </div>
 );
@@ -67,9 +75,9 @@ export const Muted = () => (
 export const DashedWithActions = () => (
   <div className={stackClassName}>
     {renderMessage({
-      title: "Connect a deployment target",
-      body: "Link an environment to stream preview statuses and logs into this panel.",
-      tone: "dashed",
+      title: 'Connect a deployment target',
+      body: 'Link an environment to stream preview statuses and logs into this panel.',
+      tone: 'dashed',
       actions: (
         <>
           <Button variant="panel">Add target</Button>

@@ -1,4 +1,4 @@
-import { type CSSProperties } from "react";
+import { type CSSProperties } from 'react';
 
 type SkeletonRowsProps = {
   rows?: number;
@@ -8,17 +8,17 @@ type SkeletonRowsProps = {
 
 const rowStyle: CSSProperties = {
   borderBottomWidth: 1,
-  borderBottomStyle: "solid",
-  borderBottomColor: "var(--colors-border-subtle, #d0d5dd)",
+  borderBottomStyle: 'solid',
+  borderBottomColor: 'var(--colors-border-subtle, #d0d5dd)',
 };
 
 const cellStyle: CSSProperties = {
-  padding: "14px 16px",
+  padding: '14px 16px',
 };
 
 const blockBaseStyle: CSSProperties = {
   borderRadius: 6,
-  background: "var(--colors-surface-subtle, #f8f9fb)",
+  background: 'var(--colors-surface-subtle, #f8f9fb)',
   opacity: 0.85,
 };
 

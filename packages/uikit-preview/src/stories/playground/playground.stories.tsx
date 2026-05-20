@@ -1,12 +1,12 @@
-import { ThemeProvider } from "@archon-research/design-system";
-import { useMemo, useState } from "react";
+import { ThemeProvider } from '@archon-research/design-system';
+import { useMemo, useState } from 'react';
 
-import tokensSpec from "../../../static/tokens/spec/tokens.json";
-import semanticTokensSpec from "../../../static/tokens/spec/semantic-tokens.json";
-import { css } from "../../../styled-system/css";
+import semanticTokensSpec from '../../../static/tokens/spec/semantic-tokens.json';
+import tokensSpec from '../../../static/tokens/spec/tokens.json';
+import { css } from '../../../styled-system/css';
 
 export default {
-  title: "Playground",
+  title: 'Playground',
 };
 
 type TokenValue = {
@@ -35,63 +35,63 @@ type SemanticGroup = {
 };
 
 const shellClassName = css({
-  color: "text.default",
-  display: "grid",
-  fontFamily: "sans",
-  gap: "6",
-  maxWidth: "5xl",
-  p: "6",
+  color: 'text.default',
+  display: 'grid',
+  fontFamily: 'sans',
+  gap: '6',
+  maxWidth: '5xl',
+  p: '6',
 });
 
 const mutedClassName = css({
-  color: "text.muted",
-  fontSize: "sm",
-  lineHeight: "1.6",
+  color: 'text.muted',
+  fontSize: 'sm',
+  lineHeight: '1.6',
 });
 
 const cardClassName = css({
-  bg: "surface.default",
-  borderColor: "border.subtle",
-  borderRadius: "lg",
-  borderStyle: "solid",
-  borderWidth: "1px",
-  p: "4",
+  bg: 'surface.default',
+  borderColor: 'border.subtle',
+  borderRadius: 'lg',
+  borderStyle: 'solid',
+  borderWidth: '1px',
+  p: '4',
 });
 
 const controlsClassName = css({
-  alignItems: "center",
-  display: "grid",
-  gap: "3",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  alignItems: 'center',
+  display: 'grid',
+  gap: '3',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
 });
 
 const selectClassName = css({
-  bg: "surface.default",
-  borderColor: "border.subtle",
-  borderRadius: "md",
-  borderStyle: "solid",
-  borderWidth: "1px",
-  color: "text.default",
-  fontSize: "sm",
-  px: "3",
-  py: "2",
+  bg: 'surface.default',
+  borderColor: 'border.subtle',
+  borderRadius: 'md',
+  borderStyle: 'solid',
+  borderWidth: '1px',
+  color: 'text.default',
+  fontSize: 'sm',
+  px: '3',
+  py: '2',
 });
 
 const previewClassName = css({
-  borderColor: "border.subtle",
-  borderRadius: "md",
-  borderStyle: "solid",
-  borderWidth: "1px",
-  mt: "4",
-  p: "4",
+  borderColor: 'border.subtle',
+  borderRadius: 'md',
+  borderStyle: 'solid',
+  borderWidth: '1px',
+  mt: '4',
+  p: '4',
 });
 
 const typographySampleClassName = css({
-  borderColor: "border.subtle",
-  borderRadius: "md",
-  borderStyle: "solid",
-  borderWidth: "1px",
-  p: "4",
+  borderColor: 'border.subtle',
+  borderRadius: 'md',
+  borderStyle: 'solid',
+  borderWidth: '1px',
+  p: '4',
 });
 
 const tokensGroups = tokensSpec.data as TokenGroup[];
@@ -100,19 +100,20 @@ const semanticGroups = semanticTokensSpec.data as SemanticGroup[];
 const getTokenGroup = (groupName: string) =>
   tokensGroups.find((group) => group.type === groupName)?.values ?? [];
 
-const semanticColors = semanticGroups.find((group) => group.type === "colors")?.values ?? [];
+const semanticColors =
+  semanticGroups.find((group) => group.type === 'colors')?.values ?? [];
 
-const fontSizes = getTokenGroup("fontSizes");
-const fontWeights = getTokenGroup("fontWeights");
-const lineHeights = getTokenGroup("lineHeights");
-const colorTokens = getTokenGroup("colors");
+const fontSizes = getTokenGroup('fontSizes');
+const fontWeights = getTokenGroup('fontWeights');
+const lineHeights = getTokenGroup('lineHeights');
+const colorTokens = getTokenGroup('colors');
 
 const normalizeHex = (value: string) => {
   const hex = value.trim();
-  if (!hex.startsWith("#")) return null;
+  if (!hex.startsWith('#')) return null;
 
   if (hex.length === 4) {
-    const [r, g, b] = hex.slice(1).split("");
+    const [r, g, b] = hex.slice(1).split('');
     return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
   }
 
@@ -145,7 +146,11 @@ const luminance = (hex: string) => {
   const rgb = hexToRgb(hex);
   if (!rgb) return null;
 
-  return 0.2126 * toLinear(rgb.r) + 0.7152 * toLinear(rgb.g) + 0.0722 * toLinear(rgb.b);
+  return (
+    0.2126 * toLinear(rgb.r) +
+    0.7152 * toLinear(rgb.g) +
+    0.0722 * toLinear(rgb.b)
+  );
 };
 
 const contrastRatio = (foreground: string, background: string) => {
@@ -159,9 +164,10 @@ const contrastRatio = (foreground: string, background: string) => {
   return (lighter + 0.05) / (darker + 0.05);
 };
 
-const resolveSemanticToken = (name: string, condition: "base" | "dark") => {
+const resolveSemanticToken = (name: string, condition: 'base' | 'dark') => {
   const token = semanticColors.find((value) => value.name === name);
-  const reference = token?.values.find((value) => value.condition === condition)?.value ?? "";
+  const reference =
+    token?.values.find((value) => value.condition === condition)?.value ?? '';
   const match = /^\{colors\.(.*)\}$/.exec(reference);
   if (!match) return null;
 
@@ -173,18 +179,24 @@ export const Typography = () => (
     <div className={shellClassName}>
       <div>
         <h2>Typography preview</h2>
-        <p className={mutedClassName}>Quick reference of font sizes, weights, and line heights.</p>
+        <p className={mutedClassName}>
+          Quick reference of font sizes, weights, and line heights.
+        </p>
       </div>
 
       <div className={cardClassName}>
-        <div className={css({ display: "grid", gap: "4" })}>
+        <div className={css({ display: 'grid', gap: '4' })}>
           {fontSizes.map((size) => (
             <div className={typographySampleClassName} key={size.name}>
               <div
                 style={{
                   fontSize: size.value,
-                  fontWeight: fontWeights.find((value) => value.name === "medium")?.value ?? "500",
-                  lineHeight: lineHeights.find((value) => value.name === "normal")?.value ?? "1.5",
+                  fontWeight:
+                    fontWeights.find((value) => value.name === 'medium')
+                      ?.value ?? '500',
+                  lineHeight:
+                    lineHeights.find((value) => value.name === 'normal')
+                      ?.value ?? '1.5',
                 }}
               >
                 {size.name}: The quick brown fox jumps over the lazy dog
@@ -199,13 +211,18 @@ export const Typography = () => (
 );
 
 export const ContrastChecker = () => {
-  const defaultForeground = resolveSemanticToken("text.default", "base") ?? "#171717";
-  const defaultBackground = resolveSemanticToken("surface.default", "base") ?? "#ffffff";
+  const defaultForeground =
+    resolveSemanticToken('text.default', 'base') ?? '#171717';
+  const defaultBackground =
+    resolveSemanticToken('surface.default', 'base') ?? '#ffffff';
 
   const [foreground, setForeground] = useState(defaultForeground);
   const [background, setBackground] = useState(defaultBackground);
 
-  const ratio = useMemo(() => contrastRatio(foreground, background), [background, foreground]);
+  const ratio = useMemo(
+    () => contrastRatio(foreground, background),
+    [background, foreground],
+  );
 
   return (
     <ThemeProvider>
@@ -213,7 +230,8 @@ export const ContrastChecker = () => {
         <div>
           <h2>Color contrast checker</h2>
           <p className={mutedClassName}>
-            Contrast utility powered by token values from tokens.json and semantic-tokens.json.
+            Contrast utility powered by token values from tokens.json and
+            semantic-tokens.json.
           </p>
         </div>
 
@@ -256,18 +274,19 @@ export const ContrastChecker = () => {
           >
             <div
               style={{
-                fontSize: "1.125rem",
+                fontSize: '1.125rem',
                 fontWeight: 600,
                 lineHeight: 1.4,
               }}
             >
-              Contrast ratio: {ratio ? ratio.toFixed(2) : "N/A"}
+              Contrast ratio: {ratio ? ratio.toFixed(2) : 'N/A'}
             </div>
-            <div style={{ marginTop: "0.5rem", lineHeight: 1.6 }}>
-              Sample text for checking readability against the selected token pair.
+            <div style={{ marginTop: '0.5rem', lineHeight: 1.6 }}>
+              Sample text for checking readability against the selected token
+              pair.
             </div>
-            <div className={css({ fontSize: "sm", mt: "2" })}>
-              AA normal text: {ratio && ratio >= 4.5 ? "pass" : "fail"}
+            <div className={css({ fontSize: 'sm', mt: '2' })}>
+              AA normal text: {ratio && ratio >= 4.5 ? 'pass' : 'fail'}
             </div>
           </div>
         </div>

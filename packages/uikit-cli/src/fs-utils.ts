@@ -8,7 +8,7 @@ import {
   rmSync,
   statSync,
   symlinkSync,
-} from "node:fs";
+} from 'node:fs';
 
 /**
  * File system operations interface for dependency injection and testing
@@ -19,7 +19,10 @@ export interface FileSystemOps {
   readJson<T>(path: string): T;
   realpath(path: string): string;
   isSymlink(path: string): boolean;
-  removeDir(path: string, options?: { recursive?: boolean; force?: boolean }): void;
+  removeDir(
+    path: string,
+    options?: { recursive?: boolean; force?: boolean },
+  ): void;
   createSymlink(target: string, path: string): void;
   createDir(path: string, options?: { recursive?: boolean }): void;
   readDir(path: string): string[];
@@ -35,18 +38,18 @@ export class RealFileSystem implements FileSystemOps {
   }
 
   readFile(path: string): string {
-    return readFileSync(path, "utf8");
+    return readFileSync(path, 'utf8');
   }
 
   readJson<T>(path: string): T {
     try {
       if (process.env.UIKIT_DEBUG) {
-        console.log("[DEBUG readJson]", path);
+        console.log('[DEBUG readJson]', path);
       }
       const content = this.readFile(path);
       return JSON.parse(content) as T;
     } catch (error) {
-      console.error("[readJson ERROR] Failed to read:", path);
+      console.error('[readJson ERROR] Failed to read:', path);
       throw error;
     }
   }
@@ -63,12 +66,15 @@ export class RealFileSystem implements FileSystemOps {
     }
   }
 
-  removeDir(path: string, options?: { recursive?: boolean; force?: boolean }): void {
+  removeDir(
+    path: string,
+    options?: { recursive?: boolean; force?: boolean },
+  ): void {
     rmSync(path, { recursive: true, force: true, ...options });
   }
 
   createSymlink(target: string, path: string): void {
-    symlinkSync(target, path, "dir");
+    symlinkSync(target, path, 'dir');
   }
 
   createDir(path: string, options?: { recursive?: boolean }): void {

@@ -1,46 +1,45 @@
-import { useState } from "react";
+import { SearchInput } from '@archon-research/design-system';
+import { useState } from 'react';
 
-import { SearchInput } from "@archon-research/design-system";
-
-import { css } from "../../../styled-system/css";
+import { css } from '../../../styled-system/css';
 
 export default {
-  title: "Molecules/Search Input",
+  title: 'Molecules/Search Input',
 };
 
 const stackClassName = css({
-  display: "grid",
-  gap: "6",
-  p: "6",
-  maxWidth: "md",
-  fontFamily: "sans",
+  display: 'grid',
+  gap: '6',
+  p: '6',
+  maxWidth: 'md',
+  fontFamily: 'sans',
 });
 
 const fieldClassName = css({
-  display: "grid",
-  gap: "2",
+  display: 'grid',
+  gap: '2',
 });
 
 const labelClassName = css({
-  color: "text.muted",
-  fontSize: "sm",
-  fontWeight: "medium",
-  lineHeight: "1.4",
+  color: 'text.muted',
+  fontSize: 'sm',
+  fontWeight: 'medium',
+  lineHeight: '1.4',
 });
 
 const countryOptions = [
-  "United States",
-  "Canada",
-  "Mexico",
-  "United Kingdom",
-  "France",
-  "Germany",
-  "Japan",
-  "Australia",
+  'United States',
+  'Canada',
+  'Mexico',
+  'United Kingdom',
+  'France',
+  'Germany',
+  'Japan',
+  'Australia',
 ];
 
 export const Default = () => {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState('');
 
   return (
     <div className={stackClassName}>
@@ -61,13 +60,13 @@ export const Default = () => {
 };
 
 export const WithObjectOptions = () => {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState('');
 
   const options = [
-    { value: "us", label: "United States" },
-    { value: "ca", label: "Canada" },
-    { value: "mx", label: "Mexico" },
-    { value: "uk", label: "United Kingdom" },
+    { value: 'us', label: 'United States' },
+    { value: 'ca', label: 'Canada' },
+    { value: 'mx', label: 'Mexico' },
+    { value: 'uk', label: 'United Kingdom' },
   ];
 
   return (
@@ -82,7 +81,7 @@ export const WithObjectOptions = () => {
           value={value}
           onValueChange={setValue}
           options={options}
-          onSelectOption={(option) => console.log("Selected:", option)}
+          onSelectOption={(option) => console.log('Selected:', option)}
         />
       </div>
     </div>
@@ -106,7 +105,7 @@ export const Disabled = () => (
 );
 
 export const Loading = () => {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState('');
 
   return (
     <div className={stackClassName}>

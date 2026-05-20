@@ -9,6 +9,21 @@
   minimumReleaseAge: "7 days",
   separateMajorMinor: true,
   pinDigests: true,
+  customManagers: [
+    {
+      customType: "regex",
+      description: "Update Node runtime version in .node-version",
+      fileMatch: [
+        "(^|/)\\.node-version$",
+      ],
+      matchStrings: [
+        "^(?<currentValue>\\d+\\.\\d+\\.\\d+)\\s*$",
+      ],
+      depNameTemplate: "node",
+      datasourceTemplate: "node-version",
+      versioningTemplate: "node",
+    },
+  ],
   packageRules: [
     {
       matchPackageNames: ["esbuild", "@esbuild/linux-x64"],
@@ -29,6 +44,12 @@
       matchDatasources: ["github-actions"],
       matchUpdateTypes: ["minor", "patch"],
       groupName: "actions-minor-patch",
+    },
+    {
+      // Node runtime version file - minor and patch only
+      matchDatasources: ["node-version"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "node-runtime-minor-patch",
     },
   ],
   // Open all PRs as drafts for supply chain review

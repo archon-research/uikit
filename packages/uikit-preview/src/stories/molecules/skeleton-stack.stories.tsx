@@ -1,34 +1,34 @@
-import { SkeletonStack } from "@archon-research/design-system";
+import { SkeletonStack } from '@archon-research/design-system';
 
-import { css } from "../../../styled-system/css";
+import { css } from '../../../styled-system/css';
 
 export default {
-  title: "Molecules/Skeleton Stack",
+  title: 'Molecules/Skeleton Stack',
 };
 
 const stackClassName = css({
-  display: "grid",
-  gap: "6",
-  p: "6",
-  maxWidth: "lg",
-  fontFamily: "sans",
+  display: 'grid',
+  gap: '6',
+  p: '6',
+  maxWidth: 'lg',
+  fontFamily: 'sans',
 });
 
 const titleClassName = css({
-  color: "text.default",
-  fontSize: "sm",
-  fontWeight: "medium",
-  lineHeight: "1.4",
-  mb: "2",
+  color: 'text.default',
+  fontSize: 'sm',
+  fontWeight: 'medium',
+  lineHeight: '1.4',
+  mb: '2',
 });
 
 const cardClassName = css({
-  borderColor: "border.subtle",
-  borderRadius: "md",
-  borderStyle: "solid",
-  borderWidth: "1px",
-  p: "4",
-  bg: "surface.default",
+  borderColor: 'border.subtle',
+  borderRadius: 'md',
+  borderStyle: 'solid',
+  borderWidth: '1px',
+  p: '4',
+  bg: 'surface.default',
 });
 
 export const Default = () => (

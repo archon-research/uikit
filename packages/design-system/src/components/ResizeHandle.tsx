@@ -1,27 +1,27 @@
-import { type CSSProperties, type MouseEventHandler } from "react";
+import { type CSSProperties, type MouseEventHandler } from 'react';
 
 /**
  * @deprecated Use Ark Splitter primitives (for example, Splitter.ResizeTrigger) for new resize interactions.
  */
 type ResizeHandleProps = {
-  axis: "horizontal" | "vertical";
+  axis: 'horizontal' | 'vertical';
   label: string;
   onMouseDown: MouseEventHandler<HTMLButtonElement>;
-  placement?: "overlay" | "block";
+  placement?: 'overlay' | 'block';
 };
 
 const baseStyle: CSSProperties = {
-  position: "absolute",
+  position: 'absolute',
   zIndex: 1,
-  background: "transparent",
+  background: 'transparent',
   border: 0,
   padding: 0,
 };
 
 const lineBaseStyle: CSSProperties = {
-  position: "absolute",
-  background: "var(--colors-border-subtle, #d0d5dd)",
-  pointerEvents: "none",
+  position: 'absolute',
+  background: 'var(--colors-border-subtle, #d0d5dd)',
+  pointerEvents: 'none',
 };
 
 /**
@@ -31,55 +31,55 @@ export function ResizeHandle({
   axis,
   label,
   onMouseDown,
-  placement = axis === "vertical" ? "overlay" : "block",
+  placement = axis === 'vertical' ? 'overlay' : 'block',
 }: ResizeHandleProps) {
   const handleStyle: CSSProperties =
-    axis === "vertical"
+    axis === 'vertical'
       ? {
           ...baseStyle,
           top: 0,
           right: -4,
           bottom: 0,
           width: 8,
-          cursor: "col-resize",
+          cursor: 'col-resize',
         }
-      : placement === "overlay"
+      : placement === 'overlay'
         ? {
             ...baseStyle,
             top: -4,
             left: 0,
             right: 0,
             height: 8,
-            cursor: "row-resize",
+            cursor: 'row-resize',
           }
         : {
-            position: "relative",
-            flex: "0 0 auto",
+            position: 'relative',
+            flex: '0 0 auto',
             height: 8,
-            cursor: "row-resize",
+            cursor: 'row-resize',
             marginTop: -4,
             marginBottom: -4,
             zIndex: 1,
-            background: "transparent",
+            background: 'transparent',
           };
 
   const lineStyle: CSSProperties =
-    axis === "vertical"
+    axis === 'vertical'
       ? {
           ...lineBaseStyle,
           top: 0,
           bottom: 0,
-          left: "50%",
+          left: '50%',
           width: 1,
-          transform: "translateX(-50%)",
+          transform: 'translateX(-50%)',
         }
       : {
           ...lineBaseStyle,
           left: 0,
           right: 0,
-          top: "50%",
+          top: '50%',
           height: 1,
-          transform: "translateY(-50%)",
+          transform: 'translateY(-50%)',
         };
 
   return (
@@ -95,7 +95,12 @@ export function ResizeHandle({
       data-resize-source="legacy"
       data-legacy-resize-handle=""
     >
-      <div aria-hidden="true" style={lineStyle} data-scope="resize-handle" data-part="indicator" />
+      <div
+        aria-hidden="true"
+        style={lineStyle}
+        data-scope="resize-handle"
+        data-part="indicator"
+      />
     </button>
   );
 }

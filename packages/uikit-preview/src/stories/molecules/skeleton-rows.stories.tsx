@@ -1,40 +1,40 @@
-import { SkeletonRows } from "@archon-research/design-system";
+import { SkeletonRows } from '@archon-research/design-system';
 
-import { css } from "../../../styled-system/css";
+import { css } from '../../../styled-system/css';
 
 export default {
-  title: "Molecules/Skeleton Rows",
+  title: 'Molecules/Skeleton Rows',
 };
 
 const frameClassName = css({
-  borderColor: "border.subtle",
-  borderRadius: "md",
-  borderStyle: "solid",
-  borderWidth: "1px",
-  overflow: "hidden",
-  width: "full",
-  maxWidth: "6xl",
+  borderColor: 'border.subtle',
+  borderRadius: 'md',
+  borderStyle: 'solid',
+  borderWidth: '1px',
+  overflow: 'hidden',
+  width: 'full',
+  maxWidth: '6xl',
 });
 
 const tableClassName = css({
-  width: "full",
-  borderCollapse: "collapse",
-  bg: "surface.default",
+  width: 'full',
+  borderCollapse: 'collapse',
+  bg: 'surface.default',
 });
 
 const stackClassName = css({
-  display: "grid",
-  gap: "6",
-  p: "6",
-  fontFamily: "sans",
+  display: 'grid',
+  gap: '6',
+  p: '6',
+  fontFamily: 'sans',
 });
 
 const titleClassName = css({
-  color: "text.default",
-  fontSize: "sm",
-  fontWeight: "medium",
-  lineHeight: "1.4",
-  mb: "2",
+  color: 'text.default',
+  fontSize: 'sm',
+  fontWeight: 'medium',
+  lineHeight: '1.4',
+  mb: '2',
 });
 
 export const Default = () => (

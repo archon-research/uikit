@@ -1,18 +1,19 @@
 #!/usr/bin/env node
 
-import { fileURLToPath } from "node:url";
-import path from "node:path";
-import { RealFileSystem } from "./fs-utils.js";
-import { NpmCommandExecutor } from "./command-executor.js";
-import { ConsoleLogger } from "./logger.js";
-import { PackageDiscovery } from "./package-discovery.js";
-import { LinkValidator } from "./link-validator.js";
-import { RegisterCommand } from "./commands/register.js";
-import { LinkCommand } from "./commands/link.js";
-import { UnlinkCommand } from "./commands/unlink.js";
-import { LintCommand } from "./commands/lint.js";
-import { FormatCommand } from "./commands/format.js";
-import type { CommandMode, ParsedArgs } from "./types.js";
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { NpmCommandExecutor } from './command-executor.js';
+import { FormatCommand } from './commands/format.js';
+import { LinkCommand } from './commands/link.js';
+import { LintCommand } from './commands/lint.js';
+import { RegisterCommand } from './commands/register.js';
+import { UnlinkCommand } from './commands/unlink.js';
+import { RealFileSystem } from './fs-utils.js';
+import { LinkValidator } from './link-validator.js';
+import { ConsoleLogger } from './logger.js';
+import { PackageDiscovery } from './package-discovery.js';
+import type { CommandMode, ParsedArgs } from './types.js';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -23,12 +24,18 @@ function parseArgs(argv: string[]): ParsedArgs {
   const args = argv.slice(2);
   if (args.length === 0) {
     throw new Error(
-      "Usage: uikit-cli <register|link|unlink|lint|format> [--verify] [--debug] [--uikit-root <path>] [args...]",
+      'Usage: uikit-cli <register|link|unlink|lint|format> [--verify] [--debug] [--uikit-root <path>] [args...]',
     );
   }
 
   const mode = args[0] as CommandMode;
-  const validModes: CommandMode[] = ["lint", "format", "register", "link", "unlink"];
+  const validModes: CommandMode[] = [
+    'lint',
+    'format',
+    'register',
+    'link',
+    'unlink',
+  ];
 
   if (!validModes.includes(mode)) {
     throw new Error(`Unknown command: ${mode}`);
@@ -43,13 +50,13 @@ function parseArgs(argv: string[]): ParsedArgs {
   while (i < args.length) {
     const arg = args[i];
 
-    if (arg === "--uikit-root" && i + 1 < args.length) {
+    if (arg === '--uikit-root' && i + 1 < args.length) {
       uikitRoot = args[i + 1];
       i += 2;
-    } else if (arg === "--verify") {
+    } else if (arg === '--verify') {
       verify = true;
       i += 1;
-    } else if (arg === "--debug") {
+    } else if (arg === '--debug') {
       debug = true;
       i += 1;
     } else {
@@ -59,7 +66,7 @@ function parseArgs(argv: string[]): ParsedArgs {
   }
 
   // Check for UIKIT_DEBUG environment variable
-  if (process.env.UIKIT_DEBUG === "1") {
+  if (process.env.UIKIT_DEBUG === '1') {
     debug = true;
   }
 
@@ -68,24 +75,26 @@ function parseArgs(argv: string[]): ParsedArgs {
   const discovery = new PackageDiscovery(fs);
 
   if (debug) {
-    console.log("[DEBUG parseArgs] Resolving uikit root...");
+    console.log('[DEBUG parseArgs] Resolving uikit root...');
   }
 
   if (!uikitRoot) {
     // Try relative to script location
-    const relativeRoot = path.resolve(scriptDir, "../../../..");
+    const relativeRoot = path.resolve(scriptDir, '../../../..');
     if (debug) {
-      console.log("[DEBUG parseArgs] Checking relative root:", relativeRoot);
+      console.log('[DEBUG parseArgs] Checking relative root:', relativeRoot);
     }
     if (discovery.isValidUIKitRoot(relativeRoot)) {
       uikitRoot = relativeRoot;
       if (debug) {
-        console.log("[DEBUG parseArgs] Found valid uikit root at relative location");
+        console.log(
+          '[DEBUG parseArgs] Found valid uikit root at relative location',
+        );
       }
     }
   }
 
-  if (!uikitRoot && mode !== "lint" && mode !== "format") {
+  if (!uikitRoot && mode !== 'lint' && mode !== 'format') {
     // Try to find from consumer
     try {
       const tempConsumerRoot = discovery.findConsumerRoot(process.cwd());
@@ -98,7 +107,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
   }
 
-  if (!uikitRoot && mode !== "lint" && mode !== "format") {
+  if (!uikitRoot && mode !== 'lint' && mode !== 'format') {
     // Try walking up from cwd
     const foundRoot = discovery.findUIKitRoot(process.cwd());
     if (foundRoot) {
@@ -106,26 +115,26 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
   }
 
-  if (!uikitRoot && mode !== "lint" && mode !== "format") {
+  if (!uikitRoot && mode !== 'lint' && mode !== 'format') {
     throw new Error(
-      "Could not find uikit root directory.\n" +
-        "Tried:\n" +
-        "  - Relative to script location\n" +
-        "  - Sibling to consumer root\n" +
-        "  - Walking up from cwd\n" +
-        "Use --uikit-root to specify manually.",
+      'Could not find uikit root directory.\n' +
+        'Tried:\n' +
+        '  - Relative to script location\n' +
+        '  - Sibling to consumer root\n' +
+        '  - Walking up from cwd\n' +
+        'Use --uikit-root to specify manually.',
     );
   }
 
   let consumerRoot: string | null = null;
-  if (mode === "link" || mode === "unlink") {
+  if (mode === 'link' || mode === 'unlink') {
     consumerRoot = discovery.findConsumerRoot(process.cwd());
   }
 
   return {
     mode,
     consumerRoot,
-    uikitRoot: uikitRoot ?? "",
+    uikitRoot: uikitRoot ?? '',
     commandArgs,
     verify,
     debug,
@@ -135,21 +144,27 @@ function parseArgs(argv: string[]): ParsedArgs {
 /**
  * Ensure CLI binary is built before registering
  */
-function ensureCliBinaryBuilt(uikitRoot: string, executor: NpmCommandExecutor): void {
-  const cliPackagePath = path.join(uikitRoot, "packages/uikit-cli");
-  const distPath = path.join(cliPackagePath, "dist/cli.js");
+function ensureCliBinaryBuilt(
+  uikitRoot: string,
+  executor: NpmCommandExecutor,
+): void {
+  const cliPackagePath = path.join(uikitRoot, 'packages/uikit-cli');
+  const distPath = path.join(cliPackagePath, 'dist/cli.js');
   const fs = new RealFileSystem();
 
   if (!fs.exists(distPath)) {
-    console.log("Building CLI binary...");
-    executor.exec("npm run build", { cwd: cliPackagePath });
+    console.log('Building CLI binary...');
+    executor.exec('npm run build', { cwd: cliPackagePath });
   }
 }
 
 /**
  * Link CLI into consumer for convenience
  */
-function linkCliIntoConsumer(consumerRoot: string, executor: NpmCommandExecutor): void {
+function linkCliIntoConsumer(
+  consumerRoot: string,
+  executor: NpmCommandExecutor,
+): void {
   executor.exec(
     'npm link "@archon-research/uikit-cli" --package-lock=false --save=false --no-workspaces',
     { cwd: consumerRoot },
@@ -164,7 +179,12 @@ try {
   const { mode, consumerRoot, uikitRoot, commandArgs, verify, debug } = parsed;
 
   if (debug) {
-    console.log("[DEBUG] Parsed args:", { mode, consumerRoot, uikitRoot, verify });
+    console.log('[DEBUG] Parsed args:', {
+      mode,
+      consumerRoot,
+      uikitRoot,
+      verify,
+    });
   }
 
   // Initialize dependencies
@@ -175,28 +195,28 @@ try {
   const validator = new LinkValidator(fs, logger);
 
   // Handle lint/format commands
-  if (mode === "lint") {
+  if (mode === 'lint') {
     const lintCmd = new LintCommand(executor);
     lintCmd.execute(commandArgs);
     process.exit(0);
   }
 
-  if (mode === "format") {
+  if (mode === 'format') {
     const formatCmd = new FormatCommand(executor, fs);
     formatCmd.execute(commandArgs);
     process.exit(0);
   }
 
   // Handle register command
-  if (mode === "register") {
+  if (mode === 'register') {
     ensureCliBinaryBuilt(uikitRoot, executor);
     const registerCmd = new RegisterCommand(discovery, executor, logger);
     registerCmd.execute(uikitRoot);
 
     if (verify) {
-      logger.info("\\nVerifying registration...");
+      logger.info('\\nVerifying registration...');
       // Could add verification logic here
-      logger.info("✓ Registration verified");
+      logger.info('✓ Registration verified');
     }
 
     process.exit(0);
@@ -204,7 +224,7 @@ try {
 
   // Handle link/unlink commands (require consumerRoot)
   if (!consumerRoot) {
-    throw new Error("Consumer root is required for link/unlink operations.");
+    throw new Error('Consumer root is required for link/unlink operations.');
   }
 
   // Register packages and link CLI before link/unlink
@@ -213,20 +233,20 @@ try {
   registerCmd.execute(uikitRoot);
   linkCliIntoConsumer(consumerRoot, executor);
 
-  if (mode === "link") {
+  if (mode === 'link') {
     const linkCmd = new LinkCommand(discovery, executor, validator, fs, logger);
     linkCmd.execute(consumerRoot, uikitRoot, verify);
     process.exit(0);
   }
 
-  if (mode === "unlink") {
+  if (mode === 'unlink') {
     const unlinkCmd = new UnlinkCommand(executor, logger);
     unlinkCmd.execute(consumerRoot, uikitRoot, discovery);
     process.exit(0);
   }
 } catch (error) {
   if (process.env.UIKIT_DEBUG) {
-    console.error("Full error:", error);
+    console.error('Full error:', error);
   }
   console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);

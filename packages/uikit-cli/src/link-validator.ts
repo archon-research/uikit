@@ -1,7 +1,8 @@
-import path from "node:path";
-import type { FileSystemOps } from "./fs-utils.js";
-import type { Logger } from "./logger.js";
-import type { ValidationResult, SymlinkStatus } from "./types.js";
+import path from 'node:path';
+
+import type { FileSystemOps } from './fs-utils.js';
+import type { Logger } from './logger.js';
+import type { ValidationResult, SymlinkStatus } from './types.js';
 
 /**
  * Validates link state without npm registry checks
@@ -22,18 +23,18 @@ export class LinkValidator {
     consumerRoot: string,
     expectedLinks: Map<string, string>,
   ): ValidationResult {
-    const issues: ValidationResult["issues"] = [];
+    const issues: ValidationResult['issues'] = [];
 
-    this.logger.debug("Validating linked packages", {
+    this.logger.debug('Validating linked packages', {
       consumerRoot,
       packageCount: expectedLinks.size,
     });
 
     for (const [packageName, expectedTarget] of expectedLinks) {
-      const linkPath = path.join(consumerRoot, "node_modules", packageName);
+      const linkPath = path.join(consumerRoot, 'node_modules', packageName);
       const status = this.validateSymlink(linkPath, expectedTarget);
 
-      if (status !== "valid") {
+      if (status !== 'valid') {
         issues.push({
           type: status,
           package: packageName,
@@ -53,12 +54,12 @@ export class LinkValidator {
    */
   validateSymlink(linkPath: string, expectedTarget: string): SymlinkStatus {
     if (!this.fs.exists(linkPath)) {
-      return "missing";
+      return 'missing';
     }
 
     if (!this.fs.isSymlink(linkPath)) {
       // Not a symlink, might be a regular install
-      return "missing";
+      return 'missing';
     }
 
     try {
@@ -67,12 +68,12 @@ export class LinkValidator {
       const normalizedActual = path.resolve(actualTarget);
 
       if (normalizedActual === normalizedExpected) {
-        return "valid";
+        return 'valid';
       }
 
-      return "wrong-target";
+      return 'wrong-target';
     } catch {
-      return "broken";
+      return 'broken';
     }
   }
 
@@ -82,11 +83,11 @@ export class LinkValidator {
     status: SymlinkStatus,
   ): string {
     switch (status) {
-      case "missing":
+      case 'missing':
         return `Link does not exist at ${linkPath}`;
-      case "broken":
+      case 'broken':
         return `Symlink exists but points to non-existent location`;
-      case "wrong-target": {
+      case 'wrong-target': {
         try {
           const actualTarget = this.fs.realpath(linkPath);
           return `Expected: ${expectedTarget}\nActual: ${actualTarget}`;
@@ -95,7 +96,7 @@ export class LinkValidator {
         }
       }
       default:
-        return "";
+        return '';
     }
   }
 }

@@ -1,69 +1,70 @@
-import { defineRecipe } from "@pandacss/dev";
+import { defineRecipe } from '@pandacss/dev';
 
 export const interactiveItemRecipe = defineRecipe({
-  className: "interactiveItem",
-  description: "Row-style interactive button used in lists and relationship panels.",
+  className: 'interactiveItem',
+  description:
+    'Row-style interactive button used in lists and relationship panels.',
   base: {
-    display: "flex",
-    width: "full",
-    alignItems: "baseline",
-    gap: "2",
-    textAlign: "left",
-    borderRadius: "md",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: "transparent",
-    bg: "transparent",
-    color: "text.default",
-    cursor: "pointer",
-    transitionDuration: "fast",
-    transitionProperty: "background-color, color, border-color, box-shadow",
+    display: 'flex',
+    width: 'full',
+    alignItems: 'baseline',
+    gap: '2',
+    textAlign: 'left',
+    borderRadius: 'md',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: 'transparent',
+    bg: 'transparent',
+    color: 'text.default',
+    cursor: 'pointer',
+    transitionDuration: 'fast',
+    transitionProperty: 'background-color, color, border-color, box-shadow',
     _hover: {
-      bg: "interactive.hover",
-      borderColor: "border.default",
+      bg: 'interactive.hover',
+      borderColor: 'border.default',
     },
   },
   variants: {
     selected: {
       true: {
-        bg: "interactive.selected",
+        bg: 'interactive.selected',
       },
       false: {
-        fontWeight: "normal",
+        fontWeight: 'normal',
       },
     },
     density: {
       compact: {
-        px: "2",
-        py: "1",
-        fontSize: "xs",
+        px: '2',
+        py: '1',
+        fontSize: 'xs',
       },
       comfortable: {
-        px: "2",
-        py: "1.5",
-        fontSize: "sm",
+        px: '2',
+        py: '1.5',
+        fontSize: 'sm',
       },
     },
     tone: {
       subdued: {
-        color: "text.muted",
+        color: 'text.muted',
       },
     },
     variant: {
       treeNode: {
-        position: "absolute",
-        borderColor: "border.default",
-        bg: "bg.canvas",
-        boxShadow: "xs",
-        textAlign: "left",
+        position: 'absolute',
+        borderColor: 'border.default',
+        bg: 'bg.canvas',
+        boxShadow: 'xs',
+        textAlign: 'left',
         _hover: {
-          borderColor: "border.strong",
+          borderColor: 'border.strong',
         },
       },
     },
   },
   defaultVariants: {
     selected: false,
-    density: "comfortable",
+    density: 'comfortable',
   },
 });

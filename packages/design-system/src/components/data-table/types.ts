@@ -1,4 +1,8 @@
-import type { ColumnDef, OnChangeFn, SortingState } from "@tanstack/react-table";
+import type {
+  ColumnDef,
+  OnChangeFn,
+  SortingState,
+} from '@tanstack/react-table';
 
 export interface DataTableConfig {
   enableSearch?: boolean;

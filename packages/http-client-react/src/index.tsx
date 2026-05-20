@@ -1,8 +1,12 @@
-import { queryOptions, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { PropsWithChildren } from "react";
+import {
+  queryOptions,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
+import type { PropsWithChildren } from 'react';
 
-export { createApiClient } from "@archon-research/http-client-core";
-export type { JsonSchema } from "@archon-research/http-client-core";
+export { createApiClient } from '@archon-research/http-client-core';
+export type { JsonSchema } from '@archon-research/http-client-core';
 
 export const createQueryClient = () => new QueryClient();
 
@@ -14,7 +18,9 @@ export type HttpProviderProps = PropsWithChildren<{
 
 export function HttpProvider({ client, children }: HttpProviderProps) {
   return (
-    <QueryClientProvider client={client ?? defaultQueryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={client ?? defaultQueryClient}>
+      {children}
+    </QueryClientProvider>
   );
 }
 

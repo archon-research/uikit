@@ -1,23 +1,23 @@
-import { LoadingIndicator } from "@archon-research/design-system";
+import { LoadingIndicator } from '@archon-research/design-system';
 
-import { css } from "../../../styled-system/css";
+import { css } from '../../../styled-system/css';
 
 export default {
-  title: "Atoms/Loading Indicator",
+  title: 'Atoms/Loading Indicator',
 };
 
 const frameClassName = css({
-  display: "grid",
-  gap: "4",
-  p: "6",
-  maxWidth: "md",
-  fontFamily: "sans",
+  display: 'grid',
+  gap: '4',
+  p: '6',
+  maxWidth: 'md',
+  fontFamily: 'sans',
 });
 
 const rowClassName = css({
-  alignItems: "center",
-  display: "flex",
-  gap: "3",
+  alignItems: 'center',
+  display: 'flex',
+  gap: '3',
 });
 
 export const Default = () => (

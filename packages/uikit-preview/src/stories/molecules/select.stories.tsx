@@ -1,30 +1,30 @@
-import { Select } from "@archon-research/design-system";
+import { Select } from '@archon-research/design-system';
 
-import { css } from "../../../styled-system/css";
+import { css } from '../../../styled-system/css';
 
 export default {
-  title: "Molecules/Select",
+  title: 'Molecules/Select',
 };
 
 const stackClassName = css({
-  display: "grid",
-  gap: "5",
-  maxWidth: "sm",
-  p: "6",
-  fontFamily: "sans",
-  color: "text.default",
+  display: 'grid',
+  gap: '5',
+  maxWidth: 'sm',
+  p: '6',
+  fontFamily: 'sans',
+  color: 'text.default',
 });
 
 const fieldClassName = css({
-  display: "grid",
-  gap: "2",
+  display: 'grid',
+  gap: '2',
 });
 
 const labelClassName = css({
-  color: "text.muted",
-  fontSize: "sm",
-  fontWeight: "medium",
-  lineHeight: "1.4",
+  color: 'text.muted',
+  fontSize: 'sm',
+  fontWeight: 'medium',
+  lineHeight: '1.4',
 });
 
 export const Default = () => (

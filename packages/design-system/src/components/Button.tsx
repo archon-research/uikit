@@ -1,8 +1,8 @@
-import { type ButtonHTMLAttributes, type CSSProperties } from "react";
+import { type ButtonHTMLAttributes, type CSSProperties } from 'react';
 
-export type ButtonVariant = "panel" | "item";
-export type ButtonSize = "md" | "lg";
-export type ButtonDensity = "comfortable" | "compact";
+export type ButtonVariant = 'panel' | 'item';
+export type ButtonSize = 'md' | 'lg';
+export type ButtonDensity = 'comfortable' | 'compact';
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
@@ -10,29 +10,29 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   iconOnly?: boolean;
   density?: ButtonDensity;
   selected?: boolean;
-  tone?: "default" | "subdued";
+  tone?: 'default' | 'subdued';
   gap?: number | string;
 };
 
 const panelBaseStyle: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
+  display: 'inline-flex',
+  alignItems: 'center',
   gap: 6,
   borderWidth: 1,
-  borderStyle: "solid",
-  borderColor: "var(--colors-border-subtle, #d0d5dd)",
+  borderStyle: 'solid',
+  borderColor: 'var(--colors-border-subtle, #d0d5dd)',
   borderRadius: 8,
-  background: "var(--colors-surface-default, #ffffff)",
-  color: "var(--colors-text-default, #111827)",
-  textDecoration: "none",
-  cursor: "pointer",
+  background: 'var(--colors-surface-default, #ffffff)',
+  color: 'var(--colors-text-default, #111827)',
+  textDecoration: 'none',
+  cursor: 'pointer',
   fontSize: 13,
   lineHeight: 1.3,
 };
 
 const panelDisabledStyle: CSSProperties = {
   opacity: 0.5,
-  cursor: "not-allowed",
+  cursor: 'not-allowed',
 };
 
 const panelSizeStyleMap: Record<ButtonSize, CSSProperties> = {
@@ -47,20 +47,20 @@ const panelSizeStyleMap: Record<ButtonSize, CSSProperties> = {
 };
 
 const itemBaseStyle: CSSProperties = {
-  display: "flex",
-  width: "100%",
-  alignItems: "baseline",
+  display: 'flex',
+  width: '100%',
+  alignItems: 'baseline',
   gap: 8,
-  textAlign: "left",
+  textAlign: 'left',
   borderRadius: 8,
   borderWidth: 1,
-  borderStyle: "solid",
-  borderColor: "transparent",
-  background: "transparent",
-  color: "var(--colors-text-default, #111827)",
-  cursor: "pointer",
-  transitionDuration: "120ms",
-  transitionProperty: "background-color, color, border-color, box-shadow",
+  borderStyle: 'solid',
+  borderColor: 'transparent',
+  background: 'transparent',
+  color: 'var(--colors-text-default, #111827)',
+  cursor: 'pointer',
+  transitionDuration: '120ms',
+  transitionProperty: 'background-color, color, border-color, box-shadow',
 };
 
 const itemDensityStyleMap: Record<ButtonDensity, CSSProperties> = {
@@ -77,33 +77,33 @@ const itemDensityStyleMap: Record<ButtonDensity, CSSProperties> = {
 };
 
 const itemSelectedStyle: CSSProperties = {
-  background: "var(--colors-interactive-selected, #eef4ff)",
+  background: 'var(--colors-interactive-selected, #eef4ff)',
 };
 
 const itemSubduedStyle: CSSProperties = {
-  color: "var(--colors-text-muted, #667085)",
+  color: 'var(--colors-text-muted, #667085)',
 };
 
 export function Button({
-  variant = "panel",
-  size = "md",
+  variant = 'panel',
+  size = 'md',
   iconOnly = false,
-  density = "comfortable",
+  density = 'comfortable',
   selected = false,
-  tone = "default",
+  tone = 'default',
   gap,
   style,
   disabled,
-  type = "button",
+  type = 'button',
   ...props
 }: ButtonProps) {
   const computedStyle: CSSProperties =
-    variant === "item"
+    variant === 'item'
       ? {
           ...itemBaseStyle,
           ...itemDensityStyleMap[density],
           ...(selected ? itemSelectedStyle : undefined),
-          ...(tone === "subdued" ? itemSubduedStyle : undefined),
+          ...(tone === 'subdued' ? itemSubduedStyle : undefined),
           ...(disabled ? panelDisabledStyle : undefined),
         }
       : {
@@ -111,9 +111,9 @@ export function Button({
           ...panelSizeStyleMap[size],
           ...(iconOnly
             ? {
-                width: size === "lg" ? 36 : 32,
+                width: size === 'lg' ? 36 : 32,
                 paddingInline: 0,
-                justifyContent: "center",
+                justifyContent: 'center',
                 gap: 0,
               }
             : undefined),
@@ -133,12 +133,12 @@ export function Button({
       data-scope="button"
       data-part="root"
       data-variant={variant}
-      data-size={variant === "panel" ? size : undefined}
-      data-density={variant === "item" ? density : undefined}
+      data-size={variant === 'panel' ? size : undefined}
+      data-density={variant === 'item' ? density : undefined}
       data-tone={tone}
-      data-disabled={disabled ? "" : undefined}
-      data-selected={selected ? "" : undefined}
-      data-icon-only={iconOnly ? "" : undefined}
+      data-disabled={disabled ? '' : undefined}
+      data-selected={selected ? '' : undefined}
+      data-icon-only={iconOnly ? '' : undefined}
     />
   );
 }
