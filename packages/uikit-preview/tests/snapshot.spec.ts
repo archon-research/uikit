@@ -7,10 +7,7 @@ type LadleMeta = {
 const port = 61000
 const origin = `http://127.0.0.1:${port}`
 const meta = (await fetch(`${origin}/meta.json`).then((response) => response.json())) as LadleMeta
-const snapshotPrefixes = ['atoms--', 'molecules--', 'organisms--', 'templates--']
-const storyIds = Object.keys(meta.stories)
-  .filter((storyId) => snapshotPrefixes.some((prefix) => storyId.startsWith(prefix)))
-  .sort()
+const storyIds = Object.keys(meta.stories).sort()
 
 for (const storyId of storyIds) {
   test(`${storyId} visual snapshot`, async ({ page }) => {

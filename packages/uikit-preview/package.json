@@ -5,8 +5,8 @@
   "scripts": {
     "build": "bash ./scripts/build-preview.sh",
     "clean": "rm -rf dist",
-    "lint": "npm exec --yes -- oxlint -c oxlint.config.ts src",
-    "lint:fix": "npm exec --yes -- oxlint -c oxlint.config.ts --fix src",
+    "lint": "npm run build --workspace @archon-research/oxlint-config && npm exec --yes -- oxlint -c oxlint.config.ts src",
+    "lint:fix": "npm run build --workspace @archon-research/oxlint-config && npm exec --yes -- oxlint -c oxlint.config.ts --fix src",
     "type:check": "npm run generate && tsgo -p tsconfig.json --noEmit",
     "generate": "panda codegen --clean --config panda.config.ts && panda cssgen --config panda.config.ts --outfile styled-system/styles.css && panda spec --config panda.config.ts --outdir ./static/tokens/spec",
     "dev": "npm run generate && ladle serve --host 0.0.0.0 --port 61000",
