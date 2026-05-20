@@ -87,8 +87,19 @@ export function ResizeHandle({
       aria-label={label}
       style={handleStyle}
       onMouseDown={onMouseDown}
+      data-scope="resize-handle"
+      data-part="root"
+      data-axis={axis}
+      data-placement={placement}
+      data-resize-source="legacy"
+      data-legacy-resize-handle=""
     >
-      <div aria-hidden="true" style={lineStyle} />
+      <div
+        aria-hidden="true"
+        style={lineStyle}
+        data-scope="resize-handle"
+        data-part="indicator"
+      />
     </div>
   );
 }

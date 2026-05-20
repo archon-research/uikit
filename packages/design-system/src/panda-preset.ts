@@ -1,10 +1,12 @@
 import { definePreset } from '@pandacss/dev';
 
+import { buttonRecipe } from './recipes/button.recipe';
 import { interactiveItemRecipe } from './recipes/interactiveItem.recipe';
 import { panelActionRecipe } from './recipes/panelAction.recipe';
 import { panelSectionRecipe } from './recipes/panelSection.recipe';
 import { segmentedControlRecipe } from './recipes/segmentedControl.recipe';
 import { sectionHeadingRecipe } from './recipes/sectionHeading.recipe';
+import { surfaceMessageRecipe } from './recipes/surfaceMessage.recipe';
 import { switchRecipe } from './recipes/switch.recipe';
 
 export const designSystemPreset = definePreset({
@@ -80,12 +82,14 @@ export const designSystemPreset = definePreset({
         },
       },
       recipes: {
+        button: buttonRecipe,
         panelAction: panelActionRecipe,
         interactiveItem: interactiveItemRecipe,
         sectionHeading: sectionHeadingRecipe,
         panelSection: panelSectionRecipe,
       },
       slotRecipes: {
+        surfaceMessage: surfaceMessageRecipe,
         segmentedControl: segmentedControlRecipe,
         toggleSwitch: switchRecipe,
       },

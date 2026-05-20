@@ -1,6 +1,6 @@
 import { Button } from '@archon-research/design-system';
 
-import { css } from '../../styled-system/css';
+import { css } from '../../../styled-system/css';
 
 export default {
   title: 'Atoms/Button',

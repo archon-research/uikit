@@ -355,8 +355,17 @@ export function SidebarLayout({
           id="sidebar:main"
           aria-label="Resize sidebar"
           style={verticalResizeTriggerStyle}
+          data-scope="resize-handle"
+          data-part="root"
+          data-axis="vertical"
+          data-placement="overlay"
+          data-resize-source="splitter"
         >
-          <Splitter.ResizeTriggerIndicator style={verticalResizeIndicatorStyle} />
+          <Splitter.ResizeTriggerIndicator
+            style={verticalResizeIndicatorStyle}
+            data-scope="resize-handle"
+            data-part="indicator"
+          />
         </Splitter.ResizeTrigger>
 
         <Splitter.Panel id="main" style={mainStyle}>
@@ -406,8 +415,17 @@ export function SidebarLayout({
                   id="content:bottom"
                   aria-label="Resize bottom panel"
                   style={horizontalResizeTriggerStyle}
+                  data-scope="resize-handle"
+                  data-part="root"
+                  data-axis="horizontal"
+                  data-placement="overlay"
+                  data-resize-source="splitter"
                 >
-                  <Splitter.ResizeTriggerIndicator style={horizontalResizeIndicatorStyle} />
+                  <Splitter.ResizeTriggerIndicator
+                    style={horizontalResizeIndicatorStyle}
+                    data-scope="resize-handle"
+                    data-part="indicator"
+                  />
                 </Splitter.ResizeTrigger>
 
                 <Splitter.Panel id="bottom" style={bottomPanelStyle}>

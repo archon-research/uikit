@@ -6,7 +6,7 @@ import {
 import type { SortingState } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 
-import { css } from '../../styled-system/css';
+import { css } from '../../../styled-system/css';
 
 type Row = {
   symbol: string;

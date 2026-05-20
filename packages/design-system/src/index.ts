@@ -1,4 +1,12 @@
 export * from './recipes/index';
+export {
+	designSystemComponentManifest,
+	type DesignSystemBehaviorSource,
+	type DesignSystemComponentManifestEntry,
+	type DesignSystemLifecycleStatus,
+	type DesignSystemStoryBucket,
+	type DesignSystemStyleOwner,
+} from './component-manifest';
 export { SidebarLayout, type SidebarLayoutProps } from './layouts/SidebarLayout';
 export { ThemeProvider } from './theme/ThemeProvider';
 export { useTheme, type ThemeContextValue, type ThemeMode } from './theme/useTheme';

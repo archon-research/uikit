@@ -1,6 +1,6 @@
 import { ResizeHandle } from '@archon-research/design-system';
 
-import { css } from '../../styled-system/css';
+import { css } from '../../../styled-system/css';
 
 export default {
   title: 'Atoms/Resize Handle',
@@ -48,7 +48,7 @@ const noop = () => {};
 export const VerticalOverlay = () => (
   <div className={stackClassName}>
     <div>
-      <p className={titleClassName}>Vertical separator (overlay)</p>
+      <p className={titleClassName}>Legacy vertical separator (overlay)</p>
       <div className={`${canvasClassName} ${verticalCanvasClassName}`}>
         <ResizeHandle axis="vertical" label="Resize sidebar" onMouseDown={noop} />
       </div>
@@ -59,7 +59,7 @@ export const VerticalOverlay = () => (
 export const HorizontalBlock = () => (
   <div className={stackClassName}>
     <div>
-      <p className={titleClassName}>Horizontal separator (block)</p>
+      <p className={titleClassName}>Legacy horizontal separator (block)</p>
       <div className={`${canvasClassName} ${horizontalCanvasClassName}`}>
         <ResizeHandle
           axis="horizontal"
@@ -75,7 +75,7 @@ export const HorizontalBlock = () => (
 export const HorizontalOverlay = () => (
   <div className={stackClassName}>
     <div>
-      <p className={titleClassName}>Horizontal separator (overlay)</p>
+      <p className={titleClassName}>Legacy horizontal separator (overlay)</p>
       <div className={`${canvasClassName} ${horizontalCanvasClassName}`}>
         <ResizeHandle
           axis="horizontal"

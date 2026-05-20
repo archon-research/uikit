@@ -66,7 +66,13 @@ export function SurfaceMessageRoot({
   ...props
 }: SurfaceMessageRootProps) {
   return (
-    <div {...props} style={{ ...getWrapperStyle(tone), ...style }}>
+    <div
+      {...props}
+      data-scope="surface-message"
+      data-part="root"
+      data-tone={tone}
+      style={{ ...getWrapperStyle(tone), ...style }}
+    >
       {children}
     </div>
   );
@@ -78,7 +84,12 @@ export function SurfaceMessageTitle({
   ...props
 }: SurfaceMessageTitleProps) {
   return (
-    <p {...props} style={{ ...titleStyle, ...style }}>
+    <p
+      {...props}
+      data-scope="surface-message"
+      data-part="title"
+      style={{ ...titleStyle, ...style }}
+    >
       {children}
     </p>
   );
@@ -90,7 +101,12 @@ export function SurfaceMessageBody({
   ...props
 }: SurfaceMessageBodyProps) {
   return (
-    <p {...props} style={{ ...bodyStyle, ...style }}>
+    <p
+      {...props}
+      data-scope="surface-message"
+      data-part="body"
+      style={{ ...bodyStyle, ...style }}
+    >
       {children}
     </p>
   );
@@ -102,7 +118,12 @@ export function SurfaceMessageActions({
   ...props
 }: SurfaceMessageActionsProps) {
   return (
-    <div {...props} style={style}>
+    <div
+      {...props}
+      data-scope="surface-message"
+      data-part="actions"
+      style={style}
+    >
       {children}
     </div>
   );

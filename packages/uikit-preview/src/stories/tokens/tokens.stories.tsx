@@ -1,16 +1,16 @@
 import { ThemeProvider } from '@archon-research/design-system';
 
-import tokensSpec from '../../static/tokens/spec/tokens.json';
-import semanticTokensSpec from '../../static/tokens/spec/semantic-tokens.json';
-import patternsSpec from '../../static/tokens/spec/patterns.json';
-import recipesSpec from '../../static/tokens/spec/recipes.json';
-import textStylesSpec from '../../static/tokens/spec/text-styles.json';
-import layerStylesSpec from '../../static/tokens/spec/layer-styles.json';
-import conditionsSpec from '../../static/tokens/spec/conditions.json';
-import animationStylesSpec from '../../static/tokens/spec/animation-styles.json';
-import keyframesSpec from '../../static/tokens/spec/keyframes.json';
-import colorPaletteSpec from '../../static/tokens/spec/color-palette.json';
-import { css } from '../../styled-system/css';
+import tokensSpec from '../../../static/tokens/spec/tokens.json';
+import semanticTokensSpec from '../../../static/tokens/spec/semantic-tokens.json';
+import patternsSpec from '../../../static/tokens/spec/patterns.json';
+import recipesSpec from '../../../static/tokens/spec/recipes.json';
+import textStylesSpec from '../../../static/tokens/spec/text-styles.json';
+import layerStylesSpec from '../../../static/tokens/spec/layer-styles.json';
+import conditionsSpec from '../../../static/tokens/spec/conditions.json';
+import animationStylesSpec from '../../../static/tokens/spec/animation-styles.json';
+import keyframesSpec from '../../../static/tokens/spec/keyframes.json';
+import colorPaletteSpec from '../../../static/tokens/spec/color-palette.json';
+import { css } from '../../../styled-system/css';
 
 export default {
   title: 'Tokens',

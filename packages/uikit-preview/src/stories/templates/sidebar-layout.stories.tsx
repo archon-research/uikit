@@ -1,6 +1,6 @@
 import { SidebarLayout, StyledSelect, ThemeProvider, ThemeToggle } from '@archon-research/design-system';
 
-import { css } from '../../styled-system/css';
+import { css } from '../../../styled-system/css';
 
 export default {
   title: 'Templates/Sidebar Layout',
@@ -121,7 +121,7 @@ const main = (
     <div className={panelClassName}>
       <div className={sectionTitleClassName}>Active View</div>
       <p className={mutedTextClassName}>
-        Drag the vertical and horizontal separators to resize the sidebar and bottom panel.
+        Drag the Ark Splitter-backed vertical and horizontal separators to resize the sidebar and bottom panel.
       </p>
     </div>
   </div>
