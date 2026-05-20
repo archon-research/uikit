@@ -311,8 +311,8 @@
         "Organisms",
         "Async state renderer"
       ],
-      "locStart": 61,
-      "locEnd": 76,
+      "locStart": 55,
+      "locEnd": 65,
       "filePath": "src/stories/organisms/async-state-renderer.stories.tsx",
       "namedExport": "Empty",
       "meta": {}
@@ -323,8 +323,8 @@
         "Organisms",
         "Async state renderer"
       ],
-      "locStart": 44,
-      "locEnd": 59,
+      "locStart": 41,
+      "locEnd": 53,
       "filePath": "src/stories/organisms/async-state-renderer.stories.tsx",
       "namedExport": "Error",
       "meta": {}
@@ -336,7 +336,7 @@
         "Async state renderer"
       ],
       "locStart": 33,
-      "locEnd": 42,
+      "locEnd": 39,
       "filePath": "src/stories/organisms/async-state-renderer.stories.tsx",
       "namedExport": "Loading",
       "meta": {}
@@ -347,8 +347,8 @@
         "Organisms",
         "Async state renderer"
       ],
-      "locStart": 78,
-      "locEnd": 84,
+      "locStart": 67,
+      "locEnd": 73,
       "filePath": "src/stories/organisms/async-state-renderer.stories.tsx",
       "namedExport": "Success",
       "meta": {}
@@ -359,8 +359,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 109,
-      "locEnd": 159,
+      "locStart": 103,
+      "locEnd": 153,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "ControlledState",
       "meta": {}
@@ -371,8 +371,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 53,
-      "locEnd": 68,
+      "locStart": 49,
+      "locEnd": 64,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "Default",
       "meta": {}
@@ -383,8 +383,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 70,
-      "locEnd": 85,
+      "locStart": 66,
+      "locEnd": 81,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "Loading",
       "meta": {}
@@ -395,8 +395,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 87,
-      "locEnd": 107,
+      "locStart": 83,
+      "locEnd": 101,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "RowSelection",
       "meta": {}
@@ -467,7 +467,7 @@
         "Playground"
       ],
       "locStart": 201,
-      "locEnd": 274,
+      "locEnd": 277,
       "filePath": "src/stories/playground/playground.stories.tsx",
       "namedExport": "ContrastChecker",
       "meta": {}
@@ -489,8 +489,8 @@
         "Templates",
         "Sidebar layout"
       ],
-      "locStart": 138,
-      "locEnd": 149,
+      "locStart": 144,
+      "locEnd": 150,
       "filePath": "src/stories/templates/sidebar-layout.stories.tsx",
       "namedExport": "Default",
       "meta": {}
@@ -500,8 +500,8 @@
       "levels": [
         "Tokens"
       ],
-      "locStart": 220,
-      "locEnd": 254,
+      "locStart": 225,
+      "locEnd": 259,
       "filePath": "src/stories/tokens/tokens.stories.tsx",
       "namedExport": "Colors",
       "meta": {}
@@ -512,7 +512,7 @@
         "Tokens"
       ],
       "locStart": 173,
-      "locEnd": 218,
+      "locEnd": 223,
       "filePath": "src/stories/tokens/tokens.stories.tsx",
       "namedExport": "Overview",
       "meta": {}
@@ -522,8 +522,8 @@
       "levels": [
         "Tokens"
       ],
-      "locStart": 364,
-      "locEnd": 404,
+      "locStart": 369,
+      "locEnd": 409,
       "filePath": "src/stories/tokens/tokens.stories.tsx",
       "namedExport": "SemanticTokens",
       "meta": {}
@@ -533,8 +533,8 @@
       "levels": [
         "Tokens"
       ],
-      "locStart": 310,
-      "locEnd": 362,
+      "locStart": 315,
+      "locEnd": 367,
       "filePath": "src/stories/tokens/tokens.stories.tsx",
       "namedExport": "Sizes",
       "meta": {}
@@ -544,8 +544,8 @@
       "levels": [
         "Tokens"
       ],
-      "locStart": 256,
-      "locEnd": 308,
+      "locStart": 261,
+      "locEnd": 313,
       "filePath": "src/stories/tokens/tokens.stories.tsx",
       "namedExport": "Spacing",
       "meta": {}
