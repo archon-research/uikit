@@ -1,46 +1,46 @@
-import { ResizeHandle } from '@archon-research/design-system';
+import { ResizeHandle } from "@archon-research/design-system";
 
-import { css } from '../../../styled-system/css';
+import { css } from "../../../styled-system/css";
 
 export default {
-  title: 'Atoms/Resize Handle',
+  title: "Atoms/Resize Handle",
 };
 
 const canvasClassName = css({
-  position: 'relative',
-  borderColor: 'border.subtle',
-  borderStyle: 'solid',
-  borderWidth: '1px',
-  borderRadius: 'md',
-  bg: 'surface.default',
+  position: "relative",
+  borderColor: "border.subtle",
+  borderStyle: "solid",
+  borderWidth: "1px",
+  borderRadius: "md",
+  bg: "surface.default",
 });
 
 const verticalCanvasClassName = css({
-  height: '52',
-  width: '80',
-  p: '6',
+  height: "52",
+  width: "80",
+  p: "6",
 });
 
 const horizontalCanvasClassName = css({
-  height: '40',
-  width: '80',
-  p: '6',
-  display: 'grid',
-  alignContent: 'end',
+  height: "40",
+  width: "80",
+  p: "6",
+  display: "grid",
+  alignContent: "end",
 });
 
 const titleClassName = css({
-  mb: '3',
-  fontFamily: 'sans',
-  color: 'text.default',
-  fontWeight: 'medium',
-  fontSize: 'sm',
+  mb: "3",
+  fontFamily: "sans",
+  color: "text.default",
+  fontWeight: "medium",
+  fontSize: "sm",
 });
 
 const stackClassName = css({
-  display: 'grid',
-  gap: '6',
-  p: '6',
+  display: "grid",
+  gap: "6",
+  p: "6",
 });
 
 const noop = () => {};

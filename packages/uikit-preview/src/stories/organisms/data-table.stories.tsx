@@ -1,12 +1,8 @@
-import {
-  DataTable,
-  SearchInput,
-  useDataTable,
-} from '@archon-research/design-system';
-import type { SortingState } from '@tanstack/react-table';
-import { useMemo, useState } from 'react';
+import { DataTable, SearchInput, useDataTable } from "@archon-research/design-system";
+import type { SortingState } from "@tanstack/react-table";
+import { useMemo, useState } from "react";
 
-import { css } from '../../../styled-system/css';
+import { css } from "../../../styled-system/css";
 
 type Row = {
   symbol: string;
@@ -15,39 +11,39 @@ type Row = {
 };
 
 const rows: Row[] = [
-  { symbol: 'USDC', chain: 'Ethereum', amountUsd: 1200450 },
-  { symbol: 'WETH', chain: 'Base', amountUsd: 980210 },
-  { symbol: 'WBTC', chain: 'Arbitrum', amountUsd: 661340 },
-  { symbol: 'rETH', chain: 'Optimism', amountUsd: 412001 },
-  { symbol: 'sDAI', chain: 'Avalanche', amountUsd: 309710 },
+  { symbol: "USDC", chain: "Ethereum", amountUsd: 1200450 },
+  { symbol: "WETH", chain: "Base", amountUsd: 980210 },
+  { symbol: "WBTC", chain: "Arbitrum", amountUsd: 661340 },
+  { symbol: "rETH", chain: "Optimism", amountUsd: 412001 },
+  { symbol: "sDAI", chain: "Avalanche", amountUsd: 309710 },
 ];
 
 const columns = [
   {
-    accessorKey: 'symbol',
-    header: 'Symbol',
+    accessorKey: "symbol",
+    header: "Symbol",
     cell: ({ row }: { row: { original: Row } }) => row.original.symbol,
   },
   {
-    accessorKey: 'chain',
-    header: 'Chain',
+    accessorKey: "chain",
+    header: "Chain",
     cell: ({ row }: { row: { original: Row } }) => row.original.chain,
   },
   {
-    accessorKey: 'amountUsd',
-    header: 'Amount (USD)',
+    accessorKey: "amountUsd",
+    header: "Amount (USD)",
     cell: ({ row }: { row: { original: Row } }) =>
-      `$${row.original.amountUsd.toLocaleString('en-US')}`,
+      `$${row.original.amountUsd.toLocaleString("en-US")}`,
   },
 ];
 
 export default {
-  title: 'Organisms/Data Table',
+  title: "Organisms/Data Table",
 };
 
 const wrapperClassName = css({
-  p: '6',
-  maxWidth: '5xl',
+  p: "6",
+  maxWidth: "5xl",
 });
 
 export const Default = () => {
@@ -85,9 +81,7 @@ export const Loading = () => {
 };
 
 export const RowSelection = () => {
-  const [selectedRowKey, setSelectedRowKey] = useState<string | null>(
-    'Base:WETH',
-  );
+  const [selectedRowKey, setSelectedRowKey] = useState<string | null>("Base:WETH");
   const table = useDataTable(rows, columns as never, {
     enableSorting: true,
     enableSearch: true,
@@ -108,7 +102,7 @@ export const RowSelection = () => {
 
 export const ControlledState = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
 
   const filteredRows = useMemo(() => {
     const normalizedQuery = query.toLowerCase().trim();
@@ -135,10 +129,10 @@ export const ControlledState = () => {
     <div className={wrapperClassName}>
       <div
         className={css({
-          display: 'grid',
-          gap: '4',
-          mb: '4',
-          maxWidth: 'sm',
+          display: "grid",
+          gap: "4",
+          mb: "4",
+          maxWidth: "sm",
         })}
       >
         <SearchInput

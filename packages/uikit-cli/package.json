@@ -8,6 +8,10 @@
     "wrapper": "./scripts/create-wrapper.sh",
     "clean": "rm -rf dist",
     "type:check": "tsgo -p tsconfig.json --noEmit",
+    "lint": "oxlint src",
+    "lint:fix": "oxlint --fix src",
+    "format": "oxfmt --write src",
+    "format:check": "oxfmt --check src",
     "prepare": "npm run build"
   },
   "bin": {
@@ -19,7 +23,9 @@
   },
   "devDependencies": {
     "@archon-research/tsconfig": "*",
-    "@types/node": "^24.7.2"
+    "@types/node": "^24.7.2",
+    "oxfmt": "^0.48.0",
+    "oxlint": "^1.64.0"
   },
   "files": [
     "dist"

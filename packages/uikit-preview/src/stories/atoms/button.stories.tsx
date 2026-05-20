@@ -1,30 +1,30 @@
-import { Button } from '@archon-research/design-system';
+import { Button } from "@archon-research/design-system";
 
-import { css } from '../../../styled-system/css';
+import { css } from "../../../styled-system/css";
 
 export default {
-  title: 'Atoms/Button',
+  title: "Atoms/Button",
 };
 
 const frameClassName = css({
-  display: 'grid',
-  gap: '4',
-  p: '6',
-  fontFamily: 'sans',
+  display: "grid",
+  gap: "4",
+  p: "6",
+  fontFamily: "sans",
 });
 
 const rowClassName = css({
-  display: 'grid',
-  gap: '3',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+  display: "grid",
+  gap: "3",
+  gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
 });
 
 const labelClassName = css({
-  color: 'text.muted',
-  fontSize: 'sm',
-  fontWeight: 'medium',
-  lineHeight: '1.4',
-  mb: '2',
+  color: "text.muted",
+  fontSize: "sm",
+  fontWeight: "medium",
+  lineHeight: "1.4",
+  mb: "2",
 });
 
 export const Panel = () => (
@@ -52,7 +52,7 @@ export const Item = () => (
   <div className={frameClassName}>
     <div>
       <p className={labelClassName}>Item variant (comfortable)</p>
-      <div className={css({ display: 'grid', gap: '2' })}>
+      <div className={css({ display: "grid", gap: "2" })}>
         <Button variant="item">Navigation item</Button>
         <Button variant="item" selected>
           Selected item
@@ -67,7 +67,7 @@ export const Item = () => (
     </div>
     <div>
       <p className={labelClassName}>Item variant (compact)</p>
-      <div className={css({ display: 'grid', gap: '2' })}>
+      <div className={css({ display: "grid", gap: "2" })}>
         <Button variant="item" density="compact">
           Compact item
         </Button>

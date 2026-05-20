@@ -13,12 +13,20 @@
     "build": "tsc -p tsconfig.build.json",
     "clean": "rm -rf dist",
     "prepare": "npm run build",
-    "type:check": "tsgo -p tsconfig.json --noEmit"
+    "type:check": "tsgo -p tsconfig.json --noEmit",
+    "lint": "oxlint index.ts",
+    "lint:fix": "oxlint --fix index.ts",
+    "format": "oxfmt --write index.ts",
+    "format:check": "oxfmt --check index.ts"
   },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "devDependencies": {
+    "oxfmt": "^0.48.0",
+    "oxlint": "^1.64.0"
   }
 }

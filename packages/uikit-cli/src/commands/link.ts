@@ -1,10 +1,10 @@
-import path from 'node:path';
-import type { CommandExecutor } from '../command-executor.js';
-import type { FileSystemOps } from '../fs-utils.js';
-import type { LinkValidator } from '../link-validator.js';
-import type { Logger } from '../logger.js';
-import type { PackageDiscovery } from '../package-discovery.js';
-import type { WorkspaceInfo } from '../types.js';
+import path from "node:path";
+import type { CommandExecutor } from "../command-executor.js";
+import type { FileSystemOps } from "../fs-utils.js";
+import type { LinkValidator } from "../link-validator.js";
+import type { Logger } from "../logger.js";
+import type { PackageDiscovery } from "../package-discovery.js";
+import type { WorkspaceInfo } from "../types.js";
 
 /**
  * Link command - links uikit packages into consumer workspaces
@@ -31,26 +31,23 @@ export class LinkCommand {
   }
 
   execute(consumerRoot: string, uikitRoot: string, verify: boolean = false): void {
-    this.logger.debug('Starting link command', { consumerRoot, uikitRoot });
+    this.logger.debug("Starting link command", { consumerRoot, uikitRoot });
 
     const uikitWorkspaces = this.discovery.loadWorkspaces(uikitRoot);
     const consumerWorkspaces = this.discovery.loadWorkspaces(consumerRoot);
 
     const uikitPackages = uikitWorkspaces.filter((ws) =>
-      String(ws.name ?? '').startsWith('@archon-research/'),
+      String(ws.name ?? "").startsWith("@archon-research/"),
     );
 
-    const dirByName = new Map(uikitPackages.map((pkg) => [pkg.name ?? '', pkg.path]));
-    dirByName.delete('');
+    const dirByName = new Map(uikitPackages.map((pkg) => [pkg.name ?? "", pkg.path]));
+    dirByName.delete("");
 
     const supportedNames = new Set(dirByName.keys());
-    const neededByWorkspace = this.collectWorkspaceRequirements(
-      consumerWorkspaces,
-      supportedNames,
-    );
+    const neededByWorkspace = this.collectWorkspaceRequirements(consumerWorkspaces, supportedNames);
 
     if (neededByWorkspace.size === 0) {
-      this.logger.info('No local uikit packages referenced by consumer workspaces.');
+      this.logger.info("No local uikit packages referenced by consumer workspaces.");
       return;
     }
 
@@ -116,13 +113,12 @@ export class LinkCommand {
     }
 
     // Link at root level
-    const rootPackageArgs = [...allNames].map((name) => `"${name}"`).join(' ');
+    const rootPackageArgs = [...allNames].map((name) => `"${name}"`).join(" ");
     if (rootPackageArgs) {
-      this.logger.info('Linking packages at root level...');
-      this.executor.exec(
-        `npm link ${rootPackageArgs} --package-lock=false --save=false`,
-        { cwd: consumerRoot },
-      );
+      this.logger.info("Linking packages at root level...");
+      this.executor.exec(`npm link ${rootPackageArgs} --package-lock=false --save=false`, {
+        cwd: consumerRoot,
+      });
     }
 
     // Ensure symlinks point to correct targets
@@ -135,7 +131,7 @@ export class LinkCommand {
 
     // Link per workspace
     for (const [workspace, names] of neededByWorkspace.entries()) {
-      const packageArgs = names.map((name) => `"${name}"`).join(' ');
+      const packageArgs = names.map((name) => `"${name}"`).join(" ");
       if (!packageArgs) continue;
 
       this.logger.debug(`Linking packages for workspace: ${workspace}`);
@@ -151,7 +147,7 @@ export class LinkCommand {
       this.clearWorkspaceViteCache(consumerRoot, workspace);
     }
 
-    this.logger.info('✓ Linked local uikit packages into consumer workspaces.');
+    this.logger.info("✓ Linked local uikit packages into consumer workspaces.");
   }
 
   private ensureLinkedPath(
@@ -159,13 +155,10 @@ export class LinkCommand {
     packageName: string,
     expectedTarget: string,
   ): void {
-    const packagePath = path.join(consumerRoot, 'node_modules', packageName);
+    const packagePath = path.join(consumerRoot, "node_modules", packageName);
 
     try {
-      if (
-        this.fs.isSymlink(packagePath) &&
-        this.fs.realpath(packagePath) === expectedTarget
-      ) {
+      if (this.fs.isSymlink(packagePath) && this.fs.realpath(packagePath) === expectedTarget) {
         return;
       }
       this.fs.removeDir(packagePath);
@@ -182,7 +175,7 @@ export class LinkCommand {
     workspace: string,
     packageName: string,
   ): void {
-    const packagePath = path.join(consumerRoot, workspace, 'node_modules', packageName);
+    const packagePath = path.join(consumerRoot, workspace, "node_modules", packageName);
 
     if (!this.fs.exists(packagePath)) {
       return;
@@ -203,7 +196,7 @@ export class LinkCommand {
   }
 
   private clearWorkspaceViteCache(consumerRoot: string, workspace: string): void {
-    const viteCachePath = path.join(consumerRoot, workspace, 'node_modules', '.vite');
+    const viteCachePath = path.join(consumerRoot, workspace, "node_modules", ".vite");
 
     if (!this.fs.exists(viteCachePath)) {
       return;
@@ -218,11 +211,11 @@ export class LinkCommand {
   }
 
   private runVerification(consumerRoot: string, dirByName: Map<string, string>): void {
-    this.logger.info('\nVerifying link state...');
+    this.logger.info("\nVerifying link state...");
     const result = this.validator.validateLinkedPackages(consumerRoot, dirByName);
 
     if (result.valid) {
-      this.logger.info('✓ All links valid');
+      this.logger.info("✓ All links valid");
     } else {
       this.logger.warn(`Found ${result.issues.length} issue(s):`);
       for (const issue of result.issues) {

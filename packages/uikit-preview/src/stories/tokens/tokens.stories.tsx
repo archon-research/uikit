@@ -1,19 +1,19 @@
-import { ThemeProvider } from '@archon-research/design-system';
+import { ThemeProvider } from "@archon-research/design-system";
 
-import tokensSpec from '../../../static/tokens/spec/tokens.json';
-import semanticTokensSpec from '../../../static/tokens/spec/semantic-tokens.json';
-import patternsSpec from '../../../static/tokens/spec/patterns.json';
-import recipesSpec from '../../../static/tokens/spec/recipes.json';
-import textStylesSpec from '../../../static/tokens/spec/text-styles.json';
-import layerStylesSpec from '../../../static/tokens/spec/layer-styles.json';
-import conditionsSpec from '../../../static/tokens/spec/conditions.json';
-import animationStylesSpec from '../../../static/tokens/spec/animation-styles.json';
-import keyframesSpec from '../../../static/tokens/spec/keyframes.json';
-import colorPaletteSpec from '../../../static/tokens/spec/color-palette.json';
-import { css } from '../../../styled-system/css';
+import tokensSpec from "../../../static/tokens/spec/tokens.json";
+import semanticTokensSpec from "../../../static/tokens/spec/semantic-tokens.json";
+import patternsSpec from "../../../static/tokens/spec/patterns.json";
+import recipesSpec from "../../../static/tokens/spec/recipes.json";
+import textStylesSpec from "../../../static/tokens/spec/text-styles.json";
+import layerStylesSpec from "../../../static/tokens/spec/layer-styles.json";
+import conditionsSpec from "../../../static/tokens/spec/conditions.json";
+import animationStylesSpec from "../../../static/tokens/spec/animation-styles.json";
+import keyframesSpec from "../../../static/tokens/spec/keyframes.json";
+import colorPaletteSpec from "../../../static/tokens/spec/color-palette.json";
+import { css } from "../../../styled-system/css";
 
 export default {
-  title: 'Tokens',
+  title: "Tokens",
 };
 
 type TokenValue = {
@@ -44,90 +44,90 @@ type SemanticGroup = {
 };
 
 const shellClassName = css({
-  color: 'text.default',
-  display: 'grid',
-  fontFamily: 'sans',
-  gap: '6',
-  maxWidth: '6xl',
-  p: '6',
+  color: "text.default",
+  display: "grid",
+  fontFamily: "sans",
+  gap: "6",
+  maxWidth: "6xl",
+  p: "6",
 });
 
 const mutedClassName = css({
-  color: 'text.muted',
-  fontSize: 'sm',
-  lineHeight: '1.6',
+  color: "text.muted",
+  fontSize: "sm",
+  lineHeight: "1.6",
 });
 
 const cardClassName = css({
-  bg: 'surface.default',
-  borderColor: 'border.subtle',
-  borderRadius: 'lg',
-  borderStyle: 'solid',
-  borderWidth: '1px',
-  p: '4',
+  bg: "surface.default",
+  borderColor: "border.subtle",
+  borderRadius: "lg",
+  borderStyle: "solid",
+  borderWidth: "1px",
+  p: "4",
 });
 
 const tableClassName = css({
-  borderCollapse: 'collapse',
-  fontSize: 'sm',
-  width: '100%',
-  '& th': {
-    borderBottomColor: 'border.subtle',
-    borderBottomStyle: 'solid',
-    borderBottomWidth: '1px',
-    color: 'text.muted',
-    fontWeight: 'semibold',
-    px: '2',
-    py: '2',
-    textAlign: 'left',
+  borderCollapse: "collapse",
+  fontSize: "sm",
+  width: "100%",
+  "& th": {
+    borderBottomColor: "border.subtle",
+    borderBottomStyle: "solid",
+    borderBottomWidth: "1px",
+    color: "text.muted",
+    fontWeight: "semibold",
+    px: "2",
+    py: "2",
+    textAlign: "left",
   },
-  '& td': {
-    borderBottomColor: 'border.subtle',
-    borderBottomStyle: 'solid',
-    borderBottomWidth: '1px',
-    px: '2',
-    py: '2',
-    verticalAlign: 'top',
+  "& td": {
+    borderBottomColor: "border.subtle",
+    borderBottomStyle: "solid",
+    borderBottomWidth: "1px",
+    px: "2",
+    py: "2",
+    verticalAlign: "top",
   },
-  '& tbody tr:last-child td': {
-    borderBottomWidth: '0',
+  "& tbody tr:last-child td": {
+    borderBottomWidth: "0",
   },
 });
 
 const swatchClassName = css({
-  borderColor: 'border.subtle',
-  borderRadius: 'sm',
-  borderStyle: 'solid',
-  borderWidth: '1px',
-  height: '7',
-  minWidth: '16',
+  borderColor: "border.subtle",
+  borderRadius: "sm",
+  borderStyle: "solid",
+  borderWidth: "1px",
+  height: "7",
+  minWidth: "16",
 });
 
 const linkClassName = css({
-  color: 'blue.600',
-  fontSize: 'sm',
-  textDecoration: 'underline',
-  textUnderlineOffset: '2px',
+  color: "blue.600",
+  fontSize: "sm",
+  textDecoration: "underline",
+  textUnderlineOffset: "2px",
   _dark: {
-    color: 'blue.300',
+    color: "blue.300",
   },
 });
 
 const allSpecs = [
-  { fileName: 'tokens.json', spec: tokensSpec },
-  { fileName: 'semantic-tokens.json', spec: semanticTokensSpec },
-  { fileName: 'patterns.json', spec: patternsSpec },
-  { fileName: 'recipes.json', spec: recipesSpec },
-  { fileName: 'text-styles.json', spec: textStylesSpec },
-  { fileName: 'layer-styles.json', spec: layerStylesSpec },
-  { fileName: 'conditions.json', spec: conditionsSpec },
-  { fileName: 'animation-styles.json', spec: animationStylesSpec },
-  { fileName: 'keyframes.json', spec: keyframesSpec },
-  { fileName: 'color-palette.json', spec: colorPaletteSpec },
+  { fileName: "tokens.json", spec: tokensSpec },
+  { fileName: "semantic-tokens.json", spec: semanticTokensSpec },
+  { fileName: "patterns.json", spec: patternsSpec },
+  { fileName: "recipes.json", spec: recipesSpec },
+  { fileName: "text-styles.json", spec: textStylesSpec },
+  { fileName: "layer-styles.json", spec: layerStylesSpec },
+  { fileName: "conditions.json", spec: conditionsSpec },
+  { fileName: "animation-styles.json", spec: animationStylesSpec },
+  { fileName: "keyframes.json", spec: keyframesSpec },
+  { fileName: "color-palette.json", spec: colorPaletteSpec },
 ];
 
 const toBlobUrl = (payload: unknown) =>
-  URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+  URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
 
 const tokensGroups = (tokensSpec.data as TokenGroup[]).filter((group) => group.values.length > 0);
 
@@ -135,23 +135,23 @@ const semanticGroups = (semanticTokensSpec.data as SemanticGroup[]).filter(
   (group) => group.values.length > 0,
 );
 
-const colors = tokensGroups.find((group) => group.type === 'colors')?.values ?? [];
-const spacing = tokensGroups.find((group) => group.type === 'spacing')?.values ?? [];
-const sizes = tokensGroups.find((group) => group.type === 'sizes')?.values ?? [];
+const colors = tokensGroups.find((group) => group.type === "colors")?.values ?? [];
+const spacing = tokensGroups.find((group) => group.type === "spacing")?.values ?? [];
+const sizes = tokensGroups.find((group) => group.type === "sizes")?.values ?? [];
 
 const toPixels = (value: string) => {
-  if (value.endsWith('rem')) {
-    const numeric = Number.parseFloat(value.replace('rem', ''));
+  if (value.endsWith("rem")) {
+    const numeric = Number.parseFloat(value.replace("rem", ""));
     if (!Number.isNaN(numeric)) {
       return `${Math.round(numeric * 16)}px`;
     }
   }
 
-  if (value.endsWith('px')) {
+  if (value.endsWith("px")) {
     return value;
   }
 
-  return '-';
+  return "-";
 };
 
 const toScaleNumber = (name: string) => {
@@ -200,10 +200,15 @@ export const Overview = () => (
               return (
                 <tr key={fileName}>
                   <td>{fileName}</td>
-                  <td>{(spec as { type?: string }).type ?? 'unknown'}</td>
+                  <td>{(spec as { type?: string }).type ?? "unknown"}</td>
                   <td>{count}</td>
                   <td>
-                    <a className={linkClassName} href={toBlobUrl(spec)} target="_blank" rel="noreferrer">
+                    <a
+                      className={linkClassName}
+                      href={toBlobUrl(spec)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       Open JSON
                     </a>
                   </td>
@@ -243,7 +248,7 @@ export const Colors = () => (
                   <div className={swatchClassName} style={{ background: entry.value }} />
                 </td>
                 <td>{entry.value}</td>
-                <td>{entry.cssVar ?? '-'}</td>
+                <td>{entry.cssVar ?? "-"}</td>
               </tr>
             ))}
           </tbody>
@@ -288,12 +293,12 @@ export const Spacing = () => {
                     <td>
                       <div
                         className={css({
-                          bg: 'rose.200',
-                          borderRadius: 'sm',
-                          height: '4',
-                          minWidth: '1',
+                          bg: "rose.200",
+                          borderRadius: "sm",
+                          height: "4",
+                          minWidth: "1",
                         })}
-                        style={{ width: px !== '-' ? px : '0px' }}
+                        style={{ width: px !== "-" ? px : "0px" }}
                       />
                     </td>
                   </tr>
@@ -342,12 +347,12 @@ export const Sizes = () => {
                     <td>
                       <div
                         className={css({
-                          bg: 'sky.200',
-                          borderRadius: 'sm',
-                          height: '4',
-                          minWidth: '1',
+                          bg: "sky.200",
+                          borderRadius: "sm",
+                          height: "4",
+                          minWidth: "1",
                         })}
-                        style={{ width: px !== '-' ? px : '0px' }}
+                        style={{ width: px !== "-" ? px : "0px" }}
                       />
                     </td>
                   </tr>
@@ -383,15 +388,15 @@ export const SemanticTokens = () => (
             </thead>
             <tbody>
               {group.values.map((entry) => {
-                const base = entry.values.find((value) => value.condition === 'base')?.value ?? '-';
-                const dark = entry.values.find((value) => value.condition === 'dark')?.value ?? '-';
+                const base = entry.values.find((value) => value.condition === "base")?.value ?? "-";
+                const dark = entry.values.find((value) => value.condition === "dark")?.value ?? "-";
 
                 return (
                   <tr key={entry.name}>
                     <td>{entry.name}</td>
                     <td>{base}</td>
                     <td>{dark}</td>
-                    <td>{entry.cssVar ?? '-'}</td>
+                    <td>{entry.cssVar ?? "-"}</td>
                   </tr>
                 );
               })}

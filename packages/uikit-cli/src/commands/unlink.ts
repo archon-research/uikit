@@ -1,6 +1,6 @@
-import type { CommandExecutor } from '../command-executor.js';
-import type { Logger } from '../logger.js';
-import type { PackageDiscovery } from '../package-discovery.js';
+import type { CommandExecutor } from "../command-executor.js";
+import type { Logger } from "../logger.js";
+import type { PackageDiscovery } from "../package-discovery.js";
 
 /**
  * Unlink command - simplified version without registry checks
@@ -14,21 +14,17 @@ export class UnlinkCommand {
     this.logger = logger;
   }
 
-  execute(
-    consumerRoot: string,
-    uikitRoot: string,
-    discovery: PackageDiscovery,
-  ): void {
+  execute(consumerRoot: string, uikitRoot: string, discovery: PackageDiscovery): void {
     // Load workspaces and determine requirements
     const uikitWorkspaces = discovery.loadWorkspaces(uikitRoot);
     const consumerWorkspaces = discovery.loadWorkspaces(consumerRoot);
 
     const uikitPackages = uikitWorkspaces.filter((ws) =>
-      String(ws.name ?? '').startsWith('@archon-research/'),
+      String(ws.name ?? "").startsWith("@archon-research/"),
     );
 
     const supportedNames = new Set(
-      uikitPackages.map((pkg) => pkg.name ?? '').filter((name) => name !== ''),
+      uikitPackages.map((pkg) => pkg.name ?? "").filter((name) => name !== ""),
     );
 
     // Collect workspace requirements
@@ -49,14 +45,14 @@ export class UnlinkCommand {
 
     const packages = [...allPackages];
     const workspaces = [...neededByWorkspace.keys()];
-    this.logger.debug('Starting unlink command', {
+    this.logger.debug("Starting unlink command", {
       consumerRoot,
       packageCount: packages.length,
     });
 
     // Unlink at root level
-    this.logger.info('Unlinking packages at root level...');
-    const packageArgs = packages.map((name) => `"${name}"`).join(' ');
+    this.logger.info("Unlinking packages at root level...");
+    const packageArgs = packages.map((name) => `"${name}"`).join(" ");
 
     if (packageArgs) {
       const result = this.executor.execQuiet(
@@ -65,7 +61,7 @@ export class UnlinkCommand {
       );
 
       if (!result) {
-        this.logger.warn('Root unlink had issues, continuing...');
+        this.logger.warn("Root unlink had issues, continuing...");
       }
     }
 
@@ -79,19 +75,17 @@ export class UnlinkCommand {
     }
 
     // Restore from registry
-    this.logger.info('Restoring packages from registry...');
-    const installResult = this.executor.exec('npm_config_min_release_age=0 npm install', {
+    this.logger.info("Restoring packages from registry...");
+    const installResult = this.executor.exec("npm_config_min_release_age=0 npm install", {
       cwd: consumerRoot,
     });
 
     if (!installResult.success) {
-      this.logger.error('Failed to restore packages from registry');
-      this.logger.warn(
-        'You may need to run `uikit-cli link` again to restore local links',
-      );
-      throw new Error('Unlink failed: could not restore registry packages');
+      this.logger.error("Failed to restore packages from registry");
+      this.logger.warn("You may need to run `uikit-cli link` again to restore local links");
+      throw new Error("Unlink failed: could not restore registry packages");
     }
 
-    this.logger.info('✓ Packages unlinked and restored from registry');
+    this.logger.info("✓ Packages unlinked and restored from registry");
   }
 }

@@ -1,6 +1,6 @@
-import path from 'node:path';
-import type { FileSystemOps } from './fs-utils.js';
-import type { WorkspaceInfo } from './types.js';
+import path from "node:path";
+import type { FileSystemOps } from "./fs-utils.js";
+import type { WorkspaceInfo } from "./types.js";
 
 /**
  * Package and workspace discovery for monorepos
@@ -19,7 +19,7 @@ export class PackageDiscovery {
     let current = startDir;
 
     while (true) {
-      const pkgPath = path.join(current, 'package.json');
+      const pkgPath = path.join(current, "package.json");
 
       if (this.fs.exists(pkgPath)) {
         try {
@@ -67,7 +67,7 @@ export class PackageDiscovery {
    * Find uikit root from consumer by looking for sibling "uikit" directory
    */
   findUIKitRootFromConsumer(consumerRoot: string): string | null {
-    const candidateNames = ['uikit'];
+    const candidateNames = ["uikit"];
     let current = consumerRoot;
 
     while (true) {
@@ -96,7 +96,7 @@ export class PackageDiscovery {
 
     try {
       const workspaces = this.loadWorkspaces(rootDir);
-      return workspaces.some((ws) => ws.name === '@archon-research/design-system');
+      return workspaces.some((ws) => ws.name === "@archon-research/design-system");
     } catch {
       return false;
     }
@@ -110,19 +110,19 @@ export class PackageDiscovery {
     const workspaces: WorkspaceInfo[] = [];
 
     if (process.env.UIKIT_DEBUG) {
-      console.log('[DEBUG loadWorkspaces] rootDir:', rootDir, 'patterns:', patterns);
+      console.log("[DEBUG loadWorkspaces] rootDir:", rootDir, "patterns:", patterns);
     }
 
     for (const pattern of patterns) {
       const resolved = this.resolveWorkspacePattern(rootDir, pattern);
       if (process.env.UIKIT_DEBUG) {
-        console.log('[DEBUG loadWorkspaces] pattern:', pattern, 'resolved to:', resolved);
+        console.log("[DEBUG loadWorkspaces] pattern:", pattern, "resolved to:", resolved);
       }
       for (const dir of resolved) {
-        const pkgPath = path.join(dir, 'package.json');
+        const pkgPath = path.join(dir, "package.json");
         if (!this.fs.exists(pkgPath)) {
           if (process.env.UIKIT_DEBUG) {
-            console.log('[DEBUG loadWorkspaces] Skipping (no package.json):', dir);
+            console.log("[DEBUG loadWorkspaces] Skipping (no package.json):", dir);
           }
           continue;
         }
@@ -149,15 +149,13 @@ export class PackageDiscovery {
   }
 
   private getWorkspacePatterns(rootDir: string): string[] {
-    const pkgPath = path.join(rootDir, 'package.json');
+    const pkgPath = path.join(rootDir, "package.json");
     if (!this.fs.exists(pkgPath)) {
       return [];
     }
 
     try {
-      const pkg = this.fs.readJson<{ workspaces?: string[] | { packages?: string[] } }>(
-        pkgPath,
-      );
+      const pkg = this.fs.readJson<{ workspaces?: string[] | { packages?: string[] } }>(pkgPath);
 
       if (Array.isArray(pkg.workspaces)) {
         return pkg.workspaces;
@@ -174,9 +172,9 @@ export class PackageDiscovery {
 
   private resolveWorkspacePattern(rootDir: string, pattern: string): string[] {
     // Handle simple glob patterns like "packages/*"
-    if (pattern.includes('*')) {
+    if (pattern.includes("*")) {
       // Only support "dir/*" pattern for now
-      if (pattern.endsWith('/*')) {
+      if (pattern.endsWith("/*")) {
         const baseDir = pattern.slice(0, -2);
         const basePath = path.join(rootDir, baseDir);
 
@@ -186,7 +184,7 @@ export class PackageDiscovery {
 
         const entries = this.fs.readDir(basePath);
         return entries
-          .filter((entry) => !entry.startsWith('.') && entry !== 'node_modules')
+          .filter((entry) => !entry.startsWith(".") && entry !== "node_modules")
           .map((entry) => path.join(basePath, entry))
           .filter((p) => this.fs.isDirectory(p));
       }

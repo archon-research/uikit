@@ -1,16 +1,16 @@
-import { ErrorState } from '@archon-research/design-system';
+import { ErrorState } from "@archon-research/design-system";
 
-import { css } from '../../../styled-system/css';
+import { css } from "../../../styled-system/css";
 
 export default {
-  title: 'Organisms/Error State',
+  title: "Organisms/Error State",
 };
 
 const wrapperClassName = css({
-  display: 'grid',
-  gap: '4',
-  p: '6',
-  maxWidth: '3xl',
+  display: "grid",
+  gap: "4",
+  p: "6",
+  maxWidth: "3xl",
 });
 
 export const Default = () => (
@@ -29,7 +29,7 @@ export const WithRetry = () => (
       title="Unable to load risk breakdown"
       description="Try again in a moment. If this keeps happening, contact support."
       onRetry={() => {
-        window.alert('Retry action triggered');
+        window.alert("Retry action triggered");
       }}
     />
   </div>

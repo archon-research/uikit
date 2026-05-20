@@ -15,7 +15,11 @@
     "build": "tsc -p tsconfig.build.json",
     "clean": "rm -rf dist",
     "prepare": "npm run build",
-    "type:check": "tsgo -p tsconfig.json --noEmit"
+    "type:check": "tsgo -p tsconfig.json --noEmit",
+    "lint": "oxlint *.ts",
+    "lint:fix": "oxlint --fix *.ts",
+    "format": "oxfmt --write *.ts",
+    "format:check": "oxfmt --check *.ts"
   },
   "exports": {
     "./base": {
@@ -30,5 +34,9 @@
       "types": "./dist/design-system-boundaries.d.ts",
       "default": "./dist/design-system-boundaries.js"
     }
+  },
+  "devDependencies": {
+    "oxfmt": "^0.48.0",
+    "oxlint": "^1.64.0"
   }
 }

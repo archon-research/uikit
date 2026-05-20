@@ -1,4 +1,4 @@
-export type CommandMode = 'link' | 'unlink' | 'register' | 'lint' | 'format';
+export type CommandMode = "link" | "unlink" | "register" | "lint" | "format";
 
 export type WorkspaceInfo = {
   name: string | null;
@@ -27,4 +27,4 @@ export type ValidationResult = {
   issues: ValidationIssue[];
 };
 
-export type SymlinkStatus = 'valid' | 'missing' | 'broken' | 'wrong-target';
+export type SymlinkStatus = "valid" | "missing" | "broken" | "wrong-target";

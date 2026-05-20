@@ -1,4 +1,4 @@
-import { type CSSProperties, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { type CSSProperties, type ReactNode, type SelectHTMLAttributes } from "react";
 
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   children: ReactNode;
@@ -9,46 +9,46 @@ export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
 export type StyledSelectProps = SelectProps;
 
 const wrapperStyle: CSSProperties = {
-  position: 'relative',
-  display: 'inline-flex',
-  alignItems: 'center',
-  width: '100%',
+  position: "relative",
+  display: "inline-flex",
+  alignItems: "center",
+  width: "100%",
 };
 
 const selectStyle: CSSProperties = {
-  width: '100%',
+  width: "100%",
   minWidth: 0,
   height: 36,
   borderWidth: 1,
-  borderStyle: 'solid',
-  borderColor: 'var(--colors-border-subtle, #d0d5dd)',
+  borderStyle: "solid",
+  borderColor: "var(--colors-border-subtle, #d0d5dd)",
   borderRadius: 8,
   paddingLeft: 12,
   paddingRight: 40,
-  background: 'var(--colors-surface-default, #ffffff)',
-  color: 'var(--colors-text-default, #111827)',
+  background: "var(--colors-surface-default, #ffffff)",
+  color: "var(--colors-text-default, #111827)",
   fontSize: 14,
   lineHeight: 1.4,
-  fontFamily: 'inherit',
-  appearance: 'none',
-  WebkitAppearance: 'none',
-  MozAppearance: 'none',
+  fontFamily: "inherit",
+  appearance: "none",
+  WebkitAppearance: "none",
+  MozAppearance: "none",
 };
 
 const disabledSelectStyle: CSSProperties = {
   opacity: 0.65,
-  cursor: 'not-allowed',
+  cursor: "not-allowed",
 };
 
 const chevronStyle: CSSProperties = {
-  position: 'absolute',
-  top: '50%',
+  position: "absolute",
+  top: "50%",
   right: 12,
   width: 16,
   height: 16,
-  color: 'var(--colors-text-muted, #667085)',
-  pointerEvents: 'none',
-  transform: 'translateY(-50%)',
+  color: "var(--colors-text-muted, #667085)",
+  pointerEvents: "none",
+  transform: "translateY(-50%)",
 };
 
 function SelectChevron() {
@@ -66,11 +66,7 @@ function SelectChevron() {
   );
 }
 
-export function Select({
-  children,
-  className,
-  ...props
-}: SelectProps) {
+export function Select({ children, className, ...props }: SelectProps) {
   return (
     <div className={className} style={wrapperStyle}>
       <select

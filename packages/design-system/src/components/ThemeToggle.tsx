@@ -1,63 +1,76 @@
-import { type CSSProperties } from 'react';
+import { type CSSProperties } from "react";
 
-import { useTheme, type ThemeMode } from '../theme/useTheme';
+import { useTheme, type ThemeMode } from "../theme/useTheme";
 
 const containerStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
+  display: "flex",
+  alignItems: "center",
   gap: 6,
-  width: '100%',
-  boxSizing: 'border-box',
+  width: "100%",
+  boxSizing: "border-box",
   padding: 4,
   borderRadius: 10,
-  border: '1px solid var(--colors-border-subtle, #d0d5dd)',
-  background: 'var(--colors-surface-subtle, #f8f9fb)',
+  border: "1px solid var(--colors-border-subtle, #d0d5dd)",
+  background: "var(--colors-surface-subtle, #f8f9fb)",
 };
 
 const buttonBaseStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
   flex: 1,
   minWidth: 0,
   gap: 6,
   border: 0,
   borderRadius: 8,
-  padding: '6px 10px',
+  padding: "6px 10px",
   fontSize: 12,
   lineHeight: 1.2,
-  cursor: 'pointer',
-  background: 'transparent',
-  color: 'var(--colors-text-muted, #667085)',
+  cursor: "pointer",
+  background: "transparent",
+  color: "var(--colors-text-muted, #667085)",
+};
+
+const radioInputStyle: CSSProperties = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  margin: -1,
+  padding: 0,
+  border: 0,
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(100%)",
+  whiteSpace: "nowrap",
 };
 
 const activeButtonStyle: CSSProperties = {
-  background: 'var(--colors-surface-default, #ffffff)',
-  color: 'var(--colors-text-default, #111827)',
-  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.08)',
+  background: "var(--colors-surface-default, #ffffff)",
+  color: "var(--colors-text-default, #111827)",
+  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.08)",
 };
 
 const MODES: Array<{ mode: ThemeMode; label: string }> = [
-  { mode: 'auto', label: 'Auto' },
-  { mode: 'light', label: 'Light' },
-  { mode: 'dark', label: 'Dark' },
+  { mode: "auto", label: "Auto" },
+  { mode: "light", label: "Light" },
+  { mode: "dark", label: "Dark" },
 ];
 
 function ThemeIcon({ mode }: { mode: ThemeMode }) {
   const iconProps = {
-    'aria-hidden': true,
-    fill: 'none',
+    "aria-hidden": true,
+    fill: "none",
     height: 14,
-    stroke: 'currentColor',
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
+    stroke: "currentColor",
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
     strokeWidth: 1.5,
-    viewBox: '0 0 16 16',
+    viewBox: "0 0 16 16",
     width: 14,
   };
 
   switch (mode) {
-    case 'auto':
+    case "auto":
       return (
         <svg {...iconProps}>
           <rect x="2.5" y="3" width="11" height="7.5" rx="1.5" />
@@ -65,7 +78,7 @@ function ThemeIcon({ mode }: { mode: ThemeMode }) {
           <path d="M8 10.5V13" />
         </svg>
       );
-    case 'light':
+    case "light":
       return (
         <svg {...iconProps}>
           <circle cx="8" cy="8" r="2.5" />
@@ -96,17 +109,20 @@ export function ThemeToggle() {
       {MODES.map((item) => {
         const active = mode === item.mode;
         return (
-          <button
+          <label
             key={item.mode}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            onClick={() => setMode(item.mode)}
             style={active ? { ...buttonBaseStyle, ...activeButtonStyle } : buttonBaseStyle}
           >
+            <input
+              type="radio"
+              name="theme-mode"
+              checked={active}
+              onChange={() => setMode(item.mode)}
+              style={radioInputStyle}
+            />
             <ThemeIcon mode={item.mode} />
             {item.label}
-          </button>
+          </label>
         );
       })}
     </div>

@@ -1,11 +1,5 @@
-import { Combobox, useListCollection } from '@ark-ui/react/combobox';
-import {
-  type CSSProperties,
-  type InputHTMLAttributes,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { Combobox, useListCollection } from "@ark-ui/react/combobox";
+import { type CSSProperties, type InputHTMLAttributes, useEffect, useMemo, useState } from "react";
 
 export type SearchInputOption =
   | string
@@ -21,7 +15,7 @@ type NormalizedOption = {
 
 type SearchInputProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
-  'value' | 'defaultValue' | 'onChange' | 'autoComplete'
+  "value" | "defaultValue" | "onChange" | "autoComplete"
 > & {
   value?: string;
   defaultValue?: string;
@@ -34,85 +28,78 @@ type SearchInputProps = Omit<
 };
 
 const wrapperStyle: CSSProperties = {
-  position: 'relative',
-  width: '100%',
+  position: "relative",
+  width: "100%",
 };
 
 const inputStyle: CSSProperties = {
-  width: '100%',
+  width: "100%",
   minWidth: 0,
   height: 36,
   borderWidth: 1,
-  borderStyle: 'solid',
-  borderColor: 'var(--colors-border-subtle, #d0d5dd)',
+  borderStyle: "solid",
+  borderColor: "var(--colors-border-subtle, #d0d5dd)",
   borderRadius: 8,
   paddingLeft: 34,
   paddingRight: 12,
-  background: 'var(--colors-surface-default, #ffffff)',
-  color: 'var(--colors-text-default, #111827)',
+  background: "var(--colors-surface-default, #ffffff)",
+  color: "var(--colors-text-default, #111827)",
   fontSize: 14,
   lineHeight: 1.4,
-  fontFamily: 'inherit',
-  outline: 'none',
+  fontFamily: "inherit",
+  outline: "none",
 };
 
 const disabledInputStyle: CSSProperties = {
   opacity: 0.65,
-  cursor: 'not-allowed',
+  cursor: "not-allowed",
 };
 
 const iconStyle: CSSProperties = {
-  position: 'absolute',
-  top: '50%',
+  position: "absolute",
+  top: "50%",
   left: 10,
   width: 16,
   height: 16,
-  transform: 'translateY(-50%)',
-  color: 'var(--colors-text-muted, #667085)',
-  pointerEvents: 'none',
+  transform: "translateY(-50%)",
+  color: "var(--colors-text-muted, #667085)",
+  pointerEvents: "none",
 };
 
 const popupStyle: CSSProperties = {
   marginTop: 6,
-  minWidth: 'var(--reference-width, var(--anchor-width))',
+  minWidth: "var(--reference-width, var(--anchor-width))",
   maxHeight: 280,
-  overflowY: 'auto',
+  overflowY: "auto",
   borderWidth: 1,
-  borderStyle: 'solid',
-  borderColor: 'var(--colors-border-subtle, #d0d5dd)',
+  borderStyle: "solid",
+  borderColor: "var(--colors-border-subtle, #d0d5dd)",
   borderRadius: 10,
-  background: 'var(--colors-surface-default, #ffffff)',
-  boxShadow: '0 10px 24px rgba(16, 24, 40, 0.14)',
+  background: "var(--colors-surface-default, #ffffff)",
+  boxShadow: "0 10px 24px rgba(16, 24, 40, 0.14)",
   padding: 4,
   zIndex: 60,
 };
 
 const itemStyle: CSSProperties = {
   borderRadius: 8,
-  padding: '8px 10px',
+  padding: "8px 10px",
   fontSize: 14,
   lineHeight: 1.3,
-  color: 'var(--colors-text-default, #111827)',
-  cursor: 'pointer',
+  color: "var(--colors-text-default, #111827)",
+  cursor: "pointer",
 };
 
 const statusStyle: CSSProperties = {
-  padding: '8px 10px',
+  padding: "8px 10px",
   fontSize: 13,
-  color: 'var(--colors-text-muted, #667085)',
+  color: "var(--colors-text-muted, #667085)",
 };
 
 function SearchIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 16 16" style={iconStyle}>
-      <circle
-        cx="7"
-        cy="7"
-        r="4.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-      />
+      <circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
       <path
         d="M10.4 10.4L14 14"
         fill="none"
@@ -125,7 +112,7 @@ function SearchIcon() {
 }
 
 function normalizeOption(option: SearchInputOption): NormalizedOption {
-  if (typeof option === 'string') {
+  if (typeof option === "string") {
     return { value: option, label: option };
   }
 
@@ -139,26 +126,22 @@ export function SearchInput({
   options,
   autoComplete = true,
   onSelectOption,
-  placeholder = 'Search',
-  emptyMessage = 'No matches found.',
+  placeholder = "Search",
+  emptyMessage = "No matches found.",
   loading = false,
   disabled,
   className,
   ...inputProps
 }: SearchInputProps) {
-  const [internalValue, setInternalValue] = useState(defaultValue ?? '');
-  const normalizedOptions = useMemo(
-    () => (options ?? []).map(normalizeOption),
-    [options],
-  );
+  const [internalValue, setInternalValue] = useState(defaultValue ?? "");
+  const normalizedOptions = useMemo(() => (options ?? []).map(normalizeOption), [options]);
   const currentValue = value ?? internalValue;
   const supportsAutocomplete = autoComplete && normalizedOptions.length > 0;
   const { collection, filter, set } = useListCollection({
     initialItems: normalizedOptions,
     itemToString: (item) => item.label,
     itemToValue: (item) => item.value,
-    filter: (itemText, filterText) =>
-      itemText.toLowerCase().includes(filterText.toLowerCase()),
+    filter: (itemText, filterText) => itemText.toLowerCase().includes(filterText.toLowerCase()),
   });
 
   useEffect(() => {
@@ -223,19 +206,13 @@ export function SearchInput({
 
       <Combobox.Positioner>
         <Combobox.Content style={popupStyle}>
-          {loading ? (
-            <div style={statusStyle}>Loading suggestions...</div>
-          ) : null}
+          {loading ? <div style={statusStyle}>Loading suggestions...</div> : null}
 
           <Combobox.Empty style={statusStyle}>{emptyMessage}</Combobox.Empty>
 
           <Combobox.List>
             {collection.items.map((option) => (
-              <Combobox.Item
-                key={option.value}
-                item={option}
-                style={itemStyle}
-              >
+              <Combobox.Item key={option.value} item={option} style={itemStyle}>
                 <Combobox.ItemText>{option.label}</Combobox.ItemText>
               </Combobox.Item>
             ))}

@@ -1,22 +1,22 @@
-import { type CSSProperties } from 'react';
+import { type CSSProperties } from "react";
 
 type LoadingIndicatorProps = {
   message: string;
 };
 
 const wrapperStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
+  display: "inline-flex",
+  alignItems: "center",
   gap: 8,
   fontSize: 14,
   lineHeight: 1.6,
-  color: 'var(--colors-text-muted, #667085)',
+  color: "var(--colors-text-muted, #667085)",
 };
 
 const spinnerStyle: CSSProperties = {
-  display: 'block',
+  display: "block",
   flexShrink: 0,
-  animation: 'spin 1s linear infinite',
+  animation: "spin 1s linear infinite",
 };
 
 const spinKeyframes = `@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`;

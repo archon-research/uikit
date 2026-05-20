@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execSync } from "node:child_process";
 
 export type ExecOptions = {
   cwd?: string;
@@ -40,20 +40,20 @@ export class NpmCommandExecutor implements CommandExecutor {
     try {
       const stdout = execSync(command, {
         cwd,
-        encoding: 'utf8',
-        stdio: silent ? 'pipe' : 'inherit',
+        encoding: "utf8",
+        stdio: silent ? "pipe" : "inherit",
       });
 
       return {
-        stdout: typeof stdout === 'string' ? stdout : '',
-        stderr: '',
+        stdout: typeof stdout === "string" ? stdout : "",
+        stderr: "",
         success: true,
       };
     } catch (error) {
       const err = error as { stdout?: Buffer; stderr?: Buffer; message?: string };
       return {
-        stdout: err.stdout?.toString('utf8') || '',
-        stderr: err.stderr?.toString('utf8') || err.message || 'Unknown error',
+        stdout: err.stdout?.toString("utf8") || "",
+        stderr: err.stderr?.toString("utf8") || err.message || "Unknown error",
         success: false,
       };
     }

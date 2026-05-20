@@ -1,18 +1,18 @@
-import { ErrorBoundary } from '@archon-research/design-system';
+import { ErrorBoundary } from "@archon-research/design-system";
 
-import { css } from '../../../styled-system/css';
+import { css } from "../../../styled-system/css";
 
 export default {
-  title: 'Organisms/Error Boundary',
+  title: "Organisms/Error Boundary",
 };
 
 const wrapperClassName = css({
-  p: '6',
-  maxWidth: '3xl',
+  p: "6",
+  maxWidth: "3xl",
 });
 
 function ThrowsOnRender(): never {
-  throw new Error('Intentional render error from story demo');
+  throw new Error("Intentional render error from story demo");
 }
 
 export const CustomFallback = () => (

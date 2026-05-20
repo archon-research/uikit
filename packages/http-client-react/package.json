@@ -11,7 +11,11 @@
     ".": "./src/index.tsx"
   },
   "scripts": {
-    "type:check": "tsgo -p tsconfig.json --noEmit"
+    "type:check": "tsgo -p tsconfig.json --noEmit",
+    "lint": "oxlint src",
+    "lint:fix": "oxlint --fix src",
+    "format": "oxfmt --write src",
+    "format:check": "oxfmt --check src"
   },
   "dependencies": {
     "@archon-research/http-client-core": "*",
@@ -20,5 +24,9 @@
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.48.0",
+    "oxlint": "^1.64.0"
   }
 }

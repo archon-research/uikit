@@ -1,8 +1,8 @@
 const baseConfig = {
-  plugins: ['typescript'],
+  plugins: ["typescript"],
   categories: {
-    correctness: 'warn',
-    suspicious: 'warn',
+    correctness: "warn",
+    suspicious: "warn",
   },
 };
 

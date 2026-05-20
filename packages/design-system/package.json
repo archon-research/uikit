@@ -30,8 +30,10 @@
     "clean": "rm -rf dist",
     "prepare": "npm run build",
     "type:check": "tsgo -p tsconfig.json --noEmit",
-    "lint": "npm exec -- oxlint -c oxlint.config.ts src",
-    "lint:fix": "npm exec -- oxlint -c oxlint.config.ts --fix src"
+    "lint": "oxlint src",
+    "lint:fix": "oxlint --fix src",
+    "format": "oxfmt --write src",
+    "format:check": "oxfmt --check src"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -45,6 +47,7 @@
   },
   "devDependencies": {
     "@archon-research/oxlint-config": "*",
+    "oxfmt": "^0.48.0",
     "oxlint": "^1.64.0"
   }
 }
