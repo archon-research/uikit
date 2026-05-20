@@ -2,6 +2,7 @@ export * from './recipes/index';
 export { SidebarLayout, type SidebarLayoutProps } from './layouts/SidebarLayout';
 export { ThemeProvider } from './theme/ThemeProvider';
 export { useTheme, type ThemeContextValue, type ThemeMode } from './theme/useTheme';
+/** @deprecated Use Ark Splitter primitives (for example, Splitter.ResizeTrigger) for new resize interactions. */
 export { ResizeHandle } from './components/ResizeHandle';
 export { SkeletonRows } from './components/SkeletonRows';
 export { SkeletonStack } from './components/SkeletonStack';

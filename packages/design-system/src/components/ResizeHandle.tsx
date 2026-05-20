@@ -1,5 +1,8 @@
 import { type CSSProperties, type MouseEventHandler } from 'react';
 
+/**
+ * @deprecated Use Ark Splitter primitives (for example, Splitter.ResizeTrigger) for new resize interactions.
+ */
 type ResizeHandleProps = {
   axis: 'horizontal' | 'vertical';
   label: string;
@@ -19,6 +22,9 @@ const lineBaseStyle: CSSProperties = {
   pointerEvents: 'none',
 };
 
+/**
+ * @deprecated Use Ark Splitter primitives (for example, Splitter.ResizeTrigger) for new resize interactions.
+ */
 export function ResizeHandle({
   axis,
   label,
