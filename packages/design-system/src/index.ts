@@ -20,6 +20,11 @@ export {
 } from './components/SurfaceMessage';
 export { ThemeToggle } from './components/ThemeToggle';
 export { Button } from './components/Button';
+export type {
+	ButtonVariant,
+	ButtonSize,
+	ButtonDensity,
+} from './components/Button';
 export { SearchInput } from './components/SearchInput';
 export {
 	Select,

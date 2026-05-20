@@ -5,26 +5,33 @@
     "access": "public"
   },
   "type": "module",
+  "files": [
+    "dist",
+    "src"
+  ],
   "main": "src/index.ts",
-  "types": "src/index.d.ts",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
+      "types": "./dist/index.d.ts",
       "default": "./src/index.ts"
     },
     "./recipes": {
-      "types": "./src/recipes/index.d.ts",
+      "types": "./dist/recipes/index.d.ts",
       "default": "./src/recipes/index.ts"
     },
     "./panda-preset": {
-      "types": "./src/panda-preset.d.ts",
+      "types": "./dist/panda-preset.d.ts",
       "default": "./src/panda-preset.ts"
     }
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build",
     "type:check": "tsgo -p tsconfig.json --noEmit",
-    "lint": "npm exec --yes -- oxlint -c oxlint.config.ts src",
-    "lint:fix": "npm exec --yes -- oxlint -c oxlint.config.ts --fix src"
+    "lint": "npm exec -- oxlint -c oxlint.config.ts src",
+    "lint:fix": "npm exec -- oxlint -c oxlint.config.ts --fix src"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
