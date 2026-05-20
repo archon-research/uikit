@@ -6,9 +6,6 @@
   "workspaces": [
     "packages/*"
   ],
-  "volta": {
-    "node": "24.15.0"
-  },
   "scripts": {
     "clean": "npm run clean --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
