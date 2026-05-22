@@ -35,6 +35,8 @@ export {
 } from './components/SurfaceMessage';
 export { ThemeToggle } from './components/ThemeToggle';
 export { Button } from './components/Button';
+export { Badge } from './components/Badge';
+export type { BadgeTone } from './components/Badge';
 export type {
   ButtonVariant,
   ButtonSize,
@@ -53,6 +55,9 @@ export { ErrorState } from './components/ErrorState';
 export { ErrorBoundary } from './components/ErrorBoundary';
 export { AsyncStateRenderer } from './components/AsyncStateRenderer';
 export * from './components/data-table';
+export { Avatar } from '@ark-ui/react/avatar';
+export { Menu } from '@ark-ui/react/menu';
+export { Slider } from '@ark-ui/react/slider';
 export { Tooltip } from '@ark-ui/react/tooltip';
 export type {
   CellContext,
