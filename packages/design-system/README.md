@@ -44,30 +44,6 @@ export default defineConfig({
 });
 ```
 
-## Migration from direct primitive imports
-
-During the Ark migration, consuming apps should import primitives through `@archon-research/design-system` rather than directly from `@base-ui/react` or `@ark-ui/react`.
-
-Preferred:
-
-```typescript
-import { Tooltip, Tabs, Toggle, ToggleGroup, Switch } from '@archon-research/design-system';
-```
-
-Avoid:
-
-```typescript
-import { Tooltip } from '@ark-ui/react/tooltip';
-import { Switch } from '@base-ui/react/switch';
-```
-
-Migration workflow:
-
-1. Run `npm run migration:audit-imports` from the repository root to find remaining direct imports.
-2. Replace direct primitive imports with design-system entrypoints where an equivalent export exists.
-3. Keep consumer linting on the `design-system-boundaries` oxlint preset so new violations surface during the migration window.
-4. Once consumer repos are clean, Phase 3 can escalate warnings to errors.
-
 ### Browse components
 
 View available components and their stories at:

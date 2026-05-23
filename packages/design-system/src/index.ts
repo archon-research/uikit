@@ -3,7 +3,6 @@ export {
   designSystemComponentManifest,
   type DesignSystemBehaviorSource,
   type DesignSystemComponentManifestEntry,
-  type DesignSystemLifecycleStatus,
   type DesignSystemStoryBucket,
   type DesignSystemStyleOwner,
 } from './component-manifest';

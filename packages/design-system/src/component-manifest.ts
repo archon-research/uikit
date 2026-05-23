@@ -16,8 +16,6 @@ export type DesignSystemStoryBucket =
   | 'templates'
   | null;
 
-export type DesignSystemLifecycleStatus = 'stable' | 'migration' | 'deprecated';
-
 export type DesignSystemComponentManifestEntry = {
   exportName: string;
   behaviorSource: DesignSystemBehaviorSource;
@@ -25,7 +23,6 @@ export type DesignSystemComponentManifestEntry = {
   storyBucket: DesignSystemStoryBucket;
   contractScope: string | null;
   recipeKey: string | null;
-  status: DesignSystemLifecycleStatus;
 };
 
 export const designSystemComponentManifest = [
@@ -36,7 +33,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'atoms',
     contractScope: 'button',
     recipeKey: 'button',
-    status: 'stable',
   },
   {
     exportName: 'LoadingIndicator',
@@ -45,7 +41,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'atoms',
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'ResizeHandle',
@@ -54,7 +49,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'atoms',
     contractScope: 'resize-handle',
     recipeKey: null,
-    status: 'deprecated',
   },
   {
     exportName: 'Switch',
@@ -63,7 +57,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'atoms',
     contractScope: null,
     recipeKey: 'toggleSwitch',
-    status: 'stable',
   },
   {
     exportName: 'SearchInput',
@@ -72,7 +65,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'molecules',
     contractScope: null,
     recipeKey: null,
-    status: 'migration',
   },
   {
     exportName: 'Select',
@@ -81,7 +73,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'molecules',
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'StyledSelect',
@@ -90,7 +81,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'molecules',
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'SurfaceMessage',
@@ -99,7 +89,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'molecules',
     contractScope: 'surface-message',
     recipeKey: 'surfaceMessage',
-    status: 'stable',
   },
   {
     exportName: 'ThemeToggle',
@@ -108,7 +97,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'molecules',
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'SkeletonRows',
@@ -117,7 +105,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'molecules',
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'SkeletonStack',
@@ -126,7 +113,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'molecules',
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'AsyncStateRenderer',
@@ -135,7 +121,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'organisms',
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'DataTable',
@@ -144,7 +129,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'organisms',
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'EmptyState',
@@ -153,7 +137,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'organisms',
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'ErrorBoundary',
@@ -162,7 +145,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'organisms',
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'ErrorState',
@@ -171,7 +153,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'organisms',
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'SidebarLayout',
@@ -180,7 +161,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'templates',
     contractScope: 'resize-handle',
     recipeKey: null,
-    status: 'migration',
   },
   {
     exportName: 'Tabs',
@@ -189,7 +169,6 @@ export const designSystemComponentManifest = [
     storyBucket: null,
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'Toggle',
@@ -198,7 +177,6 @@ export const designSystemComponentManifest = [
     storyBucket: null,
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'ToggleGroup',
@@ -207,7 +185,6 @@ export const designSystemComponentManifest = [
     storyBucket: null,
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'Tooltip',
@@ -216,6 +193,5 @@ export const designSystemComponentManifest = [
     storyBucket: null,
     contractScope: null,
     recipeKey: null,
-    status: 'stable',
   },
 ] as const satisfies readonly DesignSystemComponentManifestEntry[];
