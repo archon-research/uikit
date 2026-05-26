@@ -15,6 +15,10 @@
       "path": "skills/eyes/SKILL.md"
     },
     {
+      "id": "impeccable",
+      "path": "skills/impeccable/SKILL.md"
+    },
+    {
       "id": "migrate-oxfmt",
       "path": "skills/migrate-oxfmt/SKILL.md"
     },
@@ -33,6 +37,14 @@
     {
       "id": "panda-css",
       "path": "skills/panda-css/SKILL.md"
+    },
+    {
+      "id": "uikit-design-audit",
+      "path": "skills/uikit-design-audit/SKILL.md"
+    },
+    {
+      "id": "uikit-live",
+      "path": "skills/uikit-live/SKILL.md"
     },
     {
       "id": "web-design",
