@@ -61,6 +61,11 @@ export { Menu } from '@ark-ui/react/menu';
 export { Slider } from '@ark-ui/react/slider';
 export { TreeView, createTreeCollection } from '@ark-ui/react/tree-view';
 export type { TreeCollection, TreeNode } from '@ark-ui/react/tree-view';
+export {
+  useTreeView,
+  type UseTreeViewProps,
+  type UseTreeViewReturn,
+} from '@ark-ui/react/tree-view';
 export { Tooltip } from '@ark-ui/react/tooltip';
 export type {
   CellContext,

@@ -77,6 +77,13 @@ const topBarStyle: CSSProperties = {
   minHeight: TOP_BAR_MIN_HEIGHT,
 };
 
+const contentPanelStyle: CSSProperties = {
+  minWidth: 0,
+  minHeight: 0,
+  height: '100%',
+  overflow: 'hidden',
+};
+
 const contentStyle: CSSProperties = {
   minWidth: 0,
   minHeight: 0,
@@ -412,7 +419,7 @@ export function SidebarLayout({
                   }
                 }}
               >
-                <Splitter.Panel id="content" style={contentStyle}>
+                <Splitter.Panel id="content" style={contentPanelStyle}>
                   {main}
                 </Splitter.Panel>
 
