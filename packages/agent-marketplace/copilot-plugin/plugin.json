@@ -15,6 +15,14 @@
       "path": "skills/eyes/SKILL.md"
     },
     {
+      "id": "migrate-oxfmt",
+      "path": "skills/migrate-oxfmt/SKILL.md"
+    },
+    {
+      "id": "migrate-oxlint",
+      "path": "skills/migrate-oxlint/SKILL.md"
+    },
+    {
       "id": "panda-css",
       "path": "skills/panda-css/SKILL.md"
     },
