@@ -60,23 +60,6 @@ If your consumer workspace prefers to run tooling directly, it can install and i
 `@archon-research/oxfmt-config` remain reusable config packages, while `uikit-cli` remains an
 optional workflow wrapper.
 
-### Audit direct primitive imports in consumer code
-
-From any consumer workspace root:
-
-```bash
-./node_modules/.bin/uikit-cli audit-imports
-```
-
-Optionally pass one or more target paths:
-
-```bash
-./node_modules/.bin/uikit-cli audit-imports src apps/web
-```
-
-This reports direct `@ark-ui/react` imports (and any legacy `@base-ui/react` imports) so they can be migrated to
-`@archon-research/design-system` entrypoints.
-
 ### Link uikit packages into a consumer repository
 
 From your consumer repository:

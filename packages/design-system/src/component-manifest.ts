@@ -1,7 +1,6 @@
 export type DesignSystemBehaviorSource =
   | 'design-system'
   | 'ark-ui'
-  | 'base-ui'
   | 'tanstack-react-table';
 
 export type DesignSystemStyleOwner =

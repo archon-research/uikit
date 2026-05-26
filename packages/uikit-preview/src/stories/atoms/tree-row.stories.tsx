@@ -54,7 +54,7 @@ export const BranchRows = () => (
         leading={<span className={chevronClassName}>{'>'}</span>}
       />
       <TreeRow
-        label="Pending migration"
+        label="Manual review"
         leading={<span className={chevronClassName}>{'>'}</span>}
         tone="subdued"
       />

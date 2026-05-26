@@ -49,8 +49,8 @@ export const InContext = () => (
       <Badge tone="success">Healthy</Badge>
     </div>
     <div className={rowClassName}>
-      <span>Migration status</span>
-      <Badge tone="warning">Needs review</Badge>
+      <span>Incident response</span>
+      <Badge tone="warning">Needs attention</Badge>
     </div>
   </div>
 );
