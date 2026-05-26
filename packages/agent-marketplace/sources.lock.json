@@ -86,6 +86,27 @@
       "resolved": "packages/agent-marketplace/content/agents/ui-coder.md"
     },
     {
+      "id": "ui-auditor",
+      "kind": "agent",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/agents/ui-auditor.md"
+    },
+    {
+      "id": "ui-happy-path-checker",
+      "kind": "agent",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/agents/ui-happy-path-checker.md"
+    },
+    {
+      "id": "ui-performance-tuner",
+      "kind": "agent",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/agents/ui-performance-tuner.md"
+    },
+    {
       "id": "ui-verifier",
       "kind": "agent",
       "sourceType": "local-derived",

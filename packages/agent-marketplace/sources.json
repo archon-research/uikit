@@ -133,6 +133,39 @@
       ]
     },
     {
+      "id": "ui-auditor",
+      "kind": "agent",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/agents/ui-auditor.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Lightweight design and UX audit role without Playwright dependency.",
+        "Token-first and component-library-correctness focus."
+      ]
+    },
+    {
+      "id": "ui-happy-path-checker",
+      "kind": "agent",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/agents/ui-happy-path-checker.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Focused on functional journey verification and state continuity.",
+        "Complements visual regression verification workflows."
+      ]
+    },
+    {
+      "id": "ui-performance-tuner",
+      "kind": "agent",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/agents/ui-performance-tuner.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Performance diagnosis and optimization role for UIKit surfaces.",
+        "Uses practical optimize-oriented workflows."
+      ]
+    },
+    {
       "id": "ui-verifier",
       "kind": "agent",
       "sourceType": "local-derived",
