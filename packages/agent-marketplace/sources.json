@@ -45,6 +45,28 @@
       ]
     },
     {
+      "id": "migrate-oxlint",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "upstream": "https://raw.githubusercontent.com/oxc-project/oxc/261c47789d60d91ee0afe0a1cbc361d39e982bbe/.agents/skills/migrate-oxlint/SKILL.md",
+      "pinnedRevision": "261c47789d60d91ee0afe0a1cbc361d39e982bbe",
+      "normalizationNotes": [
+        "First-party skill from OXC package authors.",
+        "Vendored into normalized content for deterministic plugin generation."
+      ]
+    },
+    {
+      "id": "migrate-oxfmt",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "upstream": "https://raw.githubusercontent.com/oxc-project/oxc/261c47789d60d91ee0afe0a1cbc361d39e982bbe/.agents/skills/migrate-oxfmt/SKILL.md",
+      "pinnedRevision": "261c47789d60d91ee0afe0a1cbc361d39e982bbe",
+      "normalizationNotes": [
+        "First-party skill from OXC package authors.",
+        "Vendored into normalized content for deterministic plugin generation."
+      ]
+    },
+    {
       "id": "ui-coder",
       "kind": "agent",
       "sourceType": "local-derived",
