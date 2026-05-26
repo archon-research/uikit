@@ -1,0 +1,47 @@
+{
+  "lockVersion": 1,
+  "sources": [
+    {
+      "id": "eyes",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "pinnedRevision": "280c015271cbf539f7950469df6f515cc41be6ec",
+      "resolved": "https://raw.githubusercontent.com/mintuz/claude-plugins/280c015271cbf539f7950469df6f515cc41be6ec/plugins/web/skills/eyes/SKILL.md"
+    },
+    {
+      "id": "web-design",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "pinnedRevision": "280c015271cbf539f7950469df6f515cc41be6ec",
+      "resolved": "https://raw.githubusercontent.com/mintuz/claude-plugins/280c015271cbf539f7950469df6f515cc41be6ec/plugins/web/skills/web-design/SKILL.md"
+    },
+    {
+      "id": "panda-css",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/panda-css/SKILL.md"
+    },
+    {
+      "id": "ark-ui-guidance",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/ark-ui-guidance/SKILL.md"
+    },
+    {
+      "id": "ui-coder",
+      "kind": "agent",
+      "sourceType": "local-derived",
+      "pinnedRevision": "local-sync-2026-05-26",
+      "resolved": "packages/agent-marketplace/content/agents/ui-coder.md"
+    },
+    {
+      "id": "ui-verifier",
+      "kind": "agent",
+      "sourceType": "local-derived",
+      "pinnedRevision": "local-sync-2026-05-26",
+      "resolved": "packages/agent-marketplace/content/agents/ui-verifier.md"
+    }
+  ]
+}

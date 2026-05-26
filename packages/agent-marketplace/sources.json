@@ -1,0 +1,70 @@
+{
+  "sources": [
+    {
+      "id": "eyes",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "upstream": "https://raw.githubusercontent.com/mintuz/claude-plugins/280c015271cbf539f7950469df6f515cc41be6ec/plugins/web/skills/eyes/SKILL.md",
+      "pinnedRevision": "280c015271cbf539f7950469df6f515cc41be6ec",
+      "normalizationNotes": [
+        "Keep source frontmatter and body as-is unless plugin runtime requires adaptation.",
+        "Treat this as externally owned content."
+      ]
+    },
+    {
+      "id": "web-design",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "upstream": "https://raw.githubusercontent.com/mintuz/claude-plugins/280c015271cbf539f7950469df6f515cc41be6ec/plugins/web/skills/web-design/SKILL.md",
+      "pinnedRevision": "280c015271cbf539f7950469df6f515cc41be6ec",
+      "normalizationNotes": [
+        "Keep source frontmatter and body as-is unless plugin runtime requires adaptation.",
+        "Treat this as externally owned content."
+      ]
+    },
+    {
+      "id": "panda-css",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/panda-css/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Authored for this repository.",
+        "Grounded in design-system Panda usage and recipe patterns."
+      ]
+    },
+    {
+      "id": "ark-ui-guidance",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/ark-ui-guidance/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Authored from Ark UI llms index and local architecture constraints.",
+        "Focuses on styling, composition, forms, and collection/tree usage."
+      ]
+    },
+    {
+      "id": "ui-coder",
+      "kind": "agent",
+      "sourceType": "local-derived",
+      "upstream": "/Users/rohit/Code/synome/agent-prompts/ui-coder.md",
+      "pinnedRevision": "local-sync-2026-05-26",
+      "normalizationNotes": [
+        "Derived from Synome prompt with plugin-native skill references.",
+        "Scope adjusted for this monorepo and package layout."
+      ]
+    },
+    {
+      "id": "ui-verifier",
+      "kind": "agent",
+      "sourceType": "local-derived",
+      "upstream": "/Users/rohit/Code/synome/agent-prompts/ui-verifier.md",
+      "pinnedRevision": "local-sync-2026-05-26",
+      "normalizationNotes": [
+        "Derived from Synome prompt with plugin-native skill references.",
+        "Scope adjusted for this monorepo and package layout."
+      ]
+    }
+  ]
+}

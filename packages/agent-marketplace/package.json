@@ -1,0 +1,23 @@
+{
+  "name": "@archon-research/agent-marketplace",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Marketplace-first plugin content for Claude Code and GitHub Copilot CLI",
+  "scripts": {
+    "build": "node ./scripts/generate.mjs",
+    "generate": "node ./scripts/generate.mjs",
+    "refresh": "node ./scripts/refresh.mjs",
+    "refresh:dry-run": "node ./scripts/refresh.mjs --dry-run",
+    "clean": "rm -rf claude-plugin copilot-plugin",
+    "lint": "oxlint -c oxlint.config.ts scripts",
+    "lint:fix": "oxlint -c oxlint.config.ts --fix scripts",
+    "format": "oxfmt -c oxfmt.config.ts --write scripts",
+    "format:check": "oxfmt -c oxfmt.config.ts --check scripts"
+  },
+  "devDependencies": {
+    "@archon-research/oxfmt-config": "*",
+    "oxfmt": "^0.48.0",
+    "oxlint": "^1.64.0"
+  }
+}
