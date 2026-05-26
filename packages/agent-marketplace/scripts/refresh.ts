@@ -29,10 +29,14 @@ function toLockEntry(source) {
 
 async function runGenerate() {
   await new Promise((resolvePromise, rejectPromise) => {
-    const child = spawn('node', ['./scripts/generate.mjs'], {
-      cwd: packageRoot,
-      stdio: 'inherit',
-    });
+    const child = spawn(
+      'node',
+      ['--experimental-strip-types', './scripts/generate.ts'],
+      {
+        cwd: packageRoot,
+        stdio: 'inherit',
+      },
+    );
 
     child.on('close', (code) => {
       if (code === 0) {

@@ -17,8 +17,8 @@ packages/agent-marketplace/
     skills/<skill>/SKILL.md
     agents/<agent>.md
   scripts/
-    generate.mjs
-    refresh.mjs
+    generate.ts
+    refresh.ts
   sources.json
   sources.lock.json
   claude-plugin/        # generated
