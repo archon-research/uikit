@@ -35,6 +35,15 @@ export const designSystemComponentManifest = [
     recipeKey: 'button',
   },
   {
+    exportName: 'TreeRow',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system',
+    storyBucket: 'atoms',
+    contractScope: 'tree-row',
+    recipeKey: null,
+    status: 'stable',
+  },
+  {
     exportName: 'LoadingIndicator',
     behaviorSource: 'design-system',
     styleOwner: 'design-system',

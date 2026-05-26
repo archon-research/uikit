@@ -35,6 +35,7 @@ export {
 } from './components/SurfaceMessage';
 export { ThemeToggle } from './components/ThemeToggle';
 export { Button } from './components/Button';
+export { TreeRow, type TreeRowProps } from './components/TreeRow';
 export { Badge } from './components/Badge';
 export type { BadgeTone } from './components/Badge';
 export type {
@@ -58,6 +59,8 @@ export * from './components/data-table';
 export { Avatar } from '@ark-ui/react/avatar';
 export { Menu } from '@ark-ui/react/menu';
 export { Slider } from '@ark-ui/react/slider';
+export { TreeView, createTreeCollection } from '@ark-ui/react/tree-view';
+export type { TreeCollection, TreeNode } from '@ark-ui/react/tree-view';
 export { Tooltip } from '@ark-ui/react/tooltip';
 export type {
   CellContext,
