@@ -41,7 +41,6 @@ export const designSystemComponentManifest = [
     storyBucket: 'atoms',
     contractScope: 'tree-row',
     recipeKey: null,
-    status: 'stable',
   },
   {
     exportName: 'LoadingIndicator',
