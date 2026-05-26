@@ -71,7 +71,7 @@ export class LinkCommand {
       }
     }
 
-    this.linkPackages(consumerRoot, neededByWorkspace, dirByName);
+    this.linkPackages(consumerRoot, uikitRoot, neededByWorkspace, dirByName);
 
     if (verify) {
       // Only verify packages that were actually linked
@@ -93,7 +93,12 @@ export class LinkCommand {
     const neededByWorkspace = new Map<string, string[]>();
 
     for (const ws of workspaces) {
-      const fields = [ws.dependencies];
+      const fields = [
+        ws.dependencies,
+        ws.devDependencies,
+        ws.peerDependencies,
+        ws.optionalDependencies,
+      ];
       const needed = new Set<string>();
 
       for (const depField of fields) {
@@ -114,6 +119,7 @@ export class LinkCommand {
 
   private linkPackages(
     consumerRoot: string,
+    uikitRoot: string,
     neededByWorkspace: Map<string, string[]>,
     dirByName: Map<string, string>,
   ): void {
@@ -162,7 +168,107 @@ export class LinkCommand {
       this.clearWorkspaceViteCache(consumerRoot, workspace);
     }
 
+    // Ensure linked packages can resolve external runtime deps when preserve-symlinks is enabled.
+    // Run this last because workspace linking can mutate root node_modules.
+    this.linkMissingRuntimeDependencies(
+      consumerRoot,
+      uikitRoot,
+      allNames,
+      dirByName,
+    );
+
     this.logger.info('✓ Linked local uikit packages into consumer workspaces.');
+  }
+
+  private linkMissingRuntimeDependencies(
+    consumerRoot: string,
+    uikitRoot: string,
+    linkedNames: Set<string>,
+    dirByName: Map<string, string>,
+  ): void {
+    const depsToLink = this.collectExternalDependencyClosure(
+      uikitRoot,
+      linkedNames,
+      dirByName,
+    );
+
+    if (depsToLink.size === 0) {
+      return;
+    }
+
+    for (const depName of depsToLink) {
+      const sourcePath = path.join(uikitRoot, 'node_modules', depName);
+      const consumerPath = path.join(consumerRoot, 'node_modules', depName);
+
+      if (!this.fs.exists(sourcePath)) {
+        continue;
+      }
+
+      // Respect existing consumer installations to avoid overriding deliberate versions.
+      if (this.fs.exists(consumerPath)) {
+        continue;
+      }
+
+      this.fs.createDir(path.dirname(consumerPath));
+      this.fs.createSymlink(sourcePath, consumerPath);
+      this.logger.debug(`Linked runtime dependency ${depName}`);
+    }
+  }
+
+  private collectExternalDependencyClosure(
+    uikitRoot: string,
+    linkedNames: Set<string>,
+    dirByName: Map<string, string>,
+  ): Set<string> {
+    const result = new Set<string>();
+    const queue: string[] = [];
+
+    type PackageJson = {
+      dependencies?: Record<string, string>;
+    };
+
+    for (const linkedName of linkedNames) {
+      const packageDir = dirByName.get(linkedName);
+      if (!packageDir) continue;
+
+      const packageJsonPath = path.join(packageDir, 'package.json');
+      if (!this.fs.exists(packageJsonPath)) continue;
+
+      const packageJson = this.fs.readJson<PackageJson>(packageJsonPath);
+      for (const depName of Object.keys(packageJson.dependencies ?? {})) {
+        if (!depName.startsWith('@archon-research/')) {
+          queue.push(depName);
+        }
+      }
+    }
+
+    while (queue.length > 0) {
+      const depName = queue.shift();
+      if (!depName || result.has(depName)) {
+        continue;
+      }
+
+      const depPackageJsonPath = path.join(
+        uikitRoot,
+        'node_modules',
+        depName,
+        'package.json',
+      );
+
+      if (!this.fs.exists(depPackageJsonPath)) {
+        continue;
+      }
+
+      result.add(depName);
+      const depPackageJson = this.fs.readJson<PackageJson>(depPackageJsonPath);
+      for (const nestedDep of Object.keys(depPackageJson.dependencies ?? {})) {
+        if (!nestedDep.startsWith('@archon-research/')) {
+          queue.push(nestedDep);
+        }
+      }
+    }
+
+    return result;
   }
 
   private ensureLinkedPath(

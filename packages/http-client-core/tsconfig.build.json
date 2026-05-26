@@ -4,8 +4,11 @@
     "allowImportingTsExtensions": false,
     "types": ["node"],
     "noEmit": false,
+    "emitDeclarationOnly": false,
+    "declaration": true,
+    "declarationMap": false,
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": ["bin/**/*.ts"]
+  "include": ["src/**/*.ts", "bin/**/*.ts"]
 }

@@ -5,12 +5,18 @@
     "access": "public"
   },
   "type": "module",
-  "main": "src/index.tsx",
-  "types": "src/index.tsx",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.tsx"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build",
     "type:check": "tsgo -p tsconfig.json --noEmit",
     "lint": "oxlint -c oxlint.config.ts src",
     "lint:fix": "oxlint -c oxlint.config.ts --fix src",

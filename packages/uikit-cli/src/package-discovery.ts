@@ -147,6 +147,9 @@ export class PackageDiscovery {
           const pkg = this.fs.readJson<{
             name?: string;
             dependencies?: Record<string, string>;
+            devDependencies?: Record<string, string>;
+            peerDependencies?: Record<string, string>;
+            optionalDependencies?: Record<string, string>;
           }>(pkgPath);
 
           workspaces.push({
@@ -154,6 +157,9 @@ export class PackageDiscovery {
             location: path.relative(rootDir, dir),
             path: dir,
             dependencies: pkg.dependencies ?? {},
+            devDependencies: pkg.devDependencies ?? {},
+            peerDependencies: pkg.peerDependencies ?? {},
+            optionalDependencies: pkg.optionalDependencies ?? {},
           });
         } catch {
           // Skip invalid package.json
