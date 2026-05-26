@@ -58,6 +58,27 @@
       "resolved": "packages/agent-marketplace/content/skills/oxfmt/SKILL.md"
     },
     {
+      "id": "uikit-design-audit",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/uikit-design-audit/SKILL.md"
+    },
+    {
+      "id": "uikit-live",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/uikit-live/SKILL.md"
+    },
+    {
+      "id": "impeccable",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "pinnedRevision": "84135db0e6bdd58d22828f7bc8331cae7bde3e7f",
+      "resolved": "https://raw.githubusercontent.com/pbakaus/impeccable/84135db0e6bdd58d22828f7bc8331cae7bde3e7f/.agents/skills/impeccable/SKILL.md"
+    },
+    {
       "id": "ui-coder",
       "kind": "agent",
       "sourceType": "local-derived",
