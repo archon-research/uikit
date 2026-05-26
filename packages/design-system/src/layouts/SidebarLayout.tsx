@@ -65,6 +65,7 @@ const mainStyle: CSSProperties = {
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',
+  background: 'var(--colors-surface-default, #ffffff)',
 };
 
 const topBarStyle: CSSProperties = {
@@ -89,6 +90,7 @@ const contentStyle: CSSProperties = {
   minHeight: 0,
   flex: 1,
   overflow: 'auto',
+  background: 'var(--colors-surface-default, #ffffff)',
 };
 
 const mainColumnStyle: CSSProperties = {
@@ -96,6 +98,7 @@ const mainColumnStyle: CSSProperties = {
   minHeight: 0,
   flex: 1,
   overflow: 'hidden',
+  background: 'var(--colors-surface-default, #ffffff)',
 };
 
 const verticalSplitterStyle: CSSProperties = {
@@ -344,7 +347,7 @@ export function SidebarLayout({
       <Splitter.Root
         orientation="horizontal"
         panels={horizontalPanels}
-        size={[sidebarPanelSize, 100 - sidebarPanelSize]}
+        defaultSize={[sidebarPanelSize, 100 - sidebarPanelSize]}
         style={horizontalSplitterStyle}
         onResizeEnd={({ size }) => {
           const nextSidebar = clamp(
@@ -401,7 +404,7 @@ export function SidebarLayout({
                     order: 1,
                   },
                 ]}
-                size={[100 - bottomPanelSize, bottomPanelSize]}
+                defaultSize={[100 - bottomPanelSize, bottomPanelSize]}
                 style={verticalSplitterStyle}
                 onResizeEnd={({ size }) => {
                   const nextBottom = clamp(
