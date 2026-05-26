@@ -13,6 +13,7 @@ packages/
   tsconfig/         Shared TypeScript configs (base, react, node)
   oxlint-config/    Shared Oxlint configs (base, react)
   oxfmt-config/     Shared Oxfmt config
+  agent-marketplace/Plugin marketplace content and generators
   design-system/    Shared UI components and style recipes
   uikit-preview/    Ladle preview site for components and tokens
   http-client-core/ OpenAPI + Zod based HTTP client helpers
@@ -65,3 +66,11 @@ See the individual package READMEs for specific usage examples:
 ## Development
 
 For local development, contributing to packages, running quality checks, and publishing, see [DEVELOPMENT.md](./DEVELOPMENT.md).
+
+## Agent marketplace plugins
+
+The repository includes an internal marketplace package that generates plugin artifacts for Claude Code and GitHub Copilot CLI:
+
+- [packages/agent-marketplace](./packages/agent-marketplace/README.md)
+
+Use it to manage normalized skill and agent content, source pinning metadata, and generated plugin outputs for both ecosystems.
