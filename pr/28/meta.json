@@ -209,6 +209,30 @@
       "namedExport": "On",
       "meta": {}
     },
+    "atoms--tree-row--branch-rows": {
+      "name": "Branch rows",
+      "levels": [
+        "Atoms",
+        "Tree row"
+      ],
+      "locStart": 44,
+      "locEnd": 63,
+      "filePath": "src/stories/atoms/tree-row.stories.tsx",
+      "namedExport": "BranchRows",
+      "meta": {}
+    },
+    "atoms--tree-row--nested-rows": {
+      "name": "Nested rows",
+      "levels": [
+        "Atoms",
+        "Tree row"
+      ],
+      "locStart": 65,
+      "locEnd": 91,
+      "filePath": "src/stories/atoms/tree-row.stories.tsx",
+      "namedExport": "NestedRows",
+      "meta": {}
+    },
     "molecules--menu--open": {
       "name": "Open",
       "levels": [
