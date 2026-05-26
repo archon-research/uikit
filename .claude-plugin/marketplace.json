@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "plugins": [
+    {
+      "id": "uikit-agent-marketplace",
+      "name": "UIKit Agent Marketplace",
+      "version": "0.1.0",
+      "description": "UI skills and specialist agents for code assistants.",
+      "source": "./packages/agent-marketplace/claude-plugin"
+    }
+  ]
+}
