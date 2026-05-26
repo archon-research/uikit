@@ -69,7 +69,7 @@ async function copyAgent(outputRoot, agentId) {
   await cp(sourceFile, destinationFile);
 }
 
-function buildPluginManifest(target, skills, agents) {
+function buildCopilotPluginManifest(target, skills, agents) {
   return {
     schemaVersion: 1,
     id: pluginId,
@@ -86,6 +86,18 @@ function buildPluginManifest(target, skills, agents) {
       id: agent.id,
       path: `agents/${agent.id}.md`,
     })),
+  };
+}
+
+function buildClaudePluginManifest() {
+  return {
+    name: pluginId,
+    version: '0.1.0',
+    description:
+      'Reusable UI-focused skills and specialist agents for Claude Code.',
+    author: {
+      name: 'Archon Research',
+    },
   };
 }
 
@@ -106,23 +118,31 @@ async function writePluginOutput(target, outputRoot, skills, agents) {
     await copyAgent(outputRoot, agent.id);
   }
 
-  const manifest = buildPluginManifest(target, skills, agents);
+  if (target === 'claude-code') {
+    const manifest = buildClaudePluginManifest();
+    await writeJson(
+      join(outputRoot, '.claude-plugin', 'plugin.json'),
+      manifest,
+    );
+    return;
+  }
+  const manifest = buildCopilotPluginManifest(target, skills, agents);
   await writeJson(join(outputRoot, 'plugin.json'), manifest);
 }
 
 async function writeMarketplaceManifests() {
-  const sharedEntry = {
-    id: pluginId,
-    name: 'UIKit Agent Marketplace',
-    version: '0.1.0',
-    description: 'UI skills and specialist agents for code assistants.',
-  };
-
   await writeJson(claudeMarketplacePath, {
-    schemaVersion: 1,
+    name: 'uikit-plugins',
+    owner: {
+      name: 'Archon Research',
+    },
+    description:
+      'UIKit marketplace for shared UI skills and specialist agents.',
     plugins: [
       {
-        ...sharedEntry,
+        name: pluginId,
+        version: '0.1.0',
+        description: 'UI skills and specialist agents for code assistants.',
         source: './packages/agent-marketplace/claude-plugin',
       },
     ],
@@ -132,7 +152,10 @@ async function writeMarketplaceManifests() {
     schemaVersion: 1,
     plugins: [
       {
-        ...sharedEntry,
+        id: pluginId,
+        name: 'UIKit Agent Marketplace',
+        version: '0.1.0',
+        description: 'UI skills and specialist agents for code assistants.',
         source: './packages/agent-marketplace/copilot-plugin',
       },
     ],
