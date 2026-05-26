@@ -53,8 +53,20 @@
   ],
   "agents": [
     {
+      "id": "ui-auditor",
+      "path": "agents/ui-auditor.md"
+    },
+    {
       "id": "ui-coder",
       "path": "agents/ui-coder.md"
+    },
+    {
+      "id": "ui-happy-path-checker",
+      "path": "agents/ui-happy-path-checker.md"
+    },
+    {
+      "id": "ui-performance-tuner",
+      "path": "agents/ui-performance-tuner.md"
     },
     {
       "id": "ui-verifier",
