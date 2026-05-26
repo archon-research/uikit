@@ -67,6 +67,28 @@
       ]
     },
     {
+      "id": "oxlint",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/oxlint/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Steady-state oxlint guidance for this monorepo.",
+        "Complements first-party migrate-oxlint skill."
+      ]
+    },
+    {
+      "id": "oxfmt",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/oxfmt/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Steady-state oxfmt guidance for this monorepo.",
+        "Complements first-party migrate-oxfmt skill."
+      ]
+    },
+    {
       "id": "ui-coder",
       "kind": "agent",
       "sourceType": "local-derived",

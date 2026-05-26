@@ -98,6 +98,20 @@ function buildClaudePluginManifest() {
     author: {
       name: 'Archon Research',
     },
+    lspServers: {
+      oxlint: {
+        command: 'oxlint',
+        args: ['--lsp'],
+        extensionToLanguage: {
+          '.ts': 'typescript',
+          '.tsx': 'typescriptreact',
+          '.js': 'javascript',
+          '.jsx': 'javascriptreact',
+          '.mjs': 'javascript',
+          '.cjs': 'javascript',
+        },
+      },
+    },
   };
 }
 
