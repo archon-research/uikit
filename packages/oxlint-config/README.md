@@ -49,4 +49,4 @@ export default defineConfig({
 
 - **base** (default) - General linting rules
 - **react** - Additional rules for React projects
-- **design-system-boundaries** - React rules plus warnings for direct `@base-ui/react` and `@ark-ui/react` imports
+- **design-system-boundaries** - React rules plus warnings for direct primitive imports (`@ark-ui/react/*`) and legacy `@base-ui/react/*` usage

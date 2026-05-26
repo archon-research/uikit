@@ -36,7 +36,6 @@
     "format:check": "oxfmt -c oxfmt.config.ts --check src"
   },
   "dependencies": {
-    "@base-ui/react": "^1.4.1",
     "@ark-ui/react": "^5.25.1",
     "@pandacss/dev": "^1.9.1",
     "@tanstack/react-table": "^8.20.0"
