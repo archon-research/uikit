@@ -5,6 +5,54 @@
     "version": 1
   },
   "stories": {
+    "atoms--avatar--fallback": {
+      "name": "Fallback",
+      "levels": [
+        "Atoms",
+        "Avatar"
+      ],
+      "locStart": 65,
+      "locEnd": 74,
+      "filePath": "src/stories/atoms/avatar.stories.tsx",
+      "namedExport": "Fallback",
+      "meta": {}
+    },
+    "atoms--avatar--with-image": {
+      "name": "With image",
+      "levels": [
+        "Atoms",
+        "Avatar"
+      ],
+      "locStart": 49,
+      "locEnd": 63,
+      "filePath": "src/stories/atoms/avatar.stories.tsx",
+      "namedExport": "WithImage",
+      "meta": {}
+    },
+    "atoms--badge--in-context": {
+      "name": "In context",
+      "levels": [
+        "Atoms",
+        "Badge"
+      ],
+      "locStart": 45,
+      "locEnd": 56,
+      "filePath": "src/stories/atoms/badge.stories.tsx",
+      "namedExport": "InContext",
+      "meta": {}
+    },
+    "atoms--badge--tones": {
+      "name": "Tones",
+      "levels": [
+        "Atoms",
+        "Badge"
+      ],
+      "locStart": 31,
+      "locEnd": 43,
+      "filePath": "src/stories/atoms/badge.stories.tsx",
+      "namedExport": "Tones",
+      "meta": {}
+    },
     "atoms--button--icon-only": {
       "name": "Icon only",
       "levels": [
@@ -101,6 +149,30 @@
       "namedExport": "VerticalOverlay",
       "meta": {}
     },
+    "atoms--slider--range": {
+      "name": "Range",
+      "levels": [
+        "Atoms",
+        "Slider"
+      ],
+      "locStart": 80,
+      "locEnd": 96,
+      "filePath": "src/stories/atoms/slider.stories.tsx",
+      "namedExport": "Range",
+      "meta": {}
+    },
+    "atoms--slider--single-thumb": {
+      "name": "Single thumb",
+      "levels": [
+        "Atoms",
+        "Slider"
+      ],
+      "locStart": 63,
+      "locEnd": 78,
+      "filePath": "src/stories/atoms/slider.stories.tsx",
+      "namedExport": "SingleThumb",
+      "meta": {}
+    },
     "atoms--switch--disabled": {
       "name": "Disabled",
       "levels": [
@@ -135,6 +207,18 @@
       "locEnd": 48,
       "filePath": "src/stories/atoms/switch.stories.tsx",
       "namedExport": "On",
+      "meta": {}
+    },
+    "molecules--menu--open": {
+      "name": "Open",
+      "levels": [
+        "Molecules",
+        "Menu"
+      ],
+      "locStart": 57,
+      "locEnd": 77,
+      "filePath": "src/stories/molecules/menu.stories.tsx",
+      "namedExport": "Open",
       "meta": {}
     },
     "molecules--search-input--default": {
