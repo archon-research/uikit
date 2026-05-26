@@ -21,11 +21,13 @@
     "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
-  "devDependencies": {
-    "@archon-research/tsconfig": "*",
-    "@types/node": "^24.7.2",
+  "dependencies": {
     "oxfmt": "^0.48.0",
     "oxlint": "^1.64.0"
+  },
+  "devDependencies": {
+    "@archon-research/tsconfig": "*",
+    "@types/node": "^24.7.2"
   },
   "files": [
     "dist"

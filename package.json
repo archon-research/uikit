@@ -33,6 +33,6 @@
   },
   "optionalDependencies": {
     "@oxfmt/binding-linux-x64-gnu": "0.48.0",
-    "@oxlint/binding-linux-x64-gnu": "1.63.0"
+    "@oxlint/binding-linux-x64-gnu": "1.64.0"
   }
 }

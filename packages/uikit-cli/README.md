@@ -52,8 +52,13 @@ From any consumer workspace:
 ./node_modules/.bin/uikit-cli format -c ./.oxfmtrc.ts --write "src/**/*.ts" "src/**/*.tsx" panda.config.ts vite.config.ts
 ```
 
-The CLI runs pinned `oxlint` and `oxfmt` versions internally, so downstream workspaces do not
-need to declare those tool packages directly.
+The CLI runs uikit-cli-managed `oxlint` and `oxfmt` versions internally (resolved via its
+lockfile), so downstream workspaces do not need to declare those tool packages directly.
+
+If your consumer workspace prefers to run tooling directly, it can install and invoke
+`oxlint`/`oxfmt` itself. In that setup, `@archon-research/oxlint-config` and
+`@archon-research/oxfmt-config` remain reusable config packages, while `uikit-cli` remains an
+optional workflow wrapper.
 
 ### Link uikit packages into a consumer repository
 

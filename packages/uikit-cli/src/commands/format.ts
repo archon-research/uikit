@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { CommandExecutor } from '../command-executor.js';
 import type { FileSystemOps } from '../fs-utils.js';
 import { shellEscape } from '../shell-utils.js';
+import { resolveCliBinary } from '../tool-binaries.js';
 
 /**
  * Format command - forwards to oxfmt with config detection
@@ -30,7 +31,9 @@ export class FormatCommand {
     }
 
     const escapedArgs = modifiedArgs.map((arg) => shellEscape(arg)).join(' ');
-    this.executor.exec(`npm exec -- oxfmt ${escapedArgs}`.trim(), {
+    const oxfmtBinary = shellEscape(resolveCliBinary('oxfmt', 'bin/oxfmt'));
+
+    this.executor.exec(`${oxfmtBinary} ${escapedArgs}`.trim(), {
       cwd: process.cwd(),
     });
   }
