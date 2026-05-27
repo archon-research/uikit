@@ -1,11 +1,21 @@
-import { type CSSProperties, type ReactNode } from 'react';
+import { type CSSProperties, type HTMLAttributes, type ReactNode } from 'react';
 
-type SurfaceMessageProps = {
+export type SurfaceMessageTone = 'default' | 'muted' | 'dashed';
+
+export type SurfaceMessageProps = {
   title: string;
   body: string;
-  tone?: 'default' | 'muted' | 'dashed';
+  tone?: SurfaceMessageTone;
   children?: ReactNode;
 };
+
+export type SurfaceMessageRootProps = HTMLAttributes<HTMLDivElement> & {
+  tone?: SurfaceMessageTone;
+};
+
+export type SurfaceMessageTitleProps = HTMLAttributes<HTMLParagraphElement>;
+export type SurfaceMessageBodyProps = HTMLAttributes<HTMLParagraphElement>;
+export type SurfaceMessageActionsProps = HTMLAttributes<HTMLDivElement>;
 
 const wrapperStyle: CSSProperties = {
   borderRadius: 8,
@@ -30,27 +40,102 @@ const bodyStyle: CSSProperties = {
   color: 'var(--colors-text-muted, #667085)',
 };
 
+function getWrapperStyle(tone: SurfaceMessageTone): CSSProperties {
+  if (tone === 'dashed') {
+    return { ...wrapperStyle, borderStyle: 'dashed' };
+  }
+
+  if (tone === 'muted') {
+    return {
+      ...wrapperStyle,
+      background: 'var(--colors-surface-default, #ffffff)',
+    };
+  }
+
+  return wrapperStyle;
+}
+
+export function SurfaceMessageRoot({
+  tone = 'default',
+  style,
+  children,
+  ...props
+}: SurfaceMessageRootProps) {
+  return (
+    <div
+      {...props}
+      data-scope="surface-message"
+      data-part="root"
+      data-tone={tone}
+      style={{ ...getWrapperStyle(tone), ...style }}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function SurfaceMessageTitle({
+  style,
+  children,
+  ...props
+}: SurfaceMessageTitleProps) {
+  return (
+    <p
+      {...props}
+      data-scope="surface-message"
+      data-part="title"
+      style={{ ...titleStyle, ...style }}
+    >
+      {children}
+    </p>
+  );
+}
+
+export function SurfaceMessageBody({
+  style,
+  children,
+  ...props
+}: SurfaceMessageBodyProps) {
+  return (
+    <p
+      {...props}
+      data-scope="surface-message"
+      data-part="body"
+      style={{ ...bodyStyle, ...style }}
+    >
+      {children}
+    </p>
+  );
+}
+
+export function SurfaceMessageActions({
+  style,
+  children,
+  ...props
+}: SurfaceMessageActionsProps) {
+  return (
+    <div
+      {...props}
+      data-scope="surface-message"
+      data-part="actions"
+      style={style}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function SurfaceMessage({
   title,
   body,
   tone = 'default',
   children,
 }: SurfaceMessageProps) {
-  const style =
-    tone === 'dashed'
-      ? { ...wrapperStyle, borderStyle: 'dashed' as const }
-      : tone === 'muted'
-        ? {
-            ...wrapperStyle,
-            background: 'var(--colors-surface-default, #ffffff)',
-          }
-        : wrapperStyle;
-
   return (
-    <div style={style}>
-      <p style={titleStyle}>{title}</p>
-      <p style={bodyStyle}>{body}</p>
+    <SurfaceMessageRoot tone={tone}>
+      <SurfaceMessageTitle>{title}</SurfaceMessageTitle>
+      <SurfaceMessageBody>{body}</SurfaceMessageBody>
       {children}
-    </div>
+    </SurfaceMessageRoot>
   );
 }

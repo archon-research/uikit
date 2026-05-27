@@ -6,9 +6,6 @@
   "workspaces": [
     "packages/*"
   ],
-  "volta": {
-    "node": "24.15.0"
-  },
   "scripts": {
     "clean": "npm run clean --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
@@ -36,6 +33,6 @@
   },
   "optionalDependencies": {
     "@oxfmt/binding-linux-x64-gnu": "0.48.0",
-    "@oxlint/binding-linux-x64-gnu": "1.63.0"
+    "@oxlint/binding-linux-x64-gnu": "1.64.0"
   }
 }

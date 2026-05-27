@@ -1,4 +1,8 @@
-import { queryOptions, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  queryOptions,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
 import type { PropsWithChildren } from 'react';
 
 export { createApiClient } from '@archon-research/http-client-core';

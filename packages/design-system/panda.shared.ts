@@ -1,5 +1,8 @@
-import { switchRecipe } from './src/recipes/switch.recipe';
 import type { Config } from '@pandacss/dev';
+
+import { buttonRecipe } from './src/recipes/button.recipe';
+import { surfaceMessageRecipe } from './src/recipes/surfaceMessage.recipe';
+import { switchRecipe } from './src/recipes/switch.recipe';
 
 export const designSystemPandaConfig = {
   jsxFramework: 'react',
@@ -7,6 +10,7 @@ export const designSystemPandaConfig = {
   preflight: true,
   staticCss: {
     recipes: {
+      button: ['*'],
       toggleSwitch: ['*'],
     },
   },
@@ -15,6 +19,9 @@ export const designSystemPandaConfig = {
   },
   theme: {
     extend: {
+      recipes: {
+        button: buttonRecipe,
+      },
       semanticTokens: {
         colors: {
           surface: {
@@ -41,6 +48,7 @@ export const designSystemPandaConfig = {
         },
       },
       slotRecipes: {
+        surfaceMessage: surfaceMessageRecipe,
         toggleSwitch: switchRecipe,
       },
     },

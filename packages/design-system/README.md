@@ -56,7 +56,7 @@ https://archon-research.github.io/uikit/
 
 ## Key dependencies
 
-- `@base-ui/react`: Unstyled component primitives
+- `@ark-ui/react`: Unstyled component primitives
 - `@pandacss/dev`: CSS-in-JS styling solution
 
 ## See also

@@ -1,4 +1,5 @@
 import path from 'node:path';
+
 import type { FileSystemOps } from './fs-utils.js';
 import type { Logger } from './logger.js';
 import type { ValidationResult, SymlinkStatus } from './types.js';

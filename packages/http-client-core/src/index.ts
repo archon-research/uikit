@@ -18,7 +18,10 @@ export function normalizeOpenApiRefs(value: unknown): unknown {
 
     for (const [key, entryValue] of Object.entries(record)) {
       if (key === '$ref' && typeof entryValue === 'string') {
-        normalized[key] = entryValue.replace('#/components/schemas/', '#/$defs/');
+        normalized[key] = entryValue.replace(
+          '#/components/schemas/',
+          '#/$defs/',
+        );
       } else {
         normalized[key] = normalizeOpenApiRefs(entryValue);
       }
@@ -37,9 +40,10 @@ export function getComponentSchemaFromOpenApi(
   const schema = openApi as {
     components?: { schemas?: Record<string, unknown> };
   };
-  const defs = normalizeOpenApiRefs(
-    schema.components?.schemas ?? {},
-  ) as Record<string, JsonSchema>;
+  const defs = normalizeOpenApiRefs(schema.components?.schemas ?? {}) as Record<
+    string,
+    JsonSchema
+  >;
 
   return z.fromJSONSchema({
     $ref: `#/$defs/${name}`,

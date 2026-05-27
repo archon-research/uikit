@@ -80,9 +80,12 @@ export class UnlinkCommand {
 
     // Restore from registry
     this.logger.info('Restoring packages from registry...');
-    const installResult = this.executor.exec('npm_config_min_release_age=0 npm install', {
-      cwd: consumerRoot,
-    });
+    const installResult = this.executor.exec(
+      'npm_config_min_release_age=0 npm install',
+      {
+        cwd: consumerRoot,
+      },
+    );
 
     if (!installResult.success) {
       this.logger.error('Failed to restore packages from registry');

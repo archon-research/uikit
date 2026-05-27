@@ -108,7 +108,13 @@ export function ErrorState({
             </div>
           ) : null}
           {onRetry ? (
-            <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: 8 }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                marginTop: 8,
+              }}
+            >
               <button
                 type="button"
                 onClick={onRetry}

@@ -1,7 +1,8 @@
-import { Autocomplete } from '@base-ui/react';
+import { Combobox, useListCollection } from '@ark-ui/react/combobox';
 import {
   type CSSProperties,
   type InputHTMLAttributes,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -73,7 +74,7 @@ const iconStyle: CSSProperties = {
 
 const popupStyle: CSSProperties = {
   marginTop: 6,
-  minWidth: 'var(--anchor-width)',
+  minWidth: 'var(--reference-width, var(--anchor-width))',
   maxHeight: 280,
   overflowY: 'auto',
   borderWidth: 1,
@@ -152,6 +153,21 @@ export function SearchInput({
   );
   const currentValue = value ?? internalValue;
   const supportsAutocomplete = autoComplete && normalizedOptions.length > 0;
+  const { collection, filter, set } = useListCollection({
+    initialItems: normalizedOptions,
+    itemToString: (item) => item.label,
+    itemToValue: (item) => item.value,
+    filter: (itemText, filterText) =>
+      itemText.toLowerCase().includes(filterText.toLowerCase()),
+  });
+
+  useEffect(() => {
+    set([...normalizedOptions]);
+
+    if (currentValue) {
+      filter(currentValue);
+    }
+  }, [currentValue, filter, normalizedOptions, set]);
 
   const handleValueChange = (nextValue: string) => {
     if (value === undefined) {
@@ -171,66 +187,61 @@ export function SearchInput({
           disabled={disabled}
           placeholder={placeholder}
           onChange={(event) => handleValueChange(event.target.value)}
-          style={disabled ? { ...inputStyle, ...disabledInputStyle } : inputStyle}
+          style={
+            disabled ? { ...inputStyle, ...disabledInputStyle } : inputStyle
+          }
         />
       </div>
     );
   }
 
   return (
-    <Autocomplete.Root
-      items={normalizedOptions}
-      value={currentValue}
-      mode="list"
-      autoHighlight="always"
-      openOnInputClick
-      itemToStringValue={(item: unknown) =>
-        (item as NormalizedOption).label
-      }
-      onValueChange={handleValueChange}
+    <Combobox.Root
+      collection={collection}
+      inputValue={currentValue}
+      inputBehavior="autohighlight"
+      openOnClick
+      closeOnSelect
+      disabled={disabled}
+      selectionBehavior="replace"
+      onInputValueChange={({ inputValue }) => handleValueChange(inputValue)}
+      onValueChange={({ items }) => {
+        const option = items[0] as NormalizedOption | undefined;
+
+        if (option) {
+          onSelectOption?.(option);
+        }
+      }}
     >
-      <Autocomplete.InputGroup className={className} style={wrapperStyle}>
+      <Combobox.Control className={className} style={wrapperStyle}>
         <SearchIcon />
-        <Autocomplete.Input
+        <Combobox.Input
           {...inputProps}
           disabled={disabled}
           placeholder={placeholder}
-          style={disabled ? { ...inputStyle, ...disabledInputStyle } : inputStyle}
+          style={
+            disabled ? { ...inputStyle, ...disabledInputStyle } : inputStyle
+          }
         />
-      </Autocomplete.InputGroup>
+      </Combobox.Control>
 
-      <Autocomplete.Portal>
-        <Autocomplete.Positioner>
-          <Autocomplete.Popup style={popupStyle}>
-            {loading ? (
-              <Autocomplete.Status style={statusStyle}>
-                Loading suggestions...
-              </Autocomplete.Status>
-            ) : null}
+      <Combobox.Positioner>
+        <Combobox.Content style={popupStyle}>
+          {loading ? (
+            <div style={statusStyle}>Loading suggestions...</div>
+          ) : null}
 
-            <Autocomplete.Empty style={statusStyle}>
-              {emptyMessage}
-            </Autocomplete.Empty>
+          <Combobox.Empty style={statusStyle}>{emptyMessage}</Combobox.Empty>
 
-            <Autocomplete.List>
-              {(item: unknown) => {
-                const option = item as NormalizedOption;
-
-                return (
-                  <Autocomplete.Item
-                    key={option.value}
-                    value={option}
-                    onClick={() => onSelectOption?.(option)}
-                    style={itemStyle}
-                  >
-                    {option.label}
-                  </Autocomplete.Item>
-                );
-              }}
-            </Autocomplete.List>
-          </Autocomplete.Popup>
-        </Autocomplete.Positioner>
-      </Autocomplete.Portal>
-    </Autocomplete.Root>
+          <Combobox.List>
+            {collection.items.map((option) => (
+              <Combobox.Item key={option.value} item={option} style={itemStyle}>
+                <Combobox.ItemText>{option.label}</Combobox.ItemText>
+              </Combobox.Item>
+            ))}
+          </Combobox.List>
+        </Combobox.Content>
+      </Combobox.Positioner>
+    </Combobox.Root>
   );
 }

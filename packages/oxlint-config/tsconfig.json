@@ -5,6 +5,7 @@
   },
   "include": [
     "base.ts",
-    "react.ts"
+    "react.ts",
+    "design-system-boundaries.ts"
   ]
 }

@@ -1,9 +1,16 @@
-import { type CSSProperties, type ReactNode, type SelectHTMLAttributes } from 'react';
+import {
+  type CSSProperties,
+  type ReactNode,
+  type SelectHTMLAttributes,
+} from 'react';
 
-type StyledSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
+export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   children: ReactNode;
   className?: string;
 };
+
+/** @deprecated Use SelectProps instead. */
+export type StyledSelectProps = SelectProps;
 
 const wrapperStyle: CSSProperties = {
   position: 'relative',
@@ -63,16 +70,16 @@ function SelectChevron() {
   );
 }
 
-export function StyledSelect({
-  children,
-  className,
-  ...props
-}: StyledSelectProps) {
+export function Select({ children, className, ...props }: SelectProps) {
   return (
     <div className={className} style={wrapperStyle}>
       <select
         {...props}
-        style={props.disabled ? { ...selectStyle, ...disabledSelectStyle } : selectStyle}
+        style={
+          props.disabled
+            ? { ...selectStyle, ...disabledSelectStyle }
+            : selectStyle
+        }
       >
         {children}
       </select>
@@ -80,3 +87,6 @@ export function StyledSelect({
     </div>
   );
 }
+
+/** @deprecated Use Select instead. */
+export const StyledSelect = Select;
