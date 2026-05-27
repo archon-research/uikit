@@ -199,7 +199,7 @@ npm publish --workspaces --registry https://registry.npmjs.org
 
 - Package: `@archon-research/design-system`
 - Purpose: Shared UI primitives and recipes
-- Key dependencies: `@base-ui/react`, `@pandacss/dev`
+- Key dependencies: `@ark-ui/react`, `@pandacss/dev`
 
 ### HTTP client core
 

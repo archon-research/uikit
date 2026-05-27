@@ -1,4 +1,5 @@
 import path from 'node:path';
+
 import type { FileSystemOps } from './fs-utils.js';
 import type { WorkspaceInfo } from './types.js';
 
@@ -96,7 +97,9 @@ export class PackageDiscovery {
 
     try {
       const workspaces = this.loadWorkspaces(rootDir);
-      return workspaces.some((ws) => ws.name === '@archon-research/design-system');
+      return workspaces.some(
+        (ws) => ws.name === '@archon-research/design-system',
+      );
     } catch {
       return false;
     }
@@ -110,19 +113,32 @@ export class PackageDiscovery {
     const workspaces: WorkspaceInfo[] = [];
 
     if (process.env.UIKIT_DEBUG) {
-      console.log('[DEBUG loadWorkspaces] rootDir:', rootDir, 'patterns:', patterns);
+      console.log(
+        '[DEBUG loadWorkspaces] rootDir:',
+        rootDir,
+        'patterns:',
+        patterns,
+      );
     }
 
     for (const pattern of patterns) {
       const resolved = this.resolveWorkspacePattern(rootDir, pattern);
       if (process.env.UIKIT_DEBUG) {
-        console.log('[DEBUG loadWorkspaces] pattern:', pattern, 'resolved to:', resolved);
+        console.log(
+          '[DEBUG loadWorkspaces] pattern:',
+          pattern,
+          'resolved to:',
+          resolved,
+        );
       }
       for (const dir of resolved) {
         const pkgPath = path.join(dir, 'package.json');
         if (!this.fs.exists(pkgPath)) {
           if (process.env.UIKIT_DEBUG) {
-            console.log('[DEBUG loadWorkspaces] Skipping (no package.json):', dir);
+            console.log(
+              '[DEBUG loadWorkspaces] Skipping (no package.json):',
+              dir,
+            );
           }
           continue;
         }
@@ -131,6 +147,9 @@ export class PackageDiscovery {
           const pkg = this.fs.readJson<{
             name?: string;
             dependencies?: Record<string, string>;
+            devDependencies?: Record<string, string>;
+            peerDependencies?: Record<string, string>;
+            optionalDependencies?: Record<string, string>;
           }>(pkgPath);
 
           workspaces.push({
@@ -138,6 +157,9 @@ export class PackageDiscovery {
             location: path.relative(rootDir, dir),
             path: dir,
             dependencies: pkg.dependencies ?? {},
+            devDependencies: pkg.devDependencies ?? {},
+            peerDependencies: pkg.peerDependencies ?? {},
+            optionalDependencies: pkg.optionalDependencies ?? {},
           });
         } catch {
           // Skip invalid package.json
@@ -155,9 +177,9 @@ export class PackageDiscovery {
     }
 
     try {
-      const pkg = this.fs.readJson<{ workspaces?: string[] | { packages?: string[] } }>(
-        pkgPath,
-      );
+      const pkg = this.fs.readJson<{
+        workspaces?: string[] | { packages?: string[] };
+      }>(pkgPath);
 
       if (Array.isArray(pkg.workspaces)) {
         return pkg.workspaces;

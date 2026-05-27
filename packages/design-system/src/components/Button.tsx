@@ -130,7 +130,13 @@ export function Button({
         ...(gap !== undefined ? { gap } : undefined),
         ...style,
       }}
+      data-scope="button"
+      data-part="root"
       data-variant={variant}
+      data-size={variant === 'panel' ? size : undefined}
+      data-density={variant === 'item' ? density : undefined}
+      data-tone={tone}
+      data-disabled={disabled ? '' : undefined}
       data-selected={selected ? '' : undefined}
       data-icon-only={iconOnly ? '' : undefined}
     />

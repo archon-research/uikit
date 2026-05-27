@@ -50,7 +50,11 @@ export class NpmCommandExecutor implements CommandExecutor {
         success: true,
       };
     } catch (error) {
-      const err = error as { stdout?: Buffer; stderr?: Buffer; message?: string };
+      const err = error as {
+        stdout?: Buffer;
+        stderr?: Buffer;
+        message?: string;
+      };
       return {
         stdout: err.stdout?.toString('utf8') || '',
         stderr: err.stderr?.toString('utf8') || err.message || 'Unknown error',

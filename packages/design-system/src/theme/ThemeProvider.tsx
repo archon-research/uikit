@@ -94,13 +94,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
       const documentTheme = document.documentElement.getAttribute('data-theme');
       if (documentTheme === 'light' || documentTheme === 'dark') {
-        setModeState((current) => (current === documentTheme ? current : documentTheme));
+        setModeState((current) =>
+          current === documentTheme ? current : documentTheme,
+        );
       }
     };
 
     const observer = new MutationObserver((records) => {
       for (const record of records) {
-        if (record.type === 'attributes' && record.attributeName === 'data-theme') {
+        if (
+          record.type === 'attributes' &&
+          record.attributeName === 'data-theme'
+        ) {
           onExternalThemeChange();
           break;
         }
@@ -124,5 +129,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     [isDark, mode],
   );
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }

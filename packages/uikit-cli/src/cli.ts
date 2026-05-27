@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 
-import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { RealFileSystem } from './fs-utils.js';
+import { fileURLToPath } from 'node:url';
+
 import { NpmCommandExecutor } from './command-executor.js';
+import { FormatCommand } from './commands/format.js';
+import { LinkCommand } from './commands/link.js';
+import { LintCommand } from './commands/lint.js';
+import { RegisterCommand } from './commands/register.js';
+import { UnlinkCommand } from './commands/unlink.js';
+import { RealFileSystem } from './fs-utils.js';
+import { LinkValidator } from './link-validator.js';
 import { ConsoleLogger } from './logger.js';
 import { PackageDiscovery } from './package-discovery.js';
-import { LinkValidator } from './link-validator.js';
-import { RegisterCommand } from './commands/register.js';
-import { LinkCommand } from './commands/link.js';
-import { UnlinkCommand } from './commands/unlink.js';
-import { LintCommand } from './commands/lint.js';
-import { FormatCommand } from './commands/format.js';
 import type { CommandMode, ParsedArgs } from './types.js';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -28,7 +29,13 @@ function parseArgs(argv: string[]): ParsedArgs {
   }
 
   const mode = args[0] as CommandMode;
-  const validModes: CommandMode[] = ['lint', 'format', 'register', 'link', 'unlink'];
+  const validModes: CommandMode[] = [
+    'lint',
+    'format',
+    'register',
+    'link',
+    'unlink',
+  ];
 
   if (!validModes.includes(mode)) {
     throw new Error(`Unknown command: ${mode}`);
@@ -80,7 +87,9 @@ function parseArgs(argv: string[]): ParsedArgs {
     if (discovery.isValidUIKitRoot(relativeRoot)) {
       uikitRoot = relativeRoot;
       if (debug) {
-        console.log('[DEBUG parseArgs] Found valid uikit root at relative location');
+        console.log(
+          '[DEBUG parseArgs] Found valid uikit root at relative location',
+        );
       }
     }
   }
@@ -170,7 +179,12 @@ try {
   const { mode, consumerRoot, uikitRoot, commandArgs, verify, debug } = parsed;
 
   if (debug) {
-    console.log('[DEBUG] Parsed args:', { mode, consumerRoot, uikitRoot, verify });
+    console.log('[DEBUG] Parsed args:', {
+      mode,
+      consumerRoot,
+      uikitRoot,
+      verify,
+    });
   }
 
   // Initialize dependencies

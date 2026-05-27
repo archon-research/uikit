@@ -31,6 +31,19 @@ const buttonBaseStyle: CSSProperties = {
   color: 'var(--colors-text-muted, #667085)',
 };
 
+const radioInputStyle: CSSProperties = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  margin: -1,
+  padding: 0,
+  border: 0,
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(100%)',
+  whiteSpace: 'nowrap',
+};
+
 const activeButtonStyle: CSSProperties = {
   background: 'var(--colors-surface-default, #ffffff)',
   color: 'var(--colors-text-default, #111827)',
@@ -96,17 +109,24 @@ export function ThemeToggle() {
       {MODES.map((item) => {
         const active = mode === item.mode;
         return (
-          <button
+          <label
             key={item.mode}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            onClick={() => setMode(item.mode)}
-            style={active ? { ...buttonBaseStyle, ...activeButtonStyle } : buttonBaseStyle}
+            style={
+              active
+                ? { ...buttonBaseStyle, ...activeButtonStyle }
+                : buttonBaseStyle
+            }
           >
+            <input
+              type="radio"
+              name="theme-mode"
+              checked={active}
+              onChange={() => setMode(item.mode)}
+              style={radioInputStyle}
+            />
             <ThemeIcon mode={item.mode} />
             {item.label}
-          </button>
+          </label>
         );
       })}
     </div>

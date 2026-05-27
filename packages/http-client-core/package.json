@@ -5,19 +5,26 @@
     "access": "public"
   },
   "type": "module",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "bin": {
     "uikit-openapi-generate": "./dist/bin/generate-openapi.js"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "clean": "rm -rf dist",
     "prepare": "npm run build",
-    "type:check": "tsgo -p tsconfig.json --noEmit"
+    "type:check": "tsgo -p tsconfig.json --noEmit",
+    "lint": "oxlint -c oxlint.config.ts src",
+    "lint:fix": "oxlint -c oxlint.config.ts --fix src",
+    "format": "oxfmt -c oxfmt.config.ts --write src",
+    "format:check": "oxfmt -c oxfmt.config.ts --check src"
   },
   "dependencies": {
     "openapi-fetch": "^0.17.0",
@@ -27,6 +34,8 @@
     "openapi-typescript": "^7.13.0"
   },
   "devDependencies": {
-    "@types/node": "^24.7.2"
+    "@types/node": "^24.7.2",
+    "oxfmt": "^0.48.0",
+    "oxlint": "^1.64.0"
   }
 }

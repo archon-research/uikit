@@ -8,6 +8,10 @@
     "wrapper": "./scripts/create-wrapper.sh",
     "clean": "rm -rf dist",
     "type:check": "tsgo -p tsconfig.json --noEmit",
+    "lint": "oxlint -c oxlint.config.ts src",
+    "lint:fix": "oxlint -c oxlint.config.ts --fix src",
+    "format": "oxfmt -c oxfmt.config.ts --write src",
+    "format:check": "oxfmt -c oxfmt.config.ts --check src",
     "prepare": "npm run build"
   },
   "bin": {
@@ -16,6 +20,10 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
     "access": "public"
+  },
+  "dependencies": {
+    "oxfmt": "^0.48.0",
+    "oxlint": "^1.64.0"
   },
   "devDependencies": {
     "@archon-research/tsconfig": "*",

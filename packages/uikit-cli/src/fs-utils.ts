@@ -19,7 +19,10 @@ export interface FileSystemOps {
   readJson<T>(path: string): T;
   realpath(path: string): string;
   isSymlink(path: string): boolean;
-  removeDir(path: string, options?: { recursive?: boolean; force?: boolean }): void;
+  removeDir(
+    path: string,
+    options?: { recursive?: boolean; force?: boolean },
+  ): void;
   createSymlink(target: string, path: string): void;
   createDir(path: string, options?: { recursive?: boolean }): void;
   readDir(path: string): string[];
@@ -63,7 +66,10 @@ export class RealFileSystem implements FileSystemOps {
     }
   }
 
-  removeDir(path: string, options?: { recursive?: boolean; force?: boolean }): void {
+  removeDir(
+    path: string,
+    options?: { recursive?: boolean; force?: boolean },
+  ): void {
     rmSync(path, { recursive: true, force: true, ...options });
   }
 

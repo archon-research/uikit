@@ -7,5 +7,5 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": ["base.ts", "react.ts"]
+  "include": ["base.ts", "react.ts", "design-system-boundaries.ts"]
 }
