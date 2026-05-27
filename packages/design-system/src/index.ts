@@ -16,8 +16,6 @@ export {
   type ThemeContextValue,
   type ThemeMode,
 } from './theme/useTheme';
-/** @deprecated Use Ark Splitter primitives (for example, Splitter.ResizeTrigger) for new resize interactions. */
-export { ResizeHandle } from './components/ResizeHandle';
 export { SkeletonRows } from './components/SkeletonRows';
 export { SkeletonStack } from './components/SkeletonStack';
 export {

@@ -19,25 +19,15 @@ const rowClassName = css({
   gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
 });
 
-const labelClassName = css({
-  color: 'text.muted',
-  fontSize: 'sm',
-  fontWeight: 'medium',
-  lineHeight: '1.4',
-  mb: '2',
-});
-
 export const Panel = () => (
   <div className={frameClassName}>
     <div>
-      <p className={labelClassName}>Panel variant (default)</p>
       <div className={rowClassName}>
         <Button>Default</Button>
         <Button disabled>Disabled</Button>
       </div>
     </div>
     <div>
-      <p className={labelClassName}>Panel - Large</p>
       <div className={rowClassName}>
         <Button size="lg">Large</Button>
         <Button size="lg" disabled>
@@ -51,7 +41,6 @@ export const Panel = () => (
 export const Item = () => (
   <div className={frameClassName}>
     <div>
-      <p className={labelClassName}>Item variant (comfortable)</p>
       <div className={css({ display: 'grid', gap: '2' })}>
         <Button variant="item">Navigation item</Button>
         <Button variant="item" selected>
@@ -66,7 +55,6 @@ export const Item = () => (
       </div>
     </div>
     <div>
-      <p className={labelClassName}>Item variant (compact)</p>
       <div className={css({ display: 'grid', gap: '2' })}>
         <Button variant="item" density="compact">
           Compact item
@@ -82,7 +70,6 @@ export const Item = () => (
 export const IconOnly = () => (
   <div className={frameClassName}>
     <div>
-      <p className={labelClassName}>Icon-only button</p>
       <div className={rowClassName}>
         <Button iconOnly title="Settings">
           ⚙️

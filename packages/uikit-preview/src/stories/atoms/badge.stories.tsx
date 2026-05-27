@@ -20,18 +20,9 @@ const rowClassName = css({
   gap: '3',
 });
 
-const labelClassName = css({
-  color: 'text.muted',
-  fontSize: 'sm',
-  fontWeight: 'medium',
-  lineHeight: '1.4',
-  mb: '2',
-});
-
 export const Tones = () => (
   <div className={frameClassName}>
     <div>
-      <p className={labelClassName}>Badge tones</p>
       <div className={rowClassName}>
         <Badge tone="neutral">Neutral</Badge>
         <Badge tone="success">Success</Badge>

@@ -14,14 +14,6 @@ const stackClassName = css({
   fontFamily: 'sans',
 });
 
-const titleClassName = css({
-  color: 'text.default',
-  fontSize: 'sm',
-  fontWeight: 'medium',
-  lineHeight: '1.4',
-  mb: '2',
-});
-
 const cardClassName = css({
   borderColor: 'border.subtle',
   borderRadius: 'md',
@@ -34,7 +26,6 @@ const cardClassName = css({
 export const Default = () => (
   <div className={stackClassName}>
     <div className={cardClassName}>
-      <p className={titleClassName}>Default list placeholder</p>
       <SkeletonStack />
     </div>
   </div>
@@ -43,7 +34,6 @@ export const Default = () => (
 export const Dense = () => (
   <div className={stackClassName}>
     <div className={cardClassName}>
-      <p className={titleClassName}>Dense list placeholder</p>
       <SkeletonStack count={8} itemHeight={40} />
     </div>
   </div>

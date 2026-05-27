@@ -30,11 +30,6 @@ const connectorClassName = css({
   pointerEvents: 'none',
 });
 
-const mutedCopyClassName = css({
-  color: 'text.muted',
-  fontSize: 'sm',
-});
-
 const chevronClassName = css({
   fontSize: 'md',
   lineHeight: '1',
@@ -83,9 +78,5 @@ export const NestedRows = () => (
         style={{ marginLeft: '2.2rem', width: 'calc(100% - 2.2rem)' }}
       />
     </div>
-    <p className={mutedCopyClassName}>
-      TreeRow keeps the disclosure slot and label truncation consistent while
-      consumers own indentation and rails.
-    </p>
   </div>
 );

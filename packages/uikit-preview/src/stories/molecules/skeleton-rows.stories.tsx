@@ -29,18 +29,9 @@ const stackClassName = css({
   fontFamily: 'sans',
 });
 
-const titleClassName = css({
-  color: 'text.default',
-  fontSize: 'sm',
-  fontWeight: 'medium',
-  lineHeight: '1.4',
-  mb: '2',
-});
-
 export const Default = () => (
   <div className={stackClassName}>
     <div>
-      <p className={titleClassName}>Default table placeholder</p>
       <div className={frameClassName}>
         <table className={tableClassName}>
           <tbody>
@@ -55,7 +46,6 @@ export const Default = () => (
 export const Compact = () => (
   <div className={stackClassName}>
     <div>
-      <p className={titleClassName}>Compact 4 x 4 placeholder</p>
       <div className={frameClassName}>
         <table className={tableClassName}>
           <tbody>

@@ -50,14 +50,6 @@ export const designSystemComponentManifest = [
     recipeKey: null,
   },
   {
-    exportName: 'ResizeHandle',
-    behaviorSource: 'design-system',
-    styleOwner: 'design-system',
-    storyBucket: 'atoms',
-    contractScope: 'resize-handle',
-    recipeKey: null,
-  },
-  {
     exportName: 'Switch',
     behaviorSource: 'ark-ui',
     styleOwner: 'design-system-preset',
