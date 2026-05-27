@@ -20,7 +20,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run snapshot:build && npm run snapshot:serve',
+    command: 'npm run build && npm run snapshot:serve',
     port,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
