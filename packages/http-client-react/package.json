@@ -32,7 +32,9 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "oxfmt": "^0.48.0",
-    "oxlint": "^1.64.0"
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "oxfmt": "0.50.0",
+    "oxlint": "1.65.0"
   }
 }

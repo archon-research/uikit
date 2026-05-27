@@ -26,6 +26,16 @@
   ],
   packageRules: [
     {
+      matchPackageNames: [
+        "oxfmt",
+        "oxlint",
+        "@oxfmt/binding-linux-x64-gnu",
+        "@oxlint/binding-linux-x64-gnu",
+      ],
+      groupName: "ox-tooling",
+      rangeStrategy: "replace",
+    },
+    {
       matchPackageNames: ["esbuild", "@esbuild/linux-x64"],
       groupName: "esbuild",
     },
