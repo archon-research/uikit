@@ -5,38 +5,14 @@
     "version": 1
   },
   "stories": {
-    "atoms--avatar--fallback": {
-      "name": "Fallback",
-      "levels": [
-        "Atoms",
-        "Avatar"
-      ],
-      "locStart": 65,
-      "locEnd": 74,
-      "filePath": "src/stories/atoms/avatar.stories.tsx",
-      "namedExport": "Fallback",
-      "meta": {}
-    },
-    "atoms--avatar--with-image": {
-      "name": "With image",
-      "levels": [
-        "Atoms",
-        "Avatar"
-      ],
-      "locStart": 49,
-      "locEnd": 63,
-      "filePath": "src/stories/atoms/avatar.stories.tsx",
-      "namedExport": "WithImage",
-      "meta": {}
-    },
     "atoms--badge--in-context": {
       "name": "In context",
       "levels": [
         "Atoms",
         "Badge"
       ],
-      "locStart": 45,
-      "locEnd": 56,
+      "locStart": 36,
+      "locEnd": 47,
       "filePath": "src/stories/atoms/badge.stories.tsx",
       "namedExport": "InContext",
       "meta": {}
@@ -47,8 +23,8 @@
         "Atoms",
         "Badge"
       ],
-      "locStart": 31,
-      "locEnd": 43,
+      "locStart": 23,
+      "locEnd": 34,
       "filePath": "src/stories/atoms/badge.stories.tsx",
       "namedExport": "Tones",
       "meta": {}
@@ -59,8 +35,8 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 82,
-      "locEnd": 99,
+      "locStart": 70,
+      "locEnd": 86,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "IconOnly",
       "meta": {}
@@ -71,8 +47,8 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 51,
-      "locEnd": 80,
+      "locStart": 41,
+      "locEnd": 68,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "Item",
       "meta": {}
@@ -83,8 +59,8 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 30,
-      "locEnd": 49,
+      "locStart": 22,
+      "locEnd": 39,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "Panel",
       "meta": {}
@@ -111,66 +87,6 @@
       "locEnd": 38,
       "filePath": "src/stories/atoms/loading-indicator.stories.tsx",
       "namedExport": "InContext",
-      "meta": {}
-    },
-    "atoms--resize-handle--horizontal-block": {
-      "name": "Horizontal block",
-      "levels": [
-        "Atoms",
-        "Resize handle"
-      ],
-      "locStart": 63,
-      "locEnd": 77,
-      "filePath": "src/stories/atoms/resize-handle.stories.tsx",
-      "namedExport": "HorizontalBlock",
-      "meta": {}
-    },
-    "atoms--resize-handle--horizontal-overlay": {
-      "name": "Horizontal overlay",
-      "levels": [
-        "Atoms",
-        "Resize handle"
-      ],
-      "locStart": 79,
-      "locEnd": 93,
-      "filePath": "src/stories/atoms/resize-handle.stories.tsx",
-      "namedExport": "HorizontalOverlay",
-      "meta": {}
-    },
-    "atoms--resize-handle--vertical-overlay": {
-      "name": "Vertical overlay",
-      "levels": [
-        "Atoms",
-        "Resize handle"
-      ],
-      "locStart": 48,
-      "locEnd": 61,
-      "filePath": "src/stories/atoms/resize-handle.stories.tsx",
-      "namedExport": "VerticalOverlay",
-      "meta": {}
-    },
-    "atoms--slider--range": {
-      "name": "Range",
-      "levels": [
-        "Atoms",
-        "Slider"
-      ],
-      "locStart": 80,
-      "locEnd": 96,
-      "filePath": "src/stories/atoms/slider.stories.tsx",
-      "namedExport": "Range",
-      "meta": {}
-    },
-    "atoms--slider--single-thumb": {
-      "name": "Single thumb",
-      "levels": [
-        "Atoms",
-        "Slider"
-      ],
-      "locStart": 63,
-      "locEnd": 78,
-      "filePath": "src/stories/atoms/slider.stories.tsx",
-      "namedExport": "SingleThumb",
       "meta": {}
     },
     "atoms--switch--disabled": {
@@ -215,8 +131,8 @@
         "Atoms",
         "Tree row"
       ],
-      "locStart": 44,
-      "locEnd": 63,
+      "locStart": 39,
+      "locEnd": 58,
       "filePath": "src/stories/atoms/tree-row.stories.tsx",
       "namedExport": "BranchRows",
       "meta": {}
@@ -227,22 +143,10 @@
         "Atoms",
         "Tree row"
       ],
-      "locStart": 65,
-      "locEnd": 91,
+      "locStart": 60,
+      "locEnd": 82,
       "filePath": "src/stories/atoms/tree-row.stories.tsx",
       "namedExport": "NestedRows",
-      "meta": {}
-    },
-    "molecules--menu--open": {
-      "name": "Open",
-      "levels": [
-        "Molecules",
-        "Menu"
-      ],
-      "locStart": 57,
-      "locEnd": 77,
-      "filePath": "src/stories/molecules/menu.stories.tsx",
-      "namedExport": "Open",
       "meta": {}
     },
     "molecules--search-input--default": {
@@ -323,8 +227,8 @@
         "Molecules",
         "Skeleton rows"
       ],
-      "locStart": 55,
-      "locEnd": 68,
+      "locStart": 46,
+      "locEnd": 58,
       "filePath": "src/stories/molecules/skeleton-rows.stories.tsx",
       "namedExport": "Compact",
       "meta": {}
@@ -335,8 +239,8 @@
         "Molecules",
         "Skeleton rows"
       ],
-      "locStart": 40,
-      "locEnd": 53,
+      "locStart": 32,
+      "locEnd": 44,
       "filePath": "src/stories/molecules/skeleton-rows.stories.tsx",
       "namedExport": "Default",
       "meta": {}
@@ -347,8 +251,8 @@
         "Molecules",
         "Skeleton stack"
       ],
-      "locStart": 34,
-      "locEnd": 41,
+      "locStart": 26,
+      "locEnd": 32,
       "filePath": "src/stories/molecules/skeleton-stack.stories.tsx",
       "namedExport": "Default",
       "meta": {}
@@ -359,8 +263,8 @@
         "Molecules",
         "Skeleton stack"
       ],
-      "locStart": 43,
-      "locEnd": 50,
+      "locStart": 34,
+      "locEnd": 40,
       "filePath": "src/stories/molecules/skeleton-stack.stories.tsx",
       "namedExport": "Dense",
       "meta": {}
