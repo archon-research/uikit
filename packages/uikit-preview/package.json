@@ -28,7 +28,7 @@
     "@ladle/react": "^5.1.1",
     "@pandacss/dev": "^1.10.0",
     "@playwright/test": "^1.54.2",
-    "oxfmt": "^0.48.0",
-    "oxlint": "^1.64.0"
+    "oxfmt": "0.50.0",
+    "oxlint": "1.65.0"
   }
 }
