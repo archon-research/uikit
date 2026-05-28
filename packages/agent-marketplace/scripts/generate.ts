@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,6 +25,65 @@ const copilotMarketplacePath = join(
 );
 
 const pluginId = 'uikit-agent-marketplace';
+
+function runGit(args) {
+  try {
+    return execFileSync('git', args, {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+  } catch {
+    return undefined;
+  }
+}
+
+function resolveSemanticVersion() {
+  const envVersion =
+    process.env.UIKIT_PLUGIN_SEMVER ??
+    process.env.NEXT_RELEASE_VERSION ??
+    process.env.RELEASE_VERSION;
+  if (envVersion) {
+    return envVersion;
+  }
+
+  const latestReleaseTag = runGit([
+    'describe',
+    '--tags',
+    '--abbrev=0',
+    '--match',
+    'release-*',
+  ]);
+  const tagMatch = latestReleaseTag?.match(/^release-(\d+\.\d+\.\d+)$/);
+  if (tagMatch) {
+    return tagMatch[1];
+  }
+
+  throw new Error(
+    'Unable to resolve semantic version. Set UIKIT_PLUGIN_SEMVER (or NEXT_RELEASE_VERSION / RELEASE_VERSION) or ensure a release-X.Y.Z tag exists.',
+  );
+}
+
+function isMainBranch() {
+  if (process.env.GITHUB_REF === 'refs/heads/main') {
+    return true;
+  }
+
+  const branchName =
+    process.env.GITHUB_REF_NAME ??
+    runGit(['rev-parse', '--abbrev-ref', 'HEAD']);
+  return branchName === 'main';
+}
+
+function resolvePluginVersion() {
+  const semanticVersion = resolveSemanticVersion();
+  if (isMainBranch()) {
+    return semanticVersion;
+  }
+
+  const commitHash = runGit(['rev-parse', '--short=12', 'HEAD']) ?? 'unknown';
+  return `${semanticVersion}+${commitHash}`;
+}
 
 function sortById(items) {
   return [...items].sort((left, right) => left.id.localeCompare(right.id));
@@ -69,12 +129,12 @@ async function copyAgent(outputRoot, agentId) {
   await cp(sourceFile, destinationFile);
 }
 
-function buildCopilotPluginManifest(target, skills, agents) {
+function buildCopilotPluginManifest(target, skills, agents, version) {
   return {
     schemaVersion: 1,
     id: pluginId,
     name: 'UIKit Agent Marketplace',
-    version: '0.1.0',
+    version,
     description:
       'Reusable UI-focused skills and specialist agents for Claude Code and GitHub Copilot CLI.',
     target,
@@ -89,10 +149,10 @@ function buildCopilotPluginManifest(target, skills, agents) {
   };
 }
 
-function buildClaudePluginManifest() {
+function buildClaudePluginManifest(version) {
   return {
     name: pluginId,
-    version: '0.1.0',
+    version,
     description:
       'Reusable UI-focused skills and specialist agents for Claude Code.',
     author: {
@@ -120,7 +180,7 @@ async function writeJson(filePath, data) {
   await writeFile(filePath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
 }
 
-async function writePluginOutput(target, outputRoot, skills, agents) {
+async function writePluginOutput(target, outputRoot, skills, agents, version) {
   await rm(outputRoot, { recursive: true, force: true });
   await mkdir(outputRoot, { recursive: true });
 
@@ -133,18 +193,18 @@ async function writePluginOutput(target, outputRoot, skills, agents) {
   }
 
   if (target === 'claude-code') {
-    const manifest = buildClaudePluginManifest();
+    const manifest = buildClaudePluginManifest(version);
     await writeJson(
       join(outputRoot, '.claude-plugin', 'plugin.json'),
       manifest,
     );
     return;
   }
-  const manifest = buildCopilotPluginManifest(target, skills, agents);
+  const manifest = buildCopilotPluginManifest(target, skills, agents, version);
   await writeJson(join(outputRoot, 'plugin.json'), manifest);
 }
 
-async function writeMarketplaceManifests() {
+async function writeMarketplaceManifests(version) {
   await writeJson(claudeMarketplacePath, {
     name: 'uikit-plugins',
     owner: {
@@ -155,7 +215,7 @@ async function writeMarketplaceManifests() {
     plugins: [
       {
         name: pluginId,
-        version: '0.1.0',
+        version,
         description: 'UI skills and specialist agents for code assistants.',
         source: './packages/agent-marketplace/claude-plugin',
       },
@@ -168,7 +228,7 @@ async function writeMarketplaceManifests() {
       {
         id: pluginId,
         name: 'UIKit Agent Marketplace',
-        version: '0.1.0',
+        version,
         description: 'UI skills and specialist agents for code assistants.',
         source: './packages/agent-marketplace/copilot-plugin',
       },
@@ -178,9 +238,22 @@ async function writeMarketplaceManifests() {
 
 async function main() {
   const { skills, agents } = await readSources();
-  await writePluginOutput('claude-code', claudeOutputRoot, skills, agents);
-  await writePluginOutput('copilot-cli', copilotOutputRoot, skills, agents);
-  await writeMarketplaceManifests();
+  const version = resolvePluginVersion();
+  await writePluginOutput(
+    'claude-code',
+    claudeOutputRoot,
+    skills,
+    agents,
+    version,
+  );
+  await writePluginOutput(
+    'copilot-cli',
+    copilotOutputRoot,
+    skills,
+    agents,
+    version,
+  );
+  await writeMarketplaceManifests(version);
 }
 
 await main();

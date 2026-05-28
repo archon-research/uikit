@@ -4,7 +4,7 @@
     {
       "id": "uikit-agent-marketplace",
       "name": "UIKit Agent Marketplace",
-      "version": "0.1.0",
+      "version": "0.4.0+202fd44fd38f",
       "description": "UI skills and specialist agents for code assistants.",
       "source": "./packages/agent-marketplace/copilot-plugin"
     }
