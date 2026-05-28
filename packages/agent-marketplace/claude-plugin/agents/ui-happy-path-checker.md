@@ -2,7 +2,7 @@
 name: ui-happy-path-checker
 description: Functional happy-path verification agent for core user flows, interaction continuity, and state transitions.
 skills:
-  - uikit-design-audit
+  - design-audit
   - ark-ui-guidance
   - web-design
 ---

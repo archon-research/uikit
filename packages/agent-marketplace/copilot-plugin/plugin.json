@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "uikit-agent-marketplace",
   "name": "UIKit Agent Marketplace",
-  "version": "0.4.0+202fd44fd38f",
+  "version": "0.4.0+25edd28d730c",
   "description": "Reusable UI-focused skills and specialist agents for Claude Code and GitHub Copilot CLI.",
   "target": "copilot-cli",
   "skills": [
@@ -11,12 +11,16 @@
       "path": "skills/ark-ui-guidance/SKILL.md"
     },
     {
+      "id": "design-audit",
+      "path": "skills/design-audit/SKILL.md"
+    },
+    {
       "id": "eyes",
       "path": "skills/eyes/SKILL.md"
     },
     {
-      "id": "impeccable",
-      "path": "skills/impeccable/SKILL.md"
+      "id": "live",
+      "path": "skills/live/SKILL.md"
     },
     {
       "id": "migrate-oxfmt",
@@ -37,14 +41,6 @@
     {
       "id": "panda-css",
       "path": "skills/panda-css/SKILL.md"
-    },
-    {
-      "id": "uikit-design-audit",
-      "path": "skills/uikit-design-audit/SKILL.md"
-    },
-    {
-      "id": "uikit-live",
-      "path": "skills/uikit-live/SKILL.md"
     },
     {
       "id": "web-design",

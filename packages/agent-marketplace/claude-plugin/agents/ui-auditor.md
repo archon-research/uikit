@@ -2,10 +2,9 @@
 name: ui-auditor
 description: Lightweight audit agent for token discipline, component-library correctness, and practical UX remediation without Playwright.
 skills:
-  - uikit-design-audit
+  - design-audit
   - web-design
   - ark-ui-guidance
-  - impeccable
 ---
 
 # UI Auditor
