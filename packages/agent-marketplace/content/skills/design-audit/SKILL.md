@@ -1,5 +1,5 @@
 ---
-name: uikit-design-audit
+name: design-audit
 description: Lightweight UI audit for UIKit-based apps focusing on design-token discipline, component-library correctness, functional UX quality, and practical remediation.
 ---
 
@@ -38,6 +38,6 @@ Produce:
 
 ## Follow-up
 
-- Use `uikit-live` to iterate in situ on the highest-priority findings.
+- Use `live` to iterate in situ on the highest-priority findings.
 - After fixes, run a polish pass for spacing, typography rhythm, and state consistency.
 - Re-audit the same screen to verify token integrity and functional improvements.

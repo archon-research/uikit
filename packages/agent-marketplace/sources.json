@@ -89,10 +89,10 @@
       ]
     },
     {
-      "id": "uikit-design-audit",
+      "id": "design-audit",
       "kind": "skill",
       "sourceType": "local-authored",
-      "upstream": "packages/agent-marketplace/content/skills/uikit-design-audit/SKILL.md",
+      "upstream": "packages/agent-marketplace/content/skills/design-audit/SKILL.md",
       "pinnedRevision": "local-v1",
       "normalizationNotes": [
         "Lightweight durable audit flow for UIKit apps.",
@@ -100,25 +100,14 @@
       ]
     },
     {
-      "id": "uikit-live",
+      "id": "live",
       "kind": "skill",
       "sourceType": "local-authored",
-      "upstream": "packages/agent-marketplace/content/skills/uikit-live/SKILL.md",
+      "upstream": "packages/agent-marketplace/content/skills/live/SKILL.md",
       "pinnedRevision": "local-v1",
       "normalizationNotes": [
         "Lightweight in-situ live iteration workflow.",
         "Emphasizes annotation-driven variants in consumer apps."
-      ]
-    },
-    {
-      "id": "impeccable",
-      "kind": "skill",
-      "sourceType": "remote-markdown",
-      "upstream": "https://raw.githubusercontent.com/pbakaus/impeccable/84135db0e6bdd58d22828f7bc8331cae7bde3e7f/.agents/skills/impeccable/SKILL.md",
-      "pinnedRevision": "84135db0e6bdd58d22828f7bc8331cae7bde3e7f",
-      "normalizationNotes": [
-        "Vendored first-party Impeccable skill for optional high-agency UI workflows.",
-        "Pinned to upstream commit for deterministic generation and controlled updates."
       ]
     },
     {

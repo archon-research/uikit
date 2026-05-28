@@ -4,7 +4,7 @@ description: Specialist verification agent for Playwright-backed visual behavior
 skills:
   - eyes
   - web-design
-  - uikit-live
+  - live
 ---
 
 # UI Verifier
