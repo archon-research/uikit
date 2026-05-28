@@ -161,3 +161,39 @@ export const ControlledState = () => {
     </div>
   );
 };
+
+const casingPolicyColumns = [
+  {
+    accessorKey: 'symbol',
+    header: 'asset symbol',
+    cell: ({ row }: { row: { original: Row } }) => row.original.symbol,
+  },
+  {
+    accessorKey: 'chain',
+    header: 'execution chain',
+    cell: ({ row }: { row: { original: Row } }) => row.original.chain,
+  },
+  {
+    accessorKey: 'amountUsd',
+    header: 'gross amount usd',
+    cell: ({ row }: { row: { original: Row } }) =>
+      `$${row.original.amountUsd.toLocaleString('en-US')}`,
+  },
+];
+
+export const HeaderCasingPolicy = () => {
+  const table = useDataTable(rows, casingPolicyColumns as never, {
+    enableSorting: true,
+    enableSearch: true,
+  });
+
+  return (
+    <div className={wrapperClassName}>
+      <DataTable
+        table={table}
+        isLoading={false}
+        getRowKey={(row: Row) => `${row.chain}:${row.symbol}`}
+      />
+    </div>
+  );
+};
