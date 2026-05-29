@@ -21,6 +21,7 @@ Before iterating, confirm all of the following:
 2. You are editing source files, not generated assets.
 3. The target screen is reachable and stable enough for repeated checks.
 4. The workflow stays tool-agnostic: Claude and Copilot paths are both valid as long as the same source files are updated.
+5. If present, read `DESIGN.md` and `PREVIEW.md` first; they override ad hoc local style guesses.
 
 ## In-Situ Flow
 
@@ -57,6 +58,25 @@ Apply these defaults unless the user asks for a deliberate exception:
 - Option controls (toggle/segmented/switch-like): maintain consistent border, focus ring, and interaction-state treatment.
 - Data-table headers: enforce casing and tracking policy (`uppercase` plus letter-spacing where that pattern is expected).
 
+## Component Contracts (Use Exactly)
+
+When implementing option controls in this repository, use these concrete pairings:
+
+1. Segmented options:
+	- Component primitive: `ToggleGroup` from `@archon-research/design-system`.
+	- Styling contract: `segmentedControl()` recipe from styled-system.
+	- Required active selector: `&[data-state="on"]` (recipe already maps selected state).
+	- Baseline tokens: `border.default`, `interactive.selected`, `interactive.hover`, `text.default`, `text.muted`.
+2. Binary toggles:
+	- Component primitive: `Switch` from `@archon-research/design-system`.
+	- Styling contract: `toggleSwitch()` slot recipe.
+	- Root defaults: `border.default`, `surface.subtle`, focus ring via `_focusVisible` rule.
+3. Data-table headers:
+	- Prefer shared `DataTable` contract first.
+	- Header policy baseline: uppercase plus tracking (`letterSpacing`), muted header color, no ad hoc one-off casing in sibling tables.
+
+Do not duplicate selectors that already exist in shared recipes unless there is a documented exception in `DESIGN.md`.
+
 ## Parameter Knobs
 
 Use at most 0 to 3 knobs per variant:
@@ -72,6 +92,15 @@ Keep knobs explicit so reviewers can compare options quickly.
 - If live iteration is interrupted, resume from the last accepted source state, not from transient preview changes.
 - If the selected element lives in a generated file, route to the source-of-truth file before applying changes.
 - If CSP or local script restrictions block iteration tooling, use a dev-only fix and remove or guard it before shipping.
+
+## Context Preference Order
+
+Choose defaults in this order:
+
+1. `DESIGN.md` and `PREVIEW.md` (if present).
+2. Shared design-system recipes/components.
+3. Existing local screen usage patterns.
+4. New local overrides (last resort, document why).
 
 ## Acceptance Checklist
 

@@ -72,6 +72,13 @@
       "resolved": "packages/agent-marketplace/content/skills/live/SKILL.md"
     },
     {
+      "id": "design-bootstrap",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/design-bootstrap/SKILL.md"
+    },
+    {
       "id": "ui-coder",
       "kind": "agent",
       "sourceType": "local-derived",

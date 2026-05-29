@@ -111,6 +111,17 @@
       ]
     },
     {
+      "id": "design-bootstrap",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/design-bootstrap/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Bootstraps PRODUCT.md, DESIGN.md, and PREVIEW.md from design-system and preview artifacts.",
+        "Keeps design context grounded in repository token and recipe sources."
+      ]
+    },
+    {
       "id": "ui-coder",
       "kind": "agent",
       "sourceType": "local-derived",
