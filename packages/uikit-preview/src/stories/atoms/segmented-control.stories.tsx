@@ -1,6 +1,7 @@
 import { ToggleGroup } from '@archon-research/design-system';
 
 import { css } from '../../../styled-system/css';
+import { segmentedControl } from '../../../styled-system/recipes';
 
 export default {
   title: 'Atoms/Segmented Control',
@@ -21,60 +22,22 @@ const hintClassName = css({
   lineHeight: '1.5',
 });
 
-const groupClassName = css({
-  alignItems: 'center',
-  bg: 'transparent',
-  borderColor: 'border.default',
-  borderRadius: 'sm',
-  borderStyle: 'solid',
-  borderWidth: '1px',
-  display: 'inline-flex',
-  gap: '0.5',
-  p: '0.5',
-});
-
-const itemClassName = css({
-  '&[data-pressed]': {
-    bg: 'interactive.selected',
-    color: 'text.default',
-  },
-  '&[data-state="on"]': {
-    bg: 'interactive.selected',
-    color: 'text.default',
-  },
-  _hover: {
-    bg: 'interactive.hover',
-    color: 'text.default',
-  },
-  alignItems: 'center',
-  borderRadius: 'xs',
-  color: 'text.muted',
-  cursor: 'pointer',
-  display: 'inline-flex',
-  fontSize: 'sm',
-  h: '7',
-  justifyContent: 'center',
-  lineHeight: 'normal',
-  px: '3',
-  py: '1',
-  transitionDuration: 'fast',
-  transitionProperty: 'background-color, color, border-color, box-shadow',
-});
-
 const renderSegmentedControl = (defaultValue = 'overview') => {
+  const classes = segmentedControl();
+
   return (
     <ToggleGroup.Root
-      className={groupClassName}
+      className={classes.group}
       defaultValue={[defaultValue]}
       aria-label="View mode"
     >
-      <ToggleGroup.Item className={itemClassName} value="overview">
+      <ToggleGroup.Item className={classes.item} value="overview">
         Overview
       </ToggleGroup.Item>
-      <ToggleGroup.Item className={itemClassName} value="positions">
+      <ToggleGroup.Item className={classes.item} value="positions">
         Positions
       </ToggleGroup.Item>
-      <ToggleGroup.Item className={itemClassName} value="activity">
+      <ToggleGroup.Item className={classes.item} value="activity">
         Activity
       </ToggleGroup.Item>
     </ToggleGroup.Root>
