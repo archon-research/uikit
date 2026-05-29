@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "uikit-agent-marketplace",
   "name": "UIKit Agent Marketplace",
-  "version": "0.4.0+25edd28d730c",
+  "version": "0.4.0+f02f1a2b792f",
   "description": "Reusable UI-focused skills and specialist agents for Claude Code and GitHub Copilot CLI.",
   "target": "copilot-cli",
   "skills": [
@@ -13,6 +13,10 @@
     {
       "id": "design-audit",
       "path": "skills/design-audit/SKILL.md"
+    },
+    {
+      "id": "design-bootstrap",
+      "path": "skills/design-bootstrap/SKILL.md"
     },
     {
       "id": "eyes",
