@@ -256,7 +256,7 @@ export const Colors = () => (
             {colors.map((entry) => (
               <tr key={entry.name}>
                 <td>{entry.name}</td>
-                <td>
+                <td aria-label={`${entry.name} preview`}>
                   <div
                     className={swatchClassName}
                     style={{ background: entry.value }}
@@ -306,7 +306,7 @@ export const Spacing = () => {
                     <td>{entry.name}</td>
                     <td>{entry.value}</td>
                     <td>{px}</td>
-                    <td>
+                    <td aria-label={`${entry.name} spacing preview`}>
                       <div
                         className={css({
                           bg: 'rose.200',
@@ -360,7 +360,7 @@ export const Sizes = () => {
                     <td>{entry.name}</td>
                     <td>{entry.value}</td>
                     <td>{px}</td>
-                    <td>
+                    <td aria-label={`${entry.name} size preview`}>
                       <div
                         className={css({
                           bg: 'sky.200',

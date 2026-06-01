@@ -30,7 +30,7 @@ export function SkeletonRows({
   return Array.from({ length: rows }, (_row, rowIndex) => (
     <tr key={rowIndex} style={rowStyle}>
       {Array.from({ length: columns }, (_cell, cellIndex) => (
-        <td key={cellIndex} style={cellStyle}>
+        <td key={cellIndex} style={cellStyle} aria-hidden="true">
           <div
             style={{
               ...blockBaseStyle,
