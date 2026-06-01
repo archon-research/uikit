@@ -21,8 +21,8 @@
     "access": "public"
   },
   "dependencies": {
-    "oxfmt": "0.50.0",
-    "oxlint": "1.65.0"
+    "oxfmt": "0.51.0",
+    "oxlint": "1.66.0"
   },
   "devDependencies": {
     "@archon-research/tsconfig": "*",

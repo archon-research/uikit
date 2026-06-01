@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.7.2",
-    "oxfmt": "0.50.0",
-    "oxlint": "1.65.0"
+    "oxfmt": "0.51.0",
+    "oxlint": "1.66.0"
   }
 }

@@ -2,7 +2,7 @@
   "name": "@archon-research/uikit",
   "private": true,
   "type": "module",
-  "packageManager": "npm@11.14.1",
+  "packageManager": "npm@11.15.0",
   "workspaces": [
     "packages/*"
   ],
@@ -24,7 +24,7 @@
     "release:run": "semantic-release"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20260518.1",
+    "@typescript/native-preview": "7.0.0-dev.20260525.1",
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
     "conventional-changelog-conventionalcommits": "^9.1.0",
@@ -32,7 +32,7 @@
     "semantic-release": "^25.0.3"
   },
   "optionalDependencies": {
-    "@oxfmt/binding-linux-x64-gnu": "0.50.0",
-    "@oxlint/binding-linux-x64-gnu": "1.65.0"
+    "@oxfmt/binding-linux-x64-gnu": "0.51.0",
+    "@oxlint/binding-linux-x64-gnu": "1.66.0"
   }
 }

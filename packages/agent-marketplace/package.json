@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@archon-research/oxfmt-config": "*",
-    "oxfmt": "^0.48.0",
+    "oxfmt": "^0.51.0",
     "oxlint": "^1.64.0"
   }
 }
