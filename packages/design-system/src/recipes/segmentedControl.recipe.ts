@@ -21,6 +21,10 @@ export const segmentedControlRecipe = defineSlotRecipe({
         bg: 'interactive.selected',
         color: 'text.default',
       },
+      '&[data-state="on"]': {
+        bg: 'interactive.selected',
+        color: 'text.default',
+      },
       _hover: {
         bg: 'interactive.hover',
         color: 'text.default',

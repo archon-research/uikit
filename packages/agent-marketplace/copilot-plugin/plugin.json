@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "id": "uikit-agent-marketplace",
+  "name": "UIKit Agent Marketplace",
+  "version": "0.4.0+f02f1a2b792f",
+  "description": "Reusable UI-focused skills and specialist agents for Claude Code and GitHub Copilot CLI.",
+  "target": "copilot-cli",
+  "skills": [
+    {
+      "id": "ark-ui-guidance",
+      "path": "skills/ark-ui-guidance/SKILL.md"
+    },
+    {
+      "id": "design-audit",
+      "path": "skills/design-audit/SKILL.md"
+    },
+    {
+      "id": "design-bootstrap",
+      "path": "skills/design-bootstrap/SKILL.md"
+    },
+    {
+      "id": "eyes",
+      "path": "skills/eyes/SKILL.md"
+    },
+    {
+      "id": "live",
+      "path": "skills/live/SKILL.md"
+    },
+    {
+      "id": "migrate-oxfmt",
+      "path": "skills/migrate-oxfmt/SKILL.md"
+    },
+    {
+      "id": "migrate-oxlint",
+      "path": "skills/migrate-oxlint/SKILL.md"
+    },
+    {
+      "id": "oxfmt",
+      "path": "skills/oxfmt/SKILL.md"
+    },
+    {
+      "id": "oxlint",
+      "path": "skills/oxlint/SKILL.md"
+    },
+    {
+      "id": "panda-css",
+      "path": "skills/panda-css/SKILL.md"
+    },
+    {
+      "id": "web-design",
+      "path": "skills/web-design/SKILL.md"
+    }
+  ],
+  "agents": [
+    {
+      "id": "ui-auditor",
+      "path": "agents/ui-auditor.md"
+    },
+    {
+      "id": "ui-coder",
+      "path": "agents/ui-coder.md"
+    },
+    {
+      "id": "ui-happy-path-checker",
+      "path": "agents/ui-happy-path-checker.md"
+    },
+    {
+      "id": "ui-performance-tuner",
+      "path": "agents/ui-performance-tuner.md"
+    },
+    {
+      "id": "ui-verifier",
+      "path": "agents/ui-verifier.md"
+    }
+  ]
+}

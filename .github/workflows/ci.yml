@@ -25,6 +25,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Verify agent-marketplace generated artifacts are committed
+        run: npm run check --workspace @archon-research/agent-marketplace
+
       - name: Lint
         run: npm run lint
 

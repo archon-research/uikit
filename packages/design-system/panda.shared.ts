@@ -1,6 +1,7 @@
 import type { Config } from '@pandacss/dev';
 
 import { buttonRecipe } from './src/recipes/button.recipe';
+import { segmentedControlRecipe } from './src/recipes/segmentedControl.recipe';
 import { surfaceMessageRecipe } from './src/recipes/surfaceMessage.recipe';
 import { switchRecipe } from './src/recipes/switch.recipe';
 
@@ -48,6 +49,7 @@ export const designSystemPandaConfig = {
         },
       },
       slotRecipes: {
+        segmentedControl: segmentedControlRecipe,
         surfaceMessage: surfaceMessageRecipe,
         toggleSwitch: switchRecipe,
       },

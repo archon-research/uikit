@@ -1,0 +1,117 @@
+{
+  "lockVersion": 1,
+  "sources": [
+    {
+      "id": "eyes",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "pinnedRevision": "280c015271cbf539f7950469df6f515cc41be6ec",
+      "resolved": "https://raw.githubusercontent.com/mintuz/claude-plugins/280c015271cbf539f7950469df6f515cc41be6ec/plugins/web/skills/eyes/SKILL.md"
+    },
+    {
+      "id": "web-design",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "pinnedRevision": "280c015271cbf539f7950469df6f515cc41be6ec",
+      "resolved": "https://raw.githubusercontent.com/mintuz/claude-plugins/280c015271cbf539f7950469df6f515cc41be6ec/plugins/web/skills/web-design/SKILL.md"
+    },
+    {
+      "id": "panda-css",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/panda-css/SKILL.md"
+    },
+    {
+      "id": "ark-ui-guidance",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/ark-ui-guidance/SKILL.md"
+    },
+    {
+      "id": "migrate-oxlint",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "pinnedRevision": "261c47789d60d91ee0afe0a1cbc361d39e982bbe",
+      "resolved": "https://raw.githubusercontent.com/oxc-project/oxc/261c47789d60d91ee0afe0a1cbc361d39e982bbe/.agents/skills/migrate-oxlint/SKILL.md"
+    },
+    {
+      "id": "migrate-oxfmt",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "pinnedRevision": "261c47789d60d91ee0afe0a1cbc361d39e982bbe",
+      "resolved": "https://raw.githubusercontent.com/oxc-project/oxc/261c47789d60d91ee0afe0a1cbc361d39e982bbe/.agents/skills/migrate-oxfmt/SKILL.md"
+    },
+    {
+      "id": "oxlint",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/oxlint/SKILL.md"
+    },
+    {
+      "id": "oxfmt",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/oxfmt/SKILL.md"
+    },
+    {
+      "id": "design-audit",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/design-audit/SKILL.md"
+    },
+    {
+      "id": "live",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/live/SKILL.md"
+    },
+    {
+      "id": "design-bootstrap",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/design-bootstrap/SKILL.md"
+    },
+    {
+      "id": "ui-coder",
+      "kind": "agent",
+      "sourceType": "local-derived",
+      "pinnedRevision": "local-sync-2026-05-26",
+      "resolved": "packages/agent-marketplace/content/agents/ui-coder.md"
+    },
+    {
+      "id": "ui-auditor",
+      "kind": "agent",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/agents/ui-auditor.md"
+    },
+    {
+      "id": "ui-happy-path-checker",
+      "kind": "agent",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/agents/ui-happy-path-checker.md"
+    },
+    {
+      "id": "ui-performance-tuner",
+      "kind": "agent",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/agents/ui-performance-tuner.md"
+    },
+    {
+      "id": "ui-verifier",
+      "kind": "agent",
+      "sourceType": "local-derived",
+      "pinnedRevision": "local-sync-2026-05-26",
+      "resolved": "packages/agent-marketplace/content/agents/ui-verifier.md"
+    }
+  ]
+}

@@ -88,6 +88,33 @@ Deployment model:
 - PR comments are updated with the branch preview link
 - PR close triggers cleanup of the corresponding `pr/<number>/` folder
 
+## Agent marketplace plugin workflow
+
+The repository includes an internal plugin-marketplace package at `packages/agent-marketplace`.
+
+Use it to maintain source-normalized skills and agents and to generate plugin outputs for Claude Code and Copilot CLI.
+
+From repository root:
+
+```bash
+npm run generate --workspace @archon-research/agent-marketplace
+```
+
+```bash
+npm run refresh --workspace @archon-research/agent-marketplace
+```
+
+```bash
+npm run refresh:dry-run --workspace @archon-research/agent-marketplace
+```
+
+Validation checkpoints:
+
+```bash
+claude plugin validate /Users/rohit/Code/uikit
+claude plugin validate /Users/rohit/Code/uikit/packages/agent-marketplace/claude-plugin
+```
+
 ## Local co-development with a consumer repository
 
 To actively develop uikit packages alongside a consumer repository, use workspace dependencies and link packages:

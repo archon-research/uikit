@@ -1,0 +1,180 @@
+{
+  "sources": [
+    {
+      "id": "eyes",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "upstream": "https://raw.githubusercontent.com/mintuz/claude-plugins/280c015271cbf539f7950469df6f515cc41be6ec/plugins/web/skills/eyes/SKILL.md",
+      "pinnedRevision": "280c015271cbf539f7950469df6f515cc41be6ec",
+      "normalizationNotes": [
+        "Keep source frontmatter and body as-is unless plugin runtime requires adaptation.",
+        "Treat this as externally owned content."
+      ]
+    },
+    {
+      "id": "web-design",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "upstream": "https://raw.githubusercontent.com/mintuz/claude-plugins/280c015271cbf539f7950469df6f515cc41be6ec/plugins/web/skills/web-design/SKILL.md",
+      "pinnedRevision": "280c015271cbf539f7950469df6f515cc41be6ec",
+      "normalizationNotes": [
+        "Keep source frontmatter and body as-is unless plugin runtime requires adaptation.",
+        "Treat this as externally owned content."
+      ]
+    },
+    {
+      "id": "panda-css",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/panda-css/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Authored for this repository.",
+        "Grounded in design-system Panda usage and recipe patterns."
+      ]
+    },
+    {
+      "id": "ark-ui-guidance",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/ark-ui-guidance/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Authored from Ark UI llms index and local architecture constraints.",
+        "Focuses on styling, composition, forms, and collection/tree usage."
+      ]
+    },
+    {
+      "id": "migrate-oxlint",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "upstream": "https://raw.githubusercontent.com/oxc-project/oxc/261c47789d60d91ee0afe0a1cbc361d39e982bbe/.agents/skills/migrate-oxlint/SKILL.md",
+      "pinnedRevision": "261c47789d60d91ee0afe0a1cbc361d39e982bbe",
+      "normalizationNotes": [
+        "First-party skill from OXC package authors.",
+        "Vendored into normalized content for deterministic plugin generation."
+      ]
+    },
+    {
+      "id": "migrate-oxfmt",
+      "kind": "skill",
+      "sourceType": "remote-markdown",
+      "upstream": "https://raw.githubusercontent.com/oxc-project/oxc/261c47789d60d91ee0afe0a1cbc361d39e982bbe/.agents/skills/migrate-oxfmt/SKILL.md",
+      "pinnedRevision": "261c47789d60d91ee0afe0a1cbc361d39e982bbe",
+      "normalizationNotes": [
+        "First-party skill from OXC package authors.",
+        "Vendored into normalized content for deterministic plugin generation."
+      ]
+    },
+    {
+      "id": "oxlint",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/oxlint/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Steady-state oxlint guidance for this monorepo.",
+        "Complements first-party migrate-oxlint skill."
+      ]
+    },
+    {
+      "id": "oxfmt",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/oxfmt/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Steady-state oxfmt guidance for this monorepo.",
+        "Complements first-party migrate-oxfmt skill."
+      ]
+    },
+    {
+      "id": "design-audit",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/design-audit/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Lightweight durable audit flow for UIKit apps.",
+        "Prioritizes token integrity and component-library correctness."
+      ]
+    },
+    {
+      "id": "live",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/live/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Lightweight in-situ live iteration workflow.",
+        "Emphasizes annotation-driven variants in consumer apps."
+      ]
+    },
+    {
+      "id": "design-bootstrap",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/design-bootstrap/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Bootstraps PRODUCT.md, DESIGN.md, and PREVIEW.md from design-system and preview artifacts.",
+        "Keeps design context grounded in repository token and recipe sources."
+      ]
+    },
+    {
+      "id": "ui-coder",
+      "kind": "agent",
+      "sourceType": "local-derived",
+      "upstream": "/Users/rohit/Code/synome/agent-prompts/ui-coder.md",
+      "pinnedRevision": "local-sync-2026-05-26",
+      "normalizationNotes": [
+        "Derived from Synome prompt with plugin-native skill references.",
+        "Scope adjusted for this monorepo and package layout."
+      ]
+    },
+    {
+      "id": "ui-auditor",
+      "kind": "agent",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/agents/ui-auditor.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Lightweight design and UX audit role without Playwright dependency.",
+        "Token-first and component-library-correctness focus."
+      ]
+    },
+    {
+      "id": "ui-happy-path-checker",
+      "kind": "agent",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/agents/ui-happy-path-checker.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Focused on functional journey verification and state continuity.",
+        "Complements visual regression verification workflows."
+      ]
+    },
+    {
+      "id": "ui-performance-tuner",
+      "kind": "agent",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/agents/ui-performance-tuner.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Performance diagnosis and optimization role for UIKit surfaces.",
+        "Uses practical optimize-oriented workflows."
+      ]
+    },
+    {
+      "id": "ui-verifier",
+      "kind": "agent",
+      "sourceType": "local-derived",
+      "upstream": "/Users/rohit/Code/synome/agent-prompts/ui-verifier.md",
+      "pinnedRevision": "local-sync-2026-05-26",
+      "normalizationNotes": [
+        "Derived from Synome prompt with plugin-native skill references.",
+        "Scope adjusted for this monorepo and package layout."
+      ]
+    }
+  ]
+}
