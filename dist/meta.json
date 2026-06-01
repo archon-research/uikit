@@ -89,6 +89,30 @@
       "namedExport": "InContext",
       "meta": {}
     },
+    "atoms--segmented-control--active-state-on": {
+      "name": "Active state on",
+      "levels": [
+        "Atoms",
+        "Segmented control"
+      ],
+      "locStart": 51,
+      "locEnd": 58,
+      "filePath": "src/stories/atoms/segmented-control.stories.tsx",
+      "namedExport": "ActiveStateOn",
+      "meta": {}
+    },
+    "atoms--segmented-control--default": {
+      "name": "Default",
+      "levels": [
+        "Atoms",
+        "Segmented control"
+      ],
+      "locStart": 47,
+      "locEnd": 49,
+      "filePath": "src/stories/atoms/segmented-control.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
     "atoms--switch--disabled": {
       "name": "Disabled",
       "levels": [
@@ -387,6 +411,18 @@
       "locEnd": 68,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "Default",
+      "meta": {}
+    },
+    "organisms--data-table--header-casing-policy": {
+      "name": "Header casing policy",
+      "levels": [
+        "Organisms",
+        "Data table"
+      ],
+      "locStart": 184,
+      "locEnd": 199,
+      "filePath": "src/stories/organisms/data-table.stories.tsx",
+      "namedExport": "HeaderCasingPolicy",
       "meta": {}
     },
     "organisms--data-table--loading": {
