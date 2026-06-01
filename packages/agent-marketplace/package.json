@@ -5,7 +5,6 @@
   "type": "module",
   "description": "Marketplace-first plugin content for Claude Code and GitHub Copilot CLI",
   "scripts": {
-    "build": "node --experimental-strip-types ./scripts/generate.ts",
     "generate": "node --experimental-strip-types ./scripts/generate.ts",
     "refresh": "node --experimental-strip-types ./scripts/refresh.ts",
     "refresh:dry-run": "node --experimental-strip-types ./scripts/refresh.ts --dry-run",

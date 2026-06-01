@@ -47,20 +47,8 @@ function resolveSemanticVersion() {
     return envVersion;
   }
 
-  const latestReleaseTag = runGit([
-    'describe',
-    '--tags',
-    '--abbrev=0',
-    '--match',
-    'release-*',
-  ]);
-  const tagMatch = latestReleaseTag?.match(/^release-(\d+\.\d+\.\d+)$/);
-  if (tagMatch) {
-    return tagMatch[1];
-  }
-
   throw new Error(
-    'Unable to resolve semantic version. Set UIKIT_PLUGIN_SEMVER (or NEXT_RELEASE_VERSION / RELEASE_VERSION) or ensure a release-X.Y.Z tag exists.',
+    'Unable to resolve semantic version. Set UIKIT_PLUGIN_SEMVER (or NEXT_RELEASE_VERSION / RELEASE_VERSION).',
   );
 }
 

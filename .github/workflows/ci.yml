@@ -26,6 +26,8 @@ jobs:
         run: npm run build
 
       - name: Verify agent-marketplace generated artifacts are committed
+        env:
+          UIKIT_PLUGIN_SEMVER: 0.0.0
         run: |
           npm run refresh --workspace @archon-research/agent-marketplace
 
