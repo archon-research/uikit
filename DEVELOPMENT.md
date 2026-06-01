@@ -111,8 +111,8 @@ npm run refresh:dry-run --workspace @archon-research/agent-marketplace
 Validation checkpoints:
 
 ```bash
-claude plugin validate /Users/rohit/Code/uikit
-claude plugin validate /Users/rohit/Code/uikit/packages/agent-marketplace/claude-plugin
+claude plugin validate .
+claude plugin validate ./packages/agent-marketplace/claude-plugin
 ```
 
 ## Local co-development with a consumer repository

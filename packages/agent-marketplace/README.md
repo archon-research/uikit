@@ -66,9 +66,9 @@ npm run refresh --workspace @archon-research/agent-marketplace
 
 ## Validation Checklist
 
-- `claude plugin validate /Users/rohit/Code/uikit`
-- `claude plugin validate /Users/rohit/Code/uikit/packages/agent-marketplace/claude-plugin`
-- `copilot plugin install /Users/rohit/Code/uikit/packages/agent-marketplace/copilot-plugin`
+- `claude plugin validate .`
+- `claude plugin validate ./packages/agent-marketplace/claude-plugin`
+- `copilot plugin install ./packages/agent-marketplace/copilot-plugin`
 
 If CLI validation schemas evolve, keep generation stable and only adjust manifest fields.
 
