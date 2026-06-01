@@ -25,6 +25,20 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Verify agent-marketplace generated artifacts are committed
+        run: |
+          npm run refresh --workspace @archon-research/agent-marketplace
+
+          git add -A
+
+          if ! git diff --cached --exit-code; then
+            echo "Repository is not reproducible from committed state."
+            echo "Run: npm run refresh --workspace @archon-research/agent-marketplace"
+            echo "Then commit all resulting updates."
+            git status --short
+            exit 1
+          fi
+
       - name: Lint
         run: npm run lint
 

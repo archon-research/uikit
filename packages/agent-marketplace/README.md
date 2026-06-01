@@ -71,3 +71,27 @@ npm run refresh --workspace @archon-research/agent-marketplace
 - `copilot plugin install /Users/rohit/Code/uikit/packages/agent-marketplace/copilot-plugin`
 
 If CLI validation schemas evolve, keep generation stable and only adjust manifest fields.
+
+## Recommended Installation Pattern
+
+Prefer GitHub marketplace installs instead of direct local path installs.
+
+1. Keep marketplace manifests current:
+  - `.claude-plugin/marketplace.json`
+  - `.github/plugin/marketplace.json`
+2. Add marketplace from GitHub in each CLI.
+3. Install plugin by name from marketplace.
+
+Claude Code team marketplace setup guide:
+
+- https://code.claude.com/docs/en/discover-plugins#configure-team-marketplaces
+
+Typical commands:
+
+```bash
+claude plugin marketplace add https://github.com/archon-research/uikit.git
+claude plugin install uikit-agent-marketplace
+
+copilot plugin marketplace add https://github.com/archon-research/uikit.git
+copilot plugin install uikit-agent-marketplace@uikit-plugins
+```

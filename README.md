@@ -74,3 +74,14 @@ The repository includes an internal marketplace package that generates plugin ar
 - [packages/agent-marketplace](./packages/agent-marketplace/README.md)
 
 Use it to manage normalized skill and agent content, source pinning metadata, and generated plugin outputs for both ecosystems.
+
+### Recommended install flow (GitHub marketplace)
+
+Prefer marketplace-based installs from GitHub over direct local-path installs.
+
+- Claude Code team marketplaces:
+  - https://code.claude.com/docs/en/discover-plugins#configure-team-marketplaces
+- Copilot plugin marketplaces:
+  - https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace
+
+For this repository, publish or reference the marketplace metadata in `.claude-plugin/marketplace.json` and `.github/plugin/marketplace.json`, then install by plugin name from the configured marketplace.
