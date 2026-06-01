@@ -1,7 +1,8 @@
-import { execFileSync } from 'node:child_process';
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { resolvePluginVersion } from './versioning.ts';
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(currentDir, '..');
@@ -25,53 +26,7 @@ const copilotMarketplacePath = join(
 );
 
 const pluginId = 'uikit-agent-marketplace';
-
-function runGit(args) {
-  try {
-    return execFileSync('git', args, {
-      cwd: repoRoot,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).trim();
-  } catch {
-    return undefined;
-  }
-}
-
-function resolveSemanticVersion() {
-  const envVersion =
-    process.env.UIKIT_PLUGIN_SEMVER ??
-    process.env.NEXT_RELEASE_VERSION ??
-    process.env.RELEASE_VERSION;
-  if (envVersion) {
-    return envVersion;
-  }
-
-  throw new Error(
-    'Unable to resolve semantic version. Set UIKIT_PLUGIN_SEMVER (or NEXT_RELEASE_VERSION / RELEASE_VERSION).',
-  );
-}
-
-function isMainBranch() {
-  if (process.env.GITHUB_REF === 'refs/heads/main') {
-    return true;
-  }
-
-  const branchName =
-    process.env.GITHUB_REF_NAME ??
-    runGit(['rev-parse', '--abbrev-ref', 'HEAD']);
-  return branchName === 'main';
-}
-
-function resolvePluginVersion() {
-  const semanticVersion = resolveSemanticVersion();
-  if (isMainBranch()) {
-    return semanticVersion;
-  }
-
-  const commitHash = runGit(['rev-parse', '--short=12', 'HEAD']) ?? 'unknown';
-  return `${semanticVersion}+${commitHash}`;
-}
+const currentFilePath = fileURLToPath(import.meta.url);
 
 function sortById(items) {
   return [...items].sort((left, right) => left.id.localeCompare(right.id));
@@ -224,24 +179,26 @@ async function writeMarketplaceManifests(version) {
   });
 }
 
-async function main() {
+export async function generate(options: { version?: string } = {}) {
   const { skills, agents } = await readSources();
-  const version = resolvePluginVersion();
+  const pluginVersion = resolvePluginVersion(options.version);
   await writePluginOutput(
     'claude-code',
     claudeOutputRoot,
     skills,
     agents,
-    version,
+    pluginVersion,
   );
   await writePluginOutput(
     'copilot-cli',
     copilotOutputRoot,
     skills,
     agents,
-    version,
+    pluginVersion,
   );
-  await writeMarketplaceManifests(version);
+  await writeMarketplaceManifests(pluginVersion);
 }
 
-await main();
+if (process.argv[1] === currentFilePath) {
+  await generate();
+}

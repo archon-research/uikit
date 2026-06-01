@@ -1,7 +1,9 @@
-import { spawn } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { generate } from './generate.ts';
+import { resolveSemanticVersion } from './versioning.ts';
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(currentDir, '..');
@@ -28,24 +30,13 @@ function toLockEntry(source) {
 }
 
 async function runGenerate() {
-  await new Promise((resolvePromise, rejectPromise) => {
-    const child = spawn(
-      'node',
-      ['--experimental-strip-types', './scripts/generate.ts'],
-      {
-        cwd: packageRoot,
-        stdio: 'inherit',
-      },
-    );
+  const pluginVersion = await resolveCurrentVersion();
 
-    child.on('close', (code) => {
-      if (code === 0) {
-        resolvePromise();
-        return;
-      }
-      rejectPromise(new Error(`Generation failed with exit code ${code}`));
-    });
-  });
+  await generate({ version: pluginVersion });
+}
+
+async function resolveCurrentVersion() {
+  return resolveSemanticVersion();
 }
 
 async function main() {
