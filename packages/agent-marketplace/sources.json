@@ -125,7 +125,7 @@
       "id": "ui-coder",
       "kind": "agent",
       "sourceType": "local-derived",
-      "upstream": "/Users/rohit/Code/synome/agent-prompts/ui-coder.md",
+      "upstream": "synome/agent-prompts/ui-coder.md",
       "pinnedRevision": "local-sync-2026-05-26",
       "normalizationNotes": [
         "Derived from Synome prompt with plugin-native skill references.",
@@ -169,7 +169,7 @@
       "id": "ui-verifier",
       "kind": "agent",
       "sourceType": "local-derived",
-      "upstream": "/Users/rohit/Code/synome/agent-prompts/ui-verifier.md",
+      "upstream": "synome/agent-prompts/ui-verifier.md",
       "pinnedRevision": "local-sync-2026-05-26",
       "normalizationNotes": [
         "Derived from Synome prompt with plugin-native skill references.",
