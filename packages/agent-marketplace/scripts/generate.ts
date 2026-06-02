@@ -2,8 +2,6 @@ import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { resolvePluginVersion } from './versioning.ts';
-
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(currentDir, '..');
 const repoRoot = resolve(packageRoot, '..', '..');
@@ -49,7 +47,6 @@ interface CopilotPluginManifest {
   schemaVersion: 1;
   id: string;
   name: string;
-  version: string;
   description: string;
   target: PluginTarget;
   skills: Array<{ id: string; path: string }>;
@@ -58,7 +55,6 @@ interface CopilotPluginManifest {
 
 interface ClaudePluginManifest {
   name: string;
-  version: string;
   description: string;
   author: { name: string };
   lspServers: {
@@ -146,13 +142,11 @@ function buildCopilotPluginManifest(
   target: PluginTarget,
   skills: SkillEntry[],
   agents: AgentEntry[],
-  version: string,
 ): CopilotPluginManifest {
   return {
     schemaVersion: 1,
     id: pluginId,
     name: 'UIKit Agent Marketplace',
-    version,
     description:
       'Reusable UI-focused skills and specialist agents for Claude Code and GitHub Copilot CLI.',
     target,
@@ -167,10 +161,9 @@ function buildCopilotPluginManifest(
   };
 }
 
-function buildClaudePluginManifest(version: string): ClaudePluginManifest {
+function buildClaudePluginManifest(): ClaudePluginManifest {
   return {
     name: pluginId,
-    version,
     description:
       'Reusable UI-focused skills and specialist agents for Claude Code.',
     author: {
@@ -203,7 +196,6 @@ async function writePluginOutput(
   outputRoot: string,
   skills: SkillEntry[],
   agents: AgentEntry[],
-  version: string,
 ): Promise<void> {
   await rm(outputRoot, { recursive: true, force: true });
   await mkdir(outputRoot, { recursive: true });
@@ -217,18 +209,18 @@ async function writePluginOutput(
   }
 
   if (target === 'claude-code') {
-    const manifest = buildClaudePluginManifest(version);
+    const manifest = buildClaudePluginManifest();
     await writeJson(
       join(outputRoot, '.claude-plugin', 'plugin.json'),
       manifest,
     );
     return;
   }
-  const manifest = buildCopilotPluginManifest(target, skills, agents, version);
+  const manifest = buildCopilotPluginManifest(target, skills, agents);
   await writeJson(join(outputRoot, 'plugin.json'), manifest);
 }
 
-async function writeMarketplaceManifests(version: string): Promise<void> {
+async function writeMarketplaceManifests(): Promise<void> {
   await writeJson(claudeMarketplacePath, {
     name: 'uikit-plugins',
     owner: {
@@ -239,7 +231,6 @@ async function writeMarketplaceManifests(version: string): Promise<void> {
     plugins: [
       {
         name: pluginId,
-        version,
         description: 'UI skills and specialist agents for code assistants.',
         source: './packages/agent-marketplace/claude-plugin',
       },
@@ -252,7 +243,6 @@ async function writeMarketplaceManifests(version: string): Promise<void> {
       {
         id: pluginId,
         name: 'UIKit Agent Marketplace',
-        version,
         description: 'UI skills and specialist agents for code assistants.',
         source: './packages/agent-marketplace/copilot-plugin',
       },
@@ -260,24 +250,11 @@ async function writeMarketplaceManifests(version: string): Promise<void> {
   });
 }
 
-export async function generate(options: { version?: string } = {}) {
+export async function generate() {
   const { skills, agents } = await readSources();
-  const pluginVersion = resolvePluginVersion(options.version);
-  await writePluginOutput(
-    'claude-code',
-    claudeOutputRoot,
-    skills,
-    agents,
-    pluginVersion,
-  );
-  await writePluginOutput(
-    'copilot-cli',
-    copilotOutputRoot,
-    skills,
-    agents,
-    pluginVersion,
-  );
-  await writeMarketplaceManifests(pluginVersion);
+  await writePluginOutput('claude-code', claudeOutputRoot, skills, agents);
+  await writePluginOutput('copilot-cli', copilotOutputRoot, skills, agents);
+  await writeMarketplaceManifests();
 }
 
 if (process.argv[1] === currentFilePath) {

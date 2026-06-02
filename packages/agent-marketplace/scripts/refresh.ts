@@ -3,7 +3,6 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { generate } from './generate.ts';
-import { resolveSemanticVersion } from './versioning.ts';
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(currentDir, '..');
@@ -60,16 +59,6 @@ function toLockEntry(source: SourceEntry): LockEntry {
   };
 }
 
-async function runGenerate() {
-  const pluginVersion = await resolveCurrentVersion();
-
-  await generate({ version: pluginVersion });
-}
-
-async function resolveCurrentVersion(): Promise<string> {
-  return resolveSemanticVersion(undefined);
-}
-
 async function main() {
   const raw = await readFile(sourcesPath, 'utf8');
   const parsed = JSON.parse(raw) as { sources?: unknown };
@@ -88,7 +77,7 @@ async function main() {
   }
 
   await writeFile(lockPath, `${JSON.stringify(lock, null, 2)}\n`, 'utf8');
-  await runGenerate();
+  await generate();
 }
 
 await main();

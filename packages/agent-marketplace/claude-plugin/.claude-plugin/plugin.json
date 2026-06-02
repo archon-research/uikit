@@ -1,6 +1,5 @@
 {
   "name": "uikit-agent-marketplace",
-  "version": "0.4.0+f02f1a2b792f",
   "description": "Reusable UI-focused skills and specialist agents for Claude Code.",
   "author": {
     "name": "Archon Research"
