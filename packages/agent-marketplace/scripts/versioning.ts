@@ -6,7 +6,7 @@ const currentDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(currentDir, '..');
 const repoRoot = resolve(packageRoot, '..', '..');
 
-function runGit(args) {
+function runGit(args: string[]): string | undefined {
   try {
     return execFileSync('git', args, {
       cwd: repoRoot,
@@ -18,7 +18,7 @@ function runGit(args) {
   }
 }
 
-export function resolveSemanticVersion(explicitVersion) {
+export function resolveSemanticVersion(explicitVersion?: string): string {
   if (explicitVersion) {
     return explicitVersion;
   }
@@ -36,7 +36,7 @@ export function resolveSemanticVersion(explicitVersion) {
   );
 }
 
-function isMainBranch() {
+function isMainBranch(): boolean {
   if (process.env.GITHUB_REF === 'refs/heads/main') {
     return true;
   }
@@ -47,7 +47,7 @@ function isMainBranch() {
   return branchName === 'main';
 }
 
-export function resolvePluginVersion(explicitVersion) {
+export function resolvePluginVersion(explicitVersion?: string): string {
   const semanticVersion = resolveSemanticVersion(explicitVersion);
   if (semanticVersion.includes('+')) {
     return semanticVersion;

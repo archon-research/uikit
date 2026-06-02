@@ -1,0 +1,7 @@
+{
+  "extends": "@archon-research/tsconfig/node",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["scripts/**/*.ts"]
+}

@@ -5,9 +5,38 @@ on:
     branches:
       - main
   pull_request:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - synchronize
+
+permissions:
+  actions: read
+  contents: read
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      lint: ${{ steps.changed-files.outputs.lint_any_changed }}
+      agent_marketplace: ${{ steps.changed-files.outputs.agent_marketplace_any_changed }}
+      visual_snapshots: ${{ steps.changed-files.outputs.visual_snapshots_any_changed }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed files
+        id: changed-files
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47
+        with:
+          files_yaml_from_source_file: .github/changed-files.yml
+
   lint:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.lint == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -25,17 +54,37 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Verify agent-marketplace generated artifacts are committed
-        run: npm run check --workspace @archon-research/agent-marketplace
-
       - name: Lint
         run: npm run lint
 
       - name: Type check
         run: npm run type:check
 
+  check-agent-marketplace:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.agent_marketplace == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify agent-marketplace generated artifacts are committed
+        run: npm run check --workspace @archon-research/agent-marketplace
+
   visual-snapshots:
-    needs: lint
+    needs:
+      - detect-changes
+      - lint
+    if: needs.detect-changes.outputs.visual_snapshots == 'true'
     runs-on: macos-latest
     steps:
       - name: Checkout code
@@ -76,3 +125,28 @@ jobs:
             packages/uikit-preview/test-results
             packages/uikit-preview/tests/snapshot.spec.ts-snapshots
           if-no-files-found: ignore
+
+  success:
+    needs:
+      - detect-changes
+      - lint
+      - check-agent-marketplace
+      - visual-snapshots
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs succeeded
+        run: |
+          if [[ "${{ needs.detect-changes.result }}" != "success" ]]; then
+            echo "detect-changes did not succeed (result: '${{ needs.detect-changes.result }}')"
+            exit 1
+          fi
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "One or more CI jobs failed"
+            exit 1
+          fi
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "One or more CI jobs were cancelled"
+            exit 1
+          fi
+          echo 'All required CI checks passed or were skipped.'

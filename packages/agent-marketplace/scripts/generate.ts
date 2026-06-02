@@ -28,23 +28,93 @@ const copilotMarketplacePath = join(
 const pluginId = 'uikit-agent-marketplace';
 const currentFilePath = fileURLToPath(import.meta.url);
 
-function sortById(items) {
+type PluginTarget = 'claude-code' | 'copilot-cli';
+
+interface SourceEntry {
+  id: string;
+  kind: 'skill' | 'agent';
+  sourceType: string;
+  upstream: string;
+  pinnedRevision: string;
+}
+
+type SkillEntry = SourceEntry & { kind: 'skill' };
+type AgentEntry = SourceEntry & { kind: 'agent' };
+
+interface SourcesFile {
+  sources: SourceEntry[];
+}
+
+interface CopilotPluginManifest {
+  schemaVersion: 1;
+  id: string;
+  name: string;
+  version: string;
+  description: string;
+  target: PluginTarget;
+  skills: Array<{ id: string; path: string }>;
+  agents: Array<{ id: string; path: string }>;
+}
+
+interface ClaudePluginManifest {
+  name: string;
+  version: string;
+  description: string;
+  author: { name: string };
+  lspServers: {
+    oxlint: {
+      command: string;
+      args: string[];
+      extensionToLanguage: Record<string, string>;
+    };
+  };
+}
+
+function sortById<T extends { id: string }>(items: T[]): T[] {
   return [...items].sort((left, right) => left.id.localeCompare(right.id));
 }
 
-async function readSources() {
+function isSourceEntry(value: unknown): value is SourceEntry {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.id === 'string' &&
+    (candidate.kind === 'skill' || candidate.kind === 'agent') &&
+    typeof candidate.sourceType === 'string' &&
+    typeof candidate.upstream === 'string' &&
+    typeof candidate.pinnedRevision === 'string'
+  );
+}
+
+async function readSources(): Promise<{
+  skills: SkillEntry[];
+  agents: AgentEntry[];
+}> {
   const raw = await readFile(sourcesPath, 'utf8');
-  const parsed = JSON.parse(raw);
+  const parsed = JSON.parse(raw) as Partial<SourcesFile>;
   if (!Array.isArray(parsed.sources)) {
     throw new Error('sources.json must contain a "sources" array.');
   }
 
-  const skills = parsed.sources.filter((entry) => entry.kind === 'skill');
-  const agents = parsed.sources.filter((entry) => entry.kind === 'agent');
+  if (!parsed.sources.every(isSourceEntry)) {
+    throw new Error(
+      'sources.json contains one or more invalid source entries.',
+    );
+  }
+
+  const skills = parsed.sources.filter(
+    (entry): entry is SkillEntry => entry.kind === 'skill',
+  );
+  const agents = parsed.sources.filter(
+    (entry): entry is AgentEntry => entry.kind === 'agent',
+  );
   return { skills: sortById(skills), agents: sortById(agents) };
 }
 
-async function ensureExists(filePath, message) {
+async function ensureExists(filePath: string, message: string): Promise<void> {
   try {
     await readFile(filePath, 'utf8');
   } catch {
@@ -52,7 +122,7 @@ async function ensureExists(filePath, message) {
   }
 }
 
-async function copySkill(outputRoot, skillId) {
+async function copySkill(outputRoot: string, skillId: string): Promise<void> {
   const sourceDir = join(contentRoot, 'skills', skillId);
   const sourceSkillFile = join(sourceDir, 'SKILL.md');
   const destinationDir = join(outputRoot, 'skills', skillId);
@@ -62,7 +132,7 @@ async function copySkill(outputRoot, skillId) {
   await cp(sourceDir, destinationDir, { recursive: true });
 }
 
-async function copyAgent(outputRoot, agentId) {
+async function copyAgent(outputRoot: string, agentId: string): Promise<void> {
   const sourceFile = join(contentRoot, 'agents', `${agentId}.md`);
   const destinationDir = join(outputRoot, 'agents');
   const destinationFile = join(destinationDir, `${agentId}.md`);
@@ -72,7 +142,12 @@ async function copyAgent(outputRoot, agentId) {
   await cp(sourceFile, destinationFile);
 }
 
-function buildCopilotPluginManifest(target, skills, agents, version) {
+function buildCopilotPluginManifest(
+  target: PluginTarget,
+  skills: SkillEntry[],
+  agents: AgentEntry[],
+  version: string,
+): CopilotPluginManifest {
   return {
     schemaVersion: 1,
     id: pluginId,
@@ -92,7 +167,7 @@ function buildCopilotPluginManifest(target, skills, agents, version) {
   };
 }
 
-function buildClaudePluginManifest(version) {
+function buildClaudePluginManifest(version: string): ClaudePluginManifest {
   return {
     name: pluginId,
     version,
@@ -118,12 +193,18 @@ function buildClaudePluginManifest(version) {
   };
 }
 
-async function writeJson(filePath, data) {
+async function writeJson(filePath: string, data: unknown): Promise<void> {
   await mkdir(dirname(filePath), { recursive: true });
   await writeFile(filePath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
 }
 
-async function writePluginOutput(target, outputRoot, skills, agents, version) {
+async function writePluginOutput(
+  target: PluginTarget,
+  outputRoot: string,
+  skills: SkillEntry[],
+  agents: AgentEntry[],
+  version: string,
+): Promise<void> {
   await rm(outputRoot, { recursive: true, force: true });
   await mkdir(outputRoot, { recursive: true });
 
@@ -147,7 +228,7 @@ async function writePluginOutput(target, outputRoot, skills, agents, version) {
   await writeJson(join(outputRoot, 'plugin.json'), manifest);
 }
 
-async function writeMarketplaceManifests(version) {
+async function writeMarketplaceManifests(version: string): Promise<void> {
   await writeJson(claudeMarketplacePath, {
     name: 'uikit-plugins',
     owner: {

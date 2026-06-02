@@ -48,7 +48,7 @@ if [[ "$TARGET_DIR" == "." ]]; then
   fi
 
   find . -mindepth 1 -maxdepth 1 ! -name .git ! -name pr -exec rm -rf {} +
-  cp -R "$GITHUB_WORKSPACE/packages/uikit-preview/dist/" .
+  cp -R "$GITHUB_WORKSPACE/packages/uikit-preview/dist/." .
 
   # Restore PR directories
   if [[ -n "$(ls -A "$PR_BACKUP_DIR" 2>/dev/null)" ]]; then
