@@ -1,0 +1,17 @@
+lint:
+  - packages/**
+  - package.json
+  - package-lock.json
+  - .github/workflows/ci.yml
+  - .github/changed-files.yml
+
+agent_marketplace:
+  - packages/agent-marketplace/**
+
+visual_snapshots:
+  - packages/design-system/**
+  - packages/uikit-preview/**
+  - package.json
+  - package-lock.json
+  - .github/workflows/ci.yml
+  - .github/changed-files.yml

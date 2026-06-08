@@ -120,6 +120,7 @@ export function ThemeToggle() {
             <input
               type="radio"
               name="theme-mode"
+              aria-label={item.label}
               checked={active}
               onChange={() => setMode(item.mode)}
               style={radioInputStyle}
