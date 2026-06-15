@@ -3,7 +3,6 @@ import {
   DataTable,
   EmptyState,
   ErrorState,
-  SkeletonRows,
   ThemeProvider,
   useDataTable,
 } from '@archon-research/design-system';
@@ -145,10 +144,10 @@ const allocationColumns = [
     header: 'Risk',
     cell: ({ row }: { row: { original: AllocationRow } }) => {
       const risk = row.original.risk;
-      const tone: 'default' | 'success' | 'warning' | 'critical' =
-        risk === 'low' ? 'success' : risk === 'medium' ? 'warning' : 'critical';
+      const tone: 'neutral' | 'success' | 'warning' | 'danger' =
+        risk === 'low' ? 'success' : risk === 'medium' ? 'warning' : 'danger';
       return (
-        <Badge tone={tone} size="sm">
+        <Badge tone={tone}>
           {risk.charAt(0).toUpperCase() + risk.slice(1)}
         </Badge>
       );
@@ -178,9 +177,19 @@ const LoadedState = () => {
 };
 
 const LoadingState = () => {
+  const table = useDataTable(allocationRows, allocationColumns as never, {
+    enableSorting: true,
+    enableSearch: true,
+  });
+
   return (
     <div className={panelClassName}>
-      <SkeletonRows count={5} columnCount={5} />
+      <DataTable
+        table={table}
+        isLoading
+        getRowKey={(row: AllocationRow) => row.id}
+        skeletonConfig={{ rows: 5, columns: 5 }}
+      />
     </div>
   );
 };
@@ -189,7 +198,7 @@ const EmptyState_NoData = () => {
   return (
     <div className={css({ p: '12', textAlign: 'center' })}>
       <EmptyState
-        heading="No allocations yet"
+        title="No allocations yet"
         description="Start by adding your first position to build your portfolio."
         icon="💼"
       />
@@ -201,7 +210,7 @@ const EmptyState_NoResults = () => {
   return (
     <div className={css({ p: '12', textAlign: 'center' })}>
       <EmptyState
-        heading="No allocations match your filters"
+        title="No allocations match your filters"
         description="Try adjusting your search or filter criteria."
         icon="🔍"
       />
@@ -213,9 +222,9 @@ const ErrorState_FetchFailed = () => {
   return (
     <div className={css({ p: '12', textAlign: 'center' })}>
       <ErrorState
-        heading="Failed to load allocations"
+        title="Failed to load allocations"
         description="We encountered an error retrieving your allocation data. Please try again or contact support."
-        retry={() => {
+        onRetry={() => {
           console.log('Retry triggered');
         }}
       />

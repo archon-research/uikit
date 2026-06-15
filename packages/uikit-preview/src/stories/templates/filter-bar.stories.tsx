@@ -213,8 +213,8 @@ export const Default = () => {
                   <ToggleGroup.Root
                     className={riskSegments.group}
                     value={[risk]}
-                    onValueChange={(value) => {
-                      const next = value[0] as
+                    onValueChange={(details) => {
+                      const next = details.value[0] as
                         | 'all'
                         | 'low'
                         | 'medium'
@@ -247,8 +247,6 @@ export const Default = () => {
 
                 <div className={css({ display: 'flex', gap: '2' })}>
                   <Button
-                    size="sm"
-                    variant="outline"
                     onClick={() => {
                       setQuery('');
                       setChain('all');
@@ -257,7 +255,7 @@ export const Default = () => {
                   >
                     Clear
                   </Button>
-                  <Button size="sm">Apply</Button>
+                  <Button>Apply</Button>
                 </div>
               </div>
 

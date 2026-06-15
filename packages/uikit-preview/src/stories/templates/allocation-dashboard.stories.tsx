@@ -257,10 +257,10 @@ const allocationColumns = [
     header: 'Risk',
     cell: ({ row }: { row: { original: AllocationRow } }) => {
       const risk = row.original.risk;
-      const tone: 'default' | 'success' | 'warning' | 'critical' =
-        risk === 'low' ? 'success' : risk === 'medium' ? 'warning' : 'critical';
+      const tone: 'neutral' | 'success' | 'warning' | 'danger' =
+        risk === 'low' ? 'success' : risk === 'medium' ? 'warning' : 'danger';
       return (
-        <Badge tone={tone} size="sm">
+        <Badge tone={tone}>
           {risk.charAt(0).toUpperCase() + risk.slice(1)}
         </Badge>
       );
@@ -325,12 +325,8 @@ const TopBar = () => (
       <div className={sectionTitleClassName}>Allocations</div>
     </div>
     <div className={controlBarClassName}>
-      <Button size="sm" variant="outline">
-        ⚙️ Settings
-      </Button>
-      <Button size="sm" variant="outline">
-        📊 Export
-      </Button>
+      <Button>⚙️ Settings</Button>
+      <Button>📊 Export</Button>
       <ThemeToggle />
     </div>
   </div>
@@ -355,7 +351,7 @@ const GridPanel = () => {
     <div className={panelClassName}>
       <div className={panelHeaderClassName}>
         <div className={sectionTitleClassName}>Current Allocations</div>
-        <Button size="sm">+ Add Position</Button>
+        <Button>+ Add Position</Button>
       </div>
       <div className={panelBodyClassName}>
         <DataTable
@@ -373,7 +369,10 @@ const BottomPanel = () => {
 
   return (
     <div className={panelClassName}>
-      <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
+      <Tabs.Root
+        value={activeTab}
+        onValueChange={(details) => setActiveTab(details.value)}
+      >
         <div
           className={css({
             borderBottomColor: 'border.subtle',

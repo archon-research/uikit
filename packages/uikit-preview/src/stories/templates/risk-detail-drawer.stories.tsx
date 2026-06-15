@@ -211,9 +211,8 @@ const AllocationCard = ({ allocation, onSelect }: any) => (
             ? 'success'
             : allocation.risk === 'medium'
               ? 'warning'
-              : 'critical'
+              : 'danger'
         }
-        size="sm"
       >
         {allocation.risk}
       </Badge>
@@ -234,7 +233,7 @@ const RiskDetailDrawer = ({ allocation, onClose }: any) => {
       ? 'success'
       : risk === 'medium'
         ? 'warning'
-        : 'critical';
+        : 'danger';
   };
 
   return (
@@ -263,7 +262,10 @@ const RiskDetailDrawer = ({ allocation, onClose }: any) => {
       </div>
 
       <div className={drawerBodyClassName}>
-        <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
+        <Tabs.Root
+          value={activeTab}
+          onValueChange={(details) => setActiveTab(details.value)}
+        >
           <div
             className={css({
               borderBottomColor: 'border.subtle',
@@ -298,7 +300,7 @@ const RiskDetailDrawer = ({ allocation, onClose }: any) => {
                 <div>
                   <div className={metricLabelClassName}>Risk Level</div>
                   <div className={css({ mt: '1' })}>
-                    <Badge tone={getRiskColor(allocation.risk)} size="sm">
+                    <Badge tone={getRiskColor(allocation.risk)}>
                       {allocation.risk.charAt(0).toUpperCase() +
                         allocation.risk.slice(1)}
                     </Badge>
@@ -407,12 +409,8 @@ const RiskDetailDrawer = ({ allocation, onClose }: any) => {
       </div>
 
       <div className={drawerFooterClassName}>
-        <Button size="sm" variant="outline" style={{ flex: 1 }}>
-          Edit
-        </Button>
-        <Button size="sm" variant="outline" style={{ flex: 1 }}>
-          Remove
-        </Button>
+        <Button style={{ flex: 1 }}>Edit</Button>
+        <Button style={{ flex: 1 }}>Remove</Button>
       </div>
     </div>
   );
@@ -423,7 +421,9 @@ const RiskDetailDrawer = ({ allocation, onClose }: any) => {
 // ============================================================================
 
 export const Default = () => {
-  const [selectedAllocation, setSelectedAllocation] = useState(allocations[0]);
+  const [selectedAllocation, setSelectedAllocation] = useState<
+    (typeof allocations)[number] | null
+  >(allocations[0]);
 
   return (
     <ThemeProvider>

@@ -53,6 +53,7 @@ export { EmptyState } from './components/EmptyState';
 export { ErrorState } from './components/ErrorState';
 export { ErrorBoundary } from './components/ErrorBoundary';
 export { AsyncStateRenderer } from './components/AsyncStateRenderer';
+export * from './components/charts';
 export * from './components/data-table';
 export { Avatar } from '@ark-ui/react/avatar';
 export { Menu } from '@ark-ui/react/menu';

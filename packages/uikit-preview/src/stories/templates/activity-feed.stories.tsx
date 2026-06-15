@@ -177,9 +177,9 @@ const sidebarClassName = css({
 });
 
 const severityToTone = {
-  info: 'default',
+  info: 'neutral',
   warning: 'warning',
-  critical: 'critical',
+  critical: 'danger',
 } as const;
 
 const groupedEvents = (filtered: FeedEvent[]) => ({
@@ -224,8 +224,8 @@ export const Default = () => {
               <ToggleGroup.Root
                 className={segments.group}
                 value={[view]}
-                onValueChange={(value) => {
-                  const next = value[0] as
+                onValueChange={(details) => {
+                  const next = details.value[0] as
                     | 'all'
                     | 'warning'
                     | 'critical'
@@ -256,7 +256,7 @@ export const Default = () => {
                         <strong>
                           {event.actor} {event.action} {event.target}
                         </strong>
-                        <Badge tone={severityToTone[event.severity]} size="sm">
+                        <Badge tone={severityToTone[event.severity]}>
                           {event.severity}
                         </Badge>
                       </div>
@@ -280,7 +280,7 @@ export const Default = () => {
                         <strong>
                           {event.actor} {event.action} {event.target}
                         </strong>
-                        <Badge tone={severityToTone[event.severity]} size="sm">
+                        <Badge tone={severityToTone[event.severity]}>
                           {event.severity}
                         </Badge>
                       </div>
@@ -304,7 +304,7 @@ export const Default = () => {
                         <strong>
                           {event.actor} {event.action} {event.target}
                         </strong>
-                        <Badge tone={severityToTone[event.severity]} size="sm">
+                        <Badge tone={severityToTone[event.severity]}>
                           {event.severity}
                         </Badge>
                       </div>
@@ -331,10 +331,8 @@ export const Default = () => {
                   Use filters to narrow to severe incidents while preserving
                   timeline context.
                 </p>
-                <Button size="sm" variant="outline">
-                  Mark All Read
-                </Button>
-                <Button size="sm">Create Alert Rule</Button>
+                <Button>Mark All Read</Button>
+                <Button>Create Alert Rule</Button>
               </div>
             </section>
 
