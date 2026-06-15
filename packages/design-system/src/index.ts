@@ -84,3 +84,5 @@ export { Tabs } from '@ark-ui/react/tabs';
 export { Toggle } from '@ark-ui/react/toggle';
 export { ToggleGroup } from '@ark-ui/react/toggle-group';
 export { Switch } from '@ark-ui/react/switch';
+export { Dialog } from '@ark-ui/react/dialog';
+export { Indicator, type IndicatorStatus } from './components/Indicator';
