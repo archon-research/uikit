@@ -1,8 +1,9 @@
+/* eslint-disable no-underscore-dangle -- the registry exposes internal-by-convention methods (_addSpec, _contributeViewState) that these public hooks wrap. */
 /**
- * Public hooks for @synome/web-mcp.
+ * Public hooks for @archon-research/webmcp.
  *
  * All hooks require <WebMCPProvider> in the component tree.
- * None of them import @mcp-b/* directly — that coupling lives in provider.tsx.
+ * None of them import @mcp-b/* directly, that coupling lives in provider.tsx.
  */
 import {
   useCallback,
@@ -192,8 +193,8 @@ export function useContributeViewState(
   useEffect(
     () => {
       return contribute(partial);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     deps ?? Object.values(partial),
   );
 }

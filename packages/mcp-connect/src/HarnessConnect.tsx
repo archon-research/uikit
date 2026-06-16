@@ -206,7 +206,7 @@ export function HarnessConnect({
 
               {/* Relay URL chip */}
               <div style={fieldGroupStyle}>
-                <label style={fieldLabelStyle}>Relay URL</label>
+                <span style={fieldLabelStyle}>Relay URL</span>
                 <div style={cmdWrapStyle}>
                   <code style={cmdCodeStyle}>{mcpUrl}</code>
                   <CopyButton text={mcpUrl} label="Copy relay URL" />
@@ -215,7 +215,7 @@ export function HarnessConnect({
 
               {connectionToken ? (
                 <div style={fieldGroupStyle}>
-                  <label style={fieldLabelStyle}>Connection token</label>
+                  <span style={fieldLabelStyle}>Connection token</span>
                   <div style={cmdWrapStyle}>
                     <code style={{ ...cmdCodeStyle, wordBreak: 'break-all' }}>
                       {connectionToken}
@@ -230,7 +230,7 @@ export function HarnessConnect({
 
               {/* Segmented control for harness type */}
               <div style={fieldGroupStyle}>
-                <label style={fieldLabelStyle}>Add command</label>
+                <span style={fieldLabelStyle}>Add command</span>
                 <Tabs.Root defaultValue="claude-code">
                   <Tabs.List style={tabListStyle}>
                     <Tabs.Trigger value="claude-code" style={tabTriggerStyle}>

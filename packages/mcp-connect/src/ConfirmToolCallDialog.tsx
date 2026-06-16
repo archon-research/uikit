@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/prefer-tag-over-role -- this is a custom overlay with its own backdrop and focus handling, not a native dialog element (no showModal lifecycle), so the ARIA dialog role is intentional. */
 import { Button } from '@archon-research/design-system';
 import { AlertTriangle, ChevronDown, ChevronRight, X } from 'lucide-react';
 import {

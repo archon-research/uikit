@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle -- the registry exposes internal-by-convention methods (_addSpec, _contributeViewState) that the public hooks wrap. */
 import {
   cleanupWebModelContext,
   initializeWebModelContext,
