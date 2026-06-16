@@ -38,5 +38,8 @@
     "@types/react-dom": "19.2.3",
     "oxfmt": "0.53.0",
     "oxlint": "1.68.0"
+  },
+  "dependencies": {
+    "@visx/xychart": "4.0.0"
   }
 }
