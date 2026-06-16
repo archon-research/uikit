@@ -1,8 +1,4 @@
 export { ChartContainer } from './ChartContainer';
-export { LineChart } from './LineChart';
-export { BarChart } from './BarChart';
-export { Sparkline } from './Sparkline';
-export type { BaseChartProps, ChartDatum, ChartMargins } from './types';
 
 // Token-driven theme contract (see DESIGN.md).
 export { chartTheme, chartTokens } from './theme';
