@@ -1,4 +1,5 @@
 import { Combobox, useListCollection } from '@ark-ui/react/combobox';
+import { Search } from 'lucide-react';
 import {
   type CSSProperties,
   type InputHTMLAttributes,
@@ -104,23 +105,7 @@ const statusStyle: CSSProperties = {
 
 function SearchIcon() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 16 16" style={iconStyle}>
-      <circle
-        cx="7"
-        cy="7"
-        r="4.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-      />
-      <path
-        d="M10.4 10.4L14 14"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.4"
-      />
-    </svg>
+    <Search aria-hidden="true" size={16} style={iconStyle} strokeWidth={1.9} />
   );
 }
 

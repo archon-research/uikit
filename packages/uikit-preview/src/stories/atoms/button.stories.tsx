@@ -1,4 +1,5 @@
 import { Button } from '@archon-research/design-system';
+import { Plus, Settings2, X } from 'lucide-react';
 
 import { css } from '../../../styled-system/css';
 
@@ -72,13 +73,13 @@ export const IconOnly = () => (
     <div>
       <div className={rowClassName}>
         <Button iconOnly title="Settings">
-          ⚙️
+          <Settings2 size={16} strokeWidth={1.9} />
         </Button>
         <Button iconOnly size="lg" title="Add">
-          ➕
+          <Plus size={18} strokeWidth={1.9} />
         </Button>
         <Button iconOnly disabled title="Disabled">
-          ❌
+          <X size={16} strokeWidth={1.9} />
         </Button>
       </div>
     </div>

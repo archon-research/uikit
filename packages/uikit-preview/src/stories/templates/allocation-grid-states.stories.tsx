@@ -6,6 +6,7 @@ import {
   ThemeProvider,
   useDataTable,
 } from '@archon-research/design-system';
+import { FolderSearch, SearchX } from 'lucide-react';
 
 import { css } from '../../../styled-system/css';
 
@@ -196,11 +197,11 @@ const LoadingState = () => {
 
 const EmptyState_NoData = () => {
   return (
-    <div className={css({ p: '12', textAlign: 'center' })}>
+    <div className={css({ p: '8', textAlign: 'center' })}>
       <EmptyState
         title="No allocations yet"
         description="Start by adding your first position to build your portfolio."
-        icon="💼"
+        icon={<FolderSearch size={18} strokeWidth={1.8} />}
       />
     </div>
   );
@@ -208,11 +209,11 @@ const EmptyState_NoData = () => {
 
 const EmptyState_NoResults = () => {
   return (
-    <div className={css({ p: '12', textAlign: 'center' })}>
+    <div className={css({ p: '8', textAlign: 'center' })}>
       <EmptyState
         title="No allocations match your filters"
         description="Try adjusting your search or filter criteria."
-        icon="🔍"
+        icon={<SearchX size={18} strokeWidth={1.8} />}
       />
     </div>
   );
@@ -220,10 +221,11 @@ const EmptyState_NoResults = () => {
 
 const ErrorState_FetchFailed = () => {
   return (
-    <div className={css({ p: '12', textAlign: 'center' })}>
+    <div className={css({ p: '8', textAlign: 'center' })}>
       <ErrorState
         title="Failed to load allocations"
         description="We encountered an error retrieving your allocation data. Please try again or contact support."
+        errorMessage="HTTP_503: upstream service unavailable"
         onRetry={() => {
           console.log('Retry triggered');
         }}

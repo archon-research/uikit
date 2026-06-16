@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react';
 import {
   type CSSProperties,
   type ReactNode,
@@ -57,16 +58,12 @@ const chevronStyle: CSSProperties = {
 
 function SelectChevron() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 16 16" style={chevronStyle}>
-      <path
-        d="M4 6.5L8 10l4-3.5"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.5"
-      />
-    </svg>
+    <ChevronDown
+      aria-hidden="true"
+      size={16}
+      style={chevronStyle}
+      strokeWidth={1.9}
+    />
   );
 }
 

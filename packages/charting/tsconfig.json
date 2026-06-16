@@ -1,0 +1,7 @@
+{
+  "extends": "@archon-research/tsconfig/react",
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ]
+}

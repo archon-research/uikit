@@ -1,11 +1,10 @@
 import {
   BarChart,
-  Button,
   ChartContainer,
   LineChart,
   Sparkline,
-  ThemeProvider,
-} from '@archon-research/design-system';
+} from '@archon-research/charting';
+import { Button, ThemeProvider } from '@archon-research/design-system';
 
 import { css } from '../../../styled-system/css';
 

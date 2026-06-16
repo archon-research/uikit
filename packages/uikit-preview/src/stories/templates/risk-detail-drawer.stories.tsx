@@ -5,6 +5,7 @@ import {
   ThemeToggle,
   Tabs,
 } from '@archon-research/design-system';
+import { X } from 'lucide-react';
 import { useState } from 'react';
 
 import { css } from '../../../styled-system/css';
@@ -248,16 +249,22 @@ const RiskDetailDrawer = ({ allocation, onClose }: any) => {
           className={css({
             color: 'text.muted',
             cursor: 'pointer',
-            fontSize: 'lg',
-            lineHeight: '1',
             border: 'none',
             background: 'transparent',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            h: '8',
+            w: '8',
+            borderRadius: 'sm',
             _hover: {
+              backgroundColor: 'surface.hover',
               color: 'text.default',
             },
           })}
+          aria-label="Close drawer"
         >
-          ✕
+          <X size={16} strokeWidth={1.9} />
         </button>
       </div>
 

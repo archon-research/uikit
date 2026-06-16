@@ -8,6 +8,7 @@ import {
   Tabs,
   useDataTable,
 } from '@archon-research/design-system';
+import { Download, Plus, Settings2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { css } from '../../../styled-system/css';
@@ -70,14 +71,31 @@ const navItemClassName = css({
 });
 
 const topBarClassName = css({
-  alignItems: 'center',
+  alignItems: 'start',
   borderBottomColor: 'border.subtle',
   borderBottomStyle: 'solid',
   borderBottomWidth: '1px',
   display: 'flex',
-  gap: '3',
+  gap: '4',
   justifyContent: 'space-between',
+  flexWrap: 'wrap',
   p: '4',
+});
+
+const topBarControlsClassName = css({
+  display: 'grid',
+  gap: '2',
+  justifyItems: 'end',
+  minWidth: 'min(100%, 34rem)',
+  flex: '1',
+});
+
+const actionButtonsClassName = css({
+  display: 'flex',
+  gap: '2',
+  alignItems: 'center',
+  flexWrap: 'wrap',
+  justifyContent: 'end',
 });
 
 const mainClassName = css({
@@ -324,10 +342,20 @@ const TopBar = () => (
     <div>
       <div className={sectionTitleClassName}>Allocations</div>
     </div>
-    <div className={controlBarClassName}>
-      <Button>⚙️ Settings</Button>
-      <Button>📊 Export</Button>
-      <ThemeToggle />
+    <div className={topBarControlsClassName}>
+      <div className={actionButtonsClassName}>
+        <Button>
+          <Settings2 size={16} strokeWidth={1.8} />
+          Settings
+        </Button>
+        <Button>
+          <Download size={16} strokeWidth={1.8} />
+          Export
+        </Button>
+      </div>
+      <div className={controlBarClassName}>
+        <ThemeToggle />
+      </div>
     </div>
   </div>
 );
@@ -351,7 +379,10 @@ const GridPanel = () => {
     <div className={panelClassName}>
       <div className={panelHeaderClassName}>
         <div className={sectionTitleClassName}>Current Allocations</div>
-        <Button>+ Add Position</Button>
+        <Button>
+          <Plus size={16} strokeWidth={1.8} />
+          Add Position
+        </Button>
       </div>
       <div className={panelBodyClassName}>
         <DataTable
