@@ -19,6 +19,8 @@ packages/
   uikit-preview/    Ladle preview site for components and tokens
   http-client-core/ OpenAPI + Zod based HTTP client helpers
   http-client-react/React Query integration on top of core client
+  webmcp/           WebMCP UI tool-registration layer (document.modelContext)
+  mcp-connect/      Harness connection UI (chat icon, status, connect modal)
   uikit-cli/        CLI for local package linking in consumer repos
 ```
 
@@ -32,6 +34,8 @@ packages/
 - `@archon-research/uikit-preview`
 - `@archon-research/http-client-core`
 - `@archon-research/http-client-react`
+- `@archon-research/webmcp`
+- `@archon-research/mcp-connect`
 - `@archon-research/uikit-cli`
 
 If you are adapting this template for another organization, you can replace the package scope and names while keeping the same structure and workflows.
@@ -41,7 +45,7 @@ If you are adapting this template for another organization, you can replace the 
 Install packages from npm:
 
 ```bash
-npm install @archon-research/tsconfig @archon-research/oxlint-config @archon-research/oxfmt-config @archon-research/design-system @archon-research/charting @archon-research/http-client-core @archon-research/http-client-react @archon-research/uikit-cli
+npm install @archon-research/tsconfig @archon-research/oxlint-config @archon-research/oxfmt-config @archon-research/design-system @archon-research/charting @archon-research/http-client-core @archon-research/http-client-react @archon-research/webmcp @archon-research/mcp-connect @archon-research/uikit-cli
 ```
 
 Each package has its own npm page with detailed documentation and usage examples.
@@ -64,6 +68,8 @@ See the individual package READMEs for specific usage examples:
 - [charting](./packages/charting/README.md)
 - [http-client-core](./packages/http-client-core/README.md)
 - [http-client-react](./packages/http-client-react/README.md)
+- [webmcp](./packages/webmcp/README.md)
+- [mcp-connect](./packages/mcp-connect/README.md)
 - [uikit-cli](./packages/uikit-cli/README.md)
 
 ## Development

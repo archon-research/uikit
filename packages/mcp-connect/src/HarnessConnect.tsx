@@ -102,6 +102,12 @@ export type HarnessConnectProps = {
    * Defaults to "synome".
    */
   serverName?: string;
+  /**
+   * When true the connection modal starts open. Useful for static story
+   * previews that want to show the modal content without requiring a click.
+   * Defaults to false.
+   */
+  defaultOpen?: boolean;
 };
 
 /**
@@ -114,8 +120,9 @@ export function HarnessConnect({
   relayBaseUrl,
   connectionToken,
   serverName = 'synome',
+  defaultOpen = false,
 }: HarnessConnectProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
 
   const mcpUrl = `${relayBaseUrl}/mcp`;
   const token = connectionToken ?? '<connection-token>';
