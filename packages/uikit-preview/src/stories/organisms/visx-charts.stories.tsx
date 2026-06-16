@@ -3,7 +3,6 @@ import {
   Axis,
   BarGroup,
   BarSeries,
-  ChartContainer,
   Grid,
   LineSeries,
   Tooltip,
@@ -12,6 +11,7 @@ import {
   chartTokens,
 } from '@archon-research/charting';
 import { ThemeProvider } from '@archon-research/design-system';
+import type { ReactNode } from 'react';
 
 import { css } from '../../../styled-system/css';
 
@@ -61,6 +61,50 @@ const gridClassName = css({
   '@media (max-width: 980px)': { gridTemplateColumns: '1fr' },
 });
 
+const panelClassName = css({
+  borderColor: 'border.subtle',
+  borderStyle: 'solid',
+  borderWidth: '1px',
+  borderRadius: 'xl',
+  background: 'surface.default',
+  overflow: 'hidden',
+});
+
+const panelHeaderClassName = css({
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'space-between',
+  gap: '3',
+  p: '4',
+  borderBottomColor: 'border.subtle',
+  borderBottomStyle: 'solid',
+  borderBottomWidth: '1px',
+});
+
+const panelTitleClassName = css({
+  fontSize: 'sm',
+  fontWeight: 600,
+  color: 'text.default',
+});
+
+const panelSubtitleClassName = css({
+  fontSize: 'xs',
+  color: 'text.muted',
+  mt: '1',
+});
+
+const panelBodyClassName = css({ p: '4' });
+
+const panelFooterClassName = css({
+  px: '4',
+  py: '3',
+  borderTopColor: 'border.subtle',
+  borderTopStyle: 'solid',
+  borderTopWidth: '1px',
+  fontSize: 'xs',
+  color: 'text.muted',
+});
+
 const legendClassName = css({
   display: 'flex',
   gap: '4',
@@ -91,6 +135,29 @@ const tooltipPreviewClassName = css({
   width: 'fit-content',
 });
 
+const Panel = ({
+  title,
+  subtitle,
+  footer,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  footer?: ReactNode;
+  children: ReactNode;
+}) => (
+  <section className={panelClassName}>
+    <header className={panelHeaderClassName}>
+      <div>
+        <h3 className={panelTitleClassName}>{title}</h3>
+        {subtitle ? <p className={panelSubtitleClassName}>{subtitle}</p> : null}
+      </div>
+    </header>
+    <div className={panelBodyClassName}>{children}</div>
+    {footer ? <footer className={panelFooterClassName}>{footer}</footer> : null}
+  </section>
+);
+
 const Legend = ({
   items,
 }: {
@@ -113,7 +180,7 @@ const Legend = ({
 export const Default = () => (
   <ThemeProvider>
     <div className={pageClassName}>
-      <ChartContainer
+      <Panel
         title="Portfolio vs Benchmark"
         subtitle="visx XYChart: dual line series, axes, grid, interactive tooltip"
         footer="Hover a point to inspect values; colors are theme tokens."
@@ -162,13 +229,10 @@ export const Default = () => (
             { label: 'Benchmark', color: chartTokens.series[1] },
           ]}
         />
-      </ChartContainer>
+      </Panel>
 
       <div className={gridClassName}>
-        <ChartContainer
-          title="Inflows"
-          subtitle="visx AreaSeries with token area fill"
-        >
+        <Panel title="Inflows" subtitle="visx AreaSeries with token area fill">
           <XYChart
             theme={chartTheme}
             width={500}
@@ -187,9 +251,9 @@ export const Default = () => (
             <Axis orientation="bottom" />
             <Axis orientation="left" numTicks={4} />
           </XYChart>
-        </ChartContainer>
+        </Panel>
 
-        <ChartContainer
+        <Panel
           title="Allocation by Chain"
           subtitle="visx BarGroup, part-to-whole"
         >
@@ -212,10 +276,10 @@ export const Default = () => (
             <Axis orientation="bottom" />
             <Axis orientation="left" numTicks={4} />
           </XYChart>
-        </ChartContainer>
+        </Panel>
       </div>
 
-      <ChartContainer
+      <Panel
         title="Tooltip style"
         subtitle="Static preview of the token-themed tooltip surface"
       >
@@ -224,7 +288,7 @@ export const Default = () => (
           <div style={{ color: chartTokens.series[0] }}>Portfolio: 182</div>
           <div style={{ color: chartTokens.series[1] }}>Benchmark: 156</div>
         </div>
-      </ChartContainer>
+      </Panel>
     </div>
   </ThemeProvider>
 );

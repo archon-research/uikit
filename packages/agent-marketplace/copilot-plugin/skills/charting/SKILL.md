@@ -39,7 +39,7 @@ visualization in this monorepo. The authoritative contract is
 - Compact trends (metric rails, summary cards): use `Sparkline`, which is built on
   low-level visx primitives so it stays lightweight; do not pull `XYChart` for a
   mini line.
-- Chrome (title, subtitle, actions, footer): use `ChartContainer`.
+- Chrome (title, subtitle, actions, footer): compose from the design-system panel and heading recipes (`panelSection`, `sectionHeading`, `panelAction`). The charting package does not own card chrome.
 
 ## States and accessibility
 

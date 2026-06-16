@@ -1,5 +1,3 @@
-export { ChartContainer } from './ChartContainer';
-
 // Token-driven theme contract (see DESIGN.md).
 export { chartTheme, chartTokens } from './theme';
 

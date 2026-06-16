@@ -47,46 +47,52 @@ The package exposes:
 Both `XYChart` (via `chartTheme`) and our own primitive-based components (via
 `chartTokens`) derive from one contract, so they render identically.
 
+This package owns chart concerns only. Card chrome (a paneled container with a
+heading, actions, and footer) is generic and not chart-specific; compose it from
+the design-system panel and heading recipes (`panelSection`, `sectionHeading`,
+`panelAction`), not from here.
+
 ## Package surface
 
+Current (exported from the package root):
+
 - `chartTokens`, `chartTheme`: the theme contract above.
-- `ChartContainer`: presentational chrome (title, subtitle, actions, footer). Not
-  a visx component; owned by us.
+- A curated set of visx re-exports: `XYChart`, `Axis`, `Grid`, `Tooltip`,
+  `LineSeries`, `AreaSeries`, `BarSeries`, `BarGroup`, `BarStack`, `GlyphSeries`,
+  and `buildChartTheme`, so consumers depend on this package, not `@visx/*`.
+
+Planned:
+
 - `Sparkline`: an axis-less mini line built on low-level primitives
   (`@visx/shape` `LinePath` + `@visx/scale`), not `XYChart`, so a metrics rail
   does not pull the full `XYChart` bundle.
-- Curated visx re-exports under subpaths (for example
-  `@archon-research/charting/shape`, `/scale`, `/axis`, `/xychart`), covering the
+- Move the curated re-exports to subpaths (for example
+  `@archon-research/charting/shape`, `/scale`, `/axis`, `/xychart`) covering the
   supported set: `scale, shape, axis, grid, group, curve, tooltip, responsive,
   text, legend, glyph, gradient, xychart`. Niche packages (`geo, network,
-  hierarchy, wordcloud, brush, zoom`) are not re-exported; a consumer that needs
-  one adds it directly.
-
-Re-exports use subpaths (not one flat barrel) to avoid name collisions across
-visx packages and to keep the type-checker fast. The package sets
-`"sideEffects": false` and ships ESM so unused re-exports tree-shake.
+  hierarchy, wordcloud, brush, zoom`) stay out; a consumer that needs one adds it
+  directly. Subpaths (not one flat barrel) avoid name collisions across visx
+  packages and keep the type-checker fast. Set `"sideEffects": false` and ship
+  ESM so unused re-exports tree-shake.
 
 ## Usage patterns
 
 Standard cartesian charts (line, bar, area, scatter) use `XYChart` with the theme:
 
 ```tsx
-import { XYChart, AnimatedLineSeries, Axis, Grid, Tooltip } from '@archon-research/charting/xychart';
-import { chartTheme } from '@archon-research/charting';
+import { XYChart, LineSeries, Axis, Grid, Tooltip, chartTheme } from '@archon-research/charting';
 
-<ChartContainer title="Weekly Trend">
-  <XYChart theme={chartTheme} xScale={{ type: 'band' }} yScale={{ type: 'linear' }}>
-    <Grid columns={false} />
-    <Axis orientation="bottom" />
-    <Axis orientation="left" />
-    <AnimatedLineSeries dataKey="value" data={data} xAccessor={d => d.label} yAccessor={d => d.value} />
-    <Tooltip renderTooltip={/* token-styled */} />
-  </XYChart>
-</ChartContainer>
+<XYChart theme={chartTheme} xScale={{ type: 'band' }} yScale={{ type: 'linear' }}>
+  <Grid columns={false} />
+  <Axis orientation="bottom" />
+  <Axis orientation="left" />
+  <LineSeries dataKey="value" data={data} xAccessor={d => d.label} yAccessor={d => d.value} />
+  <Tooltip renderTooltip={/* token-styled */} />
+</XYChart>
 ```
 
-Compact trends use `Sparkline`. Bespoke charts use the subpath re-exports plus
-`chartTokens` directly.
+Wrap charts in card chrome from the design-system panel/heading recipes when
+needed. Bespoke charts use the curated re-exports plus `chartTokens` directly.
 
 ## States
 
