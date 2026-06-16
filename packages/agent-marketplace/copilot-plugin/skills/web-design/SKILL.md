@@ -53,7 +53,8 @@ Focus on clear hierarchy, generous spacing, and restrained styling to make inter
 - Buttons: one clear primary, a low-emphasis secondary (ghost/text), and a destructive variant. Use consistent padding and radius.
 - Forms: pair clear labels with inputs; avoid placeholder-as-label; show inline validation close to the field; use generous vertical spacing.
 - Lists/tables: increase row height, soften alternating backgrounds, and highlight the primary cell with weight/color.
-- Icons: keep stroke weight consistent; pair icons with labels unless the meaning is universal. Balance visual weight with padding.
+- Icons: use `lucide-react` as the default icon set, keep stroke weight consistent, and pair icons with labels unless the meaning is universal.
+- Avoid emoji or ad hoc inline SVG icon drawings in production UI and component stories.
 
 ## States, Feedback & Empty Space
 
