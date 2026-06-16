@@ -1,0 +1,14 @@
+{
+  "extends": "@archon-research/tsconfig/node",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "types": [
+      "@cloudflare/workers-types",
+      "@cloudflare/vitest-pool-workers/types"
+    ],
+    "lib": ["ES2023"],
+    "moduleResolution": "bundler",
+    "noEmit": true
+  },
+  "include": ["*.ts"]
+}

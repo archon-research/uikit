@@ -14,7 +14,8 @@
     "dev": "npm run generate && ladle serve --host 0.0.0.0 --port 61000",
     "snapshot:serve": "ladle preview --outDir dist --host 127.0.0.1 --port 61000",
     "snapshot:test": "playwright test",
-    "snapshot:update": "playwright test --update-snapshots"
+    "snapshot:update": "playwright test --update-snapshots",
+    "cf:test": "vitest run --config cloudflare/vitest.config.ts"
   },
   "dependencies": {
     "@archon-research/charting": "*",
@@ -25,13 +26,18 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@types/node": "^24.7.2",
+    "@archon-research/mcp-relay": "*",
     "@archon-research/oxlint-config": "*",
     "@archon-research/tsconfig": "*",
+    "@cloudflare/vitest-pool-workers": "^0.16.15",
+    "@cloudflare/workers-types": "^4.20260616.1",
     "@ladle/react": "^5.1.1",
     "@pandacss/dev": "^1.10.0",
     "@playwright/test": "1.60.0",
+    "@types/node": "^24.7.2",
     "oxfmt": "0.53.0",
-    "oxlint": "1.68.0"
+    "oxlint": "1.68.0",
+    "vitest": "^4.1.9",
+    "wrangler": "^4.100.0"
   }
 }

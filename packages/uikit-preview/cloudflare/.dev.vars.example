@@ -1,0 +1,6 @@
+# Copy this file to .dev.vars and fill in values for local wrangler dev.
+# .dev.vars is gitignored; never commit real secrets.
+
+# HS256 signing secret for connection JWTs.
+# Generate one with: openssl rand -base64 32
+WEBMCP_RELAY_JWT_SECRET=your-secret-here

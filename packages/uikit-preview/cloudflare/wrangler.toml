@@ -1,0 +1,15 @@
+name = "mcp-relay"
+main = "worker.ts"
+compatibility_date = "2025-06-16"
+compatibility_flags = ["nodejs_compat"]
+
+# Local dev: set WEBMCP_RELAY_JWT_SECRET in .dev.vars (see .dev.vars.example).
+# Production: wrangler secret put WEBMCP_RELAY_JWT_SECRET
+
+[[durable_objects.bindings]]
+name = "SESSION_DO"
+class_name = "SessionDO"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["SessionDO"]
