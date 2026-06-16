@@ -9,7 +9,7 @@ export function Sparkline({
   data,
   width = 160,
   height = 44,
-  stroke = 'var(--colors-text-default, #111827)',
+  stroke = 'var(--colors-chart-series-secondary, #0f766e)',
   ariaLabel = 'Sparkline',
 }: SparklineProps) {
   if (data.length === 0) {

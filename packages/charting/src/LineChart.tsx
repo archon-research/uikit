@@ -27,8 +27,8 @@ export function LineChart({
   data,
   width = 640,
   height = 220,
-  stroke = 'var(--colors-text-interactive, #155eef)',
-  fill = 'color-mix(in srgb, var(--colors-text-interactive, #155eef) 16%, transparent)',
+  stroke = 'var(--colors-chart-series-primary, #155eef)',
+  fill = 'color-mix(in srgb, var(--colors-chart-area-primary, #dbeafe) 60%, transparent)',
   showPoints = true,
   showArea = true,
   margins = defaultMargins,
@@ -71,7 +71,7 @@ export function LineChart({
         y1={area.y + area.height}
         x2={area.x + area.width}
         y2={area.y + area.height}
-        stroke="var(--colors-border-subtle, #d0d5dd)"
+        stroke="var(--colors-chart-axis, #6b7280)"
         strokeWidth="1"
       />
 

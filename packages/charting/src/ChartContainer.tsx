@@ -34,7 +34,7 @@ const titleStyle: CSSProperties = {
   fontSize: 14,
   fontWeight: 600,
   lineHeight: 1.35,
-  color: 'var(--colors-text-default, #111827)',
+  color: 'var(--colors-text-strong, #030712)',
 };
 
 const subtitleStyle: CSSProperties = {

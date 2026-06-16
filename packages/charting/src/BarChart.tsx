@@ -25,7 +25,7 @@ export function BarChart({
   data,
   width = 640,
   height = 220,
-  barColor = 'var(--colors-text-interactive, #155eef)',
+  barColor = 'var(--colors-chart-series-primary, #155eef)',
   barGap = 8,
   margins = defaultMargins,
   ariaLabel = 'Bar chart',
@@ -50,7 +50,7 @@ export function BarChart({
         y1={area.y + area.height}
         x2={area.x + area.width}
         y2={area.y + area.height}
-        stroke="var(--colors-border-subtle, #d0d5dd)"
+        stroke="var(--colors-chart-axis, #6b7280)"
         strokeWidth="1"
       />
 
