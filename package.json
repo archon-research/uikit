@@ -4,7 +4,18 @@
   "type": "module",
   "packageManager": "npm@11.16.0",
   "workspaces": [
-    "packages/*"
+    "packages/tsconfig",
+    "packages/oxlint-config",
+    "packages/oxfmt-config",
+    "packages/agent-marketplace",
+    "packages/design-system",
+    "packages/uikit-preview",
+    "packages/http-client-core",
+    "packages/http-client-react",
+    "packages/webmcp",
+    "packages/mcp-connect",
+    "packages/mcp-relay",
+    "packages/uikit-cli"
   ],
   "scripts": {
     "clean": "npm run clean --workspaces --if-present",

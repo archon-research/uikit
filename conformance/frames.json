@@ -1,0 +1,73 @@
+{
+  "_comment": "Wire-contract fixtures for WebMCP relay protocol frames. Both cores must produce JSON serialisations that match these exactly (field names, types, and values). Derived from webmcp_relay.protocol (Python) and protocol.ts (TS) which share snake_case field names throughout.",
+  "inputs": {
+    "session_id": "11111111-2222-3333-4444-555555555555",
+    "activity_id": "act-aaaabbbbcccc",
+    "call_id": "call-11111111",
+    "tool_name": "explorer.search",
+    "args": { "q": "test" },
+    "last_activity_ms": 1700001234567
+  },
+  "hello_accepted": {
+    "type": "hello/accepted",
+    "session_id": "11111111-2222-3333-4444-555555555555"
+  },
+  "hello_rejected": {
+    "type": "hello/rejected",
+    "reason": "Session token missing, invalid, or expired. Reconnect from the Explorer panel."
+  },
+  "harness_status_attached": {
+    "type": "harness_status",
+    "attached": true,
+    "last_activity_ms": 1700001234567
+  },
+  "harness_status_detached": {
+    "type": "harness_status",
+    "attached": false,
+    "last_activity_ms": null
+  },
+  "tool_activity_started": {
+    "type": "tool_activity",
+    "activity_id": "act-aaaabbbbcccc",
+    "tool_name": "explorer.search",
+    "kind": "ui",
+    "status": "started",
+    "args": { "q": "test" },
+    "result_preview": null,
+    "error": null
+  },
+  "tool_activity_ok": {
+    "type": "tool_activity",
+    "activity_id": "act-aaaabbbbcccc",
+    "tool_name": "explorer.search",
+    "kind": "ui",
+    "status": "ok",
+    "args": { "q": "test" },
+    "result_preview": "found 3 results",
+    "error": null
+  },
+  "tool_activity_error": {
+    "type": "tool_activity",
+    "activity_id": "act-aaaabbbbcccc",
+    "tool_name": "explorer.search",
+    "kind": "ui",
+    "status": "error",
+    "args": { "q": "test" },
+    "result_preview": null,
+    "error": "Browser returned error: not found"
+  },
+  "invoke": {
+    "type": "invoke",
+    "call_id": "call-11111111",
+    "tool_name": "explorer.search",
+    "args": { "q": "test" }
+  },
+  "create_session_response_fields": [
+    "session_id",
+    "pairing_token",
+    "connection_token",
+    "connection_token_expires_at",
+    "ws_url",
+    "expires_at"
+  ]
+}
