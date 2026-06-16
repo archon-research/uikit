@@ -85,7 +85,10 @@ jobs:
       - detect-changes
       - lint
     if: needs.detect-changes.outputs.visual_snapshots == 'true'
-    runs-on: macos-latest
+    # Pinned to macos-26 (not macos-latest) so the runner matches the macOS
+    # version snapshots are generated on. CoreText font metrics differ between
+    # macOS major versions, so a mismatch reflows text and fails comparisons.
+    runs-on: macos-26
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
