@@ -83,11 +83,11 @@ const topBarClassName = css({
 });
 
 const topBarControlsClassName = css({
-  display: 'grid',
+  display: 'flex',
+  flexWrap: 'wrap',
   gap: '2',
-  justifyItems: 'end',
-  minWidth: 'min(100%, 34rem)',
-  flex: '1',
+  alignItems: 'center',
+  justifyContent: 'end',
 });
 
 const actionButtonsClassName = css({
