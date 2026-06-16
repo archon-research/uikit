@@ -29,7 +29,7 @@
     "@archon-research/tsconfig": "*",
     "@ladle/react": "^5.1.1",
     "@pandacss/dev": "^1.10.0",
-    "@playwright/test": "1.54.2",
+    "@playwright/test": "1.60.0",
     "oxfmt": "0.53.0",
     "oxlint": "1.68.0"
   }

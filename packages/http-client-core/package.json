@@ -28,13 +28,13 @@
   },
   "dependencies": {
     "openapi-fetch": "0.17.0",
-    "zod": "4.3.6"
+    "zod": "4.4.3"
   },
   "peerDependencies": {
     "openapi-typescript": "^7.13.0"
   },
   "devDependencies": {
-    "@types/node": "24.7.2",
+    "@types/node": "24.12.4",
     "oxfmt": "0.53.0",
     "oxlint": "1.68.0"
   }
