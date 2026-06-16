@@ -81,7 +81,7 @@ export const Default = () => (
         actions={<Button>Export CSV</Button>}
         footer="Source: internal simulation data"
       >
-        <LineChart data={lineData} />
+        <LineChart data={lineData} includeZero />
       </ChartContainer>
 
       <div className={gridClassName}>
@@ -89,7 +89,7 @@ export const Default = () => (
           title="Allocation by Chain"
           subtitle="Bar chart primitive for part-to-whole snapshots"
         >
-          <BarChart data={barData} />
+          <BarChart data={barData} includeZero />
         </ChartContainer>
 
         <ChartContainer

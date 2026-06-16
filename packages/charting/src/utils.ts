@@ -1,13 +1,32 @@
 import type { ChartDatum, ChartMargins } from './types';
 
-export function getDomainValues(data: readonly ChartDatum[]) {
-  const maxValue = Math.max(...data.map((item) => item.value), 0);
-  const minValue = Math.min(...data.map((item) => item.value), 0);
+export function getDomainValues(
+  data: readonly ChartDatum[],
+  includeZero = false,
+) {
+  // Seed with zero only when an explicit zero baseline is requested; otherwise
+  // derive the domain purely from the data so the full value range is visible.
+  let min = includeZero ? 0 : Infinity;
+  let max = includeZero ? 0 : -Infinity;
 
-  return {
-    min: minValue,
-    max: maxValue,
-  };
+  // Reduce in a single pass (rather than spreading into Math.min/max, which
+  // overflows the call stack on large series) and reject non-finite values
+  // up front so a stray NaN/Infinity cannot silently poison every coordinate.
+  for (const { value } of data) {
+    if (!Number.isFinite(value)) {
+      throw new Error(
+        `Chart received a non-finite value (${value}); ChartDatum values must be finite numbers.`,
+      );
+    }
+    if (value < min) {
+      min = value;
+    }
+    if (value > max) {
+      max = value;
+    }
+  }
+
+  return { min, max };
 }
 
 export function getDrawableArea(

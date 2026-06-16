@@ -33,12 +33,13 @@ export function LineChart({
   showArea = true,
   margins = defaultMargins,
   ariaLabel = 'Line chart',
+  includeZero = false,
 }: LineChartProps) {
   if (data.length === 0) {
     return null;
   }
 
-  const domain = getDomainValues(data);
+  const domain = getDomainValues(data, includeZero);
   const area = getDrawableArea(width, height, margins);
   const stepX = data.length > 1 ? area.width / (data.length - 1) : 0;
 
@@ -62,6 +63,7 @@ export function LineChart({
 
   return (
     <svg
+      role="img"
       aria-label={ariaLabel}
       viewBox={`0 0 ${width} ${height}`}
       style={svgStyle}
@@ -80,9 +82,9 @@ export function LineChart({
       <path d={path} fill="none" stroke={stroke} strokeWidth="2" />
 
       {showPoints
-        ? points.map((point) => (
+        ? points.map((point, index) => (
             <circle
-              key={point.label}
+              key={index}
               cx={point.x}
               cy={point.y}
               r="3"

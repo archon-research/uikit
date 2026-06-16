@@ -11,13 +11,14 @@ export function Sparkline({
   height = 44,
   stroke = 'var(--colors-chart-series-secondary, #0f766e)',
   ariaLabel = 'Sparkline',
+  includeZero = false,
 }: SparklineProps) {
   if (data.length === 0) {
     return null;
   }
 
   const margins = { top: 4, right: 2, bottom: 4, left: 2 };
-  const domain = getDomainValues(data);
+  const domain = getDomainValues(data, includeZero);
   const area = getDrawableArea(width, height, margins);
   const stepX = data.length > 1 ? area.width / (data.length - 1) : 0;
 
@@ -33,6 +34,7 @@ export function Sparkline({
 
   return (
     <svg
+      role="img"
       aria-label={ariaLabel}
       viewBox={`0 0 ${width} ${height}`}
       style={{ width: '100%', display: 'block' }}

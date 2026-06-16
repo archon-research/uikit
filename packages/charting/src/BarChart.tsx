@@ -29,18 +29,20 @@ export function BarChart({
   barGap = 8,
   margins = defaultMargins,
   ariaLabel = 'Bar chart',
+  includeZero = false,
 }: BarChartProps) {
   if (data.length === 0) {
     return null;
   }
 
-  const domain = getDomainValues(data);
+  const domain = getDomainValues(data, includeZero);
   const area = getDrawableArea(width, height, margins);
   const band = area.width / data.length;
   const barWidth = Math.max(band - barGap, 4);
 
   return (
     <svg
+      role="img"
       aria-label={ariaLabel}
       viewBox={`0 0 ${width} ${height}`}
       style={svgStyle}
@@ -64,7 +66,7 @@ export function BarChart({
 
         return (
           <rect
-            key={datum.label}
+            key={index}
             x={x}
             y={y}
             width={barWidth}
