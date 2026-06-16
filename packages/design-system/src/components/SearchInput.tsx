@@ -105,7 +105,13 @@ const statusStyle: CSSProperties = {
 
 function SearchIcon() {
   return (
-    <Search aria-hidden="true" size={16} style={iconStyle} strokeWidth={1.9} />
+    <Search
+      aria-hidden="true"
+      size={16}
+      style={iconStyle}
+      strokeWidth={1.9}
+      absoluteStrokeWidth
+    />
   );
 }
 

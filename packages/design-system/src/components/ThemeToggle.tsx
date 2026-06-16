@@ -62,6 +62,7 @@ function ThemeIcon({ mode }: { mode: ThemeMode }) {
     'aria-hidden': true,
     size: 14,
     strokeWidth: 1.75,
+    absoluteStrokeWidth: true,
   };
 
   switch (mode) {

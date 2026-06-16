@@ -201,7 +201,7 @@ const EmptyState_NoData = () => {
       <EmptyState
         title="No allocations yet"
         description="Start by adding your first position to build your portfolio."
-        icon={<FolderSearch size={18} strokeWidth={1.8} />}
+        icon={<FolderSearch size={18} strokeWidth={1.8} absoluteStrokeWidth />}
       />
     </div>
   );
@@ -213,7 +213,7 @@ const EmptyState_NoResults = () => {
       <EmptyState
         title="No allocations match your filters"
         description="Try adjusting your search or filter criteria."
-        icon={<SearchX size={18} strokeWidth={1.8} />}
+        icon={<SearchX size={18} strokeWidth={1.8} absoluteStrokeWidth />}
       />
     </div>
   );

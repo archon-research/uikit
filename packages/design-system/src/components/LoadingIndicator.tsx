@@ -31,6 +31,7 @@ function SpinnerIcon() {
         size={14}
         strokeWidth={2}
         style={spinnerStyle}
+        absoluteStrokeWidth
       />
     </>
   );

@@ -345,11 +345,11 @@ const TopBar = () => (
     <div className={topBarControlsClassName}>
       <div className={actionButtonsClassName}>
         <Button>
-          <Settings2 size={16} strokeWidth={1.8} />
+          <Settings2 size={16} strokeWidth={1.8} absoluteStrokeWidth />
           Settings
         </Button>
         <Button>
-          <Download size={16} strokeWidth={1.8} />
+          <Download size={16} strokeWidth={1.8} absoluteStrokeWidth />
           Export
         </Button>
       </div>
@@ -380,7 +380,7 @@ const GridPanel = () => {
       <div className={panelHeaderClassName}>
         <div className={sectionTitleClassName}>Current Allocations</div>
         <Button>
-          <Plus size={16} strokeWidth={1.8} />
+          <Plus size={16} strokeWidth={1.8} absoluteStrokeWidth />
           Add Position
         </Button>
       </div>

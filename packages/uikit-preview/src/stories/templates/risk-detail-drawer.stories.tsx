@@ -264,7 +264,7 @@ const RiskDetailDrawer = ({ allocation, onClose }: any) => {
           })}
           aria-label="Close drawer"
         >
-          <X size={16} strokeWidth={1.9} />
+          <X size={16} strokeWidth={1.9} absoluteStrokeWidth />
         </button>
       </div>
 

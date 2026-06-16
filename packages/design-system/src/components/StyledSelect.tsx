@@ -63,6 +63,7 @@ function SelectChevron() {
       size={16}
       style={chevronStyle}
       strokeWidth={1.9}
+      absoluteStrokeWidth
     />
   );
 }

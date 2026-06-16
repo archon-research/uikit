@@ -1,3 +1,5 @@
+import { CircleAlert } from 'lucide-react';
+
 type ErrorStateProps = {
   title: string;
   description: string;
@@ -57,13 +59,10 @@ export function ErrorState({
             borderRadius: 9999,
             background: 'var(--colors-surface-default, #ffffff)',
             color: 'var(--colors-text-muted, #667085)',
-            fontWeight: 700,
-            fontSize: 24,
-            lineHeight: 1,
           }}
           aria-hidden="true"
         >
-          !
+          <CircleAlert size={24} strokeWidth={1.9} absoluteStrokeWidth />
         </div>
         <div style={{ minWidth: 0, width: '100%', maxWidth: 720 }}>
           <h3 style={titleStyle}>{title}</h3>
@@ -85,7 +84,8 @@ export function ErrorState({
                   fontFamily:
                     'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
                   color: 'var(--colors-text-muted, #667085)',
-                  wordBreak: 'break-word',
+                  whiteSpace: 'nowrap',
+                  overflowX: 'auto',
                 }}
               >
                 {errorMessage}
