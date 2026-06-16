@@ -34,6 +34,7 @@ export function LineChart({
   margins = defaultMargins,
   ariaLabel = 'Line chart',
   includeZero = false,
+  getDatumTooltip,
 }: LineChartProps) {
   if (data.length === 0) {
     return null;
@@ -82,17 +83,35 @@ export function LineChart({
       <path d={path} fill="none" stroke={stroke} strokeWidth="2" />
 
       {showPoints
-        ? points.map((point, index) => (
-            <circle
-              key={index}
-              cx={point.x}
-              cy={point.y}
-              r="3"
-              fill={stroke}
-              stroke="var(--colors-surface-default, #ffffff)"
-              strokeWidth="1.5"
-            />
-          ))
+        ? points.map((point, index) => {
+            const tooltipText = getDatumTooltip?.(point, index);
+
+            return (
+              <g key={index}>
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r="3"
+                  fill={stroke}
+                  stroke="var(--colors-surface-default, #ffffff)"
+                  strokeWidth="1.5"
+                >
+                  {tooltipText ? <title>{tooltipText}</title> : null}
+                </circle>
+                {tooltipText ? (
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    r="8"
+                    fill="transparent"
+                    pointerEvents="all"
+                  >
+                    <title>{tooltipText}</title>
+                  </circle>
+                ) : null}
+              </g>
+            );
+          })
         : null}
     </svg>
   );

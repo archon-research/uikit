@@ -15,6 +15,7 @@ export type BaseChartProps = {
   width?: number;
   height?: number;
   ariaLabel?: string;
+  getDatumTooltip?: (datum: ChartDatum, index: number) => string | undefined;
   /**
    * Force the value domain to include zero, anchoring the chart to a zero
    * baseline. Off by default, so the domain is derived from the data's own

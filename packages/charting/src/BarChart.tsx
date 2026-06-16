@@ -30,6 +30,7 @@ export function BarChart({
   margins = defaultMargins,
   ariaLabel = 'Bar chart',
   includeZero = false,
+  getDatumTooltip,
 }: BarChartProps) {
   if (data.length === 0) {
     return null;
@@ -63,17 +64,34 @@ export function BarChart({
           normalizeValue(datum.value, domain.min, domain.max, area.height);
         const y = Math.min(barTop, area.y + area.height);
         const barHeight = Math.max(area.y + area.height - y, 2);
+        const tooltipText = getDatumTooltip?.(datum, index);
 
         return (
-          <rect
-            key={index}
-            x={x}
-            y={y}
-            width={barWidth}
-            height={barHeight}
-            rx="4"
-            fill={barColor}
-          />
+          <g key={index}>
+            <rect
+              x={x}
+              y={y}
+              width={barWidth}
+              height={barHeight}
+              rx="4"
+              fill={barColor}
+            >
+              {tooltipText ? <title>{tooltipText}</title> : null}
+            </rect>
+            {tooltipText ? (
+              <rect
+                x={x}
+                y={y}
+                width={Math.max(barWidth, 12)}
+                height={barHeight}
+                rx="4"
+                fill="transparent"
+                pointerEvents="all"
+              >
+                <title>{tooltipText}</title>
+              </rect>
+            ) : null}
+          </g>
         );
       })}
     </svg>

@@ -12,6 +12,7 @@ export function Sparkline({
   stroke = 'var(--colors-chart-series-secondary, #0f766e)',
   ariaLabel = 'Sparkline',
   includeZero = false,
+  getDatumTooltip,
 }: SparklineProps) {
   if (data.length === 0) {
     return null;
@@ -22,13 +23,21 @@ export function Sparkline({
   const area = getDrawableArea(width, height, margins);
   const stepX = data.length > 1 ? area.width / (data.length - 1) : 0;
 
-  const path = data
-    .map((datum, index) => {
-      const x = area.x + index * stepX;
-      const y =
-        area.y +
-        normalizeValue(datum.value, domain.min, domain.max, area.height);
-      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+  const points = data.map((datum, index) => {
+    const x = area.x + index * stepX;
+    const y =
+      area.y + normalizeValue(datum.value, domain.min, domain.max, area.height);
+    return {
+      datum,
+      index,
+      x,
+      y,
+    };
+  });
+
+  const path = points
+    .map((point) => {
+      return `${point.index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`;
     })
     .join(' ');
 
@@ -40,6 +49,20 @@ export function Sparkline({
       style={{ width: '100%', display: 'block' }}
     >
       <path d={path} fill="none" stroke={stroke} strokeWidth="2" />
+      {getDatumTooltip
+        ? points.map((point) => (
+            <circle
+              key={`${point.index}-${point.x}-${point.y}`}
+              cx={point.x}
+              cy={point.y}
+              r="6"
+              fill="transparent"
+              pointerEvents="all"
+            >
+              <title>{getDatumTooltip(point.datum, point.index)}</title>
+            </circle>
+          ))
+        : null}
     </svg>
   );
 }
