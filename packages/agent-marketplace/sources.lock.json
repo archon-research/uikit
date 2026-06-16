@@ -30,6 +30,13 @@
       "resolved": "packages/agent-marketplace/content/skills/ark-ui-guidance/SKILL.md"
     },
     {
+      "id": "charting",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/charting/SKILL.md"
+    },
+    {
       "id": "migrate-oxlint",
       "kind": "skill",
       "sourceType": "remote-markdown",
