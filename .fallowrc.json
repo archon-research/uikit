@@ -1,0 +1,8 @@
+{
+  "$schema": "https://docs.fallow.tools/schema/config.json",
+  "entry": [
+    "packages/uikit-preview/src/stories/**/*.stories.tsx",
+    "packages/uikit-preview/demo-relay/worker.ts"
+  ],
+  "ignoreDependencies": ["@archon-research/tsconfig"]
+}

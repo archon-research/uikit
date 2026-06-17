@@ -25,6 +25,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@archon-research/oxfmt-config": "*",
     "@archon-research/tsconfig": "*",
     "@types/node": "^24.7.2",
     "oxfmt": "0.53.0",

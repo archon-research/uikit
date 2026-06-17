@@ -1,8 +1,8 @@
 /**
  * @archon-research/webmcp
  *
- * Stable wrapper over @mcp-b/react-webmcp, exposing a fixed interface that
- * the rest of the codebase depends on. All @mcp-b/* churn is absorbed here.
+ * Stable wrapper over the @mcp-b/global polyfill, exposing a fixed interface
+ * that the rest of the codebase depends on. All @mcp-b/* churn is absorbed here.
  *
  * Public surface (stable contract):
  *   - defineTool                   schema-first tool factory

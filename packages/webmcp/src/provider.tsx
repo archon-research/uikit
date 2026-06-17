@@ -3,7 +3,6 @@ import {
   cleanupWebModelContext,
   initializeWebModelContext,
 } from '@mcp-b/global';
-import { useWebMCP } from '@mcp-b/react-webmcp';
 /**
  * WebMCPProvider
  *
@@ -20,7 +19,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type DependencyList,
   type ReactNode,
 } from 'react';
 
@@ -191,10 +189,3 @@ export function useToolRegistryContext(): ToolRegistryContextValue {
   }
   return ctx;
 }
-
-// ---------------------------------------------------------------------------
-// Re-export the raw useWebMCP hook for advanced use within this package
-// ---------------------------------------------------------------------------
-
-export { useWebMCP };
-export type { DependencyList };

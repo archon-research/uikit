@@ -24,9 +24,9 @@ import type { ToolSpec, ViewState } from './types.js';
 /**
  * Register a tool while the calling component is mounted.
  *
- * Wraps `@mcp-b/react-webmcp`'s `useWebMCP` so the tool is exposed to any
- * connected harness via `document.modelContext`, AND registers the spec in the
- * local ToolRegistry so `listTools()` / `getViewState()` see it.
+ * Registers the tool into `document.modelContext` (via the @mcp-b/global
+ * polyfill) so it is exposed to any connected harness, AND registers the spec
+ * in the local ToolRegistry so `listTools()` / `getViewState()` see it.
  *
  * @example
  * ```tsx

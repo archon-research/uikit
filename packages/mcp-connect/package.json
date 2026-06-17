@@ -25,13 +25,14 @@
   },
   "dependencies": {
     "@archon-research/design-system": "*",
-    "@archon-research/webmcp": "*",
     "lucide-react": "^1.7.0"
   },
   "peerDependencies": {
     "react": "^19.0.0"
   },
   "devDependencies": {
+    "@archon-research/oxfmt-config": "*",
+    "@archon-research/oxlint-config": "*",
     "@types/react": "^19.0.0",
     "oxfmt": "0.53.0",
     "oxlint": "1.68.0"
