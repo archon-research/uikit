@@ -9,6 +9,7 @@
     "packages/oxfmt-config",
     "packages/agent-marketplace",
     "packages/design-system",
+    "packages/charting",
     "packages/uikit-preview",
     "packages/http-client-core",
     "packages/http-client-react",
