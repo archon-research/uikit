@@ -24,7 +24,10 @@ import {
   parseBearer,
   sessionIdFromToken,
 } from '@archon-research/mcp-relay';
-import type { ToolDefinition } from '@archon-research/mcp-relay';
+import type {
+  RelaySessionSnapshot,
+  ToolDefinition,
+} from '@archon-research/mcp-relay';
 
 import type { Env } from './env.js';
 
@@ -46,6 +49,23 @@ export class SessionDO implements DurableObject {
   constructor(state: DurableObjectState, env: Env) {
     this.state = state;
     this.jwtSecret = env.WEBMCP_RELAY_JWT_SECRET;
+    // Rehydrate the in-memory session from storage before any request/message
+    // runs. The DO is evicted between events under WebSocket Hibernation, so
+    // the registered tools + liveness state must survive in storage, not just
+    // memory. blockConcurrencyWhile guarantees this completes before handlers.
+    state.blockConcurrencyWhile(async () => {
+      const snap = await state.storage.get<RelaySessionSnapshot>('session');
+      if (snap) {
+        this.session = RelaySession.fromSnapshot(snap);
+      }
+    });
+  }
+
+  /** Persist the durable session state so it survives DO eviction. */
+  private async persist(): Promise<void> {
+    if (this.session) {
+      await this.state.storage.put('session', this.session.toSnapshot());
+    }
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -55,6 +75,7 @@ export class SessionDO implements DurableObject {
     if (!this.session) {
       this.session = new RelaySession(sessionId);
       await this.state.storage.setAlarm(Date.now() + ALARM_INTERVAL_MS);
+      await this.persist();
     }
 
     const upgradeHeader = request.headers.get('upgrade');
@@ -83,21 +104,23 @@ export class SessionDO implements DurableObject {
     await this.onBrowserMessage(ws, raw);
   }
 
-  webSocketClose(
+  async webSocketClose(
     ws: WebSocket,
     _code: number,
     _reason: string,
     _wasClean: boolean,
-  ): void {
+  ): Promise<void> {
     ws.close();
     this.session?.onDisconnect();
     this.rejectAllPending('Browser disconnected.');
+    await this.persist();
   }
 
-  webSocketError(ws: WebSocket, _error: unknown): void {
+  async webSocketError(ws: WebSocket, _error: unknown): Promise<void> {
     ws.close();
     this.session?.onDisconnect();
     this.rejectAllPending('Browser WebSocket error.');
+    await this.persist();
   }
 
   // ---------------------------------------------------------------------------
@@ -110,6 +133,7 @@ export class SessionDO implements DurableObject {
     const statusFrame = this.session.sweep(now);
     if (statusFrame) {
       this.broadcastToAccepted(JSON.stringify(statusFrame));
+      await this.persist();
     }
     await this.state.storage.setAlarm(now + ALARM_INTERVAL_MS);
   }
@@ -154,11 +178,13 @@ export class SessionDO implements DurableObject {
         tokenValid,
       );
       this.wsSend(ws, JSON.stringify(reply));
+      await this.persist();
       return;
     }
 
     if (type === 'tools/list' || type === 'tools/changed') {
       this.session.setTools((msg['tools'] as ToolDefinition[]) ?? []);
+      await this.persist();
       return;
     }
 
@@ -219,10 +245,12 @@ export class SessionDO implements DurableObject {
     // Touch harness on every /mcp call.
     const touchFrame = this.session.touch(now);
     this.broadcastToAccepted(JSON.stringify(touchFrame));
+    await this.persist();
 
     if (method === 'initialize') {
       const { harnessStatus } = this.session.onInitialize(now);
       this.broadcastToAccepted(JSON.stringify(harnessStatus));
+      await this.persist();
       return jsonResponse({
         jsonrpc: '2.0',
         id,

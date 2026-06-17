@@ -42,6 +42,19 @@ export const HARNESS_LIVENESS_TTL_MS = 90_000;
 /** Invoke timeout: 30 s matches the Python INVOKE_TIMEOUT_SECONDS. */
 export const INVOKE_TIMEOUT_MS = 30_000;
 
+/**
+ * Serializable snapshot of a session's durable state. A host (e.g. a Cloudflare
+ * Durable Object) persists this so the session survives eviction/hibernation,
+ * then rehydrates with RelaySession.fromSnapshot.
+ */
+export interface RelaySessionSnapshot {
+  sessionId: string;
+  sessionState: SessionState;
+  tools: ToolDefinition[];
+  attached: boolean;
+  lastSeen: number | null;
+}
+
 export class RelaySession {
   readonly sessionId: string;
 
@@ -66,6 +79,27 @@ export class RelaySession {
   }
   get lastSeenMs(): number | null {
     return this.lastSeen;
+  }
+
+  /** Snapshot the durable state so a host can persist it (e.g. to DO storage). */
+  toSnapshot(): RelaySessionSnapshot {
+    return {
+      sessionId: this.sessionId,
+      sessionState: this.sessionState,
+      tools: this.toolsCatalogue,
+      attached: this.attached,
+      lastSeen: this.lastSeen,
+    };
+  }
+
+  /** Reconstruct a session from a persisted snapshot (after eviction/wake). */
+  static fromSnapshot(snap: RelaySessionSnapshot): RelaySession {
+    const session = new RelaySession(snap.sessionId);
+    session.sessionState = snap.sessionState;
+    session.toolsCatalogue = snap.tools;
+    session.attached = snap.attached;
+    session.lastSeen = snap.lastSeen;
+    return session;
   }
 
   // ---------------------------------------------------------------------------

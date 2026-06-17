@@ -28,6 +28,30 @@ type Theme = 'light' | 'dark' | 'auto';
 
 const DEFAULT_STORY = 'atoms--button--item';
 
+// Persist the relay session so a token saved in a harness config keeps working
+// across page reloads (the session DO retains its tools server-side). Without
+// this, every reload would mint a fresh session and invalidate a saved token.
+const SESSION_STORAGE_KEY = 'archon-relay-demo-session-v1';
+
+type StoredSession = {
+  connection_token: string;
+  ws_url: string;
+  expires: number;
+};
+
+function loadStoredSession(): StoredSession | null {
+  try {
+    const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw) as StoredSession;
+    if (!s.connection_token || !s.ws_url) return null;
+    if (s.expires && Date.now() > s.expires) return null;
+    return s;
+  } catch {
+    return null;
+  }
+}
+
 // Tools the connected harness can call to drive this preview. The handlers run
 // in the browser (this panel) and manipulate the canvas iframe below.
 const PREVIEW_TOOLS = [
@@ -195,21 +219,40 @@ export const LiveDemo = () => {
 
     const connect = async () => {
       try {
-        const res = await fetch(`${RELAY_BASE_URL}/api/sessions`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: '{}',
-        });
-        const session = (await res.json()) as {
-          connection_token: string;
-          ws_url: string;
-        };
-        if (closed) return;
-        setToken(session.connection_token);
+        let stored = loadStoredSession();
+        if (!stored) {
+          const res = await fetch(`${RELAY_BASE_URL}/api/sessions`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: '{}',
+          });
+          const minted = (await res.json()) as {
+            connection_token: string;
+            ws_url: string;
+          };
+          // Re-mint shortly before the 12h connection-token TTL.
+          stored = {
+            connection_token: minted.connection_token,
+            ws_url: minted.ws_url,
+            expires: Date.now() + 11 * 60 * 60 * 1000,
+          };
+          try {
+            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stored));
+          } catch {
+            /* storage disabled/full: fall back to an in-memory session */
+          }
+          if (closed) return;
+          log('Minted a new session (saved for reuse across reloads).');
+        } else {
+          if (closed) return;
+          log(
+            'Reusing the saved session: the connect token is stable across reloads.',
+          );
+        }
+        setToken(stored.connection_token);
         setStatus('ready');
-        log('Session minted; opening the back-channel...');
 
-        const ws = new WebSocket(session.ws_url);
+        const ws = new WebSocket(stored.ws_url);
         wsRef.current = ws;
 
         ws.onopen = () => {
@@ -220,7 +263,7 @@ export const LiveDemo = () => {
               origin: location.origin,
               url: location.href,
               title: 'uikit relay demo',
-              connection_token: session.connection_token,
+              connection_token: stored.connection_token,
             }),
           );
         };
