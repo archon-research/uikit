@@ -3,6 +3,7 @@ import {
   type CSSProperties,
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -21,7 +22,16 @@ export type RangePreset =
   | '365d'
   | 'custom';
 
+// An applied range always has both endpoints; presets compute both and the
+// custom flow only commits once both are present and valid (see disableConfirm).
 export type TimeRange = {
+  from_timestamp: string;
+  to_timestamp: string;
+};
+
+// The in-progress custom range being edited in the modal, where either endpoint
+// may be empty until the user fills it in. Narrowed to a TimeRange on confirm.
+type DraftRange = {
   from_timestamp: string | undefined;
   to_timestamp: string | undefined;
 };
@@ -259,6 +269,8 @@ function toDateTimeLocalValue(iso: string | undefined): string {
   // The model stores UTC ISO, but <input type="datetime-local"> expects local
   // wall-clock time; shift by the offset so the control shows the right moment.
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  // Truncate to YYYY-MM-DDTHH:mm: datetime-local is minute-precision by design,
+  // so a confirmed range is intentionally rounded down to the minute.
   return local.toISOString().slice(0, 16);
 }
 
@@ -269,7 +281,7 @@ function fromDateTimeLocalValue(value: string): string | undefined {
 
 export function RangePicker({ preset, range, onChange }: RangePickerProps) {
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
-  const [draftRange, setDraftRange] = useState<TimeRange>(range);
+  const [draftRange, setDraftRange] = useState<DraftRange>(range);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -320,19 +332,26 @@ export function RangePicker({ preset, range, onChange }: RangePickerProps) {
         setIsCustomModalOpen(true);
         return;
       }
-      // Selecting the already-applied custom range is a no-op.
-      if (value === CUSTOM_ACTIVE_VALUE) {
+      // Selecting the already-applied custom range, or any unexpected value, is
+      // a no-op; the guard narrows away 'custom'/'custom-active' before the call.
+      if (!isRangePreset(value) || value === 'custom') {
         return;
       }
 
-      const nextPreset = value as Exclude<RangePreset, 'custom'>;
-      onChange(nextPreset, presetToRange(nextPreset));
+      onChange(value, presetToRange(value));
     },
     [onChange, range],
   );
 
   const handleConfirmCustomRange = useCallback(() => {
-    onChange('custom', draftRange);
+    // The Confirm button is disabled unless both endpoints are present and
+    // valid; re-check here so the narrowing to TimeRange is enforced by types.
+    const { from_timestamp, to_timestamp } = draftRange;
+    if (from_timestamp == null || to_timestamp == null) {
+      return;
+    }
+
+    onChange('custom', { from_timestamp, to_timestamp });
     closeCustomModal();
   }, [closeCustomModal, draftRange, onChange]);
 
@@ -340,8 +359,9 @@ export function RangePicker({ preset, range, onChange }: RangePickerProps) {
     setDraftRange(range);
     closeCustomModal();
   }, [closeCustomModal, range]);
-  const modalTitleId = 'range-picker-custom-modal-title';
-  const modalDescriptionId = 'range-picker-custom-modal-description';
+  const modalId = useId();
+  const modalTitleId = `${modalId}-title`;
+  const modalDescriptionId = `${modalId}-description`;
 
   // Reject missing, unparseable, or inverted ranges. parseTimestamp filters
   // Invalid Dates so a NaN comparison can't silently leave Confirm enabled.
