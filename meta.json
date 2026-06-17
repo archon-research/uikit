@@ -35,8 +35,8 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 70,
-      "locEnd": 86,
+      "locStart": 71,
+      "locEnd": 87,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "IconOnly",
       "meta": {}
@@ -47,8 +47,8 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 41,
-      "locEnd": 68,
+      "locStart": 42,
+      "locEnd": 69,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "Item",
       "meta": {}
@@ -59,8 +59,8 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 22,
-      "locEnd": 39,
+      "locStart": 23,
+      "locEnd": 40,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "Panel",
       "meta": {}
@@ -509,6 +509,18 @@
       "namedExport": "WithRetry",
       "meta": {}
     },
+    "organisms--visx-charts--default": {
+      "name": "Default",
+      "levels": [
+        "Organisms",
+        "Visx charts"
+      ],
+      "locStart": 180,
+      "locEnd": 294,
+      "filePath": "src/stories/organisms/visx-charts.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
     "playground--contrast-checker": {
       "name": "Contrast checker",
       "levels": [
@@ -529,6 +541,162 @@
       "locEnd": 211,
       "filePath": "src/stories/playground/playground.stories.tsx",
       "namedExport": "Typography",
+      "meta": {}
+    },
+    "templates--activity-feed--default": {
+      "name": "Default",
+      "levels": [
+        "Templates",
+        "Activity feed"
+      ],
+      "locStart": 191,
+      "locEnd": 357,
+      "filePath": "src/stories/templates/activity-feed.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "templates--allocation-dashboard--default": {
+      "name": "Default",
+      "levels": [
+        "Templates",
+        "Allocation dashboard"
+      ],
+      "locStart": 478,
+      "locEnd": 496,
+      "filePath": "src/stories/templates/allocation-dashboard.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "templates--allocation-grid-states--all-states-gallery": {
+      "name": "All states gallery",
+      "levels": [
+        "Templates",
+        "Allocation grid states"
+      ],
+      "locStart": 393,
+      "locEnd": 453,
+      "filePath": "src/stories/templates/allocation-grid-states.stories.tsx",
+      "namedExport": "AllStatesGallery",
+      "meta": {}
+    },
+    "templates--allocation-grid-states--empty": {
+      "name": "Empty",
+      "levels": [
+        "Templates",
+        "Allocation grid states"
+      ],
+      "locStart": 319,
+      "locEnd": 336,
+      "filePath": "src/stories/templates/allocation-grid-states.stories.tsx",
+      "namedExport": "Empty",
+      "meta": {}
+    },
+    "templates--allocation-grid-states--empty-filtered": {
+      "name": "Empty filtered",
+      "levels": [
+        "Templates",
+        "Allocation grid states"
+      ],
+      "locStart": 338,
+      "locEnd": 355,
+      "filePath": "src/stories/templates/allocation-grid-states.stories.tsx",
+      "namedExport": "EmptyFiltered",
+      "meta": {}
+    },
+    "templates--allocation-grid-states--error": {
+      "name": "Error",
+      "levels": [
+        "Templates",
+        "Allocation grid states"
+      ],
+      "locStart": 357,
+      "locEnd": 374,
+      "filePath": "src/stories/templates/allocation-grid-states.stories.tsx",
+      "namedExport": "Error",
+      "meta": {}
+    },
+    "templates--allocation-grid-states--filtered": {
+      "name": "Filtered",
+      "levels": [
+        "Templates",
+        "Allocation grid states"
+      ],
+      "locStart": 376,
+      "locEnd": 391,
+      "filePath": "src/stories/templates/allocation-grid-states.stories.tsx",
+      "namedExport": "Filtered",
+      "meta": {}
+    },
+    "templates--allocation-grid-states--loaded": {
+      "name": "Loaded",
+      "levels": [
+        "Templates",
+        "Allocation grid states"
+      ],
+      "locStart": 285,
+      "locEnd": 300,
+      "filePath": "src/stories/templates/allocation-grid-states.stories.tsx",
+      "namedExport": "Loaded",
+      "meta": {}
+    },
+    "templates--allocation-grid-states--loading": {
+      "name": "Loading",
+      "levels": [
+        "Templates",
+        "Allocation grid states"
+      ],
+      "locStart": 302,
+      "locEnd": 317,
+      "filePath": "src/stories/templates/allocation-grid-states.stories.tsx",
+      "namedExport": "Loading",
+      "meta": {}
+    },
+    "templates--control-rich-filter-bar--default": {
+      "name": "Default",
+      "levels": [
+        "Templates",
+        "Control rich filter bar"
+      ],
+      "locStart": 146,
+      "locEnd": 305,
+      "filePath": "src/stories/templates/filter-bar.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "templates--risk-detail-drawer--default": {
+      "name": "Default",
+      "levels": [
+        "Templates",
+        "Risk detail drawer"
+      ],
+      "locStart": 430,
+      "locEnd": 460,
+      "filePath": "src/stories/templates/risk-detail-drawer.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "templates--risk-detail-drawer--drawer-closed": {
+      "name": "Drawer closed",
+      "levels": [
+        "Templates",
+        "Risk detail drawer"
+      ],
+      "locStart": 462,
+      "locEnd": 484,
+      "filePath": "src/stories/templates/risk-detail-drawer.stories.tsx",
+      "namedExport": "DrawerClosed",
+      "meta": {}
+    },
+    "templates--risk-detail-drawer--drawer-open-performance": {
+      "name": "Drawer open performance",
+      "levels": [
+        "Templates",
+        "Risk detail drawer"
+      ],
+      "locStart": 486,
+      "locEnd": 509,
+      "filePath": "src/stories/templates/risk-detail-drawer.stories.tsx",
+      "namedExport": "DrawerOpenPerformance",
       "meta": {}
     },
     "templates--sidebar-layout--default": {
