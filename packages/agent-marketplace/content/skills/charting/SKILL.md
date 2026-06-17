@@ -16,10 +16,13 @@ visualization in this monorepo. The authoritative contract is
   [visx](https://github.com/airbnb/visx): UIKit owns the visual language, visx
   owns the rendering mechanics.
 - Consumers depend on `@archon-research/charting`, never on `@visx/*` directly.
-  The package re-exports the supported visx surface under subpaths (for example
-  `@archon-research/charting/xychart`, `/shape`, `/scale`, `/axis`).
-- Theme every chart with the package `chartTheme` (for `XYChart`) or `chartTokens`
-  (for primitive-based components). Both derive from the semantic chart tokens.
+  The package re-exports the supported visx surface from its root today
+  (`XYChart`, `Axis`, `Grid`, `Tooltip`, `LineSeries`, `AreaSeries`, `BarSeries`,
+  `BarGroup`, `BarStack`, `GlyphSeries`, `buildChartTheme`); a subpath layout is
+  planned (see DESIGN.md).
+- Theme every chart with the package `chartTheme` (for `XYChart`); use
+  `chartTokens` or `seriesColor` for custom marks and legends. All derive from the
+  semantic chart tokens.
 
 ## Theming
 
@@ -36,9 +39,9 @@ visualization in this monorepo. The authoritative contract is
 
 - Cartesian charts (line, bar, area, scatter): use `XYChart` with `theme={chartTheme}`
   plus `Axis`, `Grid`, the relevant `*Series`, and `Tooltip`.
-- Compact trends (metric rails, summary cards): use `Sparkline`, which is built on
-  low-level visx primitives so it stays lightweight; do not pull `XYChart` for a
-  mini line.
+- Compact trends (metric rails, summary cards): a lightweight `Sparkline` built on
+  low-level visx primitives is planned (see DESIGN.md); until it ships, build a
+  minimal `@visx/shape` line rather than pulling all of `XYChart` for a mini line.
 - Chrome (title, subtitle, actions, footer): compose from the design-system panel and heading recipes (`panelSection`, `sectionHeading`, `panelAction`). The charting package does not own card chrome.
 
 ## States and accessibility
