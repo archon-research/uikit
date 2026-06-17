@@ -10,7 +10,7 @@ state machine. It contains zero transport code: no sockets, no timers,
 no fetch, no Cloudflare or Node APIs.
 
 Use it as the shared core inside any relay host adapter:
-- Cloudflare Durable Objects (see `packages/uikit-preview/cloudflare/`)
+- Cloudflare Durable Objects (see `packages/uikit-preview/demo-relay/`)
 - Node.js / Bun servers
 - Future WASM targets
 

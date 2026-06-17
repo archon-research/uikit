@@ -19,7 +19,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { css } from '../../../styled-system/css';
 
-// The deployed relay Worker (see packages/uikit-preview/cloudflare).
+// The deployed relay Worker (see packages/uikit-preview/demo-relay).
 const RELAY_BASE_URL = 'https://mcp-relay.archon-tech.workers.dev';
 
 type StoryMeta = { name: string; levels: string[] };

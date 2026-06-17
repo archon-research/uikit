@@ -15,7 +15,7 @@
     "snapshot:serve": "ladle preview --outDir dist --host 127.0.0.1 --port 61000",
     "snapshot:test": "playwright test",
     "snapshot:update": "playwright test --update-snapshots",
-    "cf:test": "vitest run --config cloudflare/vitest.config.ts"
+    "cf:test": "vitest run --config demo-relay/vitest.config.ts"
   },
   "dependencies": {
     "@archon-research/charting": "*",

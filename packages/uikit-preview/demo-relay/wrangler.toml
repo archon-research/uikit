@@ -6,6 +6,12 @@ compatibility_flags = ["nodejs_compat"]
 # Local dev: set WEBMCP_RELAY_JWT_SECRET in .dev.vars (see .dev.vars.example).
 # Production: wrangler secret put WEBMCP_RELAY_JWT_SECRET
 
+# CORS allow-list. The published preview is served from GitHub Pages at a stable
+# origin, so we scope browser access to it precisely. For local `wrangler dev`,
+# override this in .dev.vars (e.g. an empty value falls back to "*").
+[vars]
+ALLOWED_ORIGINS = "https://archon-research.github.io"
+
 [[durable_objects.bindings]]
 name = "SESSION_DO"
 class_name = "SessionDO"

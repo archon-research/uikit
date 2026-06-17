@@ -376,4 +376,42 @@ describe('POST /mcp auth', () => {
   });
 });
 
+describe('CORS allow-list', () => {
+  // vitest.config.ts binds ALLOWED_ORIGINS to two origins.
+  const ALLOWED = 'https://allowed.example';
+  const DISALLOWED = 'https://evil.example';
+
+  it('echoes an allowed Origin on the preflight', async () => {
+    const res = await SELF.fetch('http://localhost/api/sessions', {
+      method: 'OPTIONS',
+      headers: { Origin: ALLOWED },
+    });
+    expect(res.status).toBe(204);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe(ALLOWED);
+    expect(res.headers.get('Vary')).toBe('Origin');
+  });
+
+  it('does not echo a disallowed Origin (browser blocks the read)', async () => {
+    const res = await SELF.fetch('http://localhost/api/sessions', {
+      method: 'OPTIONS',
+      headers: { Origin: DISALLOWED },
+    });
+    // Falls back to the canonical (first) configured origin, never the wildcard
+    // and never the requester's origin.
+    const allow = res.headers.get('Access-Control-Allow-Origin');
+    expect(allow).not.toBe(DISALLOWED);
+    expect(allow).not.toBe('*');
+    expect(allow).toBe(ALLOWED);
+  });
+
+  it('reflects an allowed Origin on the actual POST response', async () => {
+    const res = await SELF.fetch('http://localhost/api/sessions', {
+      method: 'POST',
+      headers: { Origin: ALLOWED },
+    });
+    expect(res.status).toBe(201);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe(ALLOWED);
+  });
+});
+
 void TEST_SECRET; // referenced in vitest.config.ts; suppress unused warning

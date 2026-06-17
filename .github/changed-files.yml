@@ -8,6 +8,15 @@ lint:
 agent_marketplace:
   - packages/agent-marketplace/**
 
+demo_relay:
+  - packages/uikit-preview/demo-relay/**
+  - packages/mcp-relay/**
+  - package.json
+  - package-lock.json
+  - .github/workflows/ci.yml
+  - .github/workflows/deploy-relay.yml
+  - .github/changed-files.yml
+
 visual_snapshots:
   - packages/design-system/**
   - packages/uikit-preview/**

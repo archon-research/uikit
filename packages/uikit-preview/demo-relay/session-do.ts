@@ -68,6 +68,8 @@ export class SessionDO implements DurableObject {
     }
   }
 
+  // Invoked by the CF runtime, not app code.
+  // fallow-ignore-next-line unused-class-member
   async fetch(request: Request): Promise<Response> {
     const sessionId = request.headers.get('x-session-id') ?? '';
     const jwtSecret = this.jwtSecret;
@@ -94,6 +96,8 @@ export class SessionDO implements DurableObject {
   // Hibernation WebSocket handler methods (called by the CF runtime)
   // ---------------------------------------------------------------------------
 
+  // Invoked by the CF runtime, not app code.
+  // fallow-ignore-next-line unused-class-member
   async webSocketMessage(
     ws: WebSocket,
     message: string | ArrayBuffer,
@@ -104,6 +108,8 @@ export class SessionDO implements DurableObject {
     await this.onBrowserMessage(ws, raw);
   }
 
+  // Invoked by the CF runtime, not app code.
+  // fallow-ignore-next-line unused-class-member
   async webSocketClose(
     ws: WebSocket,
     _code: number,
@@ -116,6 +122,8 @@ export class SessionDO implements DurableObject {
     await this.persist();
   }
 
+  // Invoked by the CF runtime, not app code.
+  // fallow-ignore-next-line unused-class-member
   async webSocketError(ws: WebSocket, _error: unknown): Promise<void> {
     ws.close();
     this.session?.onDisconnect();
@@ -127,6 +135,8 @@ export class SessionDO implements DurableObject {
   // DO alarm
   // ---------------------------------------------------------------------------
 
+  // Invoked by the CF runtime, not app code.
+  // fallow-ignore-next-line unused-class-member
   async alarm(): Promise<void> {
     if (!this.session) return;
     const now = Date.now();

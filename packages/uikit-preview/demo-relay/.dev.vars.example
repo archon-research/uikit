@@ -4,3 +4,7 @@
 # HS256 signing secret for connection JWTs.
 # Generate one with: openssl rand -base64 32
 WEBMCP_RELAY_JWT_SECRET=your-secret-here
+
+# CORS allow-list override for local dev. Overrides the production [vars] value
+# in wrangler.toml. Leave empty to allow any origin ("*") while developing.
+ALLOWED_ORIGINS=

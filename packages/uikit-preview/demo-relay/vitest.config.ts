@@ -13,11 +13,12 @@ export default defineConfig({
       miniflare: {
         bindings: {
           WEBMCP_RELAY_JWT_SECRET: 'test-secret-for-vitest-only',
+          ALLOWED_ORIGINS: 'https://allowed.example, https://also.example',
         },
       },
     }),
   ],
   test: {
-    include: ['cloudflare/**/*.test.ts'],
+    include: ['demo-relay/**/*.test.ts'],
   },
 });

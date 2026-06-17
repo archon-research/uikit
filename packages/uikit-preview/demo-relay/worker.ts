@@ -9,8 +9,8 @@
  * The JWT secret is read from env.WEBMCP_RELAY_JWT_SECRET.
  * Set it in .dev.vars locally and via `wrangler secret put` in production.
  *
- * NOTE: production deploy and wiring into the published Ladle preview are
- * intentionally deferred. This file is for local `wrangler dev` use only.
+ * This Worker backs the live "Relay Live Demo" story in the published preview.
+ * See demo-relay/README.md for the deploy + GitHub Pages wiring.
  */
 
 import {
@@ -26,21 +26,42 @@ import type { Env } from './env.js';
 
 export type { Env };
 
-// Permissive CORS: the relay authenticates with a bearer JWT (not cookies), so
-// allowing any origin is safe and lets a Pages-hosted demo on a different
-// origin call /api/sessions and /mcp. The browser WebSocket is not subject to
+// CORS: the relay authenticates with a bearer JWT (not cookies), so cross-origin
+// access is safe, but we still scope the allowed origin to the configured Pages
+// deployment so only our own demo can drive the relay from a browser. The origin
+// allow-list comes from env.ALLOWED_ORIGINS (comma-separated); when unset (local
+// `wrangler dev`) it falls back to "*". The browser WebSocket is not subject to
 // CORS, so the /ws upgrade response is returned untouched (a 101 cannot be
 // rewrapped).
-const CORS_HEADERS: Record<string, string> = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-  'Access-Control-Max-Age': '86400',
-};
+function resolveAllowedOrigin(request: Request, env: Env): string {
+  const configured = (env.ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (configured.length === 0) return '*';
+  const origin = request.headers.get('Origin');
+  if (origin && configured.includes(origin)) return origin;
+  // Disallowed/absent origin: respond with the canonical origin so the browser
+  // blocks the cross-origin read rather than receiving a usable wildcard.
+  return configured[0]!;
+}
 
-function withCors(res: Response): Response {
+function corsHeaders(request: Request, env: Env): Record<string, string> {
+  const allowOrigin = resolveAllowedOrigin(request, env);
+  const headers: Record<string, string> = {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    'Access-Control-Max-Age': '86400',
+  };
+  // When the origin is reflected (not "*"), caches must vary on it.
+  if (allowOrigin !== '*') headers.Vary = 'Origin';
+  return headers;
+}
+
+function withCors(res: Response, request: Request, env: Env): Response {
   const headers = new Headers(res.headers);
-  for (const [key, value] of Object.entries(CORS_HEADERS)) {
+  for (const [key, value] of Object.entries(corsHeaders(request, env))) {
     headers.set(key, value);
   }
   return new Response(res.body, {
@@ -53,7 +74,10 @@ function withCors(res: Response): Response {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: CORS_HEADERS });
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders(request, env),
+      });
     }
 
     const url = new URL(request.url);
@@ -66,15 +90,15 @@ export default {
 
     // POST /api/sessions
     if (request.method === 'POST' && url.pathname === '/api/sessions') {
-      return withCors(await handleCreateSession(request, env));
+      return withCors(await handleCreateSession(request, env), request, env);
     }
 
     // POST /mcp  (harness entry)
     if (request.method === 'POST' && url.pathname === '/mcp') {
-      return withCors(await handleMcpEntry(request, env));
+      return withCors(await handleMcpEntry(request, env), request, env);
     }
 
-    return withCors(new Response('Not found', { status: 404 }));
+    return withCors(new Response('Not found', { status: 404 }), request, env);
   },
 } satisfies ExportedHandler<Env>;
 
