@@ -1,6 +1,0 @@
-import{j as e}from"./index-DRTA2rpZ.js";import{c as i}from"./createLucideIcon-DcWXYqea.js";/**
- * @license lucide-react v0.525.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */const s=[["path",{d:"m6 9 6 6 6-6",key:"qrunsl"}]],l=i("chevron-down",s),a={position:"relative",display:"inline-flex",alignItems:"center",width:"100%"},o={width:"100%",minWidth:0,height:36,borderWidth:1,borderStyle:"solid",borderColor:"var(--colors-border-subtle, #d0d5dd)",borderRadius:8,paddingLeft:12,paddingRight:40,background:"var(--colors-surface-default, #ffffff)",color:"var(--colors-text-default, #111827)",fontSize:14,lineHeight:1.4,fontFamily:"inherit",appearance:"none",WebkitAppearance:"none",MozAppearance:"none"},d={opacity:.65,cursor:"not-allowed"},c={position:"absolute",top:"50%",right:12,width:16,height:16,color:"var(--colors-text-muted, #667085)",pointerEvents:"none",transform:"translateY(-50%)"};function h(){return e.jsx(l,{"aria-hidden":"true",size:16,style:c,strokeWidth:1.9,absoluteStrokeWidth:!0})}function p({children:r,className:n,...t}){return e.jsxs("div",{className:n,style:a,children:[e.jsx("select",{...t,style:t.disabled?{...o,...d}:o,children:r}),e.jsx(h,{})]})}const y=p;export{p as S,y as a};

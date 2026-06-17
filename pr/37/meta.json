@@ -389,18 +389,6 @@
       "namedExport": "Success",
       "meta": {}
     },
-    "organisms--charts--default": {
-      "name": "Default",
-      "levels": [
-        "Organisms",
-        "Charts"
-      ],
-      "locStart": 75,
-      "locEnd": 119,
-      "filePath": "src/stories/organisms/charts.stories.tsx",
-      "namedExport": "Default",
-      "meta": {}
-    },
     "organisms--data-table--controlled-state": {
       "name": "Controlled state",
       "levels": [
@@ -519,6 +507,18 @@
       "locEnd": 36,
       "filePath": "src/stories/organisms/error-state.stories.tsx",
       "namedExport": "WithRetry",
+      "meta": {}
+    },
+    "organisms--visx-charts--default": {
+      "name": "Default",
+      "levels": [
+        "Organisms",
+        "Visx charts"
+      ],
+      "locStart": 180,
+      "locEnd": 294,
+      "filePath": "src/stories/organisms/visx-charts.stories.tsx",
+      "namedExport": "Default",
       "meta": {}
     },
     "playground--contrast-checker": {
