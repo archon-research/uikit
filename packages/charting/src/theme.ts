@@ -1,40 +1,45 @@
 import { buildChartTheme } from '@visx/xychart';
 
 /**
+ * Source of truth for the series palette, keyed by role, as CSS-variable
+ * strings. Consumers reference roles (`seriesColor.primary`) rather than a
+ * palette index, and `chartTokens.series` derives its order from these, so
+ * there are no magic indices to drift if the palette is reordered or resized.
+ *
+ * Each token carries a fallback so a missing or renamed design-system variable
+ * degrades to an intentional color rather than the SVG default (black/none).
+ */
+export const seriesColor = {
+  primary: 'var(--colors-chart-series-primary, #155eef)',
+  secondary: 'var(--colors-chart-series-secondary, #0f766e)',
+  tertiary: 'var(--colors-chart-series-tertiary, #7c3aed)',
+  positive: 'var(--colors-chart-series-positive, #16a34a)',
+  critical: 'var(--colors-chart-series-critical, #dc2626)',
+} as const;
+
+/**
  * Single source of truth for chart colors, as CSS-variable strings.
  *
  * These resolve in SVG presentation attributes (the way visx applies series and
  * axis colors) across Chromium, Firefox, and WebKit, and track the active
  * design-system theme via the `_dark` token switch with no runtime resolution.
- * Each token carries a fallback so a missing or renamed design-system variable
- * degrades to an intentional color rather than the SVG default (black/none).
+ * Each non-series token carries a fallback for the same reason as `seriesColor`.
  * See packages/charting/DESIGN.md.
  */
 export const chartTokens = {
+  // Ordered palette visx consumes; roles are owned by `seriesColor` above.
   series: [
-    'var(--colors-chart-series-primary, #155eef)',
-    'var(--colors-chart-series-secondary, #0f766e)',
-    'var(--colors-chart-series-tertiary, #7c3aed)',
-    'var(--colors-chart-series-positive, #16a34a)',
-    'var(--colors-chart-series-critical, #dc2626)',
+    seriesColor.primary,
+    seriesColor.secondary,
+    seriesColor.tertiary,
+    seriesColor.positive,
+    seriesColor.critical,
   ],
   areaPrimary: 'var(--colors-chart-area-primary, #dbeafe)',
   axis: 'var(--colors-chart-axis, #6b7280)',
   grid: 'var(--colors-chart-grid, #e5e7eb)',
   surface: 'var(--colors-surface-default, #ffffff)',
   label: 'var(--colors-text-muted, #667085)',
-} as const;
-
-/**
- * Named series colors, so consumers reference roles (`seriesColor.primary`)
- * instead of magic palette indices that silently shift if the array reorders.
- */
-export const seriesColor = {
-  primary: chartTokens.series[0],
-  secondary: chartTokens.series[1],
-  tertiary: chartTokens.series[2],
-  positive: chartTokens.series[3],
-  critical: chartTokens.series[4],
 } as const;
 
 /** Token-driven theme for `<XYChart theme={chartTheme}>`. */
