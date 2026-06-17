@@ -87,11 +87,11 @@ export interface WebMCPProviderProps {
 
 /**
  * Mount this provider once near the root of your React tree before using
- * any hooks from @synome/web-mcp.
+ * any hooks from @archon-research/webmcp.
  *
  * @example
  * ```tsx
- * import { WebMCPProvider } from '@synome/web-mcp';
+ * import { WebMCPProvider } from '@archon-research/webmcp';
  *
  * function App() {
  *   return (
@@ -185,7 +185,7 @@ export function useToolRegistryContext(): ToolRegistryContextValue {
   if (!ctx) {
     throw new Error(
       '[web-mcp] useToolRegistryContext called outside <WebMCPProvider>. ' +
-        'Wrap your app (or at least the component tree that uses @synome/web-mcp hooks) ' +
+        'Wrap your app (or at least the component tree that uses @archon-research/webmcp hooks) ' +
         'with <WebMCPProvider>.',
     );
   }

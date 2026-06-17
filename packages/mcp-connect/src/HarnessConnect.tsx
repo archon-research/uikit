@@ -99,7 +99,7 @@ export type HarnessConnectProps = {
   connectionToken: string | null;
   /**
    * Human-readable name for this connection, used in the add command.
-   * Defaults to "synome".
+   * Defaults to "uikit-preview".
    */
   serverName?: string;
   /**
@@ -119,7 +119,7 @@ export function HarnessConnect({
   indicatorStatus,
   relayBaseUrl,
   connectionToken,
-  serverName = 'synome',
+  serverName = 'uikit-preview',
   defaultOpen = false,
 }: HarnessConnectProps) {
   const [open, setOpen] = useState(defaultOpen);
@@ -310,12 +310,18 @@ const statusLabels: Record<HarnessIndicatorStatus, string> = {
 const triggerWrapStyle: CSSProperties = {
   position: 'relative',
   display: 'inline-flex',
+  // Shrink to the icon button: as a flex/grid child the default align-stretch
+  // would otherwise widen this wrapper and push the absolutely-positioned dot
+  // to the far edge instead of onto the icon's corner.
+  alignSelf: 'flex-start',
+  width: 'fit-content',
+  flex: 'none',
 };
 
 const dotOverlayStyle: CSSProperties = {
   position: 'absolute',
-  bottom: 2,
-  right: 2,
+  top: -2,
+  right: -2,
   pointerEvents: 'none',
 };
 

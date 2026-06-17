@@ -1,8 +1,8 @@
 /**
- * Relay wire-protocol types (TypeScript mirror of src/synome/relay/protocol.py).
+ * Relay wire-protocol types (TypeScript mirror of the Python relay protocol).
  *
  * These match the @mcp-b/webmcp-local-relay wire protocol so the browser
- * widget can speak to the Synome WebSocket back-channel without changes.
+ * widget can speak to the relay WebSocket back-channel without changes.
  */
 
 // ---------------------------------------------------------------------------

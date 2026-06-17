@@ -30,7 +30,7 @@ import type { ToolSpec, ViewState } from './types.js';
  *
  * @example
  * ```tsx
- * import { defineTool, useRegisterTool } from '@synome/web-mcp';
+ * import { defineTool, useRegisterTool } from '@archon-research/webmcp';
  *
  * const selectIdentityTool = defineTool({
  *   name: 'explorer.selectIdentity',

@@ -6,7 +6,7 @@
  *
  * Mirrors the claim schema and constants from the Python tokens.py:
  *   iss  = "urn:webmcp-relay"
- *   aud  = "synome-mcp"
+ *   aud  = "webmcp-relay"
  *   channel_id carries the session_id (stateless routing without a store lookup)
  *   scope = "mcp:tools"
  */
@@ -14,7 +14,7 @@
 import type { ConnectionTokenClaims } from './protocol.js';
 
 const JWT_ISSUER = 'urn:webmcp-relay';
-const JWT_AUDIENCE = 'synome-mcp';
+const JWT_AUDIENCE = 'webmcp-relay';
 
 /** 12 hours, matching CONNECTION_TOKEN_TTL_SECONDS in tokens.py. */
 export const CONNECTION_TOKEN_TTL_SECONDS = 12 * 3600;

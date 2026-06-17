@@ -53,7 +53,7 @@ from webmcp_relay.tokens import (
 def _make_echo_write_tool() -> GuardedWriteTool:
     """Build the echo_write demo guarded write tool (previously in confirm.py)."""
     return GuardedWriteTool(
-        name="synome.demo.echo_write",
+        name="uikit-preview.demo.echo_write",
         description="Demo guarded write for testing confirmation path.",
         input_schema={
             "type": "object",
@@ -70,7 +70,7 @@ def _fresh_relay() -> Any:
     reset_relay()
     clear_registries()
     # Register the echo_write demo so existing tests that reference
-    # "synome.demo.echo_write" continue to work.
+    # "uikit-preview.demo.echo_write" continue to work.
     register_guarded_write(_make_echo_write_tool())
     yield
     reset_relay()
@@ -130,7 +130,7 @@ def test_connection_jwt_roundtrip_and_claims() -> None:
     assert claims is not None
     assert claims.channel_id == "chan"
     assert claims.tab_id == "tab"
-    assert claims.aud == "synome-mcp"
+    assert claims.aud == "webmcp-relay"
     assert claims.scope == "mcp:tools"
     assert claims.exp > claims.iat
 
@@ -305,7 +305,7 @@ def test_notify_activity_sends_frame_to_live_socket() -> None:
             "s1",
             ToolActivityMessage(
                 activity_id="a1",
-                tool_name="synome.branches.list",
+                tool_name="uikit-preview.branches.list",
                 kind="data",
                 status="started",
             ),
@@ -315,7 +315,7 @@ def test_notify_activity_sends_frame_to_live_socket() -> None:
     sent = asyncio.run(scenario())
     assert len(sent) == 1
     assert sent[0]["type"] == "tool_activity"
-    assert sent[0]["tool_name"] == "synome.branches.list"
+    assert sent[0]["tool_name"] == "uikit-preview.branches.list"
     assert sent[0]["status"] == "started"
 
 
@@ -373,7 +373,7 @@ def test_mcp_initialize_with_connection_token(client: TestClient) -> None:
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 200
-    assert response.json()["result"]["_synome"]["session_id"] == sess["session_id"]
+    assert response.json()["result"]["_relay"]["session_id"] == sess["session_id"]
 
     # Stateless auth: the same connection token keeps working (not single-use).
     again = client.post(
@@ -486,7 +486,7 @@ def _mutation_tool(name: str = "explorer.delete") -> ToolDefinition:
 
 
 def test_guarded_write_tool_registered() -> None:
-    tool = get_guarded_write_tool("synome.demo.echo_write")
+    tool = get_guarded_write_tool("uikit-preview.demo.echo_write")
     assert tool is not None
     assert tool.mutation is True
     assert "message" in tool.input_schema["properties"]
@@ -498,7 +498,7 @@ def test_is_mutation_detects_server_and_browser_tools() -> None:
     relay.attach_socket("s1", _FakeSocket())
     relay.set_tools("s1", [_tool("explorer.search"), _mutation_tool("explorer.delete")])
 
-    assert relay.is_mutation("s1", "synome.demo.echo_write") is True  # server-side guarded
+    assert relay.is_mutation("s1", "uikit-preview.demo.echo_write") is True  # server-side guarded
     assert relay.is_mutation("s1", "explorer.delete") is True  # browser, mutation=True
     assert relay.is_mutation("s1", "explorer.search") is False  # browser, read-only
 
@@ -648,7 +648,7 @@ def test_mcp_mutation_without_browser_returns_no_browser_error(client: TestClien
             "method": "tools/call",
             "id": 1,
             "params": {
-                "name": "synome.demo.echo_write",
+                "name": "uikit-preview.demo.echo_write",
                 "arguments": {"message": "hello"},
             },
         },
@@ -674,7 +674,7 @@ def test_mcp_tools_list_includes_guarded_write_tool(client: TestClient) -> None:
     )
     assert response.status_code == 200
     names = [t["name"] for t in response.json()["result"]["tools"]]
-    assert "synome.demo.echo_write" in names
+    assert "uikit-preview.demo.echo_write" in names
 
 
 def test_pending_calls_endpoint_empty_by_default(client: TestClient) -> None:
@@ -813,9 +813,9 @@ def test_revoke_connection_token_removes_lookup() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_register_server_tool_routes_call_without_synome_import(client: TestClient) -> None:
+def test_register_server_tool_routes_call_without_host_import(client: TestClient) -> None:
     """The host can register a server tool; the relay routes calls to it with no
-    synome.mcp import needed inside the relay core."""
+    host-package import needed inside the relay core."""
     clear_registries()  # start clean (autouse fixture already did this, but be explicit)
     called_with: list[dict] = []
 
@@ -868,7 +868,7 @@ def test_register_server_tool_routes_call_without_synome_import(client: TestClie
 
 def test_register_prompt_routes_list_and_get(client: TestClient) -> None:
     """The host can register prompts; the relay routes prompts/list and
-    prompts/get without importing synome.mcp."""
+    prompts/get without importing the host package."""
     clear_registries()
 
     def _list() -> list[dict]:
@@ -954,36 +954,6 @@ def test_register_guarded_write_advertised_and_requires_confirmation(
     result = resp.json()["result"]
     assert result["isError"] is True
     assert "browser" in result["content"][0]["text"].lower()
-
-
-def test_no_synome_imports_in_relay_core() -> None:
-    """Sanity check: none of the relay core modules import synome.*."""
-    import importlib
-    import sys
-
-    # Force reload to get a clean module state for the import check.
-    relay_modules = [
-        "webmcp_relay.router",
-        "webmcp_relay.relay",
-        "webmcp_relay.confirm",
-        "webmcp_relay.store",
-        "webmcp_relay.protocol",
-        "webmcp_relay.tokens",
-        "webmcp_relay.registry",
-    ]
-    for mod_name in relay_modules:
-        mod = sys.modules.get(mod_name)
-        if mod is None:
-            mod = importlib.import_module(mod_name)
-        # Walk the module's globals: no name should reference synome.
-        for attr_name in dir(mod):
-            attr = getattr(mod, attr_name, None)
-            if attr is None:
-                continue
-            attr_module = getattr(attr, "__module__", "") or ""
-            assert not attr_module.startswith("synome"), (
-                f"{mod_name}.{attr_name} references {attr_module} (synome import leaked)"
-            )
 
 
 # ---------------------------------------------------------------------------
@@ -1172,68 +1142,6 @@ def test_harness_status_not_attached_when_no_initialize(client: TestClient) -> N
 # ---------------------------------------------------------------------------
 # I1: Relay is the sole /mcp handler; FastMCP server path is gone
 # ---------------------------------------------------------------------------
-
-
-def test_relay_tools_list_advertises_atlas_search(client: TestClient) -> None:
-    """tools/list via the relay must include synome.atlas.search (registered
-    server-side by the host) and must NOT include any of the 11 data tools
-    (those are now UI-registered in the Explorer)."""
-    from synome.mcp.skills import atlas_search_tool
-
-    # Register atlas.search as the host does in app._register_relay_capabilities.
-    register_server_tool(
-        ServerToolSpec(
-            name=atlas_search_tool.name,
-            description=atlas_search_tool.description,
-            input_schema=atlas_search_tool.input_schema,
-            handler=atlas_search_tool.handler,
-            mutation=atlas_search_tool.mutation,
-        )
-    )
-
-    sess = client.post("/api/sessions", json={}).json()
-    token = sess["connection_token"]
-
-    resp = client.post(
-        "/mcp",
-        json={"method": "tools/list", "id": 1},
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert resp.status_code == 200
-    names = [t["name"] for t in resp.json()["result"]["tools"]]
-
-    # Atlas search must appear via the relay.
-    assert "synome.atlas.search" in names
-
-    # None of the 11 data tools (now UI-registered) must appear here.
-    ui_migrated = {
-        "synome.branches.list",
-        "synome.identities.list",
-        "synome.identities.get",
-        "synome.identities.dependencies",
-        "synome.identities.dependents",
-        "synome.content_nodes.list",
-        "synome.content_nodes.get",
-        "synome.content_nodes.children",
-        "synome.identities.history",
-        "synome.commits.changes",
-        "synome.branches.compare",
-    }
-    for name in ui_migrated:
-        assert name not in names, f"{name} should not be server-registered (it is UI-migrated)"
-
-
-def test_no_fastmcp_mount_in_synome_mcp() -> None:
-    """Sanity: synome.mcp no longer exports mcp_asgi or mcp_server.
-    Importing the package must not create a FastMCP ASGI application."""
-    import synome.mcp as mcp_pkg
-
-    assert not hasattr(mcp_pkg, "mcp_asgi"), (
-        "mcp_asgi found in synome.mcp - the FastMCP mount should have been removed"
-    )
-    assert not hasattr(mcp_pkg, "mcp_server"), (
-        "mcp_server found in synome.mcp - the FastMCP server should have been removed"
-    )
 
 
 def test_relay_is_sole_mcp_handler(client: TestClient) -> None:

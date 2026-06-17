@@ -19,8 +19,8 @@ The wire shape (``confirmation_request`` / ``confirmation_response`` /
 and lifecycle live in :class:`webmcp_relay.relay.SessionRelay`.
 
 Note: the ``echo_write`` demo tool was previously defined here. It has been
-moved to the Synome host (``synome.http.app``) or test fixtures, so the relay
-package itself registers no write tools by default.
+moved to the host application or test fixtures, so the relay package itself
+registers no write tools by default.
 """
 
 from __future__ import annotations

@@ -135,11 +135,11 @@
     {
       "id": "ui-coder",
       "kind": "agent",
-      "sourceType": "local-derived",
-      "upstream": "synome/agent-prompts/ui-coder.md",
-      "pinnedRevision": "local-sync-2026-05-26",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/agents/ui-coder.md",
+      "pinnedRevision": "local-v1",
       "normalizationNotes": [
-        "Derived from Synome prompt with plugin-native skill references.",
+        "Implementation role with plugin-native skill references.",
         "Scope adjusted for this monorepo and package layout."
       ]
     },
@@ -179,11 +179,11 @@
     {
       "id": "ui-verifier",
       "kind": "agent",
-      "sourceType": "local-derived",
-      "upstream": "synome/agent-prompts/ui-verifier.md",
-      "pinnedRevision": "local-sync-2026-05-26",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/agents/ui-verifier.md",
+      "pinnedRevision": "local-v1",
       "normalizationNotes": [
-        "Derived from Synome prompt with plugin-native skill references.",
+        "Visual verification role with plugin-native skill references.",
         "Scope adjusted for this monorepo and package layout."
       ]
     }

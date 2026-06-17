@@ -60,7 +60,7 @@ describe('tokens', () => {
       const token = await mintConnectionToken(SESSION_ID, TAB_ID, SECRET);
       const claims = await decodeConnectionToken(token, SECRET);
       expect(claims?.iss).toBe('urn:webmcp-relay');
-      expect(claims?.aud).toBe('synome-mcp');
+      expect(claims?.aud).toBe('webmcp-relay');
     });
 
     it('respects a custom TTL', async () => {

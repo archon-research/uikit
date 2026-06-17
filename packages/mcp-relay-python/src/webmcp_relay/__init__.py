@@ -4,7 +4,7 @@ This package owns the relay core: it binds an external harness to a live
 browser session via the three-role token model and routes tool calls to the
 browser over a WebSocket back-channel.
 
-The relay core has no Synome imports. The host registers capabilities via
+The relay core has no host imports. The host registers capabilities via
 the registration interface at startup:
 
   from webmcp_relay.registry import (

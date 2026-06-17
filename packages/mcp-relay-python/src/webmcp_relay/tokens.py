@@ -45,7 +45,7 @@ _BASE58_ALPHABET: Final = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstu
 # override belongs in the host's startup call to configure_jwt_secret().
 _JWT_ALGORITHM: Final = "HS256"
 _JWT_ISSUER: Final = "urn:webmcp-relay"
-_JWT_AUDIENCE: Final = "synome-mcp"
+_JWT_AUDIENCE: Final = "webmcp-relay"
 
 # Per-process fallback secret. Used only when neither configure_jwt_secret()
 # has been called nor WEBMCP_RELAY_JWT_SECRET is set. Regenerated on restart,

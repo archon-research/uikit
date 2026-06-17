@@ -14,7 +14,7 @@ browser WebSocket. (The FastMCP data-tool server from BE-TOOLS mounts its own
 Streamable HTTP app; this handler covers the relay-routed, browser-hosted tool
 path and the pairing handshake.)
 
-The relay itself has no Synome imports. The host registers capabilities via
+The relay itself has no host imports. The host registers capabilities via
 ``webmcp_relay.registry`` at startup.
 """
 
@@ -281,12 +281,12 @@ async def mcp_entry(
             "id": request_id,
             "result": {
                 "protocolVersion": "2025-03-26",
-                "serverInfo": {"name": "synome-relay", "version": "1"},
+                "serverInfo": {"name": "mcp-relay-py", "version": "1"},
                 "capabilities": {
                     "tools": {"listChanged": True},
                     "prompts": {},
                 },
-                "_synome": {"session_id": session_id},
+                "_relay": {"session_id": session_id},
             },
         }
 

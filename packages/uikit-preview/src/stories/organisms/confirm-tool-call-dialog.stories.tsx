@@ -51,7 +51,7 @@ function isoFromNow(seconds: number): string {
 const BASE_CALL: PendingCall = {
   callId: 'call-0001',
   sessionId: 'ses-abcd-1234',
-  toolName: 'synome.demo.echo_write',
+  toolName: 'uikit-preview.demo.echo_write',
   toolArgs: {
     message: 'hello world',
     destination: 'activity-log',
@@ -88,7 +88,7 @@ export const QueuedCalls = () => {
   const call: PendingCall = {
     ...BASE_CALL,
     callId: 'call-0002',
-    toolName: 'synome.identities.update',
+    toolName: 'uikit-preview.identities.update',
     toolArgs: {
       identity_id: 'SYN-042',
       field: 'expression',
@@ -121,7 +121,7 @@ export const CountdownActive = () => {
   const call: PendingCall = {
     ...BASE_CALL,
     callId: 'call-0003',
-    toolName: 'synome.demo.echo_write',
+    toolName: 'uikit-preview.demo.echo_write',
     toolArgs: {
       message: 'urgent write',
       destination: 'audit-trail',

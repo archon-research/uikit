@@ -16,7 +16,7 @@ export type PendingCall = {
   callId: string;
   /** Session that owns this call (maps to the browser back-channel). */
   sessionId: string;
-  /** Fully qualified tool name, e.g. "synome.identities.update". */
+  /** Fully qualified tool name, e.g. "uikit-preview.identities.update". */
   toolName: string;
   /** Raw arguments supplied by the harness. */
   toolArgs: Record<string, unknown>;

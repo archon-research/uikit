@@ -32,6 +32,6 @@ async def validate_connection_token(token: str) -> AccessToken | None:
         return None
     return AccessToken(
         token=token,
-        client_id="synome-mcp",
+        client_id="webmcp-relay",
         scopes=["mcp:tools"],
     )

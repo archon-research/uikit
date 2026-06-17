@@ -31,7 +31,7 @@ const DEFAULT_STORY = 'atoms--button--item';
 // Persist the relay session so a token saved in a harness config keeps working
 // across page reloads (the session DO retains its tools server-side). Without
 // this, every reload would mint a fresh session and invalidate a saved token.
-const SESSION_STORAGE_KEY = 'archon-relay-demo-session-v1';
+const SESSION_STORAGE_KEY = 'archon-relay-demo-session-v2';
 
 type StoredSession = {
   connection_token: string;

@@ -22,7 +22,7 @@ export default {
   title: 'Organisms/Harness Connect',
 };
 
-const RELAY_BASE_URL = 'https://synome.example.com';
+const RELAY_BASE_URL = 'https://relay.example.com';
 
 // A realistic-looking JWT-shaped dummy token (not a real credential).
 const FAKE_TOKEN =

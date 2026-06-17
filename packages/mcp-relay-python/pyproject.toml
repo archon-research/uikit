@@ -34,7 +34,7 @@ pythonpath = ["src"]
 testpaths = ["tests"]
 
 # Ruff - mirror the root repo conventions with one carve-out: os.environ is
-# permitted in webmcp_relay.tokens because the package has no synome.config.
+# permitted in webmcp_relay.tokens because the package has no host config module.
 [tool.ruff]
 target-version = "py311"
 line-length = 100

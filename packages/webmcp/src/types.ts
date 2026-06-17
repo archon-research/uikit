@@ -1,12 +1,12 @@
 /**
- * Tool-definition contract for @synome/web-mcp.
+ * Tool-definition contract for @archon-research/webmcp.
  *
- * Mirrors the Python ToolSpec / define_tool idiom in
- * src/synome/mcp/contract.py (decision 11 schema-first authoring shape).
+ * Mirrors the Python ToolSpec / define_tool idiom in the relay core
+ * (schema-first authoring shape).
  *
- * Usage (Phase 1 will provide the concrete registerTool implementation):
+ * Usage:
  *
- *   import { defineTool } from '@synome/web-mcp';
+ *   import { defineTool } from '@archon-research/webmcp';
  *
  *   const selectIdentity = defineTool({
  *     name: 'explorer.selectIdentity',

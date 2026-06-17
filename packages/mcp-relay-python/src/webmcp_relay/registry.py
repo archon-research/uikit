@@ -1,7 +1,7 @@
 """Relay registration interface: server tools, prompts, and guarded writes.
 
-The relay core is generic; the host (e.g. Synome) populates these registries
-at startup with its own capabilities. No Synome imports live here.
+The relay core is generic; the host application populates these registries
+at startup with its own capabilities. No host imports live here.
 
 Registration functions (called by the host at startup):
 
@@ -33,7 +33,7 @@ class ServerToolSpec:
 
     Carries only what the relay router needs: name, description, input_schema
     (raw JSON Schema dict), handler, and mutation flag. Deliberately thin so the
-    relay package does not depend on synome.mcp.contract.
+    relay package does not depend on any host tool-contract module.
     """
 
     name: str
