@@ -1,0 +1,9 @@
+# Python build and cache artifacts for this package.
+# (JS artifacts like dist/ are handled by the repo-root .gitignore.)
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+*.egg-info/
