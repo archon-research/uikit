@@ -8,7 +8,7 @@ import {
   Tooltip,
   XYChart,
   chartTheme,
-  chartTokens,
+  seriesColor,
 } from '@archon-research/charting';
 import { ThemeProvider } from '@archon-research/design-system';
 import type { ReactNode } from 'react';
@@ -212,21 +212,21 @@ export const Default = () => (
             snapTooltipToDatumY
             showVerticalCrosshair
             showSeriesGlyphs
-            renderTooltip={({ tooltipData }) => (
-              <div>
-                {tooltipData?.nearestDatum
-                  ? `${tooltipData.nearestDatum.key}: ${yAccessor(
-                      tooltipData.nearestDatum.datum as Point,
-                    )}`
-                  : null}
-              </div>
-            )}
+            renderTooltip={({ tooltipData }) => {
+              const near = tooltipData?.nearestDatum;
+              const value = near ? yAccessor(near.datum as Point) : undefined;
+              return (
+                <div>
+                  {near && Number.isFinite(value) ? `${near.key}: ${value}` : null}
+                </div>
+              );
+            }}
           />
         </XYChart>
         <Legend
           items={[
-            { label: 'Portfolio', color: chartTokens.series[0] },
-            { label: 'Benchmark', color: chartTokens.series[1] },
+            { label: 'Portfolio', color: seriesColor.primary },
+            { label: 'Benchmark', color: seriesColor.secondary },
           ]}
         />
       </Panel>
@@ -285,8 +285,8 @@ export const Default = () => (
       >
         <div className={tooltipPreviewClassName}>
           <strong>Thu</strong>
-          <div style={{ color: chartTokens.series[0] }}>Portfolio: 182</div>
-          <div style={{ color: chartTokens.series[1] }}>Benchmark: 156</div>
+          <div style={{ color: seriesColor.primary }}>Portfolio: 182</div>
+          <div style={{ color: seriesColor.secondary }}>Benchmark: 156</div>
         </div>
       </Panel>
     </div>

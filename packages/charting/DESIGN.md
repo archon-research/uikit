@@ -1,8 +1,9 @@
 # Charting DESIGN
 
-Design contract for `@archon-research/charting`. This describes the target
-architecture. Some of it is not yet implemented; the current `src/*` vanilla
-SVG primitives are slated to be replaced per this contract.
+Design contract for `@archon-research/charting`. The visx-backed, token-driven
+rework described here has landed: the package exports the theme and a curated
+visx surface, and the earlier hand-rolled SVG primitives have been removed. A
+few items below are still marked Planned.
 
 ## Intent
 
@@ -44,8 +45,9 @@ The package exposes:
   consumers. `colors` is the ordered series array; `gridColor` and the axis/tick
   line styles and `svgLabel*` fills are wired from the same tokens.
 
-Both `XYChart` (via `chartTheme`) and our own primitive-based components (via
-`chartTokens`) derive from one contract, so they render identically.
+`XYChart` consumes `chartTheme`; any future primitive-based components (for
+example the planned `Sparkline`) read `chartTokens` directly. Both derive from
+the one token contract, so they render consistently.
 
 This package owns chart concerns only. Card chrome (a paneled container with a
 heading, actions, and footer) is generic and not chart-specific; compose it from

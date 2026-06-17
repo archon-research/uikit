@@ -1,5 +1,5 @@
 // Token-driven theme contract (see DESIGN.md).
-export { chartTheme, chartTokens } from './theme';
+export { chartTheme, chartTokens, seriesColor } from './theme';
 
 // Curated visx surface, so consumers depend on this package, not @visx/* directly.
 export {
