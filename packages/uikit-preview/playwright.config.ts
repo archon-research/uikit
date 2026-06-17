@@ -10,9 +10,11 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   expect: {
     // Absorb sub-pixel anti-aliasing jitter between machines on the same macOS
-    // version (see microsoft/playwright#20097); large structural diffs still
-    // exceed this and fail.
-    toHaveScreenshot: { maxDiffPixelRatio: 0.01 },
+    // version (see microsoft/playwright#20097) with a small absolute pixel
+    // budget. A 0.01 ratio scaled with full-page height into a ~9k-pixel budget
+    // that masked real content changes (e.g. a changed preset label slipped
+    // through); an absolute cap stays tight regardless of page size.
+    toHaveScreenshot: { maxDiffPixels: 200 },
   },
   use: {
     baseURL,
