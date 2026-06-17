@@ -26,28 +26,55 @@ import type { Env } from './env.js';
 
 export type { Env };
 
+// Permissive CORS: the relay authenticates with a bearer JWT (not cookies), so
+// allowing any origin is safe and lets a Pages-hosted demo on a different
+// origin call /api/sessions and /mcp. The browser WebSocket is not subject to
+// CORS, so the /ws upgrade response is returned untouched (a 101 cannot be
+// rewrapped).
+const CORS_HEADERS: Record<string, string> = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+  'Access-Control-Max-Age': '86400',
+};
+
+function withCors(res: Response): Response {
+  const headers = new Headers(res.headers);
+  for (const [key, value] of Object.entries(CORS_HEADERS)) {
+    headers.set(key, value);
+  }
+  return new Response(res.body, {
+    status: res.status,
+    statusText: res.statusText,
+    headers,
+  });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+
     const url = new URL(request.url);
+
+    // GET /ws/sessions/:id  (WebSocket upgrade) - return untouched (no rewrap).
+    const wsMatch = url.pathname.match(/^\/ws\/sessions\/([^/]+)$/);
+    if (wsMatch) {
+      return forwardToDO(env, wsMatch[1]!, request);
+    }
 
     // POST /api/sessions
     if (request.method === 'POST' && url.pathname === '/api/sessions') {
-      return handleCreateSession(request, env);
-    }
-
-    // GET /ws/sessions/:id  (WebSocket upgrade)
-    const wsMatch = url.pathname.match(/^\/ws\/sessions\/([^/]+)$/);
-    if (wsMatch) {
-      const sessionId = wsMatch[1]!;
-      return forwardToDO(env, sessionId, request);
+      return withCors(await handleCreateSession(request, env));
     }
 
     // POST /mcp  (harness entry)
     if (request.method === 'POST' && url.pathname === '/mcp') {
-      return handleMcpEntry(request, env);
+      return withCors(await handleMcpEntry(request, env));
     }
 
-    return new Response('Not found', { status: 404 });
+    return withCors(new Response('Not found', { status: 404 }));
   },
 } satisfies ExportedHandler<Env>;
 

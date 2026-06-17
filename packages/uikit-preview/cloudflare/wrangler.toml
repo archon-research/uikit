@@ -10,6 +10,9 @@ compatibility_flags = ["nodejs_compat"]
 name = "SESSION_DO"
 class_name = "SessionDO"
 
+# SQLite-backed Durable Objects: free-tier eligible and the modern default.
+# SessionDO uses only the hibernation WebSocket API + storage alarms, all
+# supported by SQLite-backed DOs.
 [[migrations]]
 tag = "v1"
-new_classes = ["SessionDO"]
+new_sqlite_classes = ["SessionDO"]
