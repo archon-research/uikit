@@ -173,6 +173,30 @@
       "namedExport": "NestedRows",
       "meta": {}
     },
+    "molecules--rangepicker--custom-selection": {
+      "name": "Custom selection",
+      "levels": [
+        "Molecules",
+        "Rangepicker"
+      ],
+      "locStart": 77,
+      "locEnd": 88,
+      "filePath": "src/stories/molecules/range-picker.stories.tsx",
+      "namedExport": "CustomSelection",
+      "meta": {}
+    },
+    "molecules--rangepicker--default": {
+      "name": "Default",
+      "levels": [
+        "Molecules",
+        "Rangepicker"
+      ],
+      "locStart": 64,
+      "locEnd": 75,
+      "filePath": "src/stories/molecules/range-picker.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
     "molecules--search-input--default": {
       "name": "Default",
       "levels": [
@@ -516,7 +540,7 @@
         "Visx charts"
       ],
       "locStart": 180,
-      "locEnd": 294,
+      "locEnd": 296,
       "filePath": "src/stories/organisms/visx-charts.stories.tsx",
       "namedExport": "Default",
       "meta": {}
