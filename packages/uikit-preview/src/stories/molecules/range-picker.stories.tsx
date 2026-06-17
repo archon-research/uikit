@@ -1,7 +1,6 @@
 import {
   DEFAULT_RANGE_PRESET,
   RangePicker,
-  defaultTimeRange,
   type RangePreset,
   type TimeRange,
 } from '@archon-research/design-system';
@@ -60,28 +59,30 @@ function ControlledRangePicker({ initial }: { initial: ControlledState }) {
   );
 }
 
+// Stories use fixed timestamps rather than `new Date()` so the rendered range
+// text is deterministic and the captured snapshots stay stable across runs.
 export const Default = () => (
   <ControlledRangePicker
     initial={{
       preset: DEFAULT_RANGE_PRESET,
-      range: defaultTimeRange(),
+      // A 30-day span matching DEFAULT_RANGE_PRESET, frozen for snapshots.
+      range: {
+        from_timestamp: '2025-12-16T12:00:00.000Z',
+        to_timestamp: '2026-01-15T12:00:00.000Z',
+      },
     }}
   />
 );
 
-export const CustomSelection = () => {
-  const now = new Date();
-  const from = new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString();
-
-  return (
-    <ControlledRangePicker
-      initial={{
-        preset: 'custom',
-        range: {
-          from_timestamp: from,
-          to_timestamp: now.toISOString(),
-        },
-      }}
-    />
-  );
-};
+export const CustomSelection = () => (
+  <ControlledRangePicker
+    initial={{
+      preset: 'custom',
+      // A frozen 3-hour custom span.
+      range: {
+        from_timestamp: '2026-01-15T09:00:00.000Z',
+        to_timestamp: '2026-01-15T12:00:00.000Z',
+      },
+    }}
+  />
+);

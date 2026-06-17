@@ -200,18 +200,31 @@ export function defaultTimeRange(): TimeRange {
   return presetToRange(DEFAULT_RANGE_PRESET);
 }
 
+// Parses a timestamp string, returning null for empty or unparseable input
+// so callers never propagate an Invalid Date (whose .toISOString() throws).
+function parseTimestamp(value: string | undefined): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 // Human-readable span of a range, e.g. "1 day", "1 day 6 hours", "30 minutes".
 // Minutes are only shown for sub-day ranges to keep it concise.
 function humanizeRangeDuration(
   from: string | undefined,
   to: string | undefined,
 ): string | null {
-  if (!from || !to) {
+  const fromDate = parseTimestamp(from);
+  const toDate = parseTimestamp(to);
+  if (!fromDate || !toDate) {
     return null;
   }
 
-  const ms = new Date(to).getTime() - new Date(from).getTime();
-  if (!Number.isFinite(ms) || ms <= 0) {
+  const ms = toDate.getTime() - fromDate.getTime();
+  if (ms <= 0) {
     return null;
   }
 
@@ -238,17 +251,20 @@ function humanizeRangeDuration(
 }
 
 function toDateTimeLocalValue(iso: string | undefined): string {
-  if (!iso) {
+  const date = parseTimestamp(iso);
+  if (!date) {
     return '';
   }
 
-  const date = new Date(iso);
+  // The model stores UTC ISO, but <input type="datetime-local"> expects local
+  // wall-clock time; shift by the offset so the control shows the right moment.
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
   return local.toISOString().slice(0, 16);
 }
 
 function fromDateTimeLocalValue(value: string): string | undefined {
-  return value ? new Date(value).toISOString() : undefined;
+  // new Date(localString) parses back as local time, inverting the shift above.
+  return parseTimestamp(value)?.toISOString();
 }
 
 export function RangePicker({ preset, range, onChange }: RangePickerProps) {
@@ -327,11 +343,11 @@ export function RangePicker({ preset, range, onChange }: RangePickerProps) {
   const modalTitleId = 'range-picker-custom-modal-title';
   const modalDescriptionId = 'range-picker-custom-modal-description';
 
-  const disableConfirm =
-    !draftRange.from_timestamp ||
-    !draftRange.to_timestamp ||
-    new Date(draftRange.from_timestamp).getTime() >=
-      new Date(draftRange.to_timestamp).getTime();
+  // Reject missing, unparseable, or inverted ranges. parseTimestamp filters
+  // Invalid Dates so a NaN comparison can't silently leave Confirm enabled.
+  const fromMs = parseTimestamp(draftRange.from_timestamp)?.getTime();
+  const toMs = parseTimestamp(draftRange.to_timestamp)?.getTime();
+  const disableConfirm = fromMs == null || toMs == null || fromMs >= toMs;
 
   const isCustomSelected = preset === 'custom';
 
