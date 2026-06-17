@@ -217,7 +217,9 @@ export const Default = () => (
               const value = near ? yAccessor(near.datum as Point) : undefined;
               return (
                 <div>
-                  {near && Number.isFinite(value) ? `${near.key}: ${value}` : null}
+                  {near && Number.isFinite(value)
+                    ? `${near.key}: ${value}`
+                    : null}
                 </div>
               );
             }}

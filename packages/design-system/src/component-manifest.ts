@@ -82,6 +82,14 @@ export const designSystemComponentManifest = [
     recipeKey: null,
   },
   {
+    exportName: 'RangePicker',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system',
+    storyBucket: 'molecules',
+    contractScope: null,
+    recipeKey: null,
+  },
+  {
     exportName: 'SurfaceMessage',
     behaviorSource: 'design-system',
     styleOwner: 'design-system-preset',
