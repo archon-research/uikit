@@ -49,6 +49,7 @@ When all variants are rejected:
 - Prefer existing UIKit components, recipes, and slot recipes.
 - Avoid visual drift that breaks established system language.
 - Keep modifications composable and easy to port into source code.
+- Keep iconography consistent: use `lucide-react` and avoid emoji or ad hoc inline SVG icon implementations.
 
 ## Design-System Defaults
 

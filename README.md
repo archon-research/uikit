@@ -15,6 +15,7 @@ packages/
   oxfmt-config/     Shared Oxfmt config
   agent-marketplace/Plugin marketplace content and generators
   design-system/    Shared UI components and style recipes
+  charting/         Dedicated charting primitives package
   uikit-preview/    Ladle preview site for components and tokens
   http-client-core/ OpenAPI + Zod based HTTP client helpers
   http-client-react/React Query integration on top of core client
@@ -27,6 +28,7 @@ packages/
 - `@archon-research/oxlint-config`
 - `@archon-research/oxfmt-config`
 - `@archon-research/design-system`
+- `@archon-research/charting`
 - `@archon-research/uikit-preview`
 - `@archon-research/http-client-core`
 - `@archon-research/http-client-react`
@@ -39,7 +41,7 @@ If you are adapting this template for another organization, you can replace the 
 Install packages from npm:
 
 ```bash
-npm install @archon-research/tsconfig @archon-research/oxlint-config @archon-research/oxfmt-config @archon-research/design-system @archon-research/http-client-core @archon-research/http-client-react @archon-research/uikit-cli
+npm install @archon-research/tsconfig @archon-research/oxlint-config @archon-research/oxfmt-config @archon-research/design-system @archon-research/charting @archon-research/http-client-core @archon-research/http-client-react @archon-research/uikit-cli
 ```
 
 Each package has its own npm page with detailed documentation and usage examples.
@@ -59,6 +61,7 @@ See the individual package READMEs for specific usage examples:
 - [oxlint-config](./packages/oxlint-config/README.md)
 - [oxfmt-config](./packages/oxfmt-config/README.md)
 - [design-system](./packages/design-system/README.md)
+- [charting](./packages/charting/README.md)
 - [http-client-core](./packages/http-client-core/README.md)
 - [http-client-react](./packages/http-client-react/README.md)
 - [uikit-cli](./packages/uikit-cli/README.md)
@@ -74,6 +77,11 @@ The repository includes an internal marketplace package that generates plugin ar
 - [packages/agent-marketplace](./packages/agent-marketplace/README.md)
 
 Use it to manage normalized skill and agent content, source pinning metadata, and generated plugin outputs for both ecosystems.
+
+## Icon policy
+
+- Use `lucide-react` for all product and story iconography.
+- Do not introduce emoji icons or ad hoc inline SVG icon implementations in components/stories.
 
 ### Recommended install flow (GitHub marketplace)
 

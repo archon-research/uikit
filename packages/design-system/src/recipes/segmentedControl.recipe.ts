@@ -8,7 +8,7 @@ export const segmentedControlRecipe = defineSlotRecipe({
     group: {
       alignItems: 'center',
       bg: 'transparent',
-      borderColor: 'border.default',
+      borderColor: 'border.subtle',
       borderRadius: 'sm',
       borderStyle: 'solid',
       borderWidth: '1px',

@@ -8,6 +8,12 @@ export default defineConfig({
   timeout: 30_000,
   retries: 1,
   reporter: [['list'], ['html', { open: 'never' }]],
+  expect: {
+    // Absorb sub-pixel anti-aliasing jitter between machines on the same macOS
+    // version (see microsoft/playwright#20097); large structural diffs still
+    // exceed this and fail.
+    toHaveScreenshot: { maxDiffPixelRatio: 0.01 },
+  },
   use: {
     baseURL,
     viewport: { width: 1280, height: 720 },

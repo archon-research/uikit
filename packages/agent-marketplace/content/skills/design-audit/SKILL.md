@@ -20,6 +20,7 @@ Use this skill to run quick, repeatable audits on UIKit-based consumer app scree
 3. Functional UX flows: check affordances, feedback states, error handling, and interaction continuity.
 4. Accessibility basics: validate focus visibility, contrast basics, labels, and keyboard reachability.
 5. Responsive sanity: confirm behavior across representative breakpoints and density constraints.
+6. Iconography consistency: enforce `lucide-react` usage and flag emoji or inline SVG icon drift.
 
 ## Severity Rubric
 
@@ -41,3 +42,13 @@ Produce:
 - Use `live` to iterate in situ on the highest-priority findings.
 - After fixes, run a polish pass for spacing, typography rhythm, and state consistency.
 - Re-audit the same screen to verify token integrity and functional improvements.
+
+## Icon policy guardrail
+
+- Use Lucide icons from `lucide-react` across stories and component surfaces.
+- Treat emoji icons and custom inline SVG icon drawings as design-system violations unless explicitly required for charts/illustrations.
+
+## Charting guardrail
+
+- Charts, graphs, and sparklines must come from the visx-backed, token-themed `@archon-research/charting` package (see `packages/charting/DESIGN.md` and the `charting` skill).
+- Flag as violations: hand-rolled SVG chart math, hardcoded chart colors instead of `--colors-chart-*` tokens, a direct `@visx/*` dependency in a consumer, or a chart theme rebuilt at runtime rather than passed as `var(...)` tokens.

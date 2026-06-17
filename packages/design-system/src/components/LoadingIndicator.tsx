@@ -1,3 +1,4 @@
+import { LoaderCircle } from 'lucide-react';
 import { type CSSProperties } from 'react';
 
 type LoadingIndicatorProps = {
@@ -25,20 +26,13 @@ function SpinnerIcon() {
   return (
     <>
       <style>{spinKeyframes}</style>
-      <svg
+      <LoaderCircle
         aria-hidden="true"
-        fill="none"
-        height={14}
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        size={14}
         strokeWidth={2}
         style={spinnerStyle}
-        viewBox="0 0 24 24"
-        width={14}
-      >
-        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-      </svg>
+        absoluteStrokeWidth
+      />
     </>
   );
 }

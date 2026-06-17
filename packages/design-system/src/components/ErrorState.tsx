@@ -1,3 +1,5 @@
+import { CircleAlert } from 'lucide-react';
+
 type ErrorStateProps = {
   title: string;
   description: string;
@@ -12,7 +14,7 @@ const rootStyle = {
   borderStyle: 'solid' as const,
   borderColor: 'var(--colors-border-default, #c2c8d1)',
   background: 'var(--colors-surface-subtle, #f8f9fb)',
-  maxWidth: 640,
+  maxWidth: 840,
   marginInline: 'auto',
 };
 
@@ -40,48 +42,29 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <div style={{ ...rootStyle, padding: 24 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+      <div
+        style={{
+          display: 'grid',
+          gap: 14,
+          justifyItems: 'center',
+          textAlign: 'center',
+        }}
+      >
         <div
           style={{
             display: 'inline-grid',
             placeItems: 'center',
-            width: 28,
-            height: 28,
+            width: 44,
+            height: 44,
             borderRadius: 9999,
             background: 'var(--colors-surface-default, #ffffff)',
             color: 'var(--colors-text-muted, #667085)',
           }}
+          aria-hidden="true"
         >
-          <span
-            aria-hidden="true"
-            style={{
-              display: 'inline-flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 2,
-              transform: 'translateY(1px)',
-            }}
-          >
-            <span
-              style={{
-                width: 2,
-                height: 7,
-                borderRadius: 9999,
-                background: 'currentColor',
-              }}
-            />
-            <span
-              style={{
-                width: 2,
-                height: 2,
-                borderRadius: 9999,
-                background: 'currentColor',
-              }}
-            />
-          </span>
+          <CircleAlert size={24} strokeWidth={1.9} absoluteStrokeWidth />
         </div>
-        <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ minWidth: 0, width: '100%', maxWidth: 720 }}>
           <h3 style={titleStyle}>{title}</h3>
           <p style={bodyStyle}>{description}</p>
           {errorMessage ? (
@@ -91,6 +74,7 @@ export function ErrorState({
                 background: 'var(--colors-surface-default, #ffffff)',
                 padding: 12,
                 marginTop: 12,
+                textAlign: 'left',
               }}
             >
               <p
@@ -100,7 +84,8 @@ export function ErrorState({
                   fontFamily:
                     'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
                   color: 'var(--colors-text-muted, #667085)',
-                  wordBreak: 'break-word',
+                  whiteSpace: 'nowrap',
+                  overflowX: 'auto',
                 }}
               >
                 {errorMessage}
@@ -111,7 +96,7 @@ export function ErrorState({
             <div
               style={{
                 display: 'flex',
-                justifyContent: 'flex-start',
+                justifyContent: 'center',
                 marginTop: 8,
               }}
             >

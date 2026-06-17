@@ -45,6 +45,17 @@
       ]
     },
     {
+      "id": "charting",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/charting/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Authored for this repository.",
+        "Grounded in the visx-backed, token-themed @archon-research/charting contract in packages/charting/DESIGN.md."
+      ]
+    },
+    {
       "id": "migrate-oxlint",
       "kind": "skill",
       "sourceType": "remote-markdown",
