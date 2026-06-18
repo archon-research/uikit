@@ -32,32 +32,6 @@ export type PendingCallRecord = {
   status: PendingCallStatus;
 };
 
-/**
- * Message shape pushed over the session back-channel by the relay server
- * when a mutation tool call needs confirmation.
- *
- * Field names match the relay wire protocol (snake_case).
- */
-export type ConfirmationRequestEvent = {
-  type: 'confirmation_request';
-  call_id: string;
-  tool_name: string;
-  summary: string;
-  args_preview: Record<string, unknown>;
-  expires_at: string;
-};
-
-/**
- * Message shape pushed over the session back-channel when the server
- * cancels a pending call because the timeout fired server-side.
- */
-export type ConfirmationExpiredEvent = {
-  type: 'confirmation_expired';
-  call_id: string;
-};
-
-export type ConfirmationDecision = 'approved' | 'denied';
-
 // ---------------------------------------------------------------------------
 // Harness connection state for the HarnessConnect icon and modal
 // ---------------------------------------------------------------------------

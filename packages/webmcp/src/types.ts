@@ -102,5 +102,7 @@ export interface PendingCallPrompt {
   toolName: string;
   summary: string;
   argsPreview: Record<string, unknown>;
+  /** ISO-8601 timestamp when the prompt was raised (for the countdown bar). */
+  createdAt: string;
   expiresAt: string;
 }

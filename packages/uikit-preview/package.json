@@ -21,6 +21,7 @@
     "@archon-research/charting": "*",
     "@archon-research/design-system": "*",
     "@archon-research/mcp-connect": "*",
+    "@archon-research/webmcp": "*",
     "lucide-react": "^0.525.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

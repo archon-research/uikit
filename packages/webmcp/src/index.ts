@@ -11,9 +11,10 @@
  *   - useTool                      observe a single tool's spec by name
  *   - useToolRegistry              read the full registry (listTools / getViewState)
  *   - useContributeViewState       contribute a partial view-state slice
+ *   - useRelaySession              drive a relay back-channel from the registry
  *   - listTools / getViewState     imperative helpers for non-React callers
  *   - ToolSpec / ViewState / etc.  shared types
- *   - wire-protocol types          shared with the Python relay
+ *   - wire-protocol types          re-exported from @archon-research/mcp-relay
  */
 
 // Tool-definition contract
@@ -45,15 +46,17 @@ export {
 } from './hooks.js';
 export type { ToolRegistryRef } from './hooks.js';
 
-// Relay activity logger (console.info per tool_activity frame; no feed state)
-export { useRelayActivity } from './useRelayActivity.js';
+// Relay session: connects the registry to a relay back-channel.
+export { useRelaySession } from './useRelaySession.js';
+export type {
+  RelaySessionStatus,
+  UseRelaySessionOptions,
+  UseRelaySessionResult,
+} from './useRelaySession.js';
 
-// Wire-protocol types (shared with the Python relay)
+// Wire-protocol types (single source of truth: @archon-research/mcp-relay)
 export type {
   BrowserToServerMessage,
-  ConfirmationExpiredMessage,
-  ConfirmationRequestMessage,
-  ConfirmationResponseMessage,
   ConnectionTokenClaims,
   CreateSessionResponse,
   HarnessStatusMessage,
@@ -70,5 +73,4 @@ export type {
   ToolInputSchema,
   ToolsChangedMessage,
   ToolsListMessage,
-  TokenRefreshResponse,
 } from './protocol.js';

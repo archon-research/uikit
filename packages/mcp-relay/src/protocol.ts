@@ -120,6 +120,27 @@ export interface HarnessStatusMessage {
 }
 
 // ---------------------------------------------------------------------------
+// Message unions (MVP subset: no mutation-confirmation frames)
+// ---------------------------------------------------------------------------
+
+/** Frames a browser back-channel sends to the relay. */
+export type BrowserToServerMessage =
+  | HelloMessage
+  | ToolsListMessage
+  | ToolsChangedMessage
+  | ResultMessage
+  | PongMessage;
+
+/** Frames the relay pushes to a browser back-channel. */
+export type ServerToBrowserMessage =
+  | HelloAcceptedMessage
+  | HelloRejectedMessage
+  | InvokeMessage
+  | PingMessage
+  | ToolActivityMessage
+  | HarnessStatusMessage;
+
+// ---------------------------------------------------------------------------
 // HTTP: session issuance
 // ---------------------------------------------------------------------------
 
