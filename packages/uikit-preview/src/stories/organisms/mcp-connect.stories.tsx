@@ -447,3 +447,47 @@ export const ControlPreview = () => {
     </div>
   );
 };
+
+// ---------------------------------------------------------------------------
+// Static, network-free stories (deterministic; snapshot-tested)
+//
+// ControlPreview above connects to a live relay and is excluded from visual
+// snapshots. These prop-driven stories cover the same surface (the chat-bubble
+// button and the connect modal) without any network, so they are safe to snapshot.
+// ---------------------------------------------------------------------------
+
+// A realistic-looking JWT-shaped dummy token (not a real credential).
+const FAKE_TOKEN =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
+  '.eyJzdWIiOiJzZXMtYWJjZCIsImNoYW5uZWxfaWQiOiJzZXMtYWJjZCIsImV4cCI6NDEwMjQ0NDgwMH0' +
+  '.ZmFrZS1zaWduYXR1cmUtbm90LXJlYWw';
+
+export const ChatButton = () => (
+  <div className={frameClassName}>
+    <p className={captionClassName}>
+      The MCP Connect entry point: a chat-bubble button whose status dot
+      reflects the relay connection. Click it to open the connect modal. This
+      story is fully static (no relay connection).
+    </p>
+    <HarnessConnect
+      indicatorStatus="ready"
+      relayBaseUrl={RELAY_BASE_URL}
+      connectionToken={FAKE_TOKEN}
+    />
+  </div>
+);
+
+export const ConnectModalOpen = () => (
+  <div className={frameClassName}>
+    <p className={captionClassName}>
+      The connect modal pre-opened, showing the relay URL, connection token, and
+      the per-harness add commands. Static (no relay connection).
+    </p>
+    <HarnessConnect
+      indicatorStatus="ready"
+      relayBaseUrl={RELAY_BASE_URL}
+      connectionToken={FAKE_TOKEN}
+      defaultOpen
+    />
+  </div>
+);
