@@ -150,6 +150,21 @@ const ControlPreviewInner = () => {
 
   useRegisterTool(
     defineTool({
+      name: 'ladle.listComponents',
+      description:
+        'List every component story available in the preview. Returns story ids and titles; pass an id to ladle.selectComponent to display it.',
+      schema: { type: 'object', properties: {} },
+      handler: () => {
+        const components = Object.keys(storiesRef.current)
+          .sort()
+          .map((id) => ({ id, title: titleOf(id) }));
+        return { count: components.length, components };
+      },
+    }),
+  );
+
+  useRegisterTool(
+    defineTool({
       name: 'ladle.selectComponent',
       description:
         'Display a component story in the preview canvas by its story id (from ladle.searchComponents).',
@@ -244,14 +259,14 @@ const ControlPreviewInner = () => {
     <div className={frameClassName}>
       <p className={captionClassName}>
         This panel connects live to the deployed relay Worker at{' '}
-        <code>{RELAY_BASE_URL}</code> and exposes three tools to a connected
-        harness: <code>ladle.searchComponents</code>,{' '}
-        <code>ladle.selectComponent</code>, and <code>ladle.setTheme</code>.
-        Open the connection modal, copy the add command for your harness, run
-        it, then ask the harness to (for example) "search for button, show the
-        variants story, and switch to dark theme". Changing the theme is a
-        mutation, so it pauses for your approval. The canvas below updates live
-        while this connection stays open.
+        <code>{RELAY_BASE_URL}</code> and exposes four tools to a connected
+        harness: <code>ladle.listComponents</code>,{' '}
+        <code>ladle.searchComponents</code>, <code>ladle.selectComponent</code>,
+        and <code>ladle.setTheme</code>. Open the connection modal, copy the add
+        command for your harness, run it, then ask the harness to (for example)
+        "search for button, show the variants story, and switch to dark theme".
+        Changing the theme is a mutation, so it pauses for your approval. The
+        canvas below updates live while this connection stays open.
       </p>
 
       <HarnessConnect
