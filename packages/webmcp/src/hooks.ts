@@ -5,13 +5,7 @@
  * All hooks require <WebMCPProvider> in the component tree.
  * None of them import @mcp-b/* directly, that coupling lives in provider.tsx.
  */
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  type DependencyList,
-} from 'react';
+import { useEffect, useMemo, useRef, type DependencyList } from 'react';
 
 import { useToolRegistryContext } from './provider.js';
 import { acquireToolRegistration } from './registration.js';
@@ -245,11 +239,14 @@ export type ToolRegistryRef = {
  */
 export function useToolRegistryRef(): ToolRegistryRef {
   const registry = useToolRegistryContext();
-  return useCallback(
+  // useMemo (not useCallback-then-invoke) so the returned object keeps a stable
+  // identity across renders. Non-React consumers (e.g. a WebSocket session
+  // handler) can hold this reference without it churning every render.
+  return useMemo(
     () => ({
       listTools: registry.listTools,
       getViewState: registry.getViewState,
     }),
     [registry.listTools, registry.getViewState],
-  )();
+  );
 }

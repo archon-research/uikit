@@ -55,6 +55,14 @@ export interface ToolSpec<TArgs = Record<string, unknown>, TResult = unknown> {
 export function defineTool<TArgs = Record<string, unknown>, TResult = unknown>(
   spec: ToolSpec<TArgs, TResult>,
 ): ToolSpec<TArgs, TResult> {
+  // Enforce the cross-field invariant the type system can't express cleanly:
+  // a mutation must carry a confirmationSummary, otherwise the human-in-the-loop
+  // dialog would have nothing to show. Fail loudly at authoring time.
+  if (spec.mutation && !spec.confirmationSummary) {
+    throw new Error(
+      `defineTool("${spec.name}"): a tool with mutation:true must provide a confirmationSummary.`,
+    );
+  }
   return spec;
 }
 
@@ -79,10 +87,17 @@ export interface ToolRegistry {
 }
 
 // ---------------------------------------------------------------------------
-// Pending-call confirmation (shared between server push and browser UI)
+// Pending-call confirmation prompt (input shape for a browser confirmation UI)
 // ---------------------------------------------------------------------------
 
-export interface PendingCall {
+/**
+ * A mutation awaiting approval, as the browser-side UI needs to render it.
+ *
+ * Named `PendingCallPrompt` (not `PendingCall`) to avoid colliding with
+ * `@archon-research/mcp-connect`'s richer `PendingCallRecord`, which carries
+ * lifecycle status. This shape is the minimal prompt: what the dialog displays.
+ */
+export interface PendingCallPrompt {
   callId: string;
   toolName: string;
   summary: string;

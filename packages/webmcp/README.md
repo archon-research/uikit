@@ -1,6 +1,6 @@
 # @archon-research/webmcp
 
-A stable React wrapper over [WebMCP](https://github.com/webmcp-org) (`@mcp-b/react-webmcp`) for registering UI tools that a connected agent harness can call. It exposes a fixed interface so the fast-moving `@mcp-b/*` packages can churn behind a single seam.
+A stable React wrapper over [WebMCP](https://github.com/webmcp-org) (`@mcp-b/global`) for registering UI tools that a connected agent harness can call. It exposes a fixed interface so the fast-moving `@mcp-b/*` packages can churn behind a single seam.
 
 Tools are registered into `document.modelContext`. A tool registered here runs in the consumer's own authenticated browser session, so it reuses the app's existing auth and APIs rather than requiring separate server credentials.
 
@@ -38,29 +38,30 @@ export function App() {
 
 ### Define and register a tool
 
+The handler lives on the spec. Build the spec inside the component (or with a
+ref) when it needs to close over component state — `useRegisterTool` reads the
+latest spec through a ref, so it re-registers only when the tool *name* changes,
+never on every render.
+
 ```tsx
 import { defineTool, useRegisterTool } from '@archon-research/webmcp';
 
-const selectIdentityTool = defineTool<{ identityId: string }, { selected: string }>({
-  name: 'explorer.selectIdentity',
-  description: 'Select and focus an identity node in the Explorer.',
-  schema: {
-    type: 'object',
-    properties: { identityId: { type: 'string' } },
-    required: ['identityId'],
-  },
-  handler: async () => {
-    throw new Error('handler injected at registration');
-  },
-});
-
 function IdentityView({ onSelect }: { onSelect: (id: string) => void }) {
-  useRegisterTool(selectIdentityTool, {
+  const selectIdentityTool = defineTool<{ identityId: string }, { selected: string }>({
+    name: 'explorer.selectIdentity',
+    description: 'Select and focus an identity node in the Explorer.',
+    schema: {
+      type: 'object',
+      properties: { identityId: { type: 'string' } },
+      required: ['identityId'],
+    },
     handler: async ({ identityId }) => {
       onSelect(identityId);
       return { selected: identityId };
     },
   });
+
+  useRegisterTool(selectIdentityTool);
   return null;
 }
 ```

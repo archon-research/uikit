@@ -19,7 +19,7 @@
 // Tool-definition contract
 export { defineTool } from './types.js';
 export type {
-  PendingCall,
+  PendingCallPrompt,
   ToolHandler,
   ToolRegistry,
   ToolSpec,
