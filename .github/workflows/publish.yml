@@ -120,16 +120,29 @@ jobs:
             npm pack --workspace "$pkg" --pack-destination dist-pack
           done
 
+      - name: Check release publish status
+        id: release-status
+        if: always() && steps.release-meta.outputs.is_dev != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          is_draft="$(gh release view "${{ steps.release-meta.outputs.release_tag }}" --json isDraft --jq '.isDraft')"
+          if [ "$is_draft" = "false" ]; then
+            echo "release_published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload tarballs to release
         id: upload-tarballs
-        if: always() && steps.release-meta.outputs.is_dev != 'true' && steps.pack-tarballs.outcome == 'success'
+        if: always() && steps.release-meta.outputs.is_dev != 'true' && steps.pack-tarballs.outcome == 'success' && steps.release-status.outputs.release_published != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "${{ steps.release-meta.outputs.release_tag }}" dist-pack/*.tgz --clobber
 
       - name: Mark release as published
-        if: always() && steps.release-meta.outputs.is_dev != 'true' && steps.publish-gpr.outcome == 'success' && steps.publish-npmjs.outcome == 'success' && steps.upload-tarballs.outcome == 'success'
+        if: always() && steps.release-meta.outputs.is_dev != 'true' && steps.release-status.outputs.release_published != 'true' && steps.publish-gpr.outcome == 'success' && steps.publish-npmjs.outcome == 'success' && steps.upload-tarballs.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
