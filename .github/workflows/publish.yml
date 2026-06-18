@@ -70,6 +70,8 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Publish packages to GitHub Packages
+        id: publish-gpr
+        continue-on-error: true
         run: |
           cat > "$RUNNER_TEMP/npmrc-gpr" <<EOF
           @archon-research:registry=https://npm.pkg.github.com
@@ -88,9 +90,13 @@ jobs:
           NPM_CONFIG_TAG: ${{ steps.release-meta.outputs.npm_tag }}
 
       - name: Switch workspace publish registry to npmjs
+        if: always()
         run: npm pkg delete publishConfig.registry --workspaces
 
       - name: Publish packages to npmjs
+        id: publish-npmjs
+        if: always()
+        continue-on-error: true
         run: |
           npm pkg set repository.url="https://github.com/${GITHUB_REPOSITORY}" --workspaces
           failed=0
@@ -105,6 +111,9 @@ jobs:
           NPM_CONFIG_TAG: ${{ steps.release-meta.outputs.npm_tag }}
 
       - name: Pack tarballs for release assets
+        id: pack-tarballs
+        if: always()
+        continue-on-error: true
         run: |
           mkdir -p dist-pack
           for pkg in $WORKSPACE_PACKAGES; do
@@ -112,14 +121,15 @@ jobs:
           done
 
       - name: Upload tarballs to release
-        if: steps.release-meta.outputs.is_dev != 'true'
+        id: upload-tarballs
+        if: always() && steps.release-meta.outputs.is_dev != 'true' && steps.pack-tarballs.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "${{ steps.release-meta.outputs.release_tag }}" dist-pack/*.tgz --clobber
 
       - name: Mark release as published
-        if: steps.release-meta.outputs.is_dev != 'true'
+        if: always() && steps.release-meta.outputs.is_dev != 'true' && steps.publish-gpr.outcome == 'success' && steps.publish-npmjs.outcome == 'success' && steps.upload-tarballs.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
