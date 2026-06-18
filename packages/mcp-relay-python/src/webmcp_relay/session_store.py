@@ -28,7 +28,11 @@ async def validate_connection_token(token: str) -> AccessToken | None:
         return None
     relay = get_relay()
     record = relay.store.get_by_connection_token(token)
-    if record is None or record.is_expired():
+    # Reject on either deadline: the session lifecycle TTL (is_expired) AND the
+    # durable connection token's own 12h deadline. A long-lived connected tab
+    # keeps is_expired() false indefinitely, so without the second check the
+    # connection token would never lapse here (it would fail open past its life).
+    if record is None or record.is_expired() or record.is_connection_token_expired():
         return None
     return AccessToken(
         token=token,

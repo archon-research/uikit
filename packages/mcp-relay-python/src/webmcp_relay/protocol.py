@@ -1,20 +1,24 @@
 """Relay wire-protocol types.
 
 These mirror the @mcp-b/webmcp-local-relay wire protocol verbatim so the
-browser widget (using @mcp-b/react-webmcp) can connect to our server-side
+browser widget (wrapped here by @mcp-b/global) can connect to our server-side
 WebSocket endpoint without any browser-side changes.
 
 Message types (browser -> server unless noted):
-  hello             browser sends on WS connect
-  hello/accepted    server responds (server -> browser)
-  hello/rejected    server responds (server -> browser)
-  tools/list        browser pushes full tool catalogue
-  tools/changed     browser pushes updated tool catalogue
-  invoke            server sends tool call (server -> browser)
-  result            browser returns tool result
-  ping              server heartbeat (server -> browser)
-  pong              browser heartbeat response
-  harness_status    server pushes harness-liveness state (server -> browser)
+  hello                   browser sends on WS connect
+  hello/accepted          server responds (server -> browser)
+  hello/rejected          server responds (server -> browser)
+  tools/list              browser pushes full tool catalogue
+  tools/changed           browser pushes updated tool catalogue
+  invoke                  server sends tool call (server -> browser)
+  result                  browser returns tool result
+  ping                    server heartbeat (server -> browser)
+  pong                    browser heartbeat response
+  harness_status          server pushes harness-liveness state (server -> browser)
+  tool_activity           server pushes a harness-activity feed entry (server -> browser)
+  confirmation_request    server asks the browser to approve a mutation (server -> browser)
+  confirmation_response   browser returns the user's approve/deny decision
+  confirmation_expired    server cancels a pending mutation on timeout (server -> browser)
 
 Token / session protocol (HTTP):
   POST /api/sessions        browser requests session + pairing token

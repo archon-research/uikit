@@ -6,7 +6,7 @@ distinct token roles (see ``.notes/web-mcp-investigations/tokens.md``):
 * **Session/channel token** - opaque UUID v4, browser-internal, one per tab,
   re-issued on every Explorer load.  Used to authenticate the browser
   WebSocket upgrade.  Never seen by the user or the harness.
-* **Pairing token** - opaque single-use base-58 code (~64 bits), 10-minute
+* **Pairing token** - opaque single-use base-58 code (~70 bits), 10-minute
   TTL.  This is the *only* token the user copies, pasting it into their
   harness config as ``Authorization: Bearer <pairing>``.  Consumed on first
   use and exchanged for a connection token.

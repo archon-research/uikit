@@ -29,6 +29,7 @@ import asyncio
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 ConfirmationStatus = Literal["pending", "approved", "denied", "expired"]
@@ -87,9 +88,14 @@ class PendingCall:
     status: ConfirmationStatus = "pending"
 
     def expires_at_iso(self) -> str:
-        """Wall-clock ISO-8601 expiry, derived from the monotonic deadline."""
+        """Wall-clock ISO-8601 expiry, derived from the monotonic deadline.
+
+        Millisecond precision with a trailing Z to match the TS core's
+        Date.toISOString() so both relays emit identically-shaped timestamps.
+        """
         seconds_from_now = max(0.0, self.expires_at - time.monotonic())
-        return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + seconds_from_now))
+        moment = datetime.fromtimestamp(time.time() + seconds_from_now, tz=UTC)
+        return moment.strftime("%Y-%m-%dT%H:%M:%S.") + f"{moment.microsecond // 1000:03d}Z"
 
     def args_preview(self) -> dict[str, Any]:
         """A shallow, JSON-safe-ish view of the arguments for the dialog."""

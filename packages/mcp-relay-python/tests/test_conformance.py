@@ -21,14 +21,22 @@ from typing import Any
 import pytest
 
 from webmcp_relay.protocol import (
+    ConfirmationResponseMessage,
     CreateSessionResponse,
     HarnessStatusMessage,
     HelloAcceptedMessage,
+    HelloMessage,
     HelloRejectedMessage,
     InvokeMessage,
+    ResultMessage,
     ToolActivityMessage,
+    ToolsListMessage,
 )
-from webmcp_relay.tokens import configure_jwt_secret, session_id_from_token
+from webmcp_relay.tokens import (
+    configure_jwt_secret,
+    decode_connection_jwt,
+    session_id_from_token,
+)
 
 # ---------------------------------------------------------------------------
 # Fixture loading
@@ -76,6 +84,21 @@ def test_tampered_token_returns_none(tokens_fixture: dict[str, Any]) -> None:
     configure_jwt_secret(tokens_fixture["secret"])
     result = session_id_from_token(tokens_fixture["tampered"]["token"])
     assert result == tokens_fixture["tampered"]["expected_session_id"]  # None
+
+
+def test_tampered_header_returns_none(tokens_fixture: dict[str, Any]) -> None:
+    # alg-confusion: a token whose header claims alg:none must be rejected.
+    # python-jose pins algorithms=[HS256] in decode_connection_jwt.
+    configure_jwt_secret(tokens_fixture["secret"])
+    result = session_id_from_token(tokens_fixture["tampered_header"]["token"])
+    assert result == tokens_fixture["tampered_header"]["expected_session_id"]  # None
+
+
+def test_decoded_claims_match_fixture(tokens_fixture: dict[str, Any]) -> None:
+    configure_jwt_secret(tokens_fixture["secret"])
+    claims = decode_connection_jwt(tokens_fixture["valid"]["token"])
+    assert claims is not None
+    assert claims.model_dump() == tokens_fixture["valid"]["claims"]
 
 
 # ---------------------------------------------------------------------------
@@ -168,3 +191,29 @@ def test_create_session_response_fields(frames_fixture: dict[str, Any]) -> None:
     expected_fields = set(frames_fixture["create_session_response_fields"])
     actual_fields = set(CreateSessionResponse.model_fields.keys())
     assert actual_fields == expected_fields
+
+
+# ---------------------------------------------------------------------------
+# Browser -> server frame conformance: the models the host parses must accept
+# the fixture wire JSON and round-trip back to it (catches snake_case drift).
+# ---------------------------------------------------------------------------
+
+
+def test_hello_frame_round_trips(frames_fixture: dict[str, Any]) -> None:
+    fixture = frames_fixture["hello"]
+    assert HelloMessage.model_validate(fixture).model_dump() == fixture
+
+
+def test_tools_list_frame_round_trips(frames_fixture: dict[str, Any]) -> None:
+    fixture = frames_fixture["tools_list"]
+    assert ToolsListMessage.model_validate(fixture).model_dump() == fixture
+
+
+def test_result_frame_round_trips(frames_fixture: dict[str, Any]) -> None:
+    fixture = frames_fixture["result"]
+    assert ResultMessage.model_validate(fixture).model_dump() == fixture
+
+
+def test_confirmation_response_frame_round_trips(frames_fixture: dict[str, Any]) -> None:
+    fixture = frames_fixture["confirmation_response"]
+    assert ConfirmationResponseMessage.model_validate(fixture).model_dump() == fixture

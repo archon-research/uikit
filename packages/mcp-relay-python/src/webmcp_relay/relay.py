@@ -223,8 +223,10 @@ class SessionRelay:
             attached=record.harness_attached,
             last_activity_ms=record.harness_last_seen_ms,
         )
-        with contextlib.suppress(Exception):
+        try:
             await socket.send_json(msg.model_dump())
+        except Exception:  # noqa: BLE001 - best-effort; never fail a call on the status push
+            logger.debug("Failed to push harness_status for %s", session_id, exc_info=True)
 
     # -- harness -> browser invocation ----------------------------------
 
@@ -393,8 +395,10 @@ class SessionRelay:
         socket = self._sockets.get(session_id)
         if socket is None:
             return
-        with contextlib.suppress(Exception):
+        try:
             await socket.send_json(ConfirmationExpiredMessage(call_id=call_id).model_dump())
+        except Exception:  # noqa: BLE001 - best-effort; the harness already saw the timeout
+            logger.debug("Failed to push confirmation_expired for %s", session_id, exc_info=True)
 
     def _reject_pending_confirmations(self, session_id: str) -> None:
         for call_id, pending in list(self._pending_calls.items()):
@@ -429,6 +433,7 @@ class SessionRelay:
         except asyncio.CancelledError:
             raise
         except Exception:  # noqa: BLE001 - dead socket; receive loop handles teardown
+            logger.debug("Heartbeat loop ended for %s", session_id, exc_info=True)
             return
 
     def make_tools_message(

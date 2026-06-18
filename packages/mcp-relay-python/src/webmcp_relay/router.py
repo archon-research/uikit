@@ -26,6 +26,7 @@ import json
 import logging
 import time
 import uuid
+from datetime import UTC, datetime
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Header, HTTPException, Request, WebSocket, WebSocketDisconnect
@@ -68,7 +69,10 @@ logger = logging.getLogger(__name__)
 
 
 def _iso_from_monotonic_offset(seconds_from_now: float) -> str:
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + seconds_from_now))
+    # Millisecond precision with a trailing Z, matching the TS core's
+    # Date.toISOString() so both relays emit identically-shaped timestamps.
+    moment = datetime.fromtimestamp(time.time() + seconds_from_now, tz=UTC)
+    return moment.strftime("%Y-%m-%dT%H:%M:%S.") + f"{moment.microsecond // 1000:03d}Z"
 
 
 # ---------------------------------------------------------------------------
@@ -265,7 +269,12 @@ async def mcp_entry(
     record = _resolve_session(relay, bearer)
     session_id = record.session_id
 
-    body = await request.json()
+    # A malformed body must become a protocol-level parse error, not an opaque
+    # 500 the harness cannot distinguish from "relay broken". Mirrors the TS DO.
+    try:
+        body = await request.json()
+    except (json.JSONDecodeError, ValueError):
+        return _jsonrpc_error(None, -32700, "Parse error")
     method = body.get("method")
     request_id = body.get("id")
     params = body.get("params") or {}
@@ -367,6 +376,12 @@ async def refresh_token(
     session_id = session_id_from_token(bearer) if bearer else None
     if session_id is None:
         raise HTTPException(status_code=401, detail="Token invalid or expired; re-pair.")
+    # Extend the session record's connection-token deadline in lockstep with the
+    # freshly-minted 12h JWT; otherwise the in-memory record could be purged on
+    # the reconnect grace window while the new token is still valid.
+    relay = get_relay()
+    record = _ensure_session(relay, session_id)
+    record.connection_token_expires_at = time.monotonic() + CONNECTION_TOKEN_TTL_SECONDS
     return {
         "connection_token": mint_connection_token(session_id),
         "expires_at": _iso_from_monotonic_offset(CONNECTION_TOKEN_TTL_SECONDS),
@@ -385,7 +400,8 @@ def refresh_session_token(session_id: str) -> TokenRefreshResponse:
     lapses at its expiry; this issues a fresh 12h token.
     """
     relay = get_relay()
-    _ensure_session(relay, session_id)
+    record = _ensure_session(relay, session_id)
+    record.connection_token_expires_at = time.monotonic() + CONNECTION_TOKEN_TTL_SECONDS
     return TokenRefreshResponse(
         connection_token=mint_connection_token(session_id),
         expires_at=_iso_from_monotonic_offset(CONNECTION_TOKEN_TTL_SECONDS),
@@ -530,7 +546,11 @@ def _confirmation_summary(guarded: Any, tool_name: str, arguments: dict[str, Any
         try:
             return guarded.confirmation_summary(arguments)
         except Exception:  # noqa: BLE001 - never block confirmation on a bad summary
-            pass
+            logger.debug(
+                "confirmation_summary for %s raised; using fallback",
+                tool_name,
+                exc_info=True,
+            )
     return f"Run {tool_name} with {_stringify(arguments)}"
 
 
