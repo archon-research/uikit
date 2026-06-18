@@ -100,7 +100,11 @@ const ControlPreviewInner = () => {
   };
 
   useEffect(() => {
-    fetch('/meta.json')
+    // Resolve against the app base so the catalogue loads whether the preview
+    // is served at the origin root (local dev) or under a subpath (the deployed
+    // PR preview, e.g. /uikit/pr/40/). An absolute "/meta.json" 404s on a subpath.
+    const metaUrl = new URL('meta.json', new URL('.', window.location.href));
+    fetch(metaUrl)
       .then((r) => r.json())
       .then((m: { stories?: Stories }) => {
         storiesRef.current = m.stories ?? {};
@@ -229,7 +233,12 @@ const ControlPreviewInner = () => {
       }
     : null;
 
-  const canvasSrc = `/?story=${encodeURIComponent(storyId)}&mode=preview&theme=${theme}`;
+  // Resolve against the app base (not "/...") so the canvas iframe loads under
+  // a deployed subpath as well as at the origin root.
+  const canvasSrc = new URL(
+    `?story=${encodeURIComponent(storyId)}&mode=preview&theme=${theme}`,
+    new URL('.', window.location.href),
+  ).href;
 
   return (
     <div className={frameClassName}>
