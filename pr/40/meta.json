@@ -707,8 +707,8 @@
         "Organisms",
         "Mcp connect"
       ],
-      "locStart": 305,
-      "locEnd": 318,
+      "locStart": 314,
+      "locEnd": 327,
       "filePath": "src/stories/organisms/mcp-connect.stories.tsx",
       "namedExport": "ChatButton",
       "meta": {}
@@ -719,8 +719,8 @@
         "Organisms",
         "Mcp connect"
       ],
-      "locStart": 320,
-      "locEnd": 333,
+      "locStart": 329,
+      "locEnd": 342,
       "filePath": "src/stories/organisms/mcp-connect.stories.tsx",
       "namedExport": "ConnectModalOpen",
       "meta": {}
