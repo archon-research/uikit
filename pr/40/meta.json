@@ -701,6 +701,30 @@
       "namedExport": "Reconnecting",
       "meta": {}
     },
+    "organisms--mcp-connect--chat-button": {
+      "name": "Chat button",
+      "levels": [
+        "Organisms",
+        "Mcp connect"
+      ],
+      "locStart": 465,
+      "locEnd": 478,
+      "filePath": "src/stories/organisms/mcp-connect.stories.tsx",
+      "namedExport": "ChatButton",
+      "meta": {}
+    },
+    "organisms--mcp-connect--connect-modal-open": {
+      "name": "Connect modal open",
+      "levels": [
+        "Organisms",
+        "Mcp connect"
+      ],
+      "locStart": 480,
+      "locEnd": 493,
+      "filePath": "src/stories/organisms/mcp-connect.stories.tsx",
+      "namedExport": "ConnectModalOpen",
+      "meta": {}
+    },
     "organisms--mcp-connect--control-preview": {
       "name": "Control preview",
       "levels": [
