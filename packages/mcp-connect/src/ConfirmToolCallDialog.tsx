@@ -10,7 +10,7 @@ import {
   type CSSProperties,
 } from 'react';
 
-import type { PendingCall } from './types.js';
+import type { PendingCallRecord } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Countdown hook
@@ -57,7 +57,7 @@ function useSecondsRemaining(expiresAt: string | null): number {
 
 export type ConfirmToolCallDialogProps = {
   /** The call at the head of the confirmation queue. Null = dialog is closed. */
-  pendingCall: PendingCall | null;
+  pendingCall: PendingCallRecord | null;
   /** Total number of pending items in the queue (including this one). */
   queueLength: number;
   onApprove: () => void;

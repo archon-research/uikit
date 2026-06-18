@@ -14,7 +14,7 @@
  */
 
 import { ConfirmToolCallDialog } from '@archon-research/mcp-connect';
-import type { PendingCall } from '@archon-research/mcp-connect';
+import type { PendingCallRecord } from '@archon-research/mcp-connect';
 
 import { css } from '../../../styled-system/css';
 
@@ -48,7 +48,7 @@ function isoFromNow(seconds: number): string {
   return new Date(Date.now() + seconds * 1000).toISOString();
 }
 
-const BASE_CALL: PendingCall = {
+const BASE_CALL: PendingCallRecord = {
   callId: 'call-0001',
   sessionId: 'ses-abcd-1234',
   toolName: 'uikit-preview.demo.echo_write',
@@ -85,7 +85,7 @@ export const SinglePending = () => (
 );
 
 export const QueuedCalls = () => {
-  const call: PendingCall = {
+  const call: PendingCallRecord = {
     ...BASE_CALL,
     callId: 'call-0002',
     toolName: 'uikit-preview.identities.update',
@@ -118,7 +118,7 @@ export const QueuedCalls = () => {
 export const CountdownActive = () => {
   // Expires ~30 seconds from when the story is rendered, so the countdown
   // bar is visibly non-full and ticking.
-  const call: PendingCall = {
+  const call: PendingCallRecord = {
     ...BASE_CALL,
     callId: 'call-0003',
     toolName: 'uikit-preview.demo.echo_write',

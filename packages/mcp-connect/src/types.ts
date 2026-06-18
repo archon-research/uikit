@@ -11,7 +11,7 @@ export type PendingCallStatus = 'pending' | 'approved' | 'denied' | 'expired';
  * invokes a tool tagged mutation:true. The browser surfaces a confirmation
  * dialog; the user approves or denies; the server unblocks the harness call.
  */
-export type PendingCall = {
+export type PendingCallRecord = {
   /** Unique identifier for this invocation, issued by the relay. */
   callId: string;
   /** Session that owns this call (maps to the browser back-channel). */

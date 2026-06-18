@@ -12,6 +12,6 @@ export type {
   ConfirmationExpiredEvent,
   ConfirmationRequestEvent,
   HarnessIndicatorStatus,
-  PendingCall,
+  PendingCallRecord,
   PendingCallStatus,
 } from './types.js';

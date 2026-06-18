@@ -41,16 +41,16 @@ The four `indicatorStatus` values map to:
 
 ### `ConfirmToolCallDialog` + `useConfirmationQueue`
 
-A guarded write from a harness must be approved by the user. `useConfirmationQueue` consumes confirmation events from the relay back-channel and exposes the active `PendingCall` plus `approve` / `deny`; `ConfirmToolCallDialog` renders it (tool name, summary, arguments, a countdown to expiry, and a queue badge). Render the dialog at the app root so it works regardless of the connection modal.
+A guarded write from a harness must be approved by the user. `useConfirmationQueue` consumes confirmation events from the relay back-channel and exposes the active `PendingCallRecord` (as `activePendingCall`) plus `approve` / `deny`; `ConfirmToolCallDialog` renders it (tool name, summary, arguments, a countdown to expiry, and a queue badge). Render the dialog at the app root so it works regardless of the connection modal.
 
 ```tsx
 import { ConfirmToolCallDialog, useConfirmationQueue } from '@archon-research/mcp-connect';
 
 function ConfirmationSurface({ backChannel }: { backChannel: WebSocket | null }) {
-  const { pendingCall, queueLength, approve, deny } = useConfirmationQueue({ backChannel });
+  const { activePendingCall, queueLength, approve, deny } = useConfirmationQueue({ backChannel });
   return (
     <ConfirmToolCallDialog
-      pendingCall={pendingCall}
+      pendingCall={activePendingCall}
       queueLength={queueLength}
       onApprove={approve}
       onDeny={deny}
@@ -64,7 +64,7 @@ function ConfirmationSurface({ backChannel }: { backChannel: WebSocket | null })
 - `HarnessConnect` (+ `HarnessConnectProps`)
 - `ConfirmToolCallDialog` (+ `ConfirmToolCallDialogProps`)
 - `useConfirmationQueue` (+ option/result types)
-- Types: `HarnessIndicatorStatus`, `PendingCall`, `PendingCallStatus`, `ConfirmationDecision`, `ConfirmationRequestEvent`, `ConfirmationExpiredEvent`
+- Types: `HarnessIndicatorStatus`, `PendingCallRecord`, `PendingCallStatus`, `ConfirmationDecision`, `ConfirmationRequestEvent`, `ConfirmationExpiredEvent`
 
 ## Preview
 

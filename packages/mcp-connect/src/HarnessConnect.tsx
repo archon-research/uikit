@@ -6,11 +6,12 @@
  * (ark-ui via design-system) with setup instructions for connecting Claude
  * Code or GitHub Copilot CLI as a harness.
  *
- * State mapping from props to Indicator status:
- *   no session / token expired          -> idle     (disconnected)
- *   session + WS up, no harness         -> ready
- *   harness attached (harness_status)   -> active   (connected)
- *   WS reconnecting                     -> pending
+ * State mapping from the public `indicatorStatus` prop (left) to the internal
+ * design-system Indicator status (right):
+ *   disconnected (no session / token expired) -> idle
+ *   ready        (session + WS up, no harness) -> ready
+ *   connected    (harness attached)            -> active
+ *   reconnecting (WS dropped, retrying)        -> pending
  */
 
 import {
@@ -35,28 +36,41 @@ function CopyButton({
   text: string;
   label?: string;
 }) {
-  const [copied, setCopied] = useState(false);
+  const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard unavailable; silently ignore.
+      setState('copied');
+      setTimeout(() => setState('idle'), 2000);
+    } catch (err: unknown) {
+      // Clipboard unavailable (insecure context, permission denied): give the
+      // user explicit feedback instead of a button that silently does nothing.
+      console.error('[mcp-connect] clipboard write failed', err);
+      setState('failed');
+      setTimeout(() => setState('idle'), 2000);
     }
   };
+
+  const title =
+    state === 'copied'
+      ? 'Copied!'
+      : state === 'failed'
+        ? 'Copy failed — select and copy manually'
+        : label;
 
   return (
     <button
       type="button"
       onClick={handleCopy}
-      aria-label={copied ? 'Copied!' : label}
-      title={copied ? 'Copied!' : label}
+      aria-label={title}
+      title={title}
       style={copyBtnStyle}
     >
-      {copied ? (
+      {state === 'copied' ? (
         <Check size={12} aria-hidden />
+      ) : state === 'failed' ? (
+        <X size={12} aria-hidden />
       ) : (
         <Copy size={12} aria-hidden />
       )}

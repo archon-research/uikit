@@ -7,6 +7,7 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": ["dist", "src"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -25,7 +26,7 @@
   },
   "dependencies": {
     "@archon-research/design-system": "*",
-    "lucide-react": "^1.7.0"
+    "lucide-react": "0.525.0"
   },
   "peerDependencies": {
     "react": "^19.0.0"
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@archon-research/oxfmt-config": "*",
     "@archon-research/oxlint-config": "*",
+    "@archon-research/tsconfig": "*",
     "@types/react": "^19.0.0",
     "oxfmt": "0.53.0",
     "oxlint": "1.68.0"
