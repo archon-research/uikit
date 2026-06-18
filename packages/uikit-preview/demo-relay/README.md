@@ -91,13 +91,14 @@ For local `wrangler dev`, override the allow-list in `.dev.vars`
 ## Tests
 
 ```bash
-# From packages/uikit-preview/:
-npm run cf:test
+# From the repo root:
+npm test
 ```
 
-Tests run inside the Workers runtime via `@cloudflare/vitest-pool-workers`
-(Miniflare). The JWT secret and `ALLOWED_ORIGINS` are injected via
-`miniflare.bindings` in `vitest.config.ts`.
+`npm test` runs the full relay test suite in one pass: the I/O-free core unit
+tests and the integration tests that drive the host (HTTP + WebSocket + session
+storage) end to end. Test-time bindings such as the JWT secret and
+`ALLOWED_ORIGINS` are injected via `vitest.config.ts`.
 
 ## Deploy
 

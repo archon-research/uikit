@@ -23,6 +23,7 @@
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "type:check": "npm run type:check --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present && npm run cf:test --workspace @archon-research/uikit-preview",
     "lint:fix": "npm run lint:fix --workspaces --if-present",
     "format": "npm run format --workspaces --if-present",
     "format:check": "npm run format:check --workspaces --if-present",
