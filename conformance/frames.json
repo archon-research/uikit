@@ -62,6 +62,42 @@
     "tool_name": "explorer.search",
     "args": { "q": "test" }
   },
+  "_browser_to_server_comment": "Frames the BROWSER sends to the server. The Python core validates these via pydantic model_validate round-trips; the TS host reads them by key, so the TS conformance test checks the key set matches the fields the host depends on.",
+  "hello": {
+    "type": "hello",
+    "tab_id": "aaaa-bbbb-cccc-dddd",
+    "origin": "http://localhost",
+    "url": "http://localhost",
+    "title": "uikit relay demo",
+    "connection_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.sig"
+  },
+  "tools_list": {
+    "type": "tools/list",
+    "tools": [
+      {
+        "name": "explorer.search",
+        "description": "Search the explorer.",
+        "input_schema": {
+          "type": "object",
+          "properties": { "q": { "type": "string" } },
+          "required": ["q"]
+        },
+        "mutation": false,
+        "confirmation_summary_template": null
+      }
+    ]
+  },
+  "result": {
+    "type": "result",
+    "call_id": "call-11111111",
+    "result": { "ok": true },
+    "error": null
+  },
+  "confirmation_response": {
+    "type": "confirmation_response",
+    "call_id": "call-11111111",
+    "decision": "approved"
+  },
   "create_session_response_fields": [
     "session_id",
     "pairing_token",

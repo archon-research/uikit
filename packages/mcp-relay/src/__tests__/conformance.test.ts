@@ -31,9 +31,13 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import type { HarnessStatusMessage, HelloMessage } from '../protocol.js';
+import type {
+  ConnectionTokenClaims,
+  HarnessStatusMessage,
+  HelloMessage,
+} from '../protocol.js';
 import { RelaySession } from '../session.js';
-import { sessionIdFromToken } from '../tokens.js';
+import { decodeConnectionToken, sessionIdFromToken } from '../tokens.js';
 
 // ---------------------------------------------------------------------------
 // Fixture loading
@@ -49,9 +53,14 @@ function loadFixture(filename: string): Record<string, unknown> {
 
 const tokensFixture = loadFixture('tokens.json') as {
   secret: string;
-  valid: { token: string; expected_session_id: string };
+  valid: {
+    token: string;
+    expected_session_id: string;
+    claims: ConnectionTokenClaims;
+  };
   expired: { token: string; expected_session_id: null };
   tampered: { token: string; expected_session_id: null };
+  tampered_header: { token: string; expected_session_id: null };
 };
 
 const framesFixture = loadFixture('frames.json') as {
@@ -71,6 +80,10 @@ const framesFixture = loadFixture('frames.json') as {
   tool_activity_ok: Record<string, unknown>;
   tool_activity_error: Record<string, unknown>;
   invoke: Record<string, unknown>;
+  hello: Record<string, unknown>;
+  tools_list: Record<string, unknown>;
+  result: Record<string, unknown>;
+  confirmation_response: Record<string, unknown>;
   create_session_response_fields: string[];
 };
 
@@ -108,6 +121,24 @@ describe('token conformance', () => {
       tokensFixture.secret,
     );
     expect(result).toBeNull();
+  });
+
+  it('tampered header (alg:none) returns null', async () => {
+    // alg-confusion: a token whose header claims alg:none must be rejected even
+    // though its payload is otherwise valid. Guards the HS256 pin in tokens.ts.
+    const result = await sessionIdFromToken(
+      tokensFixture.tampered_header.token,
+      tokensFixture.secret,
+    );
+    expect(result).toBeNull();
+  });
+
+  it('decoded claims match the fixture', async () => {
+    const claims = await decodeConnectionToken(
+      tokensFixture.valid.token,
+      tokensFixture.secret,
+    );
+    expect(claims).toEqual(tokensFixture.valid.claims);
   });
 });
 
@@ -198,6 +229,55 @@ describe('frame conformance', () => {
       inputs.args,
     );
     expect(frame).toEqual(framesFixture.invoke);
+  });
+
+  it('hello/accepted round-trips a fixture hello shape', () => {
+    // The TS host reads browser->server frames by key, so verify the fixture
+    // carries the exact field names the host depends on (catches snake_case
+    // drift between this core and the Python core that the host can't catch).
+    const hello = framesFixture.hello as Partial<HelloMessage> & {
+      type: string;
+    };
+    expect(hello.type).toBe('hello');
+    expect(Object.keys(hello).sort()).toEqual(
+      ['connection_token', 'origin', 'tab_id', 'title', 'type', 'url'].sort(),
+    );
+    // The required fields must be assignable to the TS HelloMessage shape.
+    const typed: HelloMessage = {
+      type: 'hello',
+      tab_id: String(hello.tab_id),
+      origin: String(hello.origin),
+      url: String(hello.url),
+    };
+    expect(typed.type).toBe('hello');
+  });
+
+  it('tools/list fixture carries snake_case ToolDefinition fields', () => {
+    const tools = (
+      framesFixture.tools_list as { tools: Record<string, unknown>[] }
+    ).tools;
+    expect(framesFixture.tools_list['type']).toBe('tools/list');
+    expect(Object.keys(tools[0]!).sort()).toEqual(
+      [
+        'confirmation_summary_template',
+        'description',
+        'input_schema',
+        'mutation',
+        'name',
+      ].sort(),
+    );
+  });
+
+  it('result fixture carries the keys the host reads', () => {
+    expect(Object.keys(framesFixture.result).sort()).toEqual(
+      ['call_id', 'error', 'result', 'type'].sort(),
+    );
+  });
+
+  it('confirmation_response fixture carries the wire keys', () => {
+    expect(Object.keys(framesFixture.confirmation_response).sort()).toEqual(
+      ['call_id', 'decision', 'type'].sort(),
+    );
   });
 
   it('CreateSessionResponse field set', () => {

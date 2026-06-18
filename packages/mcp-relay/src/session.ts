@@ -36,6 +36,13 @@ import type {
 /** State machine states, mirroring the Python SessionRecord. */
 export type SessionState = 'pending' | 'connected' | 'disconnected';
 
+/** Narrow an untrusted value to a known SessionState. */
+function isSessionState(value: unknown): value is SessionState {
+  return (
+    value === 'pending' || value === 'connected' || value === 'disconnected'
+  );
+}
+
 /** Liveness TTL: 90 s matches the Python HARNESS_LIVENESS_TTL_SECONDS. */
 export const HARNESS_LIVENESS_TTL_MS = 90_000;
 
@@ -92,13 +99,22 @@ export class RelaySession {
     };
   }
 
-  /** Reconstruct a session from a persisted snapshot (after eviction/wake). */
+  /**
+   * Reconstruct a session from a persisted snapshot (after eviction/wake).
+   *
+   * This is the durability seam: the snapshot may have been written by an older
+   * code version, so every field is validated and defaulted rather than trusted.
+   * An unknown/corrupt state falls back to `pending`, and `attached`/`lastSeen`
+   * are coerced so the wire frames built afterwards never carry undefined values.
+   */
   static fromSnapshot(snap: RelaySessionSnapshot): RelaySession {
     const session = new RelaySession(snap.sessionId);
-    session.sessionState = snap.sessionState;
-    session.toolsCatalogue = snap.tools;
-    session.attached = snap.attached;
-    session.lastSeen = snap.lastSeen;
+    session.sessionState = isSessionState(snap.sessionState)
+      ? snap.sessionState
+      : 'pending';
+    session.toolsCatalogue = Array.isArray(snap.tools) ? snap.tools : [];
+    session.attached = snap.attached === true;
+    session.lastSeen = typeof snap.lastSeen === 'number' ? snap.lastSeen : null;
     return session;
   }
 
@@ -226,6 +242,7 @@ export class RelaySession {
     toolName: string,
     status: ToolActivityMessage['status'],
     options?: {
+      kind?: ToolActivityMessage['kind'];
       args?: Record<string, unknown>;
       resultPreview?: string;
       error?: string;
@@ -235,7 +252,7 @@ export class RelaySession {
       type: 'tool_activity',
       activity_id: activityId,
       tool_name: toolName,
-      kind: 'ui',
+      kind: options?.kind ?? 'ui',
       status,
       args: options?.args ?? {},
       result_preview: options?.resultPreview ?? null,

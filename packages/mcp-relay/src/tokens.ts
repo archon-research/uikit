@@ -127,6 +127,20 @@ export async function decodeConnectionToken(
 
   const [headerB64, payloadB64, sigB64] = parts as [string, string, string];
 
+  // Validate the JWT header before trusting the signature. Pinning alg to HS256
+  // closes the classic alg-confusion gap: a token whose header claims alg:none
+  // or an asymmetric alg must never verify against the symmetric secret here.
+  // Mirrors the Python core, which pins algorithms=[HS256] via python-jose.
+  let header: { alg?: unknown; typ?: unknown };
+  try {
+    header = JSON.parse(
+      new TextDecoder().decode(base64UrlDecode(headerB64)),
+    ) as { alg?: unknown; typ?: unknown };
+  } catch {
+    return null;
+  }
+  if (header.alg !== 'HS256') return null;
+
   // Verify signature.
   const key = await importHmacKey(secret);
   const signingInput = `${headerB64}.${payloadB64}`;
@@ -177,9 +191,33 @@ export function isoFromNowPlusSeconds(offsetSeconds: number): string {
   return new Date(Date.now() + offsetSeconds * 1000).toISOString();
 }
 
-/** Generate a random URL-safe base-64 string (opaque pairing token). */
-export function newPairingToken(): string {
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return base64UrlEncode(bytes);
+/**
+ * Base-58 alphabet (Bitcoin variant): no 0/O/I/l to avoid transcription errors.
+ * Matches the Python core's _BASE58_ALPHABET so both relays mint pairing codes
+ * with the same alphabet, length, and entropy.
+ */
+const BASE58_ALPHABET =
+  '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+/**
+ * Issue a single-use, short, copy-friendly base-58 pairing code.
+ *
+ * Twelve base-58 characters give ~70 bits of entropy, comfortably above the
+ * 64-bit floor for a 10-minute single-use code. The alphabet/length match the
+ * Python core's `new_pairing_token` so the two implementations are interchangeable.
+ */
+export function newPairingToken(length = 12): string {
+  // Rejection-sample random bytes so each character is uniform over the 58-char
+  // alphabet (a plain `byte % 58` would bias the first 22 characters).
+  const out: string[] = [];
+  const limit = 256 - (256 % BASE58_ALPHABET.length);
+  while (out.length < length) {
+    const buf = new Uint8Array(length - out.length);
+    crypto.getRandomValues(buf);
+    for (const b of buf) {
+      if (b < limit) out.push(BASE58_ALPHABET[b % BASE58_ALPHABET.length]!);
+      if (out.length === length) break;
+    }
+  }
+  return out.join('');
 }

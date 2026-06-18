@@ -173,5 +173,64 @@ describe('RelaySession', () => {
       expect(frame.status).toBe('ok');
       expect(frame.result_preview).toBe('clicked');
     });
+
+    it('defaults kind to "ui" but honours an explicit kind', () => {
+      const s = makeSession();
+      expect(s.buildToolActivity('a', 't', 'started').kind).toBe('ui');
+      expect(
+        s.buildToolActivity('a', 't', 'started', { kind: 'mutation' }).kind,
+      ).toBe('mutation');
+    });
+  });
+
+  describe('toSnapshot / fromSnapshot (DO hibernation durability)', () => {
+    it('round-trips the full durable state losslessly', () => {
+      const s = makeSession();
+      s.setTools([
+        {
+          name: 'click_button',
+          description: 'Clicks a button',
+          input_schema: { type: 'object', properties: {}, required: [] },
+        },
+      ]);
+      s.onHello(
+        {
+          type: 'hello',
+          tab_id: 't',
+          origin: 'http://localhost',
+          url: 'http://localhost',
+        },
+        true,
+      );
+      s.onInitialize(1700001234567);
+
+      const restored = RelaySession.fromSnapshot(s.toSnapshot());
+      expect(restored.toSnapshot()).toEqual(s.toSnapshot());
+      expect(restored.state).toBe('connected');
+      expect(restored.harnessAttached).toBe(true);
+      expect(restored.lastSeenMs).toBe(1700001234567);
+      expect(restored.tools).toHaveLength(1);
+    });
+
+    it('defaults unknown/legacy snapshot fields instead of trusting them', () => {
+      // Simulates a snapshot written by an older code version (bad state, no
+      // attached/lastSeen, non-array tools). fromSnapshot must coerce rather
+      // than emit undefined values over the wire afterwards.
+      const restored = RelaySession.fromSnapshot({
+        sessionId: SESSION_ID,
+        // @ts-expect-error deliberately invalid persisted state
+        sessionState: 'bogus',
+        // @ts-expect-error deliberately invalid persisted tools
+        tools: undefined,
+        // @ts-expect-error deliberately missing persisted attached
+        attached: undefined,
+        // @ts-expect-error deliberately missing persisted lastSeen
+        lastSeen: undefined,
+      });
+      expect(restored.state).toBe('pending');
+      expect(restored.tools).toEqual([]);
+      expect(restored.harnessAttached).toBe(false);
+      expect(restored.lastSeenMs).toBeNull();
+    });
   });
 });
