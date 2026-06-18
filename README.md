@@ -22,7 +22,6 @@ packages/
   webmcp/           WebMCP UI tool-registration layer (document.modelContext)
   mcp-connect/      Harness connection UI (chat icon, status, connect modal)
   mcp-relay/        Host-agnostic WebMCP relay protocol core (sans-I/O, TS)
-  mcp-relay-python/ Python relay core (webmcp_relay), conformance-paired with mcp-relay
   uikit-cli/        CLI for local package linking in consumer repos
 ```
 
@@ -40,8 +39,6 @@ packages/
 - `@archon-research/mcp-connect`
 - `@archon-research/mcp-relay`
 - `@archon-research/uikit-cli`
-
-The `mcp-relay-python` package (published as `webmcp-relay`) is a Python port of the relay core, kept in lockstep with `@archon-research/mcp-relay` via a shared conformance suite.
 
 If you are adapting this template for another organization, you can replace the package scope and names while keeping the same structure and workflows.
 
