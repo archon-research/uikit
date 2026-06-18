@@ -9,7 +9,7 @@
  * The JWT secret is read from env.WEBMCP_RELAY_JWT_SECRET.
  * Set it in .dev.vars locally and via `wrangler secret put` in production.
  *
- * This Worker backs the live "Relay Live Demo" story in the published preview.
+ * This Worker backs the live "MCP Connect" story in the published preview.
  * See demo-relay/README.md for the deploy + GitHub Pages wiring.
  */
 

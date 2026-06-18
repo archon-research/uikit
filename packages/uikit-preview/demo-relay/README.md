@@ -1,7 +1,7 @@
 # demo-relay — Cloudflare Workers adapter for the WebMCP relay
 
-This directory deploys the WebMCP relay that backs the **Relay Live Demo
-(Cloudflare)** story in the published preview. It is a thin Cloudflare
+This directory deploys the WebMCP relay that backs the **MCP Connect** story
+in the published preview. It is a thin Cloudflare
 Workers + Durable Objects host around the I/O-free
 [`@archon-research/mcp-relay`](../../mcp-relay) core.
 
@@ -15,7 +15,7 @@ can call them to search components, select a story, and change the theme.
 ```
 GitHub Pages (stable origin)            Cloudflare Worker            Harness
 https://archon-research.github.io       mcp-relay.*.workers.dev      (claude/copilot)
-  Relay Live Demo story  ── WS ──▶  /ws/sessions/:id  (back-channel)
+  MCP Connect story      ── WS ──▶  /ws/sessions/:id  (back-channel)
                                           │
   registers ladle.* tools                 │  invoke / result
                                           │

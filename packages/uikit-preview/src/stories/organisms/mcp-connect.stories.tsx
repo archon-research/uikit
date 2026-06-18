@@ -1,6 +1,6 @@
 /* eslint-disable react/iframe-missing-sandbox -- the canvas embeds our own first-party, same-origin Ladle preview, which requires both allow-scripts (to run) and allow-same-origin (to read its own assets/meta). The combo is intentional for trusted same-origin content. */
 /**
- * Relay live demo (Cloudflare).
+ * MCP Connect (live relay demo, Cloudflare).
  *
  * Unlike the other (static, prop-driven) stories, this one connects to the
  * DEPLOYED relay Worker, then registers tools that let a connected harness
@@ -139,10 +139,10 @@ const logClassName = css({
 });
 
 export default {
-  title: 'Organisms/Relay Live Demo (Cloudflare)',
+  title: 'Organisms/MCP Connect',
 };
 
-export const LiveDemo = () => {
+export const ControlPreview = () => {
   const [status, setStatus] = useState<HarnessIndicatorStatus>('disconnected');
   const [token, setToken] = useState<string | null>(null);
   const [activity, setActivity] = useState<string[]>([]);
