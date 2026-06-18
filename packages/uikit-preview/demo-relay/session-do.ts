@@ -49,6 +49,15 @@ export class SessionDO implements DurableObject {
   constructor(state: DurableObjectState, env: Env) {
     this.state = state;
     this.jwtSecret = env.WEBMCP_RELAY_JWT_SECRET;
+    if (!this.jwtSecret) {
+      // The DO is the security boundary (it is independently addressable), so a
+      // missing secret must fail closed at the request layer (see handleMcp /
+      // onBrowserMessage). Log loudly here so a deploy that forgot
+      // `wrangler secret put` is diagnosable rather than silently authorizing.
+      console.error(
+        '[relay] WEBMCP_RELAY_JWT_SECRET is not set; all authenticated requests will be rejected.',
+      );
+    }
     // Rehydrate the in-memory session from storage before any request/message
     // runs. The DO is evicted between events under WebSocket Hibernation, so
     // the registered tools + liveness state must survive in storage, not just
@@ -124,7 +133,10 @@ export class SessionDO implements DurableObject {
 
   // Invoked by the CF runtime, not app code.
   // fallow-ignore-next-line unused-class-member
-  async webSocketError(ws: WebSocket, _error: unknown): Promise<void> {
+  async webSocketError(ws: WebSocket, error: unknown): Promise<void> {
+    // Surface the underlying cause: without this, a browser socket dying
+    // mid-invocation leaves no trace and production WS issues are undebuggable.
+    console.error('[relay] browser WebSocket error', error);
     ws.close();
     this.session?.onDisconnect();
     this.rejectAllPending('Browser WebSocket error.');
@@ -140,12 +152,20 @@ export class SessionDO implements DurableObject {
   async alarm(): Promise<void> {
     if (!this.session) return;
     const now = Date.now();
-    const statusFrame = this.session.sweep(now);
-    if (statusFrame) {
-      this.broadcastToAccepted(JSON.stringify(statusFrame));
-      await this.persist();
+    // Always re-arm the alarm, even if the sweep throws: otherwise a single
+    // failure would permanently stop liveness sweeps and the harness indicator
+    // would stay "connected" forever after a transient error.
+    try {
+      const statusFrame = this.session.sweep(now);
+      if (statusFrame) {
+        this.broadcastToAccepted(JSON.stringify(statusFrame));
+        await this.persist();
+      }
+    } catch (err: unknown) {
+      console.error('[relay] alarm sweep failed', err);
+    } finally {
+      await this.state.storage.setAlarm(now + ALARM_INTERVAL_MS);
     }
-    await this.state.storage.setAlarm(now + ALARM_INTERVAL_MS);
   }
 
   // ---------------------------------------------------------------------------
@@ -209,6 +229,11 @@ export class SessionDO implements DurableObject {
         } else {
           pending.resolve(msg['result']);
         }
+      } else {
+        // No pending call: a malformed/duplicate result, or one that already
+        // timed out. Log it so the cause is visible rather than letting the
+        // original call silently hit its 30s timeout with a generic message.
+        console.warn('[relay] result frame for unknown call_id', callId);
       }
       return;
     }
@@ -228,12 +253,21 @@ export class SessionDO implements DurableObject {
       return jsonResponse({ error: 'Session not initialised.' }, 500);
     }
 
+    // Fail closed: the DO is independently addressable, so it enforces auth
+    // itself rather than trusting that the Worker validated before forwarding.
+    if (!jwtSecret) {
+      return jsonResponse(
+        { error: 'Relay misconfigured: signing secret is not set.' },
+        500,
+      );
+    }
     const bearer = parseBearer(request.headers.get('authorization'));
-    if (bearer && jwtSecret) {
-      const sid = await sessionIdFromToken(bearer, jwtSecret);
-      if (sid !== this.session.sessionId) {
-        return jsonResponse({ error: 'Token does not match session.' }, 401);
-      }
+    if (!bearer) {
+      return jsonResponse({ error: 'Missing bearer token.' }, 401);
+    }
+    const sid = await sessionIdFromToken(bearer, jwtSecret);
+    if (sid !== this.session.sessionId) {
+      return jsonResponse({ error: 'Token does not match session.' }, 401);
     }
 
     let body: Record<string, unknown>;
@@ -328,9 +362,23 @@ export class SessionDO implements DurableObject {
     );
     this.broadcastToAccepted(JSON.stringify(startedFrame));
 
-    // Send invoke to browser.
+    // Send invoke to browser. Unlike the best-effort activity frames, the
+    // invoke MUST reach a live socket; if every send fails, surface the error
+    // now rather than letting the call hang until the 30s timeout.
     const invokeFrame = this.session.buildInvoke(callId, toolName, args);
-    this.broadcastToAccepted(JSON.stringify(invokeFrame));
+    const delivered = this.broadcastToAccepted(JSON.stringify(invokeFrame));
+    if (delivered === 0) {
+      const errMsg =
+        'Failed to deliver tool call to the browser (no live socket accepted the frame).';
+      const errorFrame = this.session.buildToolActivity(
+        activityId,
+        toolName,
+        'error',
+        { error: errMsg },
+      );
+      this.broadcastToAccepted(JSON.stringify(errorFrame));
+      return jsonResponse(toolErrorResult(requestId, errMsg));
+    }
 
     // Await result with timeout.
     let result: unknown;
@@ -381,20 +429,27 @@ export class SessionDO implements DurableObject {
   // Helpers
   // ---------------------------------------------------------------------------
 
-  /** Send to a specific WebSocket, ignoring errors. */
-  private wsSend(ws: WebSocket, payload: string): void {
+  /** Send to a specific WebSocket. Returns false if the send threw. */
+  private wsSend(ws: WebSocket, payload: string): boolean {
     try {
       ws.send(payload);
-    } catch {
-      // Best-effort.
+      return true;
+    } catch (err: unknown) {
+      console.error('[relay] ws send failed', err);
+      return false;
     }
   }
 
-  /** Broadcast to all accepted (hibernatable) WebSockets. */
-  private broadcastToAccepted(payload: string): void {
+  /**
+   * Broadcast to all accepted (hibernatable) WebSockets.
+   * Returns the number of sockets that accepted the frame.
+   */
+  private broadcastToAccepted(payload: string): number {
+    let delivered = 0;
     for (const ws of this.state.getWebSockets()) {
-      this.wsSend(ws, payload);
+      if (this.wsSend(ws, payload)) delivered += 1;
     }
+    return delivered;
   }
 
   private rejectAllPending(reason: string): void {

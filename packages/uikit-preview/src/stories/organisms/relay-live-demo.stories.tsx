@@ -15,7 +15,7 @@ import {
   HarnessConnect,
   type HarnessIndicatorStatus,
 } from '@archon-research/mcp-connect';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { css } from '../../../styled-system/css';
 
@@ -197,6 +197,12 @@ export const LiveDemo = () => {
     return { error: `Unknown tool: ${name}` };
   };
 
+  const log = useCallback((line: string) => {
+    setActivity((prev) =>
+      [`${new Date().toLocaleTimeString()}  ${line}`, ...prev].slice(0, 50),
+    );
+  }, []);
+
   // Fetch the Ladle story catalogue (id -> {name, levels}) for search.
   useEffect(() => {
     fetch('/meta.json')
@@ -205,54 +211,83 @@ export const LiveDemo = () => {
         storiesRef.current = m.stories ?? {};
       })
       .catch(() => {
-        /* leave empty; search will return nothing */
+        log(
+          'Could not load the component catalogue; search will return nothing.',
+        );
       });
-  }, []);
+  }, [log]);
 
-  // Connect to the deployed relay and keep the back-channel open.
+  // Connect to the deployed relay and keep the back-channel open, reconnecting
+  // with exponential backoff if the socket drops.
   useEffect(() => {
     let closed = false;
-    const log = (line: string) =>
-      setActivity((prev) =>
-        [`${new Date().toLocaleTimeString()}  ${line}`, ...prev].slice(0, 50),
-      );
+    let attempt = 0;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const connect = async () => {
+    async function mintSession(): Promise<StoredSession | null> {
+      const res = await fetch(`${RELAY_BASE_URL}/api/sessions`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{}',
+      });
+      // A 4xx/5xx body is the Worker's { error } shape, not a session: surface
+      // it instead of parsing it as a session and connecting to ws_url=undefined.
+      if (!res.ok) {
+        log(`Session mint failed (HTTP ${res.status}); will retry.`);
+        return null;
+      }
+      const minted = (await res.json()) as Partial<{
+        connection_token: string;
+        ws_url: string;
+      }>;
+      if (!minted.connection_token || !minted.ws_url) {
+        log('Session mint returned an unexpected response; will retry.');
+        return null;
+      }
+      // Re-mint shortly before the 12h connection-token TTL.
+      const stored: StoredSession = {
+        connection_token: minted.connection_token,
+        ws_url: minted.ws_url,
+        expires: Date.now() + 11 * 60 * 60 * 1000,
+      };
+      try {
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stored));
+      } catch {
+        /* storage disabled/full: fall back to an in-memory session */
+      }
+      log('Minted a new session (saved for reuse across reloads).');
+      return stored;
+    }
+
+    function scheduleReconnect() {
+      if (closed) return;
+      attempt += 1;
+      const delay = Math.min(30_000, 1000 * 2 ** (attempt - 1));
+      setStatus('reconnecting');
+      log(`Reconnecting in ${Math.round(delay / 1000)}s (attempt ${attempt}).`);
+      reconnectTimer = setTimeout(() => void connect(), delay);
+    }
+
+    async function connect() {
       try {
         let stored = loadStoredSession();
-        if (!stored) {
-          const res = await fetch(`${RELAY_BASE_URL}/api/sessions`, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: '{}',
-          });
-          const minted = (await res.json()) as {
-            connection_token: string;
-            ws_url: string;
-          };
-          // Re-mint shortly before the 12h connection-token TTL.
-          stored = {
-            connection_token: minted.connection_token,
-            ws_url: minted.ws_url,
-            expires: Date.now() + 11 * 60 * 60 * 1000,
-          };
-          try {
-            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stored));
-          } catch {
-            /* storage disabled/full: fall back to an in-memory session */
-          }
-          if (closed) return;
-          log('Minted a new session (saved for reuse across reloads).');
-        } else {
-          if (closed) return;
+        if (stored) {
           log(
             'Reusing the saved session: the connect token is stable across reloads.',
           );
+        } else {
+          stored = await mintSession();
+          if (!stored) {
+            scheduleReconnect();
+            return;
+          }
         }
+        if (closed) return;
         setToken(stored.connection_token);
         setStatus('ready');
 
-        const ws = new WebSocket(stored.ws_url);
+        const session = stored;
+        const ws = new WebSocket(session.ws_url);
         wsRef.current = ws;
 
         ws.onopen = () => {
@@ -263,27 +298,44 @@ export const LiveDemo = () => {
               origin: location.origin,
               url: location.href,
               title: 'uikit relay demo',
-              connection_token: stored.connection_token,
+              connection_token: session.connection_token,
             }),
           );
         };
 
         ws.onmessage = (event) => {
-          const msg = JSON.parse(event.data as string) as {
+          let msg: {
             type: string;
             attached?: boolean;
             call_id?: string;
             tool_name?: string;
             args?: Record<string, unknown>;
           };
+          try {
+            msg = JSON.parse(event.data as string);
+          } catch {
+            log('Ignored a malformed frame from the relay.');
+            return;
+          }
           switch (msg.type) {
             case 'hello/accepted':
+              attempt = 0; // back-channel established: reset backoff
               log(
                 'Back-channel connected. Tools: searchComponents, selectComponent, setTheme.',
               );
               ws.send(
                 JSON.stringify({ type: 'tools/list', tools: PREVIEW_TOOLS }),
               );
+              break;
+            case 'hello/rejected':
+              // Stale/invalid token: drop the saved session so the next
+              // reconnect mints a fresh one rather than looping on a bad token.
+              log('Session rejected by relay; clearing it and re-pairing.');
+              try {
+                localStorage.removeItem(SESSION_STORAGE_KEY);
+              } catch {
+                /* storage disabled: nothing to clear */
+              }
               break;
             case 'harness_status':
               setStatus(msg.attached ? 'connected' : 'ready');
@@ -295,7 +347,14 @@ export const LiveDemo = () => {
               break;
             case 'invoke': {
               log(`invoke ${msg.tool_name}(${JSON.stringify(msg.args ?? {})})`);
-              const result = runTool(msg.tool_name ?? '', msg.args ?? {});
+              // A throwing handler must still produce a result frame, otherwise
+              // the harness-side call hangs until its timeout with no local trace.
+              let result: unknown;
+              try {
+                result = runTool(msg.tool_name ?? '', msg.args ?? {});
+              } catch (err) {
+                result = { error: (err as Error).message };
+              }
               ws.send(
                 JSON.stringify({
                   type: 'result',
@@ -314,23 +373,29 @@ export const LiveDemo = () => {
           }
         };
 
+        ws.onerror = () => {
+          // onclose follows and drives the reconnect; just leave a breadcrumb.
+          log('WebSocket error; the connection will be retried.');
+        };
+
         ws.onclose = () => {
-          if (!closed) setStatus('reconnecting');
+          if (!closed) scheduleReconnect();
         };
       } catch (err) {
         log(`Error: ${(err as Error).message}`);
-        setStatus('disconnected');
+        scheduleReconnect();
       }
-    };
+    }
 
     void connect();
 
     return () => {
       closed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
       wsRef.current?.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [log]);
 
   const canvasSrc = `/?story=${encodeURIComponent(storyId)}&mode=preview&theme=${theme}`;
 

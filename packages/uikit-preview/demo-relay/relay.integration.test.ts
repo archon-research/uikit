@@ -353,6 +353,100 @@ describe('tools/call end-to-end flow', () => {
   });
 });
 
+describe('tools/call failure paths', () => {
+  it('returns an MCP error when no browser socket is connected', async () => {
+    const session = await createSession();
+    // No WS opened: the DO has no live socket to deliver the invoke to.
+    const callResult = await mcpCall(
+      session.connection_token,
+      'tools/call',
+      { name: 'click_button', arguments: {} },
+      7,
+    );
+    const result = (callResult['result'] as Record<string, unknown>) ?? {};
+    expect(result['isError']).toBe(true);
+    const content = (result['content'] as { text: string }[]) ?? [];
+    expect(content[0]?.text).toMatch(/no live browser/i);
+  });
+
+  it('rejects an in-flight tools/call when the browser WS closes', async () => {
+    const session = await createSession();
+    const { ws, nextMessage } = await openBrowserSocket(
+      session.session_id,
+      session.connection_token,
+    );
+    expect(JSON.parse(await nextMessage())).toMatchObject({
+      type: 'hello/accepted',
+    });
+
+    ws.send(
+      JSON.stringify({
+        type: 'tools/list',
+        tools: [
+          {
+            name: 'click_button',
+            description: 'Clicks a button',
+            input_schema: { type: 'object', properties: {}, required: [] },
+          },
+        ],
+      }),
+    );
+    await Promise.all([
+      mcpCall(session.connection_token, 'initialize'),
+      nextMessage(),
+    ]);
+    await Promise.race([nextMessage(), new Promise((r) => setTimeout(r, 30))]);
+
+    // Start a call and wait for the invoke frame to reach the browser.
+    const callPromise = mcpCall(
+      session.connection_token,
+      'tools/call',
+      { name: 'click_button', arguments: {} },
+      9,
+    );
+    let sawInvoke = false;
+    for (let i = 0; i < 6; i++) {
+      const raw = await Promise.race([
+        nextMessage(),
+        new Promise<null>((r) => setTimeout(() => r(null), 200)),
+      ]);
+      if (raw === null) break;
+      if ((JSON.parse(raw) as { type: string }).type === 'invoke') {
+        sawInvoke = true;
+        break;
+      }
+    }
+    expect(sawInvoke).toBe(true);
+
+    // Close the browser socket before replying: the pending call must reject
+    // with an MCP error rather than hang until the invoke timeout.
+    ws.close();
+    const callResult = await callPromise;
+    const result = (callResult['result'] as Record<string, unknown>) ?? {};
+    expect(result['isError']).toBe(true);
+    const content = (result['content'] as { text: string }[]) ?? [];
+    expect(content[0]?.text).toMatch(/disconnect/i);
+  });
+});
+
+describe('POST /mcp parse error', () => {
+  it('returns a JSON-RPC -32700 for a malformed body (not an opaque 500)', async () => {
+    const session = await createSession();
+    const res = await SELF.fetch('http://localhost/mcp', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${session.connection_token}`,
+      },
+      body: 'this is not json',
+    });
+    const body = (await res.json()) as {
+      error?: { code?: number };
+    };
+    expect(body.error?.code).toBe(-32700);
+  });
+});
+
 describe('POST /mcp auth', () => {
   it('returns 401 for a missing bearer', async () => {
     const res = await SELF.fetch('http://localhost/mcp', {
