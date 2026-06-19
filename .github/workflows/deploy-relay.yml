@@ -35,6 +35,9 @@ jobs:
     steps:
       - name: Guard on Cloudflare credentials
         id: guard
+        # Runs before checkout, so override the job-level working-directory
+        # (packages/uikit-preview does not exist yet) to the workspace root.
+        working-directory: .
         run: |
           if [[ -n "$CLOUDFLARE_API_TOKEN" ]]; then
             echo "configured=true" >> "$GITHUB_OUTPUT"
