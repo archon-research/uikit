@@ -197,3 +197,109 @@ export const HeaderCasingPolicy = () => {
     </div>
   );
 };
+
+const magnitudeRows: Row[] = [
+  { symbol: 'USDC', chain: 'Ethereum', amountUsd: 12500 },
+  { symbol: 'WETH', chain: 'Base', amountUsd: 980000 },
+  { symbol: 'WBTC', chain: 'Arbitrum', amountUsd: 2210000 },
+  { symbol: 'rETH', chain: 'Optimism', amountUsd: 145000 },
+  { symbol: 'sDAI', chain: 'Avalanche', amountUsd: 45000 },
+];
+
+const magnitudeColumns = [
+  {
+    accessorKey: 'symbol',
+    header: 'Symbol',
+    cell: ({ row }: { row: { original: Row } }) => row.original.symbol,
+  },
+  {
+    accessorKey: 'chain',
+    header: 'Chain',
+    cell: ({ row }: { row: { original: Row } }) => row.original.chain,
+  },
+  {
+    accessorKey: 'amountUsd',
+    header: 'Amount (USD, log default)',
+    meta: {
+      magnitude: {
+        enabled: true,
+      },
+    },
+    cell: ({ row }: { row: { original: Row } }) =>
+      `$${row.original.amountUsd.toLocaleString('en-US')}`,
+  },
+];
+
+const linearMagnitudeColumns = [
+  {
+    accessorKey: 'symbol',
+    header: 'Symbol',
+    cell: ({ row }: { row: { original: Row } }) => row.original.symbol,
+  },
+  {
+    accessorKey: 'chain',
+    header: 'Chain',
+    cell: ({ row }: { row: { original: Row } }) => row.original.chain,
+  },
+  {
+    accessorKey: 'amountUsd',
+    header: 'Amount (USD, linear fixed domain)',
+    meta: {
+      magnitude: {
+        enabled: true,
+        scale: 'linear',
+        domain: { min: 0, max: 2500000 },
+        getValueText: (value: number) =>
+          `$${Math.round(value).toLocaleString('en-US')}`,
+      },
+    },
+    cell: ({ row }: { row: { original: Row } }) =>
+      `$${row.original.amountUsd.toLocaleString('en-US')}`,
+  },
+];
+
+export const MagnitudeColumns = () => {
+  const logTable = useDataTable(magnitudeRows, magnitudeColumns as never, {
+    enableSorting: true,
+    enableSearch: true,
+  });
+  const linearTable = useDataTable(
+    magnitudeRows,
+    linearMagnitudeColumns as never,
+    {
+      enableSorting: true,
+      enableSearch: true,
+    },
+  );
+
+  return (
+    <div
+      className={css({
+        p: '6',
+        display: 'grid',
+        gap: '6',
+        maxWidth: '6xl',
+      })}
+    >
+      <div
+        className={css({
+          fontSize: 'sm',
+          color: 'text.muted',
+        })}
+      >
+        Top table uses automatic per-column domain with logarithmic scaling.
+        Bottom table overrides to linear scaling with a fixed domain.
+      </div>
+      <DataTable
+        table={logTable}
+        isLoading={false}
+        getRowKey={(row: Row) => `${row.chain}:${row.symbol}`}
+      />
+      <DataTable
+        table={linearTable}
+        isLoading={false}
+        getRowKey={(row: Row) => `linear:${row.chain}:${row.symbol}`}
+      />
+    </div>
+  );
+};

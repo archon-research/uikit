@@ -62,4 +62,42 @@ export const dataTableRecipes = {
     borderBottomColor: 'var(--colors-border-subtle, #d0d5dd)',
     padding: '14px 16px',
   } satisfies CSSProperties,
+  magnitudeCell: {
+    display: 'grid',
+    gap: 8,
+  } satisfies CSSProperties,
+  magnitudeValue: {
+    color: 'var(--colors-text-default, #101828)',
+    fontSize: 14,
+    lineHeight: 1.4,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  } satisfies CSSProperties,
+  magnitudeProgressRoot: {
+    display: 'grid',
+    width: 'min(16rem, 100%)',
+    gridTemplateColumns: '1fr',
+    gap: 4,
+  } satisfies CSSProperties,
+  magnitudeProgressTrack: {
+    position: 'relative',
+    width: '100%',
+    height: 6,
+    overflow: 'hidden',
+    borderRadius: 999,
+    background: 'var(--colors-surface-subtle, #eaecf0)',
+  } satisfies CSSProperties,
+  magnitudeProgressRange: {
+    height: '100%',
+    borderRadius: 999,
+    background: 'var(--colors-interactive-primary, #3559e9)',
+    transition: 'width 160ms ease',
+  } satisfies CSSProperties,
+  magnitudeValueText: {
+    color: 'var(--colors-text-muted, #667085)',
+    fontSize: 12,
+    fontVariantNumeric: 'tabular-nums',
+    justifySelf: 'end',
+  } satisfies CSSProperties,
 };
