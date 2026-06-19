@@ -65,6 +65,54 @@
       "namedExport": "Panel",
       "meta": {}
     },
+    "atoms--indicator--dot-only": {
+      "name": "Dot only",
+      "levels": [
+        "Atoms",
+        "Indicator"
+      ],
+      "locStart": 47,
+      "locEnd": 56,
+      "filePath": "src/stories/atoms/indicator.stories.tsx",
+      "namedExport": "DotOnly",
+      "meta": {}
+    },
+    "atoms--indicator--in-context": {
+      "name": "In context",
+      "levels": [
+        "Atoms",
+        "Indicator"
+      ],
+      "locStart": 78,
+      "locEnd": 93,
+      "filePath": "src/stories/atoms/indicator.stories.tsx",
+      "namedExport": "InContext",
+      "meta": {}
+    },
+    "atoms--indicator--sizes": {
+      "name": "Sizes",
+      "levels": [
+        "Atoms",
+        "Indicator"
+      ],
+      "locStart": 58,
+      "locEnd": 76,
+      "filePath": "src/stories/atoms/indicator.stories.tsx",
+      "namedExport": "Sizes",
+      "meta": {}
+    },
+    "atoms--indicator--statuses": {
+      "name": "Statuses",
+      "levels": [
+        "Atoms",
+        "Indicator"
+      ],
+      "locStart": 32,
+      "locEnd": 45,
+      "filePath": "src/stories/atoms/indicator.stories.tsx",
+      "namedExport": "Statuses",
+      "meta": {}
+    },
     "atoms--loading-indicator--default": {
       "name": "Default",
       "levels": [
@@ -413,6 +461,54 @@
       "namedExport": "Success",
       "meta": {}
     },
+    "organisms--confirm-tool-call-dialog--countdown-active": {
+      "name": "Countdown active",
+      "levels": [
+        "Organisms",
+        "Confirm tool call dialog"
+      ],
+      "locStart": 118,
+      "locEnd": 152,
+      "filePath": "src/stories/organisms/confirm-tool-call-dialog.stories.tsx",
+      "namedExport": "CountdownActive",
+      "meta": {}
+    },
+    "organisms--confirm-tool-call-dialog--no-pending-call": {
+      "name": "No pending call",
+      "levels": [
+        "Organisms",
+        "Confirm tool call dialog"
+      ],
+      "locStart": 154,
+      "locEnd": 169,
+      "filePath": "src/stories/organisms/confirm-tool-call-dialog.stories.tsx",
+      "namedExport": "NoPendingCall",
+      "meta": {}
+    },
+    "organisms--confirm-tool-call-dialog--queued-calls": {
+      "name": "Queued calls",
+      "levels": [
+        "Organisms",
+        "Confirm tool call dialog"
+      ],
+      "locStart": 87,
+      "locEnd": 116,
+      "filePath": "src/stories/organisms/confirm-tool-call-dialog.stories.tsx",
+      "namedExport": "QueuedCalls",
+      "meta": {}
+    },
+    "organisms--confirm-tool-call-dialog--single-pending": {
+      "name": "Single pending",
+      "levels": [
+        "Organisms",
+        "Confirm tool call dialog"
+      ],
+      "locStart": 70,
+      "locEnd": 85,
+      "filePath": "src/stories/organisms/confirm-tool-call-dialog.stories.tsx",
+      "namedExport": "SinglePending",
+      "meta": {}
+    },
     "organisms--data-table--controlled-state": {
       "name": "Controlled state",
       "levels": [
@@ -543,6 +639,114 @@
       "locEnd": 36,
       "filePath": "src/stories/organisms/error-state.stories.tsx",
       "namedExport": "WithRetry",
+      "meta": {}
+    },
+    "organisms--harness-connect--connected": {
+      "name": "Connected",
+      "levels": [
+        "Organisms",
+        "Harness connect"
+      ],
+      "locStart": 80,
+      "locEnd": 92,
+      "filePath": "src/stories/organisms/harness-connect.stories.tsx",
+      "namedExport": "Connected",
+      "meta": {}
+    },
+    "organisms--harness-connect--disconnected": {
+      "name": "Disconnected",
+      "levels": [
+        "Organisms",
+        "Harness connect"
+      ],
+      "locStart": 51,
+      "locEnd": 64,
+      "filePath": "src/stories/organisms/harness-connect.stories.tsx",
+      "namedExport": "Disconnected",
+      "meta": {}
+    },
+    "organisms--harness-connect--modal-open-no-token": {
+      "name": "Modal open no token",
+      "levels": [
+        "Organisms",
+        "Harness connect"
+      ],
+      "locStart": 127,
+      "locEnd": 140,
+      "filePath": "src/stories/organisms/harness-connect.stories.tsx",
+      "namedExport": "ModalOpenNoToken",
+      "meta": {}
+    },
+    "organisms--harness-connect--modal-open-with-token": {
+      "name": "Modal open with token",
+      "levels": [
+        "Organisms",
+        "Harness connect"
+      ],
+      "locStart": 112,
+      "locEnd": 125,
+      "filePath": "src/stories/organisms/harness-connect.stories.tsx",
+      "namedExport": "ModalOpenWithToken",
+      "meta": {}
+    },
+    "organisms--harness-connect--ready": {
+      "name": "Ready",
+      "levels": [
+        "Organisms",
+        "Harness connect"
+      ],
+      "locStart": 66,
+      "locEnd": 78,
+      "filePath": "src/stories/organisms/harness-connect.stories.tsx",
+      "namedExport": "Ready",
+      "meta": {}
+    },
+    "organisms--harness-connect--reconnecting": {
+      "name": "Reconnecting",
+      "levels": [
+        "Organisms",
+        "Harness connect"
+      ],
+      "locStart": 94,
+      "locEnd": 106,
+      "filePath": "src/stories/organisms/harness-connect.stories.tsx",
+      "namedExport": "Reconnecting",
+      "meta": {}
+    },
+    "organisms--mcp-connect--chat-button": {
+      "name": "Chat button",
+      "levels": [
+        "Organisms",
+        "Mcp connect"
+      ],
+      "locStart": 329,
+      "locEnd": 342,
+      "filePath": "src/stories/organisms/mcp-connect.stories.tsx",
+      "namedExport": "ChatButton",
+      "meta": {}
+    },
+    "organisms--mcp-connect--connect-modal-open": {
+      "name": "Connect modal open",
+      "levels": [
+        "Organisms",
+        "Mcp connect"
+      ],
+      "locStart": 344,
+      "locEnd": 357,
+      "filePath": "src/stories/organisms/mcp-connect.stories.tsx",
+      "namedExport": "ConnectModalOpen",
+      "meta": {}
+    },
+    "organisms--mcp-connect--control-preview": {
+      "name": "Control preview",
+      "levels": [
+        "Organisms",
+        "Mcp connect"
+      ],
+      "locStart": 84,
+      "locEnd": 88,
+      "filePath": "src/stories/organisms/mcp-connect.stories.tsx",
+      "namedExport": "ControlPreview",
       "meta": {}
     },
     "organisms--visx-charts--default": {
