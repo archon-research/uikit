@@ -1,0 +1,73 @@
+name: deploy-relay
+
+# Deploys the demo relay Worker (packages/uikit-preview/demo-relay) that backs
+# the "Relay Live Demo" preview story. The published preview is served from a
+# stable GitHub Pages origin, which the Worker whitelists for CORS via the
+# ALLOWED_ORIGINS var in wrangler.toml — this job is the GitHub Pages <-> Worker
+# wiring step.
+#
+# Gated on the CLOUDFLARE_API_TOKEN secret: forks and unconfigured repos skip
+# the deploy instead of failing. The JWT signing secret is provisioned once
+# out-of-band: `wrangler secret put WEBMCP_RELAY_JWT_SECRET`.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - packages/uikit-preview/demo-relay/**
+      - packages/mcp-relay/**
+      - .github/workflows/deploy-relay.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/uikit-preview
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Guard on Cloudflare credentials
+        id: guard
+        run: |
+          if [[ -n "$CLOUDFLARE_API_TOKEN" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::CLOUDFLARE_API_TOKEN is not set; skipping relay deploy."
+          fi
+
+      - name: Checkout code
+        if: steps.guard.outputs.configured == 'true'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Node.js
+        if: steps.guard.outputs.configured == 'true'
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.guard.outputs.configured == 'true'
+        run: npm ci
+        working-directory: .
+
+      - name: Build the relay core
+        if: steps.guard.outputs.configured == 'true'
+        run: npm run build --workspace packages/mcp-relay
+        working-directory: .
+
+      - name: Verify Worker + Durable Object tests
+        if: steps.guard.outputs.configured == 'true'
+        run: npm run cf:test
+
+      - name: Deploy Worker
+        if: steps.guard.outputs.configured == 'true'
+        run: npx --no-install wrangler deploy --config demo-relay/wrangler.toml

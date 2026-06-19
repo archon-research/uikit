@@ -114,7 +114,7 @@ needed. Bespoke charts use the curated re-exports plus `chartTokens` directly.
 ## Out of scope (for now)
 
 - Threshold and range bands (`@visx/annotation`) and gauges. Document and add when
-  a real STL use case appears.
+  a real use case appears.
 
 ## Related
 

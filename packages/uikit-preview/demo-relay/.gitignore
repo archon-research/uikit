@@ -1,0 +1,6 @@
+# Local Cloudflare Worker dev secrets. Never commit real values.
+# The committed template is .dev.vars.example (kept, since this pattern is exact).
+.dev.vars
+
+# Wrangler local state / cache.
+.wrangler/

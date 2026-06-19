@@ -1,0 +1,42 @@
+{
+  "name": "@archon-research/mcp-connect",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "src"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build",
+    "type:check": "tsgo -p tsconfig.json --noEmit",
+    "lint": "oxlint -c oxlint.config.ts src",
+    "lint:fix": "oxlint -c oxlint.config.ts --fix src",
+    "format": "oxfmt -c oxfmt.config.ts --write src",
+    "format:check": "oxfmt -c oxfmt.config.ts --check src"
+  },
+  "dependencies": {
+    "@archon-research/design-system": "*",
+    "lucide-react": "0.525.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@archon-research/oxfmt-config": "*",
+    "@archon-research/oxlint-config": "*",
+    "@archon-research/tsconfig": "*",
+    "@types/react": "^19.0.0",
+    "oxfmt": "0.53.0",
+    "oxlint": "1.68.0"
+  }
+}

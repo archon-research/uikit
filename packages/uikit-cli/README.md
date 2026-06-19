@@ -35,9 +35,9 @@ From your consumer repository root:
 npm link @archon-research/uikit-cli --workspace <workspace-name>
 ```
 
-Example for stl-verify:
+Example for a consuming project:
 ```bash
-cd /path/to/stl-verify/ts
+cd /path/to/your-project/ts
 npm link @archon-research/uikit-cli --workspace ui
 ```
 

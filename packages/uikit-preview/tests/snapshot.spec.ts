@@ -9,8 +9,16 @@ const origin = `http://127.0.0.1:${port}`
 const meta = (await fetch(`${origin}/meta.json`).then((response) => response.json())) as LadleMeta
 const storyIds = Object.keys(meta.stories).sort()
 
+// Stories that connect to a live relay (real network + wall-clock timestamps in
+// the activity log) are not deterministic enough for a pixel snapshot. They are
+// still rendered in the preview; only their snapshot is skipped. Static prop-
+// driven coverage of the same UI lives in the other MCP Connect / Harness
+// Connect stories.
+const SKIP_SNAPSHOT = new Set(['organisms--mcp-connect--control-preview'])
+
 for (const storyId of storyIds) {
-  test(`${storyId} visual snapshot`, async ({ page }) => {
+  const declare = SKIP_SNAPSHOT.has(storyId) ? test.skip : test
+  declare(`${storyId} visual snapshot`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto(`${origin}/?story=${storyId}&mode=preview`, { waitUntil: 'networkidle' })
     await page.waitForSelector('[data-storyloaded]')
