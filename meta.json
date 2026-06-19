@@ -461,6 +461,18 @@
       "namedExport": "Loading",
       "meta": {}
     },
+    "organisms--data-table--magnitude-columns": {
+      "name": "Magnitude columns",
+      "levels": [
+        "Organisms",
+        "Data table"
+      ],
+      "locStart": 261,
+      "locEnd": 305,
+      "filePath": "src/stories/organisms/data-table.stories.tsx",
+      "namedExport": "MagnitudeColumns",
+      "meta": {}
+    },
     "organisms--data-table--row-selection": {
       "name": "Row selection",
       "levels": [
@@ -503,8 +515,8 @@
         "Organisms",
         "Error boundary"
       ],
-      "locStart": 18,
-      "locEnd": 33,
+      "locStart": 29,
+      "locEnd": 35,
       "filePath": "src/stories/organisms/error-boundary.stories.tsx",
       "namedExport": "CustomFallback",
       "meta": {}
