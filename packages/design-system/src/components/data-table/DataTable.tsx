@@ -1,7 +1,13 @@
+import { Progress } from '@ark-ui/react/progress';
 import { flexRender, type Table } from '@tanstack/react-table';
 import type { ReactNode } from 'react';
 
 import { SkeletonRows } from '../SkeletonRows';
+import {
+  createMagnitudeStateMap,
+  formatMagnitudeValueText,
+  normalizeMagnitudeValue,
+} from './magnitude';
 import { dataTableRecipes } from './recipes';
 
 type DataTableProps<TData> = {
@@ -31,6 +37,8 @@ export function DataTable<TData>({
   className,
   minWidth = '48rem',
 }: DataTableProps<TData>) {
+  const magnitudeStateByColumn = createMagnitudeStateMap(table);
+
   return (
     <div
       className={className}
@@ -134,21 +142,88 @@ export function DataTable<TData>({
                       }),
                     }}
                   >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} style={dataTableRecipes.bodyCell}>
-                        {renderCell
-                          ? renderCell(
-                              flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext(),
-                              ),
-                            )
-                          : flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                      </td>
-                    ))}
+                    {row.getVisibleCells().map((cell) => {
+                      const cellContent = flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      );
+                      const magnitude = cell.column.columnDef.meta?.magnitude;
+                      const magnitudeState = magnitude
+                        ? magnitudeStateByColumn.get(cell.column.id)
+                        : undefined;
+
+                      const customValue = magnitude?.getValue?.(row.original);
+                      const rawValue =
+                        customValue !== null && customValue !== undefined
+                          ? customValue
+                          : cell.getValue();
+                      const isNumericValue =
+                        typeof rawValue === 'number' &&
+                        Number.isFinite(rawValue);
+
+                      let content = cellContent;
+
+                      if (
+                        magnitude &&
+                        magnitude.enabled !== false &&
+                        magnitudeState &&
+                        isNumericValue
+                      ) {
+                        const normalized = normalizeMagnitudeValue(
+                          rawValue,
+                          magnitudeState.domain,
+                          magnitudeState.scale,
+                        );
+                        const percent = normalized * 100;
+                        const valueText = magnitude.getValueText?.(rawValue, {
+                          min: magnitudeState.domain.min,
+                          max: magnitudeState.domain.max,
+                        });
+
+                        content = (
+                          <div style={dataTableRecipes.magnitudeCell}>
+                            <span style={dataTableRecipes.magnitudeValue}>
+                              {cellContent}
+                            </span>
+                            <Progress.Root
+                              value={percent}
+                              min={0}
+                              max={100}
+                              style={dataTableRecipes.magnitudeProgressRoot}
+                            >
+                              <Progress.Track
+                                style={dataTableRecipes.magnitudeProgressTrack}
+                              >
+                                <Progress.Range
+                                  style={
+                                    dataTableRecipes.magnitudeProgressRange
+                                  }
+                                />
+                              </Progress.Track>
+                              {valueText ? (
+                                <span
+                                  style={dataTableRecipes.magnitudeValueText}
+                                >
+                                  {valueText}
+                                </span>
+                              ) : (
+                                <Progress.ValueText
+                                  style={dataTableRecipes.magnitudeValueText}
+                                >
+                                  {formatMagnitudeValueText(percent)}
+                                </Progress.ValueText>
+                              )}
+                            </Progress.Root>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <td key={cell.id} style={dataTableRecipes.bodyCell}>
+                          {renderCell ? renderCell(content) : content}
+                        </td>
+                      );
+                    })}
                   </tr>
                 );
               })}

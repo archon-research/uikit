@@ -15,18 +15,20 @@ function ThrowsOnRender(): never {
   throw new Error('Intentional render error from story demo');
 }
 
+function renderErrorFallback(error: Error, resetError: () => void) {
+  return (
+    <div>
+      <p>{error.message}</p>
+      <button type="button" onClick={resetError}>
+        Reset
+      </button>
+    </div>
+  );
+}
+
 export const CustomFallback = () => (
   <div className={wrapperClassName}>
-    <ErrorBoundary
-      fallback={(error, resetError) => (
-        <div>
-          <p>{error.message}</p>
-          <button type="button" onClick={resetError}>
-            Reset
-          </button>
-        </div>
-      )}
-    >
+    <ErrorBoundary fallback={renderErrorFallback}>
       <ThrowsOnRender />
     </ErrorBoundary>
   </div>
