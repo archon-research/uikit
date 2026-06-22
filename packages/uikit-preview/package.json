@@ -34,10 +34,10 @@
     "@cloudflare/workers-types": "^4.20260616.1",
     "@ladle/react": "^5.1.1",
     "@pandacss/dev": "^1.10.0",
-    "@playwright/test": "1.60.0",
+    "@playwright/test": "1.61.0",
     "@types/node": "^24.7.2",
-    "oxfmt": "0.53.0",
-    "oxlint": "1.68.0",
+    "oxfmt": "0.55.0",
+    "oxlint": "1.70.0",
     "vitest": "^4.1.9",
     "wrangler": "^4.100.0"
   }

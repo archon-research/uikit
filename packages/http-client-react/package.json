@@ -25,16 +25,16 @@
   },
   "dependencies": {
     "@archon-research/http-client-core": "*",
-    "@tanstack/react-query": "5.100.11"
+    "@tanstack/react-query": "5.101.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@types/react": "19.2.15",
+    "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "oxfmt": "0.53.0",
-    "oxlint": "1.68.0"
+    "oxfmt": "0.55.0",
+    "oxlint": "1.70.0"
   }
 }
