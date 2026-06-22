@@ -21,12 +21,12 @@
     "access": "public"
   },
   "dependencies": {
-    "oxfmt": "0.53.0",
-    "oxlint": "1.68.0"
+    "oxfmt": "0.54.0",
+    "oxlint": "1.69.0"
   },
   "devDependencies": {
     "@archon-research/tsconfig": "*",
-    "@types/node": "24.12.4"
+    "@types/node": "24.13.2"
   },
   "files": [
     "dist"

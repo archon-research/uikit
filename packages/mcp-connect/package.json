@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@archon-research/design-system": "*",
-    "lucide-react": "0.525.0"
+    "lucide-react": "0.577.0"
   },
   "peerDependencies": {
     "react": "^19.0.0"
@@ -36,7 +36,7 @@
     "@archon-research/oxlint-config": "*",
     "@archon-research/tsconfig": "*",
     "@types/react": "^19.0.0",
-    "oxfmt": "0.53.0",
-    "oxlint": "1.68.0"
+    "oxfmt": "0.54.0",
+    "oxlint": "1.69.0"
   }
 }

@@ -36,10 +36,10 @@
     "format:check": "oxfmt -c oxfmt.config.ts --check src"
   },
   "dependencies": {
-    "@ark-ui/react": "5.36.2",
-    "@pandacss/dev": "1.11.1",
+    "@ark-ui/react": "5.37.2",
+    "@pandacss/dev": "1.11.3",
     "@tanstack/react-table": "8.21.3",
-    "lucide-react": "0.525.0"
+    "lucide-react": "0.577.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",
@@ -47,9 +47,9 @@
   },
   "devDependencies": {
     "@archon-research/oxlint-config": "*",
-    "@types/react": "19.2.15",
+    "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "oxfmt": "0.53.0",
-    "oxlint": "1.68.0"
+    "oxfmt": "0.54.0",
+    "oxlint": "1.69.0"
   }
 }
