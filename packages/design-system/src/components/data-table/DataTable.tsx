@@ -175,6 +175,8 @@ export function DataTable<TData>({
                           magnitudeState.scale,
                         );
                         const percent = normalized * 100;
+                        const hasValueTextResolver =
+                          typeof magnitude.getValueText === 'function';
                         const valueText = magnitude.getValueText?.(rawValue, {
                           min: magnitudeState.domain.min,
                           max: magnitudeState.domain.max,
@@ -206,7 +208,7 @@ export function DataTable<TData>({
                                 >
                                   {valueText}
                                 </span>
-                              ) : (
+                              ) : hasValueTextResolver ? null : (
                                 <Progress.ValueText
                                   style={dataTableRecipes.magnitudeValueText}
                                 >
