@@ -18,10 +18,12 @@ export interface DataTableMagnitudeConfig<TData> {
   domain?: DataTableMagnitudeDomain<TData>;
   scope?: 'filtered' | 'all';
   getValue?: (row: TData) => number | null | undefined;
+  // Return a string to override the value-text, or null to suppress it entirely
+  // (bar only). When this resolver is omitted, the normalized percentage shows.
   getValueText?: (
     value: number,
     context: { min: number; max: number },
-  ) => string;
+  ) => string | null;
 }
 
 export interface DataTableConfig {
