@@ -39,7 +39,7 @@
     "@ark-ui/react": "5.37.2",
     "@pandacss/dev": "1.11.3",
     "@tanstack/react-table": "8.21.3",
-    "lucide-react": "1.18.0"
+    "lucide-react": "1.21.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",
