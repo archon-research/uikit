@@ -40,7 +40,7 @@
     "@typescript/native-preview": "7.0.0-dev.20260706.1",
     "@semantic-release/exec": "7.1.0",
     "@semantic-release/git": "10.0.1",
-    "conventional-changelog-conventionalcommits": "9.3.1",
+    "conventional-changelog-conventionalcommits": "10.2.1",
     "lefthook": "2.1.9",
     "semantic-release": "25.0.5"
   },
