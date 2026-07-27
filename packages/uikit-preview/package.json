@@ -36,8 +36,8 @@
     "@pandacss/dev": "^1.10.0",
     "@playwright/test": "1.61.1",
     "@types/node": "^24.7.2",
-    "oxfmt": "0.57.0",
-    "oxlint": "1.72.0",
+    "oxfmt": "0.59.0",
+    "oxlint": "1.74.0",
     "vitest": "^4.1.9",
     "wrangler": "^4.100.0"
   }

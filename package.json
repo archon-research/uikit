@@ -37,15 +37,15 @@
     "release:run": "semantic-release"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20260706.1",
+    "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@semantic-release/exec": "7.1.0",
     "@semantic-release/git": "10.0.1",
     "conventional-changelog-conventionalcommits": "10.2.1",
-    "lefthook": "2.1.9",
-    "semantic-release": "25.0.5"
+    "lefthook": "2.1.10",
+    "semantic-release": "25.0.8"
   },
   "optionalDependencies": {
-    "@oxfmt/binding-linux-x64-gnu": "0.57.0",
-    "@oxlint/binding-linux-x64-gnu": "1.72.0"
+    "@oxfmt/binding-linux-x64-gnu": "0.59.0",
+    "@oxlint/binding-linux-x64-gnu": "1.74.0"
   }
 }

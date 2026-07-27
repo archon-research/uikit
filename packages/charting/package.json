@@ -37,8 +37,8 @@
     "@archon-research/tsconfig": "*",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "oxfmt": "0.57.0",
-    "oxlint": "1.72.0"
+    "oxfmt": "0.59.0",
+    "oxlint": "1.74.0"
   },
   "dependencies": {
     "@visx/xychart": "4.0.0"

@@ -39,7 +39,7 @@
     "@ark-ui/react": "5.37.2",
     "@pandacss/dev": "1.11.4",
     "@tanstack/react-table": "8.21.3",
-    "lucide-react": "1.23.0"
+    "lucide-react": "1.25.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",
@@ -49,7 +49,7 @@
     "@archon-research/oxlint-config": "*",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "oxfmt": "0.57.0",
-    "oxlint": "1.72.0"
+    "oxfmt": "0.59.0",
+    "oxlint": "1.74.0"
   }
 }
