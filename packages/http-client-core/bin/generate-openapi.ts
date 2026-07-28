@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { execSync } from 'node:child_process';
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 function parseArg(name: string, fallback?: string): string | undefined {
@@ -36,8 +37,20 @@ if (!existsSync(absoluteSchema)) {
 }
 
 mkdirSync(path.dirname(absoluteOutput), { recursive: true });
-execSync(`npx openapi-typescript "${absoluteSchema}" --output "${absoluteOutput}"`, {
-  stdio: 'inherit',
-});
+
+// openapi-typescript builds its output with the classic TypeScript compiler API, which
+// TypeScript 7.0 does not ship (openapi-ts/openapi-typescript#2841). Running from an empty
+// directory makes npx resolve it in an isolated tree alongside a TypeScript that still has that
+// API, instead of picking up the host project's compiler.
+const isolatedCwd = mkdtempSync(path.join(os.tmpdir(), 'openapi-typescript-'));
+
+try {
+  execSync(
+    `npx --yes --package=openapi-typescript@7 --package=typescript@5 openapi-typescript "${absoluteSchema}" --output "${absoluteOutput}"`,
+    { cwd: isolatedCwd, stdio: 'inherit' },
+  );
+} finally {
+  rmSync(isolatedCwd, { force: true, recursive: true });
+}
 
 console.log(`Generated: ${absoluteOutput}`);

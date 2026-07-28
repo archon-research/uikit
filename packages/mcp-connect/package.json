@@ -18,7 +18,7 @@
     "build": "tsc -p tsconfig.build.json",
     "clean": "rm -rf dist",
     "prepare": "npm run build",
-    "type:check": "tsgo -p tsconfig.json --noEmit",
+    "type:check": "tsc -p tsconfig.json --noEmit",
     "lint": "oxlint -c oxlint.config.ts src",
     "lint:fix": "oxlint -c oxlint.config.ts --fix src",
     "format": "oxfmt -c oxfmt.config.ts --write src",
