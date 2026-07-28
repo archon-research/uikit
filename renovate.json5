@@ -40,8 +40,8 @@
       groupName: "esbuild",
     },
     {
-      matchPackageNames: ["@typescript/native-preview", "@typescript/native-preview-linux-x64"],
-      groupName: "typescript-native-preview",
+      matchPackageNames: ["typescript", "@typescript/typescript-linux-x64"],
+      groupName: "typescript",
     },
     {
       // Node dependencies - minor and patch only

@@ -43,6 +43,24 @@ npm run format:check
 npm run format
 ```
 
+### TypeScript toolchain
+
+The repository is pinned to TypeScript 7 (`typescript` in the root `package.json`). Both
+`npm run build` and `npm run type:check` invoke its `tsc` binary; there is no `tsgo` any more, since
+the native compiler is now what `typescript` ships.
+
+TypeScript 7.0 deliberately ships without a compiler API, so tools that import `typescript`
+programmatically cannot run against it. Only `openapi-typescript` is affected here — see
+[openapi-typescript#2841](https://github.com/openapi-ts/openapi-typescript/issues/2841). Rather than
+downgrading the compiler everyone else uses, the `generate-openapi` bin runs that one tool from an
+empty working directory, which makes `npx` resolve it in an isolated tree alongside a TypeScript that
+still exposes the API. The trade-off is that generation uses the latest `openapi-typescript@7` from
+the npx cache instead of the copy installed in the host project. Collapse it back to a plain
+`npx openapi-typescript` call once the tool adopts the API that TypeScript 7.1 is expected to ship.
+
+Because `openapi-typescript` declares a `typescript@^5.x` peer, `npm install` prints an unmet-peer
+warning. Nothing resolves that peer at runtime, so it is cosmetic; `npm ci` is unaffected.
+
 ## Pre-commit hooks
 
 Install git hooks:
@@ -234,6 +252,9 @@ npm publish --workspaces --registry https://registry.npmjs.org
 - Purpose: Typed API client helpers and response validation
 - Key dependencies: `openapi-fetch`, `zod`
 - Peer dependency: `openapi-typescript`
+- The `generate-openapi` bin shells out to `openapi-typescript`, which needs the classic TypeScript
+  compiler API. Consumers must resolve `typescript` to 5.x or 6.x for it to run — see
+  [TypeScript toolchain](#typescript-toolchain).
 
 ### HTTP client React bindings
 
