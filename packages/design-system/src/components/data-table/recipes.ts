@@ -1,12 +1,31 @@
 import type { CSSProperties } from 'react';
 
+import type { DataTableColumnAlign, DataTableDensity } from './types';
+
 type HeaderCellStyleInput = {
   sortable: boolean;
+  align?: DataTableColumnAlign;
+  density?: DataTableDensity;
+};
+
+type BodyCellStyleInput = {
+  align?: DataTableColumnAlign;
+  density?: DataTableDensity;
 };
 
 type BodyRowStyleInput = {
   selected: boolean;
   clickable: boolean;
+};
+
+const HEADER_CELL_PADDING: Record<DataTableDensity, string> = {
+  comfortable: '12px 16px',
+  compact: '8px 12px',
+};
+
+const BODY_CELL_PADDING: Record<DataTableDensity, string> = {
+  comfortable: '14px 16px',
+  compact: '8px 12px',
 };
 
 export const dataTableRecipes = {
@@ -19,17 +38,20 @@ export const dataTableRecipes = {
   } satisfies CSSProperties,
   table: {
     width: '100%',
-    minWidth: '48rem',
     borderCollapse: 'collapse',
     background: 'var(--colors-surface-default, #ffffff)',
   } satisfies CSSProperties,
   headerRow: {
     background: 'var(--colors-surface-subtle, #f8f9fb)',
   } satisfies CSSProperties,
-  headerCell: ({ sortable }: HeaderCellStyleInput) =>
+  headerCell: ({
+    sortable,
+    align = 'left',
+    density = 'comfortable',
+  }: HeaderCellStyleInput) =>
     ({
-      padding: '12px 16px',
-      textAlign: 'left',
+      padding: HEADER_CELL_PADDING[density],
+      textAlign: align,
       fontSize: 12,
       fontWeight: 600,
       letterSpacing: '0.08em',
@@ -56,12 +78,17 @@ export const dataTableRecipes = {
         : 'var(--colors-surface-default, #ffffff)',
       transition: 'background-color 120ms ease',
     }) satisfies CSSProperties,
-  bodyCell: {
-    borderBottomWidth: 1,
-    borderBottomStyle: 'solid',
-    borderBottomColor: 'var(--colors-border-subtle, #d0d5dd)',
-    padding: '14px 16px',
-  } satisfies CSSProperties,
+  bodyCell: ({
+    align = 'left',
+    density = 'comfortable',
+  }: BodyCellStyleInput = {}) =>
+    ({
+      borderBottomWidth: 1,
+      borderBottomStyle: 'solid',
+      borderBottomColor: 'var(--colors-border-subtle, #d0d5dd)',
+      padding: BODY_CELL_PADDING[density],
+      textAlign: align,
+    }) satisfies CSSProperties,
   magnitudeCell: {
     display: 'grid',
     gap: 8,
