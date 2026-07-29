@@ -31,15 +31,26 @@ export {
   type SurfaceMessageActionsProps,
   type SurfaceMessageTone,
 } from './components/SurfaceMessage';
-export { ThemeToggle } from './components/ThemeToggle';
+export {
+  ThemeToggle,
+  type ThemeToggleVariant,
+  type ThemeToggleProps,
+} from './components/ThemeToggle';
 export { Button } from './components/Button';
 export { TreeRow, type TreeRowProps } from './components/TreeRow';
 export { Badge } from './components/Badge';
-export type { BadgeTone } from './components/Badge';
+export type {
+  BadgeTone,
+  BadgeVariant,
+  BadgeColorPalette,
+  BadgeSize,
+} from './components/Badge';
 export type {
   ButtonVariant,
   ButtonSize,
   ButtonDensity,
+  ButtonEmphasis,
+  ButtonColorPalette,
 } from './components/Button';
 export { SearchInput } from './components/SearchInput';
 export {
@@ -85,4 +96,42 @@ export { Toggle } from '@ark-ui/react/toggle';
 export { ToggleGroup } from '@ark-ui/react/toggle-group';
 export { Switch } from '@ark-ui/react/switch';
 export { Dialog } from '@ark-ui/react/dialog';
-export { Indicator, type IndicatorStatus } from './components/Indicator';
+export {
+  Indicator,
+  type IndicatorStatus,
+  type IndicatorColorPalette,
+} from './components/Indicator';
+export {
+  TextInput,
+  Textarea,
+  type TextInputProps,
+  type TextareaProps,
+} from './components/TextInput';
+export { Drawer } from './components/Drawer';
+export { Field } from '@ark-ui/react/field';
+export { Progress } from '@ark-ui/react/progress';
+export { Sparkline, type SparklineProps } from './components/Sparkline';
+export {
+  Panel,
+  type PanelProps,
+  type PanelSurface,
+  type PanelDensity,
+  type PanelHeadingSpacing,
+  type PanelTitleTransform,
+} from './components/Panel';
+export {
+  StatTile,
+  StatRow,
+  type StatTileProps,
+  type StatRowProps,
+  type StatTileTone,
+  type StatTileLabelCase,
+} from './components/StatTile';
+export {
+  Code,
+  CodeBlock,
+  type CodeProps,
+  type CodeBlockProps,
+} from './components/Code';
+export { PageShell, type PageShellProps } from './layouts/PageShell';
+export { SidebarGrid, type SidebarGridProps } from './layouts/SidebarGrid';

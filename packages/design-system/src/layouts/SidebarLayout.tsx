@@ -1,18 +1,12 @@
 import { Splitter } from '@ark-ui/react/splitter';
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-} from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 type SidebarLayoutProps = {
   sidebar: ReactNode;
   main: ReactNode;
   topBar?: ReactNode;
   bottomPanel?: ReactNode;
+  className?: string;
   defaultSidebarWidth?: number;
   minSidebarWidth?: number;
   maxSidebarWidth?: number;
@@ -35,131 +29,34 @@ const TOP_BAR_MIN_HEIGHT = 64;
 const SIDEBAR_STORAGE_KEY = 'sidebar-width';
 const BOTTOM_STORAGE_KEY = 'bottom-panel-height';
 
-const rootStyle: CSSProperties = {
-  width: '100%',
-  height: '100vh',
-  minWidth: 0,
-  overflow: 'hidden',
-};
+/**
+ * Class names emitted by the `sidebarLayout` slot recipe (registered in the
+ * preset + staticCss). The design-system package builds with `tsc` and ships no
+ * generated `styled-system`, so styling is applied by stable Panda slot class
+ * names (`${className}__${slot}`). All surfaces, borders, and resize indicators
+ * — previously inline `var(--colors-*)` styles — now live in the recipe, so a
+ * consumer `className` composed LAST on `root` (utilities layer) overrides them
+ *. Runtime panel sizing still comes from Ark Splitter props.
+ */
+const slots = {
+  root: 'sidebarLayout__root',
+  horizontalSplitter: 'sidebarLayout__horizontalSplitter',
+  sidebar: 'sidebarLayout__sidebar',
+  main: 'sidebarLayout__main',
+  topBar: 'sidebarLayout__topBar',
+  mainColumn: 'sidebarLayout__mainColumn',
+  content: 'sidebarLayout__content',
+  verticalSplitter: 'sidebarLayout__verticalSplitter',
+  contentPanel: 'sidebarLayout__contentPanel',
+  bottomPanel: 'sidebarLayout__bottomPanel',
+  verticalResizeTrigger: 'sidebarLayout__verticalResizeTrigger',
+  horizontalResizeTrigger: 'sidebarLayout__horizontalResizeTrigger',
+  verticalResizeIndicator: 'sidebarLayout__verticalResizeIndicator',
+  horizontalResizeIndicator: 'sidebarLayout__horizontalResizeIndicator',
+} as const;
 
-const horizontalSplitterStyle: CSSProperties = {
-  width: '100%',
-  height: '100%',
-  display: 'flex',
-  minWidth: 0,
-  minHeight: 0,
-};
-
-const sidebarBaseStyle: CSSProperties = {
-  minWidth: 0,
-  minHeight: 0,
-  overflow: 'auto',
-  borderRight: '1px solid var(--colors-border-subtle, #d0d5dd)',
-  background: 'var(--colors-surface-default, #ffffff)',
-};
-
-const mainStyle: CSSProperties = {
-  minWidth: 0,
-  minHeight: 0,
-  height: '100%',
-  overflow: 'hidden',
-  display: 'flex',
-  flexDirection: 'column',
-  background: 'var(--colors-surface-default, #ffffff)',
-};
-
-const topBarStyle: CSSProperties = {
-  padding: '12px 16px',
-  borderBottom: '1px solid var(--colors-border-subtle, #d0d5dd)',
-  background: 'var(--colors-surface-default, #ffffff)',
-  display: 'flex',
-  justifyContent: 'flex-end',
-  alignItems: 'center',
-  minHeight: TOP_BAR_MIN_HEIGHT,
-};
-
-const contentPanelStyle: CSSProperties = {
-  minWidth: 0,
-  minHeight: 0,
-  height: '100%',
-  overflow: 'hidden',
-};
-
-const contentStyle: CSSProperties = {
-  minWidth: 0,
-  minHeight: 0,
-  flex: 1,
-  overflow: 'auto',
-  background: 'var(--colors-surface-default, #ffffff)',
-};
-
-const mainColumnStyle: CSSProperties = {
-  minWidth: 0,
-  minHeight: 0,
-  flex: 1,
-  overflow: 'hidden',
-  background: 'var(--colors-surface-default, #ffffff)',
-};
-
-const verticalSplitterStyle: CSSProperties = {
-  width: '100%',
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  minWidth: 0,
-  minHeight: 0,
-};
-
-const bottomPanelStyle: CSSProperties = {
-  background: 'var(--colors-surface-default, #ffffff)',
-  borderTop: '1px solid var(--colors-border-subtle, #d0d5dd)',
-  overflow: 'auto',
-  minHeight: 0,
-};
-
-const verticalResizeTriggerStyle: CSSProperties = {
-  position: 'relative',
-  width: 8,
-  marginLeft: -4,
-  marginRight: -4,
-  background: 'transparent',
-  border: 'none',
-  padding: 0,
-  cursor: 'col-resize',
-  zIndex: 1,
-};
-
-const horizontalResizeTriggerStyle: CSSProperties = {
-  position: 'relative',
-  height: 8,
-  marginTop: -4,
-  marginBottom: -4,
-  background: 'transparent',
-  border: 'none',
-  padding: 0,
-  cursor: 'row-resize',
-  zIndex: 1,
-};
-
-const verticalResizeIndicatorStyle: CSSProperties = {
-  position: 'absolute',
-  top: 0,
-  bottom: 0,
-  left: '50%',
-  width: 1,
-  transform: 'translateX(-50%)',
-  background: 'var(--colors-border-subtle, #d0d5dd)',
-};
-
-const horizontalResizeIndicatorStyle: CSSProperties = {
-  position: 'absolute',
-  left: 0,
-  right: 0,
-  top: '50%',
-  height: 1,
-  transform: 'translateY(-50%)',
-  background: 'var(--colors-border-subtle, #d0d5dd)',
-};
+const cx = (...classes: Array<string | false | null | undefined>): string =>
+  classes.filter(Boolean).join(' ');
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
@@ -204,6 +101,7 @@ export function SidebarLayout({
   main,
   topBar,
   bottomPanel,
+  className,
   defaultSidebarWidth = DEFAULT_SIDEBAR_WIDTH,
   minSidebarWidth = DEFAULT_MIN_SIDEBAR_WIDTH,
   maxSidebarWidth = DEFAULT_MAX_SIDEBAR_WIDTH,
@@ -343,12 +241,12 @@ export function SidebarLayout({
   );
 
   return (
-    <div ref={rootRef} style={rootStyle}>
+    <div ref={rootRef} className={cx(slots.root, className)}>
       <Splitter.Root
         orientation="horizontal"
         panels={horizontalPanels}
         defaultSize={[sidebarPanelSize, 100 - sidebarPanelSize]}
-        style={horizontalSplitterStyle}
+        className={slots.horizontalSplitter}
         onResizeEnd={({ size }) => {
           const nextSidebar = clamp(
             toPixels(size[0] ?? sidebarPanelSize, safeRootWidth),
@@ -362,14 +260,14 @@ export function SidebarLayout({
           }
         }}
       >
-        <Splitter.Panel id="sidebar" style={sidebarBaseStyle}>
+        <Splitter.Panel id="sidebar" className={slots.sidebar}>
           {sidebar}
         </Splitter.Panel>
 
         <Splitter.ResizeTrigger
           id="sidebar:main"
           aria-label="Resize sidebar"
-          style={verticalResizeTriggerStyle}
+          className={slots.verticalResizeTrigger}
           data-scope="resize-handle"
           data-part="root"
           data-axis="vertical"
@@ -377,16 +275,16 @@ export function SidebarLayout({
           data-resize-source="splitter"
         >
           <Splitter.ResizeTriggerIndicator
-            style={verticalResizeIndicatorStyle}
+            className={slots.verticalResizeIndicator}
             data-scope="resize-handle"
             data-part="indicator"
           />
         </Splitter.ResizeTrigger>
 
-        <Splitter.Panel id="main" style={mainStyle}>
-          {topBar ? <header style={topBarStyle}>{topBar}</header> : null}
+        <Splitter.Panel id="main" className={slots.main}>
+          {topBar ? <header className={slots.topBar}>{topBar}</header> : null}
 
-          <div ref={mainColumnRef} style={mainColumnStyle}>
+          <div ref={mainColumnRef} className={slots.mainColumn}>
             {bottomPanel ? (
               <Splitter.Root
                 orientation="vertical"
@@ -405,7 +303,7 @@ export function SidebarLayout({
                   },
                 ]}
                 defaultSize={[100 - bottomPanelSize, bottomPanelSize]}
-                style={verticalSplitterStyle}
+                className={slots.verticalSplitter}
                 onResizeEnd={({ size }) => {
                   const nextBottom = clamp(
                     toPixels(size[1] ?? bottomPanelSize, safeMainColumnHeight),
@@ -422,14 +320,14 @@ export function SidebarLayout({
                   }
                 }}
               >
-                <Splitter.Panel id="content" style={contentPanelStyle}>
+                <Splitter.Panel id="content" className={slots.contentPanel}>
                   {main}
                 </Splitter.Panel>
 
                 <Splitter.ResizeTrigger
                   id="content:bottom"
                   aria-label="Resize bottom panel"
-                  style={horizontalResizeTriggerStyle}
+                  className={slots.horizontalResizeTrigger}
                   data-scope="resize-handle"
                   data-part="root"
                   data-axis="horizontal"
@@ -437,18 +335,18 @@ export function SidebarLayout({
                   data-resize-source="splitter"
                 >
                   <Splitter.ResizeTriggerIndicator
-                    style={horizontalResizeIndicatorStyle}
+                    className={slots.horizontalResizeIndicator}
                     data-scope="resize-handle"
                     data-part="indicator"
                   />
                 </Splitter.ResizeTrigger>
 
-                <Splitter.Panel id="bottom" style={bottomPanelStyle}>
+                <Splitter.Panel id="bottom" className={slots.bottomPanel}>
                   {bottomPanel}
                 </Splitter.Panel>
               </Splitter.Root>
             ) : (
-              <div style={contentStyle}>{main}</div>
+              <div className={slots.content}>{main}</div>
             )}
           </div>
         </Splitter.Panel>
