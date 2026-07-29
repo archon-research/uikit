@@ -64,7 +64,8 @@ export const TitleTransform = () => (
   </div>
 );
 
-// The header row composes a meta line plus trailing actions.
+// The header row keeps the title on the left and aligns the meta line plus
+// trailing actions inline at the end of the same row.
 export const WithMetaAndActions = () => (
   <div className={frameClassName}>
     <Panel
@@ -78,8 +79,14 @@ export const WithMetaAndActions = () => (
       }
     >
       <p className={bodyClassName}>
-        Actions align to the end of the header row; the meta line sits beneath
-        the title.
+        The meta line sits inline at the end of the title row, with actions
+        aligned to the right of the same row.
+      </p>
+    </Panel>
+    <Panel title="Positions" meta="18 across 6 venues">
+      <p className={bodyClassName}>
+        With no actions, the meta line still sits inline at the end of the title
+        row.
       </p>
     </Panel>
   </div>

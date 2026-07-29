@@ -56,10 +56,22 @@ export const statTileRecipe = defineSlotRecipe({
         },
       },
     },
+    density: {
+      comfortable: {},
+      compact: {
+        label: {
+          textStyle: 'microLabel',
+        },
+        sub: {
+          textStyle: 'metaText',
+        },
+      },
+    },
   },
   defaultVariants: {
     tone: 'default',
     labelCase: 'none',
+    density: 'comfortable',
   },
 });
 

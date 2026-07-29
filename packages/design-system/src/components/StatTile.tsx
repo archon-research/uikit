@@ -13,6 +13,7 @@ const cx = (...classes: Array<string | false | null | undefined>): string =>
 
 export type StatTileTone = 'default' | 'success' | 'critical';
 export type StatTileLabelCase = 'none' | 'upper';
+export type StatTileDensity = 'comfortable' | 'compact';
 
 export type StatTileProps = HTMLAttributes<HTMLDivElement> & {
   label: ReactNode;
@@ -27,6 +28,12 @@ export type StatTileProps = HTMLAttributes<HTMLDivElement> & {
    * `upper` renders an uppercase, wider-tracked micro-label.
    */
   labelCase?: StatTileLabelCase;
+  /**
+   * Sizing treatment via the `statTile` `density` slot variant. Defaults to
+   * `comfortable` (unchanged label + sub sizing); `compact` renders the label
+   * and sub caption as tighter micro type for information-dense layouts.
+   */
+  density?: StatTileDensity;
 };
 
 export type StatRowProps = HTMLAttributes<HTMLDivElement>;
@@ -37,10 +44,13 @@ export function StatTile({
   sub,
   tone = 'default',
   labelCase = 'none',
+  density = 'comfortable',
   className,
   ...rest
 }: StatTileProps) {
   const toneSuffix = tone === 'default' ? false : `--tone_${tone}`;
+  const densitySuffix =
+    density === 'comfortable' ? false : `--density_${density}`;
 
   return (
     <div
@@ -54,6 +64,7 @@ export function StatTile({
         className={cx(
           'statTile__label',
           labelCase !== 'none' && `statTile__label--labelCase_${labelCase}`,
+          densitySuffix && `statTile__label${densitySuffix}`,
         )}
         data-part="label"
       >
@@ -73,6 +84,7 @@ export function StatTile({
           className={cx(
             'statTile__sub',
             toneSuffix && `statTile__sub${toneSuffix}`,
+            densitySuffix && `statTile__sub${densitySuffix}`,
           )}
           data-part="sub"
         >

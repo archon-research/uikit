@@ -59,6 +59,29 @@ export const LabelCase = () => (
   </div>
 );
 
+// `density="compact"` renders the label + sub as tighter micro type.
+export const Density = () => (
+  <div className={frameClassName}>
+    <p className={captionClassName}>
+      density="comfortable" (default) vs "compact"
+    </p>
+    <StatRow>
+      <StatTile
+        label="Total AUM"
+        value="$10.68M"
+        sub="+2.4% 24h"
+        density="comfortable"
+      />
+      <StatTile
+        label="Total AUM"
+        value="$10.68M"
+        sub="+2.4% 24h"
+        density="compact"
+      />
+    </StatRow>
+  </div>
+);
+
 // A single tile without a sub caption.
 export const Single = () => (
   <div className={frameClassName}>
