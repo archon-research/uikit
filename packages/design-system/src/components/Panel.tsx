@@ -20,15 +20,16 @@ const cx = (...classes: Array<string | false | null | undefined>): string =>
 
 const headerRowStyle: CSSProperties = {
   display: 'flex',
-  alignItems: 'flex-start',
+  alignItems: 'center',
   justifyContent: 'space-between',
   gap: 'var(--spacing-3, 0.75rem)',
 };
 
-const headingGroupStyle: CSSProperties = {
+const trailingStyle: CSSProperties = {
   display: 'flex',
-  flexDirection: 'column',
-  minWidth: 0,
+  alignItems: 'center',
+  gap: 'var(--spacing-3, 0.75rem)',
+  flexShrink: 0,
 };
 
 const metaStyle: CSSProperties = {
@@ -110,21 +111,23 @@ export function Panel({
     >
       {hasHeader ? (
         <div style={headerRowStyle} data-part="header">
-          <div style={headingGroupStyle}>
-            {title != null ? (
-              <div className={headingClass} data-part="title">
-                {title}
-              </div>
-            ) : null}
-            {meta != null ? (
-              <div style={metaStyle} data-part="meta">
-                {meta}
-              </div>
-            ) : null}
-          </div>
-          {actions != null ? (
-            <div style={actionsStyle} data-part="actions">
-              {actions}
+          {title != null ? (
+            <div className={headingClass} data-part="title">
+              {title}
+            </div>
+          ) : null}
+          {meta != null || actions != null ? (
+            <div style={trailingStyle} data-part="header-trailing">
+              {meta != null ? (
+                <div style={metaStyle} data-part="meta">
+                  {meta}
+                </div>
+              ) : null}
+              {actions != null ? (
+                <div style={actionsStyle} data-part="actions">
+                  {actions}
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
