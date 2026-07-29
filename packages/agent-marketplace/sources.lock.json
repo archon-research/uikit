@@ -88,8 +88,8 @@
     {
       "id": "ui-coder",
       "kind": "agent",
-      "sourceType": "local-derived",
-      "pinnedRevision": "local-sync-2026-05-26",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
       "resolved": "packages/agent-marketplace/content/agents/ui-coder.md"
     },
     {
@@ -116,8 +116,8 @@
     {
       "id": "ui-verifier",
       "kind": "agent",
-      "sourceType": "local-derived",
-      "pinnedRevision": "local-sync-2026-05-26",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
       "resolved": "packages/agent-marketplace/content/agents/ui-verifier.md"
     }
   ]
