@@ -9,6 +9,7 @@ import { indicatorRecipe } from './recipes/indicator.recipe';
 import { inputRecipe } from './recipes/input.recipe';
 import { interactiveItemRecipe } from './recipes/interactiveItem.recipe';
 import { pageShellRecipe } from './recipes/pageShell.recipe';
+import { panelRecipe } from './recipes/panel.recipe';
 import { panelActionRecipe } from './recipes/panelAction.recipe';
 import { panelSectionRecipe } from './recipes/panelSection.recipe';
 import { searchInputRecipe } from './recipes/searchInput.recipe';
@@ -565,6 +566,7 @@ export const designSystemPreset = definePreset({
         emptyState: emptyStateRecipe,
         themeToggle: themeToggleRecipe,
         sidebarLayout: sidebarLayoutRecipe,
+        panel: panelRecipe,
       },
     },
   },

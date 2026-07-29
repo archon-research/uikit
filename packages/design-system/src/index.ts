@@ -1,4 +1,5 @@
 export * from './recipes/index';
+export { designSystemStaticCssRecipes } from './staticCss';
 export {
   designSystemComponentManifest,
   type DesignSystemBehaviorSource,
@@ -116,8 +117,8 @@ export {
   type PanelProps,
   type PanelSurface,
   type PanelDensity,
-  type PanelHeadingSpacing,
   type PanelTitleTransform,
+  type PanelTitleSize,
 } from './components/Panel';
 export {
   StatTile,

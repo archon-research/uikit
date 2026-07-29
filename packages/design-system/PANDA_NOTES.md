@@ -60,11 +60,28 @@ runtime toggle always has a rule to hit. You can scope it tighter
 
 ### Recommended posture for this repo
 
-- The design-system's own `panda.shared.ts` ships `staticCss` coverage for its recipes
-  (`button`, `toggleSwitch`, …). If you export a new recipe that has a runtime-toggled variant
-  (like `interactiveItem`'s `selected`), it MUST be added to that `staticCss.recipes` map.
-- **Consumers should mirror the design-system's `staticCss` coverage** in their own
-  `panda.config.ts`. When in doubt, list every recipe you import with `['*']`.
+- **Consumers should spread the exported `designSystemStaticCssRecipes` map** rather than
+  hand-list recipes. It covers every recipe the package registers and is the same list the
+  library uses internally, so the two never drift:
+
+  ```ts
+  // panda.config.ts
+  import { designSystemStaticCssRecipes } from '@archon-research/design-system';
+
+  export default defineConfig({
+    presets: [designSystemPreset],
+    staticCss: {
+      recipes: {
+        ...designSystemStaticCssRecipes,
+        // ...your own recipes with runtime-driven variants
+      },
+    },
+  });
+  ```
+
+- If you export a new recipe with a runtime-toggled variant (like `interactiveItem`'s
+  `selected`), add it to `designSystemStaticCssRecipes` (`src/staticCss.ts`) — that single edit
+  keeps the internal config and every consumer in sync.
 
 ---
 

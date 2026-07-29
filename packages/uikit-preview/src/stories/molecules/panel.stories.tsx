@@ -64,6 +64,22 @@ export const TitleTransform = () => (
   </div>
 );
 
+// `titleSize` controls the section-label size: `md` (12px, default) or `sm`
+// (11px) for tighter, information-dense panels. Weight and tracking are held
+// consistent across both sizes.
+export const TitleSize = () => (
+  <div className={frameClassName}>
+    <Panel title="Default title" titleSize="md" meta="titleSize='md' (default)">
+      <p className={bodyClassName}>Section label at the default 12px size.</p>
+    </Panel>
+    <Panel title="Smaller title" titleSize="sm" meta="titleSize='sm'">
+      <p className={bodyClassName}>
+        Section label one step smaller at 11px for dense layouts.
+      </p>
+    </Panel>
+  </div>
+);
+
 // The header row keeps the title on the left and aligns the meta line plus
 // trailing actions inline at the end of the same row.
 export const WithMetaAndActions = () => (
