@@ -455,8 +455,8 @@
         "Molecules",
         "Panel"
       ],
-      "locStart": 96,
-      "locEnd": 108,
+      "locStart": 112,
+      "locEnd": 124,
       "filePath": "src/stories/molecules/panel.stories.tsx",
       "namedExport": "Density",
       "meta": {}
@@ -471,6 +471,18 @@
       "locEnd": 49,
       "filePath": "src/stories/molecules/panel.stories.tsx",
       "namedExport": "Surfaces",
+      "meta": {}
+    },
+    "molecules--panel--title-size": {
+      "name": "Title size",
+      "levels": [
+        "Molecules",
+        "Panel"
+      ],
+      "locStart": 70,
+      "locEnd": 81,
+      "filePath": "src/stories/molecules/panel.stories.tsx",
+      "namedExport": "TitleSize",
       "meta": {}
     },
     "molecules--panel--title-transform": {
@@ -491,8 +503,8 @@
         "Molecules",
         "Panel"
       ],
-      "locStart": 69,
-      "locEnd": 93,
+      "locStart": 85,
+      "locEnd": 109,
       "filePath": "src/stories/molecules/panel.stories.tsx",
       "namedExport": "WithMetaAndActions",
       "meta": {}
