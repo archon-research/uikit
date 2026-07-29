@@ -1,0 +1,16 @@
+// Ready-to-use Panda PostCSS config for the preview package.
+//
+// This file is INERT as `.example`. To adopt the PostCSS pipeline (so new
+// utility classes hot-reload without a manual `npm run generate`), rename it
+// to `postcss.config.cjs` and follow the remaining steps documented in
+// packages/design-system/PANDA_NOTES.md: swap the `.ladle/components.tsx`
+// import to a Panda entry stylesheet and trim the `generate` script.
+//
+// No new dependency is needed — `@pandacss/dev` (already a devDependency here)
+// ships the plugin at `@pandacss/dev/postcss`.
+
+module.exports = {
+  plugins: {
+    '@pandacss/dev/postcss': {},
+  },
+};
