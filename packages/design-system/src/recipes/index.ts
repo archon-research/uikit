@@ -19,3 +19,4 @@ export { searchInputRecipe } from './searchInput.recipe';
 export { emptyStateRecipe } from './emptyState.recipe';
 export { themeToggleRecipe } from './themeToggle.recipe';
 export { sidebarLayoutRecipe } from './sidebarLayout.recipe';
+export { panelRecipe } from './panel.recipe';

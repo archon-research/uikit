@@ -271,7 +271,7 @@ export const designSystemComponentManifest = [
     styleOwner: 'design-system-preset',
     storyBucket: 'molecules',
     contractScope: 'panel',
-    recipeKey: 'panelSection',
+    recipeKey: 'panel',
   },
   {
     exportName: 'StatTile',

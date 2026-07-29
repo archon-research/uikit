@@ -1,5 +1,7 @@
 import type { Config } from '@pandacss/dev';
 
+import { designSystemStaticCssRecipes } from './src/staticCss';
+
 import { badgeRecipe } from './src/recipes/badge.recipe';
 import { buttonRecipe } from './src/recipes/button.recipe';
 import { codeRecipe } from './src/recipes/code.recipe';
@@ -16,6 +18,7 @@ import { sectionHeadingRecipe } from './src/recipes/sectionHeading.recipe';
 import { segmentedControlRecipe } from './src/recipes/segmentedControl.recipe';
 import { selectRecipe } from './src/recipes/select.recipe';
 import { sidebarGridRecipe } from './src/recipes/sidebarGrid.recipe';
+import { panelRecipe } from './src/recipes/panel.recipe';
 import { sidebarLayoutRecipe } from './src/recipes/sidebarLayout.recipe';
 import { statRowRecipe, statTileRecipe } from './src/recipes/statTile.recipe';
 import { surfaceMessageRecipe } from './src/recipes/surfaceMessage.recipe';
@@ -183,34 +186,11 @@ export const designSystemPandaConfig = {
   // `staticCss` is a Panda ROOT-config key — a preset cannot carry it. Recipe
   // variants driven by RUNTIME state (e.g. `interactiveItem({ selected })`) emit
   // NO CSS unless the recipe is listed here, and the omission fails SILENTLY
-  // (selection rendered nothing). List EVERY exported recipe/slot-recipe with
-  // ['*'] so all variants are generated. Consumers of the published preset must
-  // replicate this `staticCss.recipes` block in their own `panda.config`.
+  // (selection rendered nothing). The recipe list is the shared, exported
+  // `designSystemStaticCssRecipes` map, so this config and the map consumers
+  // spread into their own `panda.config` never drift.
   staticCss: {
-    recipes: {
-      button: ['*'],
-      interactiveItem: ['*'],
-      panelSection: ['*'],
-      sectionHeading: ['*'],
-      panelAction: ['*'],
-      segmentedControl: ['*'],
-      surfaceMessage: ['*'],
-      toggleSwitch: ['*'],
-      input: ['*'],
-      drawer: ['*'],
-      statTile: ['*'],
-      statRow: ['*'],
-      code: ['*'],
-      pageShell: ['*'],
-      sidebarGrid: ['*'],
-      badge: ['*'],
-      indicator: ['*'],
-      select: ['*'],
-      searchInput: ['*'],
-      emptyState: ['*'],
-      themeToggle: ['*'],
-      sidebarLayout: ['*'],
-    },
+    recipes: designSystemStaticCssRecipes,
   },
   studio: {
     logo: 'UI',
@@ -400,6 +380,7 @@ export const designSystemPandaConfig = {
         emptyState: emptyStateRecipe,
         themeToggle: themeToggleRecipe,
         sidebarLayout: sidebarLayoutRecipe,
+        panel: panelRecipe,
       },
     },
   },
