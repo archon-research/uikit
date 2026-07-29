@@ -7,6 +7,18 @@ import type {
 
 export type DataTableMagnitudeScale = 'log' | 'linear';
 
+/**
+ * Horizontal alignment for a column's header and body cells. Set per-column via
+ * the column definition `meta.align`. Numeric columns typically use `'right'`.
+ */
+export type DataTableColumnAlign = 'left' | 'right' | 'center';
+
+/**
+ * Row density for the whole table. `'comfortable'` (default) preserves the
+ * historical row height/padding; `'compact'` lowers both for denser layouts.
+ */
+export type DataTableDensity = 'comfortable' | 'compact';
+
 export type DataTableMagnitudeDomain<TData> =
   | 'column'
   | { min: number; max: number }
@@ -59,5 +71,10 @@ export type TypedColumnDef<T> = ColumnDef<T> & {
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
     magnitude?: DataTableMagnitudeConfig<TData>;
+    /**
+     * Horizontal alignment applied to this column's header and body cells.
+     * Defaults to `'left'` when omitted.
+     */
+    align?: DataTableColumnAlign;
   }
 }

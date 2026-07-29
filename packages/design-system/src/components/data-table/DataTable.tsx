@@ -9,6 +9,7 @@ import {
   normalizeMagnitudeValue,
 } from './magnitude';
 import { dataTableRecipes } from './recipes';
+import type { DataTableDensity } from './types';
 
 type DataTableProps<TData> = {
   table: Table<TData>;
@@ -23,7 +24,18 @@ type DataTableProps<TData> = {
   };
   renderCell?: (cell: ReactNode) => ReactNode;
   className?: string;
+  /**
+   * Minimum table width. Defaults to `undefined` (natural/`auto` width) so the
+   * table fits narrow containers instead of forcing horizontal scroll. Pass an
+   * explicit value (e.g. `'48rem'`) to restore a forced minimum for wide,
+   * many-column tables. BREAKING: the previous default was `'48rem'`.
+   */
   minWidth?: string;
+  /**
+   * Row density. `'comfortable'` (default) keeps the historical row
+   * height/padding; `'compact'` lowers header and body padding.
+   */
+  density?: DataTableDensity;
 };
 
 export function DataTable<TData>({
@@ -35,7 +47,8 @@ export function DataTable<TData>({
   skeletonConfig = { rows: 3, columns: 3, firstColumnTall: true },
   renderCell,
   className,
-  minWidth = '48rem',
+  minWidth,
+  density = 'comfortable',
 }: DataTableProps<TData>) {
   const magnitudeStateByColumn = createMagnitudeStateMap(table);
 
@@ -70,7 +83,11 @@ export function DataTable<TData>({
                   <th
                     key={header.id}
                     aria-sort={ariaSort}
-                    style={dataTableRecipes.headerCell({ sortable: canSort })}
+                    style={dataTableRecipes.headerCell({
+                      sortable: canSort,
+                      align: header.column.columnDef.meta?.align,
+                      density,
+                    })}
                   >
                     {header.isPlaceholder ? null : canSort ? (
                       <button
@@ -221,7 +238,13 @@ export function DataTable<TData>({
                       }
 
                       return (
-                        <td key={cell.id} style={dataTableRecipes.bodyCell}>
+                        <td
+                          key={cell.id}
+                          style={dataTableRecipes.bodyCell({
+                            align: cell.column.columnDef.meta?.align,
+                            density,
+                          })}
+                        >
                           {renderCell ? renderCell(content) : content}
                         </td>
                       );
