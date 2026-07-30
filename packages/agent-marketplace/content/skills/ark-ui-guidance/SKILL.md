@@ -9,7 +9,7 @@ Use this skill for component architecture and behavior decisions around Ark UI p
 
 ## First: check what's already wrapped
 
-Before importing from `@ark-ui/*` directly, check `packages/design-system/COMPONENTS.md` (or the `designSystemComponentManifest` export). The design system already re-exports many Ark primitives — some skinned (`styleOwner: design-system-preset`), some raw (`styleOwner: consumer`, e.g. Dialog, Tabs, Menu, TreeView, Slider, Progress, Field). Prefer the design-system export so consumers depend on one package and inherit its tokens/recipes; reach for a raw `@ark-ui/*` import only when the primitive genuinely isn't re-exported yet.
+Before importing from `@ark-ui/*` directly, check the component manifest (`packages/design-system/src/component-manifest.ts`, exported as `designSystemComponentManifest`). The design system already re-exports many Ark primitives — some skinned (`styleOwner: design-system-preset`), some raw (`styleOwner: consumer`, e.g. Dialog, Tabs, Menu, TreeView, Slider, Progress, Field). Prefer the design-system export so consumers depend on one package and inherit its tokens/recipes; reach for a raw `@ark-ui/*` import only when the primitive genuinely isn't re-exported yet.
 
 ## Priorities
 

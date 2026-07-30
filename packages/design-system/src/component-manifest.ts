@@ -1,3 +1,24 @@
+/**
+ * The canonical inventory of every component this package exports — the single
+ * source of truth for "what's available and where its behaviour comes from".
+ * It is exported at runtime (`designSystemComponentManifest`) so tooling,
+ * consumers, and agents can read it directly; the README points here rather
+ * than duplicating it into a separate doc.
+ *
+ * When you add or remove a public component export in `index.ts`, update this
+ * array too — a test (`component-manifest.test.ts`) fails if a component export
+ * is missing here.
+ *
+ * Fields:
+ * - `exportName`   — the exported symbol from `@archon-research/design-system`.
+ * - `behaviorSource` — where the behaviour lives: `design-system` (owned here),
+ *   `ark-ui` (wraps/re-exports an Ark UI primitive), or `tanstack-react-table`.
+ * - `styleOwner`   — who owns the visuals: `design-system-preset` (a Panda recipe
+ *   you can override via `className`), `design-system` (component-local styling),
+ *   or `consumer` (unstyled re-export — you style it).
+ * - `storyBucket`  — Ladle catalogue bucket, or null.
+ * - `contractScope`/`recipeKey` — the recipe/contract backing it, if any.
+ */
 export type DesignSystemBehaviorSource =
   | 'design-system'
   | 'ark-ui'

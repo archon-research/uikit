@@ -35,12 +35,22 @@ export function Example() {
 
 ### What's available
 
-See **[COMPONENTS.md](./COMPONENTS.md)** for the full inventory — including which
-exports are owned here vs. wrappers around [Ark UI](https://ark-ui.com) (Dialog,
-Tabs, Menu, TreeView, Slider, …) or [TanStack Table](https://tanstack.com/table)
-(`DataTable`). It is generated from the component manifest (`npm run docs:components`),
-which is also importable at runtime as `designSystemComponentManifest`. Charts live in
-the separate [`@archon-research/charting`](../charting/README.md) package.
+The full inventory is the **component manifest** — [`src/component-manifest.ts`](./src/component-manifest.ts),
+also exported at runtime as `designSystemComponentManifest`. Each entry's
+`behaviorSource` tells you whether an export is owned here or a wrapper/re-export
+around [Ark UI](https://ark-ui.com) (Dialog, Tabs, Menu, TreeView, Slider, …) or
+[TanStack Table](https://tanstack.com/table) (`DataTable`), and `styleOwner` tells
+you who owns its visuals. Because it is data, you can also list it programmatically:
+
+```typescript
+import { designSystemComponentManifest } from '@archon-research/design-system';
+
+const arkWrappers = designSystemComponentManifest.filter(
+  (c) => c.behaviorSource === 'ark-ui',
+);
+```
+
+Charts live in the separate [`@archon-research/charting`](../charting/README.md) package.
 
 ### Code-splitting heavy components
 
