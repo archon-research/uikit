@@ -1,9 +1,5 @@
 import { ChevronDown } from 'lucide-react';
-import {
-  type CSSProperties,
-  type ReactNode,
-  type SelectHTMLAttributes,
-} from 'react';
+import { type ReactNode, type SelectHTMLAttributes } from 'react';
 
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   children: ReactNode;
@@ -13,55 +9,30 @@ export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
 /** @deprecated Use SelectProps instead. */
 export type StyledSelectProps = SelectProps;
 
-const wrapperStyle: CSSProperties = {
-  position: 'relative',
-  display: 'inline-flex',
-  alignItems: 'center',
-  width: '100%',
-};
+/**
+ * Class names emitted by the `select` slot recipe (registered in the preset +
+ * staticCss). The design-system package builds with `tsc` and ships no
+ * generated `styled-system`, so styling is applied by stable Panda slot class
+ * names (`${className}__${slot}`) rather than importing `css()`. Because these
+ * live in the `recipes` cascade layer, a consumer `className` composed LAST on
+ * `root` (utilities layer) overrides recipe styles — e.g. `css({ width })`
+ * beats the recipe's `width: full`.
+ */
+const slots = {
+  root: 'select__root',
+  control: 'select__control',
+  indicator: 'select__indicator',
+} as const;
 
-const selectStyle: CSSProperties = {
-  width: '100%',
-  minWidth: 0,
-  height: 36,
-  borderWidth: 1,
-  borderStyle: 'solid',
-  borderColor: 'var(--colors-border-subtle, #d0d5dd)',
-  borderRadius: 8,
-  paddingLeft: 12,
-  paddingRight: 40,
-  background: 'var(--colors-surface-default, #ffffff)',
-  color: 'var(--colors-text-default, #111827)',
-  fontSize: 14,
-  lineHeight: 1.4,
-  fontFamily: 'inherit',
-  appearance: 'none',
-  WebkitAppearance: 'none',
-  MozAppearance: 'none',
-};
-
-const disabledSelectStyle: CSSProperties = {
-  opacity: 0.65,
-  cursor: 'not-allowed',
-};
-
-const chevronStyle: CSSProperties = {
-  position: 'absolute',
-  top: '50%',
-  right: 12,
-  width: 16,
-  height: 16,
-  color: 'var(--colors-text-muted, #667085)',
-  pointerEvents: 'none',
-  transform: 'translateY(-50%)',
-};
+const cx = (...classes: Array<string | false | null | undefined>): string =>
+  classes.filter(Boolean).join(' ');
 
 function SelectChevron() {
   return (
     <ChevronDown
       aria-hidden="true"
+      className={slots.indicator}
       size={16}
-      style={chevronStyle}
       strokeWidth={1.9}
       absoluteStrokeWidth
     />
@@ -70,15 +41,12 @@ function SelectChevron() {
 
 export function Select({ children, className, ...props }: SelectProps) {
   return (
-    <div className={className} style={wrapperStyle}>
-      <select
-        {...props}
-        style={
-          props.disabled
-            ? { ...selectStyle, ...disabledSelectStyle }
-            : selectStyle
-        }
-      >
+    <div
+      className={cx(slots.root, className)}
+      data-scope="select"
+      data-part="root"
+    >
+      <select {...props} className={slots.control} data-part="control">
         {children}
       </select>
       <SelectChevron />

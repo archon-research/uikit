@@ -1,61 +1,56 @@
 import { Laptop, Moon, Sun } from 'lucide-react';
-import { type CSSProperties } from 'react';
 
 import { useTheme, type ThemeMode } from '../theme/useTheme';
 
-const containerStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 6,
-  width: '100%',
-  boxSizing: 'border-box',
-  padding: 4,
-  borderRadius: 10,
-  border: '1px solid var(--colors-border-subtle, #d0d5dd)',
-  background: 'var(--colors-surface-subtle, #f8f9fb)',
+export type ThemeToggleVariant = 'segmented' | 'icon';
+export type ThemeToggleAppearance = 'chip' | 'bare';
+
+export type ThemeToggleProps = {
+  /**
+   * `segmented` (default) renders the 3-option radiogroup. `icon` renders a
+   * single compact button that cycles auto -> light -> dark.
+   */
+  variant?: ThemeToggleVariant;
+  /**
+   * Chrome for the `icon` variant. `chip` (default) is the bordered, filled
+   * chip; `bare` drops border/background/radius so the button inherits an
+   * enclosing toolbar or pill surface. Ignored by the `segmented` variant.
+   */
+  appearance?: ThemeToggleAppearance;
+  className?: string;
 };
 
-const buttonBaseStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flex: 1,
-  minWidth: 0,
-  gap: 6,
-  border: 0,
-  borderRadius: 8,
-  padding: '6px 10px',
-  fontSize: 12,
-  lineHeight: 1.2,
-  cursor: 'pointer',
-  background: 'transparent',
-  color: 'var(--colors-text-muted, #667085)',
-};
+/**
+ * Class names emitted by the `themeToggle` slot recipe (registered in the
+ * preset + staticCss). The design-system package builds with `tsc` and ships no
+ * generated `styled-system`, so styling is applied by stable Panda slot class
+ * names. Conventions: slot base = `${className}__${slot}`; a variant on a slot =
+ * `${className}__${slot}--${key}_${value}`. The active segment is keyed off the
+ * runtime `data-active` attribute (not a variant class). A consumer `className`
+ * composed LAST on `root` (utilities layer) overrides recipe styles.
+ */
+const slots = {
+  root: 'themeToggle__root',
+  option: 'themeToggle__option',
+  input: 'themeToggle__input',
+  iconButton: 'themeToggle__iconButton',
+} as const;
 
-const radioInputStyle: CSSProperties = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  margin: -1,
-  padding: 0,
-  border: 0,
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(100%)',
-  whiteSpace: 'nowrap',
-};
-
-const activeButtonStyle: CSSProperties = {
-  background: 'var(--colors-surface-default, #ffffff)',
-  color: 'var(--colors-text-default, #111827)',
-  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.08)',
-};
+const cx = (...classes: Array<string | false | null | undefined>): string =>
+  classes.filter(Boolean).join(' ');
 
 const MODES: Array<{ mode: ThemeMode; label: string }> = [
   { mode: 'auto', label: 'Auto' },
   { mode: 'light', label: 'Light' },
   { mode: 'dark', label: 'Dark' },
 ];
+
+const CYCLE_ORDER: ThemeMode[] = ['auto', 'light', 'dark'];
+
+function nextMode(mode: ThemeMode): ThemeMode {
+  const index = CYCLE_ORDER.indexOf(mode);
+  return CYCLE_ORDER[(index + 1) % CYCLE_ORDER.length] ?? 'auto';
+}
 
 function ThemeIcon({ mode }: { mode: ThemeMode }) {
   const iconProps = {
@@ -75,21 +70,59 @@ function ThemeIcon({ mode }: { mode: ThemeMode }) {
   }
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({
+  variant = 'segmented',
+  appearance = 'chip',
+  className,
+}: ThemeToggleProps = {}) {
   const { mode, setMode } = useTheme();
 
+  if (variant === 'icon') {
+    const upcoming = nextMode(mode);
+    const upcomingLabel =
+      MODES.find((item) => item.mode === upcoming)?.label ?? upcoming;
+
+    return (
+      <button
+        type="button"
+        className={cx(
+          slots.root,
+          `${slots.root}--variant_icon`,
+          slots.iconButton,
+          // `chip` is the base iconButton look and emits no class; only `bare`
+          // carries a variant class.
+          appearance === 'bare' && `${slots.iconButton}--appearance_bare`,
+          className,
+        )}
+        data-appearance={appearance}
+        aria-label={`Theme: ${mode}. Switch to ${upcomingLabel}.`}
+        title={`Theme: ${mode}`}
+        data-scope="theme-toggle"
+        data-part="icon-button"
+        data-mode={mode}
+        onClick={() => setMode(upcoming)}
+      >
+        <ThemeIcon mode={mode} />
+      </button>
+    );
+  }
+
   return (
-    <div role="radiogroup" aria-label="Theme mode" style={containerStyle}>
+    <div
+      role="radiogroup"
+      aria-label="Theme mode"
+      className={cx(slots.root, `${slots.root}--variant_segmented`, className)}
+      data-scope="theme-toggle"
+      data-part="root"
+    >
       {MODES.map((item) => {
         const active = mode === item.mode;
         return (
           <label
             key={item.mode}
-            style={
-              active
-                ? { ...buttonBaseStyle, ...activeButtonStyle }
-                : buttonBaseStyle
-            }
+            className={slots.option}
+            data-part="option"
+            data-active={active ? '' : undefined}
           >
             <input
               type="radio"
@@ -97,7 +130,7 @@ export function ThemeToggle() {
               aria-label={item.label}
               checked={active}
               onChange={() => setMode(item.mode)}
-              style={radioInputStyle}
+              className={slots.input}
             />
             <ThemeIcon mode={item.mode} />
             {item.label}

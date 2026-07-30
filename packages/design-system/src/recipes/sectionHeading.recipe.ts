@@ -15,8 +15,16 @@ export const sectionHeadingRecipe = defineRecipe({
         mb: '3',
       },
     },
+    transform: {
+      none: {},
+      upper: {
+        textTransform: 'uppercase',
+        letterSpacing: 'wider',
+      },
+    },
   },
   defaultVariants: {
     spacing: 'normal',
+    transform: 'none',
   },
 });

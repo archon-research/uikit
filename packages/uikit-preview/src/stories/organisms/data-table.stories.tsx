@@ -50,6 +50,53 @@ const wrapperClassName = css({
   maxWidth: '5xl',
 });
 
+const alignedColumns = [
+  {
+    accessorKey: 'symbol',
+    header: 'Symbol',
+    cell: ({ row }: { row: { original: Row } }) => row.original.symbol,
+  },
+  {
+    accessorKey: 'chain',
+    header: 'Chain',
+    cell: ({ row }: { row: { original: Row } }) => row.original.chain,
+  },
+  {
+    accessorKey: 'amountUsd',
+    header: 'Amount (USD)',
+    meta: {
+      align: 'right' as const,
+    },
+    cell: ({ row }: { row: { original: Row } }) =>
+      `$${row.original.amountUsd.toLocaleString('en-US')}`,
+  },
+];
+
+// Numeric column set: the amount column is both right-aligned and rendered in
+// the mono font (tabular figures) so digits line up down the column.
+const numericColumns = [
+  {
+    accessorKey: 'symbol',
+    header: 'Symbol',
+    cell: ({ row }: { row: { original: Row } }) => row.original.symbol,
+  },
+  {
+    accessorKey: 'chain',
+    header: 'Chain',
+    cell: ({ row }: { row: { original: Row } }) => row.original.chain,
+  },
+  {
+    accessorKey: 'amountUsd',
+    header: 'Amount (USD)',
+    meta: {
+      align: 'right' as const,
+      mono: true,
+    },
+    cell: ({ row }: { row: { original: Row } }) =>
+      `$${row.original.amountUsd.toLocaleString('en-US')}`,
+  },
+];
+
 export const Default = () => {
   const table = useDataTable(rows, columns as never, {
     enableSorting: true,
@@ -193,6 +240,104 @@ export const HeaderCasingPolicy = () => {
         table={table}
         isLoading={false}
         getRowKey={(row: Row) => `${row.chain}:${row.symbol}`}
+      />
+    </div>
+  );
+};
+
+export const RightAlignedNumericColumn = () => {
+  const table = useDataTable(rows, alignedColumns as never, {
+    enableSorting: true,
+    enableSearch: true,
+  });
+
+  return (
+    <div className={wrapperClassName}>
+      <div
+        className={css({
+          fontSize: 'sm',
+          color: 'text.muted',
+          mb: '4',
+        })}
+      >
+        The numeric "Amount (USD)" column sets{' '}
+        <code>meta.align: &apos;right&apos;</code>, right-aligning both its
+        header and cells.
+      </div>
+      <DataTable
+        table={table}
+        isLoading={false}
+        getRowKey={(row: Row) => `${row.chain}:${row.symbol}`}
+      />
+    </div>
+  );
+};
+
+export const NumericMonoColumn = () => {
+  const table = useDataTable(rows, numericColumns as never, {
+    enableSorting: true,
+    enableSearch: true,
+  });
+
+  return (
+    <div className={wrapperClassName}>
+      <div
+        className={css({
+          fontSize: 'sm',
+          color: 'text.muted',
+          mb: '4',
+        })}
+      >
+        The numeric &quot;Amount (USD)&quot; column sets{' '}
+        <code>meta.align: &apos;right&apos;</code> and{' '}
+        <code>meta.mono: true</code>, so its body cells render in the mono font
+        with tabular figures and the digits align down the column.
+      </div>
+      <DataTable
+        table={table}
+        isLoading={false}
+        getRowKey={(row: Row) => `${row.chain}:${row.symbol}`}
+      />
+    </div>
+  );
+};
+
+export const CompactDensity = () => {
+  const comfortableTable = useDataTable(rows, numericColumns as never, {
+    enableSorting: true,
+    enableSearch: true,
+  });
+  const compactTable = useDataTable(rows, numericColumns as never, {
+    enableSorting: true,
+    enableSearch: true,
+  });
+
+  return (
+    <div
+      className={css({
+        p: '6',
+        display: 'grid',
+        gap: '6',
+        maxWidth: '5xl',
+      })}
+    >
+      <div className={css({ fontSize: 'sm', color: 'text.muted' })}>
+        Top table uses the default <code>density=&quot;comfortable&quot;</code>;
+        bottom table uses <code>density=&quot;compact&quot;</code> for genuinely
+        dense (~6px vertical) cell padding. Both right-align the numeric column
+        and render it in the mono font.
+      </div>
+      <DataTable
+        table={comfortableTable}
+        isLoading={false}
+        density="comfortable"
+        getRowKey={(row: Row) => `comfortable:${row.chain}:${row.symbol}`}
+      />
+      <DataTable
+        table={compactTable}
+        isLoading={false}
+        density="compact"
+        getRowKey={(row: Row) => `compact:${row.chain}:${row.symbol}`}
       />
     </div>
   );

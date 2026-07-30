@@ -108,10 +108,20 @@ const sidebar = (
   </div>
 );
 
+const toolbarClassName = css({
+  alignItems: 'center',
+  display: 'flex',
+  gap: '3',
+});
+
 const topBar = (
   <div className={rowClassName}>
     <span className={sectionTitleClassName}>Console</span>
-    <ThemeToggle />
+    <div className={toolbarClassName}>
+      {/* compact icon cycle form alongside the segmented default. */}
+      <ThemeToggle variant="icon" />
+      <ThemeToggle />
+    </div>
   </div>
 );
 

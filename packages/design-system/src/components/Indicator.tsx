@@ -1,75 +1,77 @@
-import type { CSSProperties, HTMLAttributes, ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 
 export type IndicatorStatus = 'idle' | 'ready' | 'active' | 'pending' | 'error';
+export type IndicatorColorPalette =
+  | 'neutral'
+  | 'gray'
+  | 'green'
+  | 'red'
+  | 'amber'
+  | 'blue';
 
 type IndicatorProps = HTMLAttributes<HTMLSpanElement> & {
-  /** Drives the dot colour and pulse. */
+  /** Semantic state: drives the dot colour (via colorPalette) and pulse. */
   status?: IndicatorStatus;
+  /** Overrides the hue picked by `status` (the pulse still follows `status`). */
+  colorPalette?: IndicatorColorPalette;
   /** Optional label rendered next to the dot. */
   children?: ReactNode;
-  /** Dot diameter in px. */
+  /** Dot diameter in px (defaults to the recipe's 8px). */
   size?: number;
 };
 
-const statusColors: Record<IndicatorStatus, string> = {
-  idle: 'var(--colors-gray-400, #98a2b3)',
-  ready: 'var(--colors-blue-500, #2e90fa)',
-  active: 'var(--colors-green-500, #12b76a)',
-  pending: 'var(--colors-yellow-500, #f79009)',
-  error: 'var(--colors-red-500, #f04438)',
-};
-
-const rootStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 6,
-  fontSize: 12,
-  fontWeight: 600,
-  lineHeight: 1,
-  color: 'var(--colors-gray-600, #475467)',
-  whiteSpace: 'nowrap',
-};
+/**
+ * Class names emitted by the `indicator` slot recipe (registered in the preset
+ * + staticCss). The design-system builds with `tsc` and ships no generated
+ * `styled-system`, so the recipe is applied by its stable slot class names
+ * (base `indicator__${slot}`, slot variant `indicator__${slot}--${key}_${value}`).
+ * Consumer `className` composes LAST.
+ */
+const cx = (...classes: Array<string | false | null | undefined>): string =>
+  classes.filter(Boolean).join(' ');
 
 /**
  * A small status dot, optionally with a label. Use for connection state and
- * other at-a-glance liveness signals. The `pending` status pulses to read as
- * "in transition".
+ * other at-a-glance liveness signals. The `pending` status pulses (via the
+ * `indicatorPulse` animation token) to read as "in transition". Colour comes
+ * from dark-aware `colorPalette` role tokens, so the dot flips correctly in
+ * dark mode.
  */
 export function Indicator({
   status = 'idle',
-  size = 8,
+  colorPalette,
+  size,
   children,
+  className,
   style,
   ...props
 }: IndicatorProps) {
-  const color = statusColors[status];
   return (
     <span
       {...props}
-      style={{ ...rootStyle, ...style }}
+      className={cx(
+        'indicator__root',
+        `indicator__root--status_${status}`,
+        // Declared after `status` in the recipe, so an explicit hue overrides
+        // the status mapping in the cascade while `status` keeps the pulse.
+        colorPalette && `indicator__root--colorPalette_${colorPalette}`,
+        className,
+      )}
+      style={style}
       data-scope="indicator"
       data-part="root"
       data-status={status}
+      data-color-palette={colorPalette}
     >
       <span
+        className={cx(
+          'indicator__dot',
+          status === 'pending' && 'indicator__dot--status_pending',
+        )}
         data-part="dot"
-        style={{
-          display: 'inline-block',
-          width: size,
-          height: size,
-          borderRadius: '50%',
-          background: color,
-          boxShadow: `0 0 0 2px color-mix(in srgb, ${color} 25%, transparent)`,
-          animation:
-            status === 'pending'
-              ? 'ds-indicator-pulse 1.2s ease-in-out infinite'
-              : undefined,
-        }}
+        style={size !== undefined ? { width: size, height: size } : undefined}
       />
       {children}
-      <style>
-        {'@keyframes ds-indicator-pulse{0%,100%{opacity:1}50%{opacity:0.35}}'}
-      </style>
     </span>
   );
 }

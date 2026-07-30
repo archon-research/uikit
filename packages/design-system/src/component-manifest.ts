@@ -1,3 +1,24 @@
+/**
+ * The canonical inventory of every component this package exports — the single
+ * source of truth for "what's available and where its behaviour comes from".
+ * It is exported at runtime (`designSystemComponentManifest`) so tooling,
+ * consumers, and agents can read it directly; the README points here rather
+ * than duplicating it into a separate doc.
+ *
+ * When you add or remove a public component export in `index.ts`, update this
+ * array too — a test (`component-manifest.test.ts`) fails if a component export
+ * is missing here.
+ *
+ * Fields:
+ * - `exportName`   — the exported symbol from `@archon-research/design-system`.
+ * - `behaviorSource` — where the behaviour lives: `design-system` (owned here),
+ *   `ark-ui` (wraps/re-exports an Ark UI primitive), or `tanstack-react-table`.
+ * - `styleOwner`   — who owns the visuals: `design-system-preset` (a Panda recipe
+ *   you can override via `className`), `design-system` (component-local styling),
+ *   or `consumer` (unstyled re-export — you style it).
+ * - `storyBucket`  — Ladle catalogue bucket, or null.
+ * - `contractScope`/`recipeKey` — the recipe/contract backing it, if any.
+ */
 export type DesignSystemBehaviorSource =
   | 'design-system'
   | 'ark-ui'
@@ -58,28 +79,44 @@ export const designSystemComponentManifest = [
     recipeKey: 'toggleSwitch',
   },
   {
+    exportName: 'Badge',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'atoms',
+    contractScope: 'badge',
+    recipeKey: 'badge',
+  },
+  {
+    exportName: 'Indicator',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'atoms',
+    contractScope: 'indicator',
+    recipeKey: 'indicator',
+  },
+  {
     exportName: 'SearchInput',
     behaviorSource: 'ark-ui',
-    styleOwner: 'design-system',
+    styleOwner: 'design-system-preset',
     storyBucket: 'molecules',
     contractScope: null,
-    recipeKey: null,
+    recipeKey: 'searchInput',
   },
   {
     exportName: 'Select',
     behaviorSource: 'design-system',
-    styleOwner: 'design-system',
+    styleOwner: 'design-system-preset',
     storyBucket: 'molecules',
     contractScope: null,
-    recipeKey: null,
+    recipeKey: 'select',
   },
   {
     exportName: 'StyledSelect',
     behaviorSource: 'design-system',
-    styleOwner: 'design-system',
+    styleOwner: 'design-system-preset',
     storyBucket: 'molecules',
     contractScope: null,
-    recipeKey: null,
+    recipeKey: 'select',
   },
   {
     exportName: 'RangePicker',
@@ -100,10 +137,10 @@ export const designSystemComponentManifest = [
   {
     exportName: 'ThemeToggle',
     behaviorSource: 'design-system',
-    styleOwner: 'design-system',
+    styleOwner: 'design-system-preset',
     storyBucket: 'molecules',
     contractScope: null,
-    recipeKey: null,
+    recipeKey: 'themeToggle',
   },
   {
     exportName: 'SkeletonRows',
@@ -132,18 +169,18 @@ export const designSystemComponentManifest = [
   {
     exportName: 'DataTable',
     behaviorSource: 'tanstack-react-table',
-    styleOwner: 'design-system',
+    styleOwner: 'design-system-preset',
     storyBucket: 'organisms',
     contractScope: null,
-    recipeKey: null,
+    recipeKey: 'dataTable',
   },
   {
     exportName: 'EmptyState',
     behaviorSource: 'design-system',
-    styleOwner: 'design-system',
+    styleOwner: 'design-system-preset',
     storyBucket: 'organisms',
     contractScope: null,
-    recipeKey: null,
+    recipeKey: 'emptyState',
   },
   {
     exportName: 'ErrorBoundary',
@@ -164,10 +201,10 @@ export const designSystemComponentManifest = [
   {
     exportName: 'SidebarLayout',
     behaviorSource: 'ark-ui',
-    styleOwner: 'design-system',
+    styleOwner: 'design-system-preset',
     storyBucket: 'templates',
     contractScope: 'resize-handle',
-    recipeKey: null,
+    recipeKey: 'sidebarLayout',
   },
   {
     exportName: 'Tabs',
@@ -200,5 +237,149 @@ export const designSystemComponentManifest = [
     storyBucket: null,
     contractScope: null,
     recipeKey: null,
+  },
+  {
+    exportName: 'Dialog',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'consumer',
+    storyBucket: null,
+    contractScope: null,
+    recipeKey: null,
+  },
+  {
+    exportName: 'Avatar',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'consumer',
+    storyBucket: null,
+    contractScope: null,
+    recipeKey: null,
+  },
+  {
+    exportName: 'Menu',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'consumer',
+    storyBucket: null,
+    contractScope: null,
+    recipeKey: null,
+  },
+  {
+    exportName: 'Slider',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'consumer',
+    storyBucket: null,
+    contractScope: null,
+    recipeKey: null,
+  },
+  {
+    exportName: 'TreeView',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'consumer',
+    storyBucket: null,
+    contractScope: null,
+    recipeKey: null,
+  },
+  {
+    exportName: 'TextInput',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'atoms',
+    contractScope: 'input',
+    recipeKey: 'input',
+  },
+  {
+    exportName: 'Textarea',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'atoms',
+    contractScope: 'input',
+    recipeKey: 'input',
+  },
+  {
+    exportName: 'Drawer',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'organisms',
+    contractScope: 'drawer',
+    recipeKey: 'drawer',
+  },
+  {
+    exportName: 'Field',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'consumer',
+    storyBucket: null,
+    contractScope: null,
+    recipeKey: null,
+  },
+  {
+    exportName: 'Progress',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'consumer',
+    storyBucket: null,
+    contractScope: null,
+    recipeKey: null,
+  },
+  {
+    exportName: 'Sparkline',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system',
+    storyBucket: 'atoms',
+    contractScope: null,
+    recipeKey: null,
+  },
+  {
+    exportName: 'Panel',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'molecules',
+    contractScope: 'panel',
+    recipeKey: 'panel',
+  },
+  {
+    exportName: 'StatTile',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'molecules',
+    contractScope: 'stat-tile',
+    recipeKey: 'statTile',
+  },
+  {
+    exportName: 'StatRow',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'molecules',
+    contractScope: 'stat-row',
+    recipeKey: 'statRow',
+  },
+  {
+    exportName: 'Code',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'atoms',
+    contractScope: 'code',
+    recipeKey: 'code',
+  },
+  {
+    exportName: 'CodeBlock',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'atoms',
+    contractScope: 'code',
+    recipeKey: 'code',
+  },
+  {
+    exportName: 'PageShell',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'templates',
+    contractScope: 'page-shell',
+    recipeKey: 'pageShell',
+  },
+  {
+    exportName: 'SidebarGrid',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'templates',
+    contractScope: 'sidebar-grid',
+    recipeKey: 'sidebarGrid',
   },
 ] as const satisfies readonly DesignSystemComponentManifestEntry[];

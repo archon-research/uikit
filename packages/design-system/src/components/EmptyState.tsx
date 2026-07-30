@@ -7,39 +7,19 @@ type EmptyStateProps = {
   action?: ReactNode;
   size?: 'default' | 'compact';
   stretch?: boolean;
+  className?: string;
 };
 
-const rootStyle = {
-  display: 'grid',
-  justifyItems: 'center',
-  textAlign: 'center' as const,
-  borderRadius: 8,
-  borderWidth: 1,
-  borderStyle: 'solid' as const,
-  borderColor: 'var(--colors-border-subtle, #d0d5dd)',
-  background: 'var(--colors-surface-subtle, #f8f9fb)',
-};
-
-const iconWrapStyle = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: 9999,
-  background: 'var(--colors-surface-default, #ffffff)',
-  color: 'var(--colors-text-muted, #667085)',
-};
-
-const titleStyle = {
-  margin: 0,
-  color: 'var(--colors-text-strong, #111827)',
-  fontWeight: 600,
-};
-
-const bodyStyle = {
-  margin: 0,
-  color: 'var(--colors-text-muted, #667085)',
-  lineHeight: 1.6,
-};
+/**
+ * Class names emitted by the `emptyState` slot recipe (registered in the preset
+ * + staticCss). The design-system package builds with `tsc` and ships no
+ * generated `styled-system`, so styling is applied by stable Panda slot class
+ * names. Conventions: slot base = `${className}__${slot}`; a slot variant =
+ * `${className}__${slot}--${key}_${value}`. A consumer `className` composed LAST
+ * on `root` (utilities layer) overrides recipe styles.
+ */
+const cx = (...classes: Array<string | false | null | undefined>): string =>
+  classes.filter(Boolean).join(' ');
 
 export function EmptyState({
   title,
@@ -48,49 +28,49 @@ export function EmptyState({
   action,
   size = 'default',
   stretch = false,
+  className,
 }: EmptyStateProps) {
-  const isCompact = size === 'compact';
-
   return (
     <div
-      style={{
-        ...rootStyle,
-        gap: isCompact ? 10 : 12,
-        padding: isCompact ? 20 : 32,
-        width: stretch ? '100%' : undefined,
-        maxWidth: stretch ? undefined : 512,
-        marginInline: stretch ? undefined : 'auto',
-      }}
+      className={cx(
+        'emptyState__root',
+        `emptyState__root--size_${size}`,
+        `emptyState__root--stretch_${stretch}`,
+        className,
+      )}
+      data-scope="empty-state"
+      data-part="root"
+      data-size={size}
+      data-stretch={stretch ? '' : undefined}
     >
       <div
-        style={{
-          ...iconWrapStyle,
-          width: isCompact ? 40 : 48,
-          height: isCompact ? 40 : 48,
-          fontSize: isCompact ? 16 : 18,
-        }}
+        className={cx('emptyState__icon', `emptyState__icon--size_${size}`)}
+        data-part="icon"
       >
         {icon ?? '○'}
       </div>
-      <div style={{ display: 'grid', gap: 8 }}>
+      <div className="emptyState__body" data-part="body">
         <h3
-          style={{
-            ...titleStyle,
-            fontSize: isCompact ? 16 : 18,
-          }}
+          className={cx('emptyState__title', `emptyState__title--size_${size}`)}
+          data-part="title"
         >
           {title}
         </h3>
         <p
-          style={{
-            ...bodyStyle,
-            fontSize: isCompact ? 12 : 14,
-          }}
+          className={cx(
+            'emptyState__description',
+            `emptyState__description--size_${size}`,
+          )}
+          data-part="description"
         >
           {description}
         </p>
       </div>
-      {action ? <div style={{ marginTop: 8 }}>{action}</div> : null}
+      {action ? (
+        <div className="emptyState__actions" data-part="actions">
+          {action}
+        </div>
+      ) : null}
     </div>
   );
 }
