@@ -1,5 +1,7 @@
+import os from 'node:os';
 import path from 'node:path';
 
+import type { CommandExecutor } from '../command-executor.js';
 import type { FileSystemOps } from '../fs-utils.js';
 import type { Logger } from '../logger.js';
 
@@ -75,17 +77,45 @@ const CSS_CANDIDATES = [
 ];
 
 /**
- * `uikit-cli doctor [path-to-styles.css]` — fails loudly on the silent CSS
- * failures the library's authoring model otherwise hides. Run against the
- * consumer's *generated* stylesheet in CI, after `panda codegen`.
+ * `uikit-cli doctor [path-to-styles.css] [--codegen]` — fails loudly on the
+ * silent CSS failures the library's authoring model otherwise hides.
+ *
+ * Point it at a generated stylesheet, or pass `--codegen` and it runs
+ * `panda cssgen --outfile` itself into a temp file — the mode PostCSS-plugin
+ * consumers need, since they never write a frozen `styled-system/styles.css`.
  */
 export class DoctorCommand {
   private fs: FileSystemOps;
   private logger: Logger;
+  private executor: CommandExecutor;
 
-  constructor(fs: FileSystemOps, logger: Logger) {
+  constructor(fs: FileSystemOps, logger: Logger, executor: CommandExecutor) {
     this.fs = fs;
     this.logger = logger;
+    this.executor = executor;
+  }
+
+  /**
+   * Generate a full stylesheet from the consumer's Panda config into a temp
+   * file (for PostCSS-plugin consumers with no frozen styles.css). Returns the
+   * temp path, or null if codegen failed.
+   */
+  private runCodegen(cwd: string): string | null {
+    const outfile = path.join(os.tmpdir(), `uikit-doctor-${process.pid}.css`);
+    const result = this.executor.exec(
+      `npx panda cssgen --outfile "${outfile}"`,
+      { cwd, silent: true },
+    );
+    if (!result.success || !this.fs.exists(outfile)) {
+      this.logger.error(
+        'Could not generate CSS with `panda cssgen --codegen`.\n' +
+          '  Ensure @pandacss/dev is installed and a panda config is present in\n' +
+          `  ${cwd}. Underlying error:\n` +
+          `  ${(result.stderr || 'panda produced no output file').trim()}`,
+      );
+      return null;
+    }
+    return outfile;
   }
 
   private resolveCssPath(args: string[], cwd: string): string | null {
@@ -103,19 +133,36 @@ export class DoctorCommand {
 
   /** Returns true when the stylesheet is healthy. */
   execute(args: string[], cwd: string = process.cwd()): boolean {
-    const cssPath = this.resolveCssPath(args, cwd);
-    if (!cssPath) {
-      this.logger.error(
-        'Could not find a generated Panda stylesheet.\n' +
-          `Looked for: ${CSS_CANDIDATES.join(', ')} (relative to ${cwd}).\n` +
-          'Run your `panda codegen` first, or pass the path explicitly:\n' +
-          '  uikit-cli doctor path/to/styled-system/styles.css',
-      );
-      return false;
+    const useCodegen = args.includes('--codegen');
+    let cssPath: string | null;
+    let temp = false;
+
+    if (useCodegen) {
+      cssPath = this.runCodegen(cwd);
+      if (!cssPath) return false; // runCodegen already logged
+      temp = true;
+    } else {
+      cssPath = this.resolveCssPath(args, cwd);
+      if (!cssPath) {
+        this.logger.error(
+          'Could not find a generated Panda stylesheet.\n' +
+            `Looked for: ${CSS_CANDIDATES.join(', ')} (relative to ${cwd}).\n` +
+            'Options:\n' +
+            '  - run your `panda codegen` first, then re-run doctor;\n' +
+            '  - pass the path explicitly: uikit-cli doctor path/to/styles.css;\n' +
+            '  - if you use the Panda PostCSS plugin (no frozen styles.css),\n' +
+            '    pass --codegen and doctor will run `panda cssgen` itself.',
+        );
+        return false;
+      }
     }
 
-    const report = scanGeneratedCss(this.fs.readFile(cssPath));
-    const relative = path.relative(cwd, cssPath) || cssPath;
+    const css = this.fs.readFile(cssPath);
+    if (temp) this.fs.removeDir(cssPath, { force: true });
+    const report = scanGeneratedCss(css);
+    const relative = temp
+      ? '(panda cssgen)'
+      : path.relative(cwd, cssPath) || cssPath;
 
     if (report.ok) {
       this.logger.info(`✓ ${relative}: no silently-dropped CSS detected.`);

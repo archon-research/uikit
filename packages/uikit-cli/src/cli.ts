@@ -212,7 +212,7 @@ try {
   // Doctor scans the consumer's generated CSS; it runs in the consumer cwd and
   // needs no uikit root. Non-zero exit on findings so it gates CI.
   if (mode === 'doctor') {
-    const doctorCmd = new DoctorCommand(fs, logger);
+    const doctorCmd = new DoctorCommand(fs, logger, executor);
     process.exit(doctorCmd.execute(commandArgs) ? 0 : 1);
   }
 

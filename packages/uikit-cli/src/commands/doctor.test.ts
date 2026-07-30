@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { SENTINEL_RECIPE_CLASSES, scanGeneratedCss } from './doctor.js';
+import type { CommandExecutor } from '../command-executor.js';
+import type { FileSystemOps } from '../fs-utils.js';
+import type { Logger } from '../logger.js';
+import {
+  DoctorCommand,
+  SENTINEL_RECIPE_CLASSES,
+  scanGeneratedCss,
+} from './doctor.js';
 
 /** A stylesheet with every sentinel present and only resolved declarations. */
 const healthyCss = `
@@ -57,5 +64,83 @@ describe('scanGeneratedCss', () => {
           i.declaration === 'background: bg.success',
       ),
     ).toBe(true);
+  });
+});
+
+/** Minimal in-memory FileSystemOps backed by a Map. */
+function makeFs(files: Record<string, string>) {
+  const store = new Map(Object.entries(files));
+  const fs = {
+    exists: (p: string) => store.has(p),
+    readFile: (p: string) => store.get(p) ?? '',
+    removeDir: (p: string) => void store.delete(p),
+    readJson: () => ({}),
+    realpath: (p: string) => p,
+    isSymlink: () => false,
+    createSymlink: () => {},
+    createDir: () => {},
+    readDir: () => [],
+    isDirectory: () => false,
+  } as unknown as FileSystemOps;
+  return { fs, store };
+}
+
+const silentLogger: Logger = {
+  info() {},
+  warn() {},
+  error() {},
+  debug() {},
+};
+
+describe('DoctorCommand.execute', () => {
+  it('scans an explicit stylesheet path (healthy → true)', () => {
+    const { fs } = makeFs({ '/proj/styled-system/styles.css': healthyCss });
+    const executor = {
+      exec: () => ({ stdout: '', stderr: '', success: true }),
+      execQuiet: () => true,
+    } as CommandExecutor;
+    const cmd = new DoctorCommand(fs, silentLogger, executor);
+    expect(cmd.execute(['styled-system/styles.css'], '/proj')).toBe(true);
+  });
+
+  it('--codegen runs panda cssgen to a temp file and scans it', () => {
+    const { fs, store } = makeFs({});
+    // The fake executor "writes" the codegen output to the --outfile path.
+    const executor = {
+      exec: (cmd: string) => {
+        const m = cmd.match(/--outfile "([^"]+)"/);
+        if (m) store.set(m[1], healthyCss);
+        return { stdout: '', stderr: '', success: true };
+      },
+      execQuiet: () => true,
+    } as CommandExecutor;
+    const cmd = new DoctorCommand(fs, silentLogger, executor);
+    expect(cmd.execute(['--codegen'], '/proj')).toBe(true);
+    // The temp file is cleaned up after scanning.
+    expect(store.size).toBe(0);
+  });
+
+  it('--codegen surfaces unhealthy CSS as a failure', () => {
+    const { fs, store } = makeFs({});
+    const executor = {
+      exec: (cmd: string) => {
+        const m = cmd.match(/--outfile "([^"]+)"/);
+        if (m) store.set(m[1], `${healthyCss}\n.x { color: text.subtle; }`);
+        return { stdout: '', stderr: '', success: true };
+      },
+      execQuiet: () => true,
+    } as CommandExecutor;
+    const cmd = new DoctorCommand(fs, silentLogger, executor);
+    expect(cmd.execute(['--codegen'], '/proj')).toBe(false);
+  });
+
+  it('reports failure when codegen itself fails', () => {
+    const { fs } = makeFs({});
+    const executor = {
+      exec: () => ({ stdout: '', stderr: 'panda: not found', success: false }),
+      execQuiet: () => false,
+    } as CommandExecutor;
+    const cmd = new DoctorCommand(fs, silentLogger, executor);
+    expect(cmd.execute(['--codegen'], '/proj')).toBe(false);
   });
 });
