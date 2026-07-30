@@ -108,17 +108,29 @@ export const WithMetaAndActions = () => (
   </div>
 );
 
-// Compact density tightens internal padding for dense dashboards.
+// Compact density tightens internal padding AND drops the meta line to a
+// smaller step for dense dashboards.
 export const Density = () => (
   <div className={frameClassName}>
-    <Panel title="Normal density" density="normal" surface="raised">
-      <p className={bodyClassName}>density="normal" (default).</p>
+    <Panel
+      title="Normal density"
+      density="normal"
+      surface="raised"
+      meta="4 pending transfers · updated 2m ago"
+    >
+      <p className={bodyClassName}>density="normal" (default) · 14px meta.</p>
     </Panel>
-    <Panel title="Compact density" density="compact" surface="raised">
-      <p className={bodyClassName}>density="compact".</p>
+    <Panel
+      title="Compact density"
+      density="compact"
+      surface="raised"
+      meta="4 pending transfers · updated 2m ago"
+    >
+      <p className={bodyClassName}>density="compact" · 11px meta.</p>
     </Panel>
     <p className={captionClassName}>
-      Compact reduces the section padding for information-dense layouts.
+      Compact reduces the section padding and the meta line size for
+      information-dense layouts.
     </p>
   </div>
 );

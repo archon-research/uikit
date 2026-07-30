@@ -38,6 +38,28 @@ export const Inline = () => (
   </div>
 );
 
+const smallProseClassName = css({
+  fontSize: 'sm',
+  lineHeight: 'relaxed',
+  color: 'text.default',
+});
+
+// Inline code sizes relative to its surrounding text (0.9em), so it stays a
+// touch smaller than the prose it sits in at any prose size rather than
+// snapping to one absolute step.
+export const InlineInProse = () => (
+  <div className={frameClassName}>
+    <p className={proseClassName}>
+      In 16px body copy, <Code>npm run generate</Code> tracks the line it sits
+      in.
+    </p>
+    <p className={smallProseClassName}>
+      In 14px caption copy, <Code>npm run generate</Code> scales down with the
+      surrounding text.
+    </p>
+  </div>
+);
+
 // `CodeBlock` renders a multi-line, scrollable `<pre><code>` block.
 export const Block = () => (
   <div className={frameClassName}>

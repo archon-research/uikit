@@ -72,6 +72,31 @@ const alignedColumns = [
   },
 ];
 
+// Numeric column set: the amount column is both right-aligned and rendered in
+// the mono font (tabular figures) so digits line up down the column.
+const numericColumns = [
+  {
+    accessorKey: 'symbol',
+    header: 'Symbol',
+    cell: ({ row }: { row: { original: Row } }) => row.original.symbol,
+  },
+  {
+    accessorKey: 'chain',
+    header: 'Chain',
+    cell: ({ row }: { row: { original: Row } }) => row.original.chain,
+  },
+  {
+    accessorKey: 'amountUsd',
+    header: 'Amount (USD)',
+    meta: {
+      align: 'right' as const,
+      mono: true,
+    },
+    cell: ({ row }: { row: { original: Row } }) =>
+      `$${row.original.amountUsd.toLocaleString('en-US')}`,
+  },
+];
+
 export const Default = () => {
   const table = useDataTable(rows, columns as never, {
     enableSorting: true,
@@ -248,12 +273,41 @@ export const RightAlignedNumericColumn = () => {
   );
 };
 
-export const CompactDensity = () => {
-  const comfortableTable = useDataTable(rows, alignedColumns as never, {
+export const NumericMonoColumn = () => {
+  const table = useDataTable(rows, numericColumns as never, {
     enableSorting: true,
     enableSearch: true,
   });
-  const compactTable = useDataTable(rows, alignedColumns as never, {
+
+  return (
+    <div className={wrapperClassName}>
+      <div
+        className={css({
+          fontSize: 'sm',
+          color: 'text.muted',
+          mb: '4',
+        })}
+      >
+        The numeric &quot;Amount (USD)&quot; column sets{' '}
+        <code>meta.align: &apos;right&apos;</code> and{' '}
+        <code>meta.mono: true</code>, so its body cells render in the mono font
+        with tabular figures and the digits align down the column.
+      </div>
+      <DataTable
+        table={table}
+        isLoading={false}
+        getRowKey={(row: Row) => `${row.chain}:${row.symbol}`}
+      />
+    </div>
+  );
+};
+
+export const CompactDensity = () => {
+  const comfortableTable = useDataTable(rows, numericColumns as never, {
+    enableSorting: true,
+    enableSearch: true,
+  });
+  const compactTable = useDataTable(rows, numericColumns as never, {
     enableSorting: true,
     enableSearch: true,
   });
@@ -269,8 +323,9 @@ export const CompactDensity = () => {
     >
       <div className={css({ fontSize: 'sm', color: 'text.muted' })}>
         Top table uses the default <code>density=&quot;comfortable&quot;</code>;
-        bottom table uses <code>density=&quot;compact&quot;</code> to lower row
-        height and padding. Both right-align the numeric column.
+        bottom table uses <code>density=&quot;compact&quot;</code> for genuinely
+        dense (~6px vertical) cell padding. Both right-align the numeric column
+        and render it in the mono font.
       </div>
       <DataTable
         table={comfortableTable}
