@@ -1,6 +1,6 @@
 import { type CSSProperties, type HTMLAttributes, type ReactNode } from 'react';
 
-export type SurfaceMessageTone = 'default' | 'muted' | 'dashed';
+export type SurfaceMessageTone = 'default' | 'muted' | 'dashed' | 'critical';
 
 export type SurfaceMessageProps = {
   title: string;
@@ -49,6 +49,14 @@ function getWrapperStyle(tone: SurfaceMessageTone): CSSProperties {
     return {
       ...wrapperStyle,
       background: 'var(--colors-surface-default, #ffffff)',
+    };
+  }
+
+  if (tone === 'critical') {
+    return {
+      ...wrapperStyle,
+      background: 'var(--colors-bg-critical, #fef2f2)',
+      borderColor: 'var(--colors-text-critical, #dc2626)',
     };
   }
 
@@ -133,7 +141,15 @@ export function SurfaceMessage({
 }: SurfaceMessageProps) {
   return (
     <SurfaceMessageRoot tone={tone}>
-      <SurfaceMessageTitle>{title}</SurfaceMessageTitle>
+      <SurfaceMessageTitle
+        style={
+          tone === 'critical'
+            ? { color: 'var(--colors-text-critical, #dc2626)' }
+            : undefined
+        }
+      >
+        {title}
+      </SurfaceMessageTitle>
       <SurfaceMessageBody>{body}</SurfaceMessageBody>
       {children}
     </SurfaceMessageRoot>

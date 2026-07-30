@@ -1,9 +1,12 @@
-import React, { Component, type ReactNode } from 'react';
+import React, { Component, type CSSProperties, type ReactNode } from 'react';
 
 type ErrorBoundaryProps = {
   children: ReactNode;
   fallback?: (error: Error, resetError: () => void) => ReactNode;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  /** Applied to the default fallback's root (ignored when `fallback` is set). */
+  className?: string;
+  style?: CSSProperties;
 };
 
 type ErrorBoundaryState = {
@@ -40,6 +43,7 @@ export class ErrorBoundary extends Component<
 
       return (
         <div
+          className={this.props.className}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -47,6 +51,7 @@ export class ErrorBoundary extends Component<
             minHeight: '100vh',
             background: 'var(--colors-surface-subtle, #f8f9fb)',
             padding: 24,
+            ...this.props.style,
           }}
         >
           <div

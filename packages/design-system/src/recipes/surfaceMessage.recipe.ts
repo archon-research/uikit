@@ -45,6 +45,15 @@ export const surfaceMessageRecipe = defineSlotRecipe({
           borderStyle: 'dashed',
         },
       },
+      critical: {
+        root: {
+          bg: 'bg.critical',
+          borderColor: 'text.critical',
+        },
+        title: {
+          color: 'text.critical',
+        },
+      },
     },
   },
   defaultVariants: {

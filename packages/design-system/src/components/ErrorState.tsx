@@ -1,4 +1,5 @@
 import { CircleAlert } from 'lucide-react';
+import { type CSSProperties } from 'react';
 
 type ErrorStateProps = {
   title: string;
@@ -6,6 +7,9 @@ type ErrorStateProps = {
   errorMessage?: string;
   onRetry?: () => void;
   retryLabel?: string;
+  className?: string;
+  /** Merged onto the root after the defaults, so it can override `maxWidth`. */
+  style?: CSSProperties;
 };
 
 const rootStyle = {
@@ -39,9 +43,11 @@ export function ErrorState({
   errorMessage,
   onRetry,
   retryLabel = 'Try again',
+  className,
+  style,
 }: ErrorStateProps) {
   return (
-    <div style={{ ...rootStyle, padding: 24 }}>
+    <div className={className} style={{ ...rootStyle, padding: 24, ...style }}>
       <div
         style={{
           display: 'grid',
