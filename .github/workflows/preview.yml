@@ -5,10 +5,11 @@ on:
     branches:
       - main
   pull_request:
+    # No ready_for_review: previews already build on opened/synchronize while a
+    # PR is a draft, so the ready transition would only rebuild the same commit.
     types:
       - opened
       - reopened
-      - ready_for_review
       - synchronize
       - closed
 
