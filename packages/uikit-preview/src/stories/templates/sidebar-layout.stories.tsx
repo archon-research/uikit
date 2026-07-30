@@ -166,3 +166,33 @@ export const Default = () => (
     </div>
   </ThemeProvider>
 );
+
+const narrowShellClassName = css({
+  height: '100vh',
+  width: '100%',
+  maxWidth: '460px',
+  marginInline: 'auto',
+  borderInlineWidth: '1px',
+  borderInlineStyle: 'solid',
+  borderColor: 'border.subtle',
+  fontFamily: 'sans',
+  color: 'text.default',
+});
+
+// Below `collapseBelow` the split collapses to a single scrolling column
+// (sidebar stacked above main, no resizable Splitter). The value is set above
+// any realistic width so the stacked path renders deterministically for the
+// snapshot, independent of the canvas viewport.
+export const Stacked = () => (
+  <ThemeProvider>
+    <div className={narrowShellClassName}>
+      <SidebarLayout
+        bottomPanel={bottomPanel}
+        collapseBelow={100000}
+        main={main}
+        sidebar={sidebar}
+        topBar={topBar}
+      />
+    </div>
+  </ThemeProvider>
+);
