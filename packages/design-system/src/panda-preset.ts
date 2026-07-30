@@ -470,11 +470,13 @@ export const designSystemPreset = definePreset({
                   'color-mix(in srgb, {colors.blue.500} 24%, {colors.surface.default})',
               },
             },
-            // Solid accent fill for primary actions (e.g. the recovery button in
-            // ErrorState/ErrorBoundary, RangePicker's apply). Those components read
-            // `var(--colors-interactive-accent, …)` from an inline style; without
-            // this token they fell back to a hardcoded off-theme blue in both
-            // themes. `blue.600` keeps white label text at AA either way.
+            // A theme-invariant FILL for primary actions (e.g. the recovery
+            // button in ErrorState/ErrorBoundary, RangePicker's apply) — white
+            // label text on it is AA (5.17:1) in both themes. It is NOT a text
+            // color: as foreground on the dark surface it is ~3.47:1 and fails
+            // AA. For accent *text*, use `text.link` (dark-aware, 9.94:1 on the
+            // dark surface). Components read `var(--colors-interactive-accent, …)`
+            // from inline styles, so this token must stay defined.
             accent: {
               value: { base: '{colors.blue.600}', _dark: '{colors.blue.600}' },
             },
