@@ -59,8 +59,8 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 86,
-      "locEnd": 96,
+      "locStart": 96,
+      "locEnd": 106,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "Density",
       "meta": {}
@@ -71,8 +71,8 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 61,
-      "locEnd": 83,
+      "locStart": 71,
+      "locEnd": 93,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "Emphasis",
       "meta": {}
@@ -83,8 +83,8 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 127,
-      "locEnd": 146,
+      "locStart": 137,
+      "locEnd": 156,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "IconOnly",
       "meta": {}
@@ -95,8 +95,8 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 98,
-      "locEnd": 125,
+      "locStart": 108,
+      "locEnd": 135,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "Item",
       "meta": {}
@@ -119,8 +119,8 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 49,
-      "locEnd": 57,
+      "locStart": 56,
+      "locEnd": 67,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "Sizes",
       "meta": {}
@@ -131,8 +131,8 @@
         "Atoms",
         "Code"
       ],
-      "locStart": 42,
-      "locEnd": 55,
+      "locStart": 64,
+      "locEnd": 77,
       "filePath": "src/stories/atoms/code.stories.tsx",
       "namedExport": "Block",
       "meta": {}
@@ -143,8 +143,8 @@
         "Atoms",
         "Code"
       ],
-      "locStart": 58,
-      "locEnd": 70,
+      "locStart": 80,
+      "locEnd": 92,
       "filePath": "src/stories/atoms/code.stories.tsx",
       "namedExport": "Both",
       "meta": {}
@@ -159,6 +159,18 @@
       "locEnd": 39,
       "filePath": "src/stories/atoms/code.stories.tsx",
       "namedExport": "Inline",
+      "meta": {}
+    },
+    "atoms--code--inline-in-prose": {
+      "name": "Inline in prose",
+      "levels": [
+        "Atoms",
+        "Code"
+      ],
+      "locStart": 50,
+      "locEnd": 61,
+      "filePath": "src/stories/atoms/code.stories.tsx",
+      "namedExport": "InlineInProse",
       "meta": {}
     },
     "atoms--indicator--color-palette-override": {
@@ -455,8 +467,8 @@
         "Molecules",
         "Panel"
       ],
-      "locStart": 112,
-      "locEnd": 124,
+      "locStart": 113,
+      "locEnd": 136,
       "filePath": "src/stories/molecules/panel.stories.tsx",
       "namedExport": "Density",
       "meta": {}
@@ -785,6 +797,18 @@
       "namedExport": "Icon",
       "meta": {}
     },
+    "molecules--theme-toggle--icon-bare": {
+      "name": "Icon bare",
+      "levels": [
+        "Molecules",
+        "Theme toggle"
+      ],
+      "locStart": 64,
+      "locEnd": 75,
+      "filePath": "src/stories/molecules/theme-toggle.stories.tsx",
+      "namedExport": "IconBare",
+      "meta": {}
+    },
     "organisms--async-state-renderer--empty": {
       "name": "Empty",
       "levels": [
@@ -887,8 +911,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 251,
-      "locEnd": 289,
+      "locStart": 305,
+      "locEnd": 344,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "CompactDensity",
       "meta": {}
@@ -899,8 +923,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 133,
-      "locEnd": 185,
+      "locStart": 158,
+      "locEnd": 210,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "ControlledState",
       "meta": {}
@@ -911,8 +935,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 75,
-      "locEnd": 90,
+      "locStart": 100,
+      "locEnd": 115,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "Default",
       "meta": {}
@@ -923,8 +947,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 206,
-      "locEnd": 221,
+      "locStart": 231,
+      "locEnd": 246,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "HeaderCasingPolicy",
       "meta": {}
@@ -935,8 +959,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 92,
-      "locEnd": 107,
+      "locStart": 117,
+      "locEnd": 132,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "Loading",
       "meta": {}
@@ -947,10 +971,22 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 351,
-      "locEnd": 395,
+      "locStart": 406,
+      "locEnd": 450,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "MagnitudeColumns",
+      "meta": {}
+    },
+    "organisms--data-table--numeric-mono-column": {
+      "name": "Numeric mono column",
+      "levels": [
+        "Organisms",
+        "Data table"
+      ],
+      "locStart": 276,
+      "locEnd": 303,
+      "filePath": "src/stories/organisms/data-table.stories.tsx",
+      "namedExport": "NumericMonoColumn",
       "meta": {}
     },
     "organisms--data-table--right-aligned-numeric-column": {
@@ -959,8 +995,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 223,
-      "locEnd": 249,
+      "locStart": 248,
+      "locEnd": 274,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "RightAlignedNumericColumn",
       "meta": {}
@@ -971,8 +1007,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 109,
-      "locEnd": 131,
+      "locStart": 134,
+      "locEnd": 156,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "RowSelection",
       "meta": {}
