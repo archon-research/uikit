@@ -104,7 +104,7 @@ const customModalStyle: CSSProperties = {
   borderStyle: 'solid',
   borderColor: 'var(--colors-border-default, #d0d5dd)',
   background: 'var(--colors-surface-default, #ffffff)',
-  boxShadow: '0 18px 48px rgba(0, 0, 0, 0.35)',
+  boxShadow: 'var(--shadows-overlay)',
   display: 'grid',
   gap: 16,
   padding: 16,
@@ -160,11 +160,11 @@ function getModalActionButtonStyle(variant: 'ghost' | 'solid'): CSSProperties {
         : 'var(--colors-border-default, #d0d5dd)',
     background:
       variant === 'solid'
-        ? 'var(--colors-interactive-default, #155eef)'
+        ? 'var(--colors-interactive-accent, #2563eb)'
         : 'var(--colors-surface-default, #ffffff)',
     color:
       variant === 'solid'
-        ? 'var(--colors-text-inverted, #ffffff)'
+        ? 'var(--colors-text-inverse, #ffffff)'
         : 'var(--colors-text-default, #111827)',
     cursor: 'pointer',
     fontSize: 14,

@@ -53,7 +53,10 @@ export function Sparkline({
   const n = data.length;
   const min = Math.min(...data);
   const max = Math.max(...data);
-  const range = max - min || 1;
+  // A flat series (all values equal) has no range; draw it through the vertical
+  // middle instead of pinning the line to the bottom edge.
+  const flat = max === min;
+  const range = flat ? 1 : max - min;
 
   // Inset by half the stroke so the line is never clipped at the edges.
   const pad = strokeWidth / 2;
@@ -62,7 +65,8 @@ export function Sparkline({
 
   const x = (i: number) =>
     n === 1 ? pad + innerW / 2 : pad + (i / (n - 1)) * innerW;
-  const y = (value: number) => pad + innerH - ((value - min) / range) * innerH;
+  const y = (value: number) =>
+    flat ? pad + innerH / 2 : pad + innerH - ((value - min) / range) * innerH;
 
   const points = data.map((value, i) => `${x(i)},${y(value)}`).join(' ');
 

@@ -143,7 +143,7 @@ export function DataTable<TData>({
                             header.getContext(),
                           )}
                         </span>
-                        <span>
+                        <span aria-hidden="true">
                           {sorted === 'asc'
                             ? '↑'
                             : sorted === 'desc'
