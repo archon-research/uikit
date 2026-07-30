@@ -424,7 +424,22 @@ export const designSystemPreset = definePreset({
               value: { base: '{colors.blue.50}', _dark: '{colors.blue.950}' },
             },
             selected: {
-              value: { base: '{colors.blue.100}', _dark: '{colors.blue.900}' },
+              // A subtle blue-tinted selection. The dark value is a low-mix tint,
+              // not a saturated fill — `blue.900` read as an error block on dense
+              // dark tables.
+              value: {
+                base: '{colors.blue.100}',
+                _dark:
+                  'color-mix(in srgb, {colors.blue.500} 24%, {colors.surface.default})',
+              },
+            },
+            // Solid accent fill for primary actions (e.g. the recovery button in
+            // ErrorState/ErrorBoundary, RangePicker's apply). Those components read
+            // `var(--colors-interactive-accent, …)` from an inline style; without
+            // this token they fell back to a hardcoded off-theme blue in both
+            // themes. `blue.600` keeps white label text at AA either way.
+            accent: {
+              value: { base: '{colors.blue.600}', _dark: '{colors.blue.600}' },
             },
           },
           scrollbar: {

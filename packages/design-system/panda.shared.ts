@@ -317,7 +317,14 @@ export const designSystemPandaConfig = {
               value: { base: '{colors.blue.50}', _dark: '{colors.blue.950}' },
             },
             selected: {
-              value: { base: '{colors.blue.100}', _dark: '{colors.blue.900}' },
+              value: {
+                base: '{colors.blue.100}',
+                _dark:
+                  'color-mix(in srgb, {colors.blue.500} 24%, {colors.surface.default})',
+              },
+            },
+            accent: {
+              value: { base: '{colors.blue.600}', _dark: '{colors.blue.600}' },
             },
           },
           scrollbar: {
