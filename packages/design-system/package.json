@@ -8,7 +8,8 @@
   "sideEffects": false,
   "files": [
     "dist",
-    "src"
+    "src",
+    "COMPONENTS.md"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -42,7 +43,8 @@
     "lint": "oxlint -c oxlint.config.ts src",
     "lint:fix": "oxlint -c oxlint.config.ts --fix src",
     "format": "oxfmt -c oxfmt.config.ts --write src",
-    "format:check": "oxfmt -c oxfmt.config.ts --check src"
+    "format:check": "oxfmt -c oxfmt.config.ts --check src",
+    "docs:components": "node --experimental-strip-types scripts/gen-components-doc.ts"
   },
   "dependencies": {
     "@ark-ui/react": "5.37.2",

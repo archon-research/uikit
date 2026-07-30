@@ -21,17 +21,43 @@ npm install @archon-research/design-system react react-dom
 ### Import components
 
 ```typescript
-import { Button, Card, Text } from '@archon-research/design-system';
+import { Panel, Button, Badge } from '@archon-research/design-system';
 
 export function Example() {
   return (
-    <Card>
-      <Text>Hello from the design system</Text>
-      <Button onClick={() => console.log('clicked')}>Click me</Button>
-    </Card>
+    <Panel title="Status" meta="updated 2m ago">
+      <Badge variant="solid" colorPalette="green">Healthy</Badge>
+      <Button onClick={() => console.log('clicked')}>Refresh</Button>
+    </Panel>
   );
 }
 ```
+
+### What's available
+
+See **[COMPONENTS.md](./COMPONENTS.md)** for the full inventory — including which
+exports are owned here vs. wrappers around [Ark UI](https://ark-ui.com) (Dialog,
+Tabs, Menu, TreeView, Slider, …) or [TanStack Table](https://tanstack.com/table)
+(`DataTable`). It is generated from the component manifest (`npm run docs:components`),
+which is also importable at runtime as `designSystemComponentManifest`. Charts live in
+the separate [`@archon-research/charting`](../charting/README.md) package.
+
+### Code-splitting heavy components
+
+`DataTable` (pulls TanStack Table) and `Drawer` (pulls `@zag-js/drawer`) have their own
+subpath entry points, so you can lazy-load them out of your initial bundle:
+
+```typescript
+import { lazy } from 'react';
+
+const DataTable = lazy(() =>
+  import('@archon-research/design-system/data-table').then((m) => ({ default: m.DataTable })),
+);
+// likewise: import('@archon-research/design-system/drawer')
+```
+
+The package is marked `sideEffects: false`, so importing only what you use is fully
+tree-shakeable (a `Badge`-only import ships ~1 KB, not the Ark/TanStack engine).
 
 ### Use design tokens
 
