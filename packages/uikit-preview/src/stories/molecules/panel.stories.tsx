@@ -108,29 +108,41 @@ export const WithMetaAndActions = () => (
   </div>
 );
 
-// Compact density tightens internal padding AND drops the meta line to a
-// smaller step for dense dashboards.
+// Compact density tightens internal padding only; the meta line size is a
+// separate `metaSize` control.
 export const Density = () => (
   <div className={frameClassName}>
-    <Panel
-      title="Normal density"
-      density="normal"
-      surface="raised"
-      meta="4 pending transfers · updated 2m ago"
-    >
-      <p className={bodyClassName}>density="normal" (default) · 14px meta.</p>
+    <Panel title="Normal density" density="normal" surface="raised">
+      <p className={bodyClassName}>density="normal" (default) · p-4 padding.</p>
     </Panel>
-    <Panel
-      title="Compact density"
-      density="compact"
-      surface="raised"
-      meta="4 pending transfers · updated 2m ago"
-    >
-      <p className={bodyClassName}>density="compact" · 11px meta.</p>
+    <Panel title="Compact density" density="compact" surface="raised">
+      <p className={bodyClassName}>density="compact" · p-3 padding.</p>
     </Panel>
     <p className={captionClassName}>
-      Compact reduces the section padding and the meta line size for
-      information-dense layouts.
+      density controls the section padding only. Meta line size is separate (see
+      MetaSize), so a roomy panel can still carry a small meta line.
+    </p>
+  </div>
+);
+
+export const MetaSize = () => (
+  <div className={frameClassName}>
+    <Panel
+      title="Default meta"
+      metaSize="md"
+      meta="4 pending transfers · updated 2m ago"
+    >
+      <p className={bodyClassName}>metaSize="md" (default) · 14px meta.</p>
+    </Panel>
+    <Panel
+      title="Small meta"
+      metaSize="sm"
+      meta="4 pending transfers · updated 2m ago"
+    >
+      <p className={bodyClassName}>metaSize="sm" · ~11px meta.</p>
+    </Panel>
+    <p className={captionClassName}>
+      metaSize sizes the meta line independently of density.
     </p>
   </div>
 );

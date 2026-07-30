@@ -65,11 +65,11 @@ export const panelRecipe = defineSlotRecipe({
       raised: { root: { bg: 'surface.default' } },
       recessed: { root: { bg: 'surface.subtle' } },
     },
+    // Padding only — the meta line has its own `metaSize` control so a roomy
+    // panel can still carry a small meta line (and vice versa).
     density: {
       normal: { root: { p: '4' } },
-      // Compact also drops the meta line to the smaller `metaText` step so the
-      // header reads as dense, not just the padding.
-      compact: { root: { p: '3' }, meta: { textStyle: 'metaText' } },
+      compact: { root: { p: '3' } },
     },
     titleTransform: {
       none: {},
@@ -84,11 +84,17 @@ export const panelRecipe = defineSlotRecipe({
       md: {},
       sm: { title: { fontSize: '2xs' } },
     },
+    // Meta line size, independent of density (like titleSize vs titleTransform).
+    metaSize: {
+      md: {},
+      sm: { meta: { textStyle: 'metaText' } },
+    },
   },
   defaultVariants: {
     surface: 'raised',
     density: 'normal',
     titleTransform: 'none',
     titleSize: 'md',
+    metaSize: 'md',
   },
 });

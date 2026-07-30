@@ -77,6 +77,11 @@ export const dataTableRecipe = defineSlotRecipe({
       p: '0',
       font: 'inherit',
       color: 'inherit',
+      // `font: inherit` does not carry text-transform/letter-spacing, and the UA
+      // resets them on <button>, so a sortable header would drop the cell's
+      // uppercase micro-label styling. Inherit them explicitly.
+      textTransform: 'inherit',
+      letterSpacing: 'inherit',
       cursor: 'pointer',
     },
     bodyRow: {

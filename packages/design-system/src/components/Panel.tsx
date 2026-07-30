@@ -20,6 +20,7 @@ export type PanelSurface = 'canvas' | 'raised' | 'recessed';
 export type PanelDensity = 'compact' | 'normal';
 export type PanelTitleTransform = 'none' | 'upper';
 export type PanelTitleSize = 'md' | 'sm';
+export type PanelMetaSize = 'md' | 'sm';
 
 export type PanelProps = HTMLAttributes<HTMLDivElement> & {
   /** Section-label heading rendered at the start of the header row. */
@@ -46,6 +47,12 @@ export type PanelProps = HTMLAttributes<HTMLDivElement> & {
    * while keeping the weight and tracking consistent.
    */
   titleSize?: PanelTitleSize;
+  /**
+   * Size of the meta line via the `panel` `metaSize` slot variant. Independent
+   * of `density` (which controls padding only), so a roomy panel can still
+   * carry a small meta line. Defaults to `md` (14px); `sm` is ~11px.
+   */
+  metaSize?: PanelMetaSize;
 };
 
 export function Panel({
@@ -56,6 +63,7 @@ export function Panel({
   density = 'normal',
   titleTransform = 'none',
   titleSize = 'md',
+  metaSize = 'md',
   className,
   children,
   ...rest
@@ -97,7 +105,7 @@ export function Panel({
                 <div
                   className={cx(
                     'panel__meta',
-                    density === 'compact' && 'panel__meta--density_compact',
+                    metaSize !== 'md' && `panel__meta--metaSize_${metaSize}`,
                   )}
                   data-part="meta"
                 >
