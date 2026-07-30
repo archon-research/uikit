@@ -5,6 +5,7 @@
     "access": "public"
   },
   "type": "module",
+  "sideEffects": false,
   "files": [
     "dist",
     "src"
@@ -23,6 +24,14 @@
     "./panda-preset": {
       "types": "./dist/panda-preset.d.ts",
       "default": "./dist/panda-preset.js"
+    },
+    "./data-table": {
+      "types": "./dist/components/data-table/index.d.ts",
+      "default": "./dist/components/data-table/index.js"
+    },
+    "./drawer": {
+      "types": "./dist/components/Drawer.d.ts",
+      "default": "./dist/components/Drawer.js"
     }
   },
   "scripts": {
