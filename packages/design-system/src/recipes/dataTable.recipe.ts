@@ -145,23 +145,33 @@ export const dataTableRecipe = defineSlotRecipe({
   variants: {
     // Density carries both padding and a type step: comfortable is the base
     // (header `xs`, body `sm`); compact tightens padding and drops header to
-    // `2xs` / body to `xs` for dense tables.
+    // `2xs` / body to `xs` for dense tables. It also steps the inline magnitude
+    // value/caption down so a dense table's money column shrinks with the rest.
     density: {
       comfortable: {},
       compact: {
         headerCell: { py: '1.5', px: '3', fontSize: '2xs' },
         bodyCell: { py: '1.5', px: '3', fontSize: 'xs' },
+        magnitudeValue: { fontSize: 'xs' },
+        magnitudeValueText: { fontSize: '2xs' },
       },
     },
+    // Alignment reaches the magnitude slots too, so a right-aligned money
+    // column and its inline bar align together instead of being mutually
+    // exclusive. Harmless on columns without a magnitude cell.
     align: {
       left: {},
       center: {
         headerCell: { textAlign: 'center' },
         bodyCell: { textAlign: 'center' },
+        magnitudeCell: { justifyItems: 'center' },
+        magnitudeValue: { textAlign: 'center' },
       },
       right: {
         headerCell: { textAlign: 'right' },
         bodyCell: { textAlign: 'right' },
+        magnitudeCell: { justifyItems: 'end' },
+        magnitudeValue: { textAlign: 'right' },
       },
     },
     sortable: {
