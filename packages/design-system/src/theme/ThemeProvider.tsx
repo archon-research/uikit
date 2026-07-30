@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
-import { ThemeContext, type ThemeMode } from './useTheme';
+import { ThemeContext, type ThemeMode } from './useTheme.js';
 
 const STORAGE_KEY = 'theme';
 const LEGACY_STORAGE_KEY = 'archon-theme';

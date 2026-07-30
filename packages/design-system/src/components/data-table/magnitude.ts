@@ -3,7 +3,7 @@ import type { Cell, Row, Table } from '@tanstack/react-table';
 import type {
   DataTableMagnitudeConfig,
   DataTableMagnitudeScale,
-} from './types';
+} from './types.js';
 
 type ColumnDomain = {
   min: number;

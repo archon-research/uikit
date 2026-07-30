@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { designSystemComponentManifest } from './component-manifest';
-import * as api from './index';
+import { designSystemComponentManifest } from './component-manifest.js';
+import * as api from './index.js';
 
 // PascalCase value exports that are intentionally NOT catalogued as standalone
 // components: the theme provider and the SurfaceMessage slot parts (the

@@ -15,12 +15,12 @@ import type {
   DataTableConfig,
   UrlSyncedTableStateAdapter,
   UseUrlSyncedTableReturn,
-} from './types';
+} from './types.js';
 import {
   deserializeSorting,
   serializeSorting,
   validateSortingState,
-} from './utils';
+} from './utils.js';
 
 export function useDataTable<T>(
   data: T[],

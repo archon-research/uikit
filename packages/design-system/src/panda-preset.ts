@@ -1,28 +1,28 @@
 import { definePreset } from '@pandacss/dev';
 
-import { badgeRecipe } from './recipes/badge.recipe';
-import { buttonRecipe } from './recipes/button.recipe';
-import { codeRecipe } from './recipes/code.recipe';
-import { dataTableRecipe } from './recipes/dataTable.recipe';
-import { drawerRecipe } from './recipes/drawer.recipe';
-import { emptyStateRecipe } from './recipes/emptyState.recipe';
-import { indicatorRecipe } from './recipes/indicator.recipe';
-import { inputRecipe } from './recipes/input.recipe';
-import { interactiveItemRecipe } from './recipes/interactiveItem.recipe';
-import { pageShellRecipe } from './recipes/pageShell.recipe';
-import { panelRecipe } from './recipes/panel.recipe';
-import { panelActionRecipe } from './recipes/panelAction.recipe';
-import { panelSectionRecipe } from './recipes/panelSection.recipe';
-import { searchInputRecipe } from './recipes/searchInput.recipe';
-import { sectionHeadingRecipe } from './recipes/sectionHeading.recipe';
-import { segmentedControlRecipe } from './recipes/segmentedControl.recipe';
-import { selectRecipe } from './recipes/select.recipe';
-import { sidebarGridRecipe } from './recipes/sidebarGrid.recipe';
-import { sidebarLayoutRecipe } from './recipes/sidebarLayout.recipe';
-import { statRowRecipe, statTileRecipe } from './recipes/statTile.recipe';
-import { surfaceMessageRecipe } from './recipes/surfaceMessage.recipe';
-import { switchRecipe } from './recipes/switch.recipe';
-import { themeToggleRecipe } from './recipes/themeToggle.recipe';
+import { badgeRecipe } from './recipes/badge.recipe.js';
+import { buttonRecipe } from './recipes/button.recipe.js';
+import { codeRecipe } from './recipes/code.recipe.js';
+import { dataTableRecipe } from './recipes/dataTable.recipe.js';
+import { drawerRecipe } from './recipes/drawer.recipe.js';
+import { emptyStateRecipe } from './recipes/emptyState.recipe.js';
+import { indicatorRecipe } from './recipes/indicator.recipe.js';
+import { inputRecipe } from './recipes/input.recipe.js';
+import { interactiveItemRecipe } from './recipes/interactiveItem.recipe.js';
+import { pageShellRecipe } from './recipes/pageShell.recipe.js';
+import { panelRecipe } from './recipes/panel.recipe.js';
+import { panelActionRecipe } from './recipes/panelAction.recipe.js';
+import { panelSectionRecipe } from './recipes/panelSection.recipe.js';
+import { searchInputRecipe } from './recipes/searchInput.recipe.js';
+import { sectionHeadingRecipe } from './recipes/sectionHeading.recipe.js';
+import { segmentedControlRecipe } from './recipes/segmentedControl.recipe.js';
+import { selectRecipe } from './recipes/select.recipe.js';
+import { sidebarGridRecipe } from './recipes/sidebarGrid.recipe.js';
+import { sidebarLayoutRecipe } from './recipes/sidebarLayout.recipe.js';
+import { statRowRecipe, statTileRecipe } from './recipes/statTile.recipe.js';
+import { surfaceMessageRecipe } from './recipes/surfaceMessage.recipe.js';
+import { switchRecipe } from './recipes/switch.recipe.js';
+import { themeToggleRecipe } from './recipes/themeToggle.recipe.js';
 
 /**
  * BREAKING VALUE-CHANGES (batch into the next major):

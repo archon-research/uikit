@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 
-import { StyledSelect } from './StyledSelect';
+import { StyledSelect } from './StyledSelect.js';
 
 export type RangePreset =
   | '1h'
