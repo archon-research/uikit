@@ -15,6 +15,12 @@ type SidebarLayoutProps = {
   maxBottomPanelHeight?: number;
   sidebarStorageKey?: string;
   bottomPanelStorageKey?: string;
+  /**
+   * Below this root width (px), collapse the resizable split into a single
+   * scrolling column (sidebar stacked above main). Omit to keep the split
+   * layout at every width. Resizing is disabled while stacked.
+   */
+  collapseBelow?: number;
 };
 
 const DEFAULT_SIDEBAR_WIDTH = 320;
@@ -110,6 +116,7 @@ export function SidebarLayout({
   maxBottomPanelHeight = DEFAULT_MAX_BOTTOM_HEIGHT,
   sidebarStorageKey = SIDEBAR_STORAGE_KEY,
   bottomPanelStorageKey = BOTTOM_STORAGE_KEY,
+  collapseBelow,
 }: SidebarLayoutProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const mainColumnRef = useRef<HTMLDivElement>(null);
@@ -239,6 +246,46 @@ export function SidebarLayout({
     ],
     [sidebarPanelMax, sidebarPanelMin],
   );
+
+  const stacked = collapseBelow != null && rootWidth < collapseBelow;
+
+  // Narrow-width fallback: a single scrolling column with no Splitter, so Ark's
+  // inline flex-basis sizing never applies. `rootRef` stays attached so the
+  // width keeps being measured and the layout switches back when widened.
+  if (stacked) {
+    const stackedOf = (slot: string): string => `${slot}--layout_stacked`;
+    return (
+      <div
+        ref={rootRef}
+        className={cx(slots.root, stackedOf(slots.root), className)}
+      >
+        <div
+          className={cx(
+            slots.horizontalSplitter,
+            stackedOf(slots.horizontalSplitter),
+          )}
+        >
+          <div className={cx(slots.sidebar, stackedOf(slots.sidebar))}>
+            {sidebar}
+          </div>
+          <div className={cx(slots.main, stackedOf(slots.main))}>
+            {topBar ? <header className={slots.topBar}>{topBar}</header> : null}
+            <div
+              ref={mainColumnRef}
+              className={cx(slots.mainColumn, stackedOf(slots.mainColumn))}
+            >
+              <div className={cx(slots.content, stackedOf(slots.content))}>
+                {main}
+              </div>
+              {bottomPanel ? (
+                <div className={slots.bottomPanel}>{bottomPanel}</div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div ref={rootRef} className={cx(slots.root, className)}>
