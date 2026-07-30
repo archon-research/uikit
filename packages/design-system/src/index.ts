@@ -7,6 +7,7 @@ export {
   type DesignSystemStoryBucket,
   type DesignSystemStyleOwner,
 } from './component-manifest';
+export type { ColorPalette } from './component-manifest';
 export {
   SidebarLayout,
   type SidebarLayoutProps,
@@ -97,6 +98,7 @@ export { Toggle } from '@ark-ui/react/toggle';
 export { ToggleGroup } from '@ark-ui/react/toggle-group';
 export { Switch } from '@ark-ui/react/switch';
 export { Dialog } from '@ark-ui/react/dialog';
+export { Portal } from '@ark-ui/react/portal';
 export {
   Indicator,
   type IndicatorStatus,
