@@ -40,6 +40,9 @@ export type RangePickerProps = {
   preset: RangePreset;
   range: TimeRange;
   onChange: (preset: RangePreset, range: TimeRange) => void;
+  className?: string;
+  /** Merged onto the root after the defaults, so it can override the layout. */
+  style?: CSSProperties;
 };
 
 const PRESETS: { label: string; value: RangePreset }[] = [
@@ -279,7 +282,13 @@ function fromDateTimeLocalValue(value: string): string | undefined {
   return parseTimestamp(value)?.toISOString();
 }
 
-export function RangePicker({ preset, range, onChange }: RangePickerProps) {
+export function RangePicker({
+  preset,
+  range,
+  onChange,
+  className,
+  style,
+}: RangePickerProps) {
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [draftRange, setDraftRange] = useState<DraftRange>(range);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -376,7 +385,7 @@ export function RangePicker({ preset, range, onChange }: RangePickerProps) {
     : null;
 
   return (
-    <div style={rootStyle}>
+    <div className={className} style={{ ...rootStyle, ...style }}>
       <StyledSelect
         aria-label="Select activity range"
         value={selectedValue}
