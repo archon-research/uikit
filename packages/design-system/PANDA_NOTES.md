@@ -93,12 +93,26 @@ invalid declaration the browser drops (e.g. `color: text.subtle;`). Run the doct
 ```sh
 npx @archon-research/uikit-cli doctor            # auto-finds styled-system/styles.css
 npx @archon-research/uikit-cli doctor path/to/styles.css
+npx @archon-research/uikit-cli doctor --codegen  # runs `panda cssgen` itself (PostCSS-plugin consumers)
 ```
 
+If you use the **Panda PostCSS plugin** there is no frozen `styled-system/styles.css` to point at —
+pass `--codegen` and doctor runs `panda cssgen --outfile` into a temp file, scans it, and cleans up.
 It errors (non-zero exit) when known recipe-variant classes are absent — meaning the
 `designSystemStaticCssRecipes` spread is missing — or when any `color`/`background`/`border-color`/
 `fill`/`stroke` declaration has an unresolved `token.path` value. Wire it after your codegen step
 in CI. (This is the same check that caught a real `text.subtle` typo in this repo's own preview.)
+
+---
+
+## `interactive.accent` is a FILL, not a text color
+
+`interactive.accent` (`blue.600`, theme-invariant) is a **fill**: white text on it is AA (5.17:1) in
+both themes, which is what a primary button/badge fill needs. It is **not** a text color — as
+foreground on the dark surface it is only ~3.47:1 and **fails AA**. For accent *text* (links,
+emphasis) use **`text.link`**, which is dark-aware (9.94:1 on the dark surface). Nothing in the token
+name or the type system distinguishes the two, so the rule is: `interactive.accent` *behind* text,
+`text.link` *as* text.
 
 ---
 
