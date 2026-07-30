@@ -41,6 +41,10 @@ export const dataTableRecipe = defineSlotRecipe({
   ],
   base: {
     root: {
+      // Wide tables scroll horizontally here — which also clips any overlay
+      // anchored to a header/body cell (a tooltip, a filter popover). Such
+      // overlays must be rendered through the re-exported `Portal` to escape
+      // this scroll container; the clipping is intrinsic to an overflow box.
       overflowX: 'auto',
       borderRadius: 'md',
       borderWidth: '1px',
@@ -83,12 +87,30 @@ export const dataTableRecipe = defineSlotRecipe({
       textTransform: 'inherit',
       letterSpacing: 'inherit',
       cursor: 'pointer',
+      // Match the focus-ring convention used by select/themeToggle so sortable
+      // headers aren't the one interactive element with only the UA ring.
+      _focusVisible: {
+        outlineWidth: '2px',
+        outlineStyle: 'solid',
+        outlineColor: 'border.strong',
+        outlineOffset: '1px',
+        borderRadius: 'xs',
+      },
     },
     bodyRow: {
       cursor: 'default',
       bg: 'surface.default',
       transitionProperty: 'background-color',
       transitionDuration: 'fast',
+      // Rows are keyboard-focusable (tabIndex={0}); give them a designed ring
+      // instead of leaving only the UA outline. Inset so it stays inside the
+      // table's own border.
+      _focusVisible: {
+        outlineWidth: '2px',
+        outlineStyle: 'solid',
+        outlineColor: 'border.strong',
+        outlineOffset: '-2px',
+      },
     },
     bodyCell: {
       borderBottomWidth: '1px',
