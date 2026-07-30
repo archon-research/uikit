@@ -119,6 +119,7 @@ export {
   type PanelDensity,
   type PanelTitleTransform,
   type PanelTitleSize,
+  type PanelMetaSize,
 } from './components/Panel';
 export {
   StatTile,
