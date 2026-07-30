@@ -468,9 +468,21 @@
         "Panel"
       ],
       "locStart": 113,
-      "locEnd": 136,
+      "locEnd": 126,
       "filePath": "src/stories/molecules/panel.stories.tsx",
       "namedExport": "Density",
+      "meta": {}
+    },
+    "molecules--panel--meta-size": {
+      "name": "Meta size",
+      "levels": [
+        "Molecules",
+        "Panel"
+      ],
+      "locStart": 128,
+      "locEnd": 148,
+      "filePath": "src/stories/molecules/panel.stories.tsx",
+      "namedExport": "MetaSize",
       "meta": {}
     },
     "molecules--panel--surfaces": {
