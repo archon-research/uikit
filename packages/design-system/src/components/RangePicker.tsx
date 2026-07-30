@@ -104,7 +104,7 @@ const customModalStyle: CSSProperties = {
   borderStyle: 'solid',
   borderColor: 'var(--colors-border-default, #d0d5dd)',
   background: 'var(--colors-surface-default, #ffffff)',
-  boxShadow: 'var(--shadows-overlay)',
+  boxShadow: 'var(--shadows-overlay, 0 18px 48px rgba(0, 0, 0, 0.35))',
   display: 'grid',
   gap: 16,
   padding: 16,
