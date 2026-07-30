@@ -34,3 +34,26 @@ export const WithRetry = () => (
     />
   </div>
 );
+
+const railClassName = css({
+  width: '260px',
+  p: '3',
+  borderColor: 'border.subtle',
+  borderRadius: 'md',
+  borderStyle: 'solid',
+  borderWidth: '1px',
+});
+
+// `size="inline"` in a ~260px rail: compact and left-aligned, and the long
+// error message wraps instead of forcing a horizontal scroll strip.
+export const Inline = () => (
+  <div className={railClassName}>
+    <ErrorState
+      size="inline"
+      title="Positions unavailable"
+      description="The account positions endpoint is failing."
+      errorMessage="GET https://api.example.com/v1/accounts/positions?window=30d — 503 Service Unavailable"
+      onRetry={() => {}}
+    />
+  </div>
+);
