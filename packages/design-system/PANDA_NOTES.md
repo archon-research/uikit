@@ -83,6 +83,23 @@ runtime toggle always has a rule to hit. You can scope it tighter
   `selected`), add it to `designSystemStaticCssRecipes` (`src/staticCss.ts`) — that single edit
   keeps the internal config and every consumer in sync.
 
+### Detect the failure loudly in CI (`uikit-cli doctor`)
+
+The failure modes above are silent: `type:check`, `lint` and `build` all pass while
+runtime-selected variants render unstyled (missing `staticCss`) or a mistyped token emits an
+invalid declaration the browser drops (e.g. `color: text.subtle;`). Run the doctor against your
+**generated** stylesheet, after `panda codegen`, so both become one CI failure:
+
+```sh
+npx @archon-research/uikit-cli doctor            # auto-finds styled-system/styles.css
+npx @archon-research/uikit-cli doctor path/to/styles.css
+```
+
+It errors (non-zero exit) when known recipe-variant classes are absent — meaning the
+`designSystemStaticCssRecipes` spread is missing — or when any `color`/`background`/`border-color`/
+`fill`/`stroke` declaration has an unresolved `token.path` value. Wire it after your codegen step
+in CI. (This is the same check that caught a real `text.subtle` typo in this repo's own preview.)
+
 ---
 
 ## App base styles MUST go in `@layer base` (unlayered CSS beats layered Panda)
