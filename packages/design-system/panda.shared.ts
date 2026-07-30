@@ -271,7 +271,7 @@ export const designSystemPandaConfig = {
           },
           text: {
             default: {
-              value: { base: '{colors.neutral.900}', _dark: '{colors.neutral.100}' },
+              value: { base: '{colors.neutral.700}', _dark: '{colors.neutral.300}' },
             },
             strong: {
               value: { base: '{colors.neutral.950}', _dark: '{colors.white}' },

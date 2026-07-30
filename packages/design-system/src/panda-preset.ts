@@ -355,10 +355,14 @@ export const designSystemPreset = definePreset({
             },
           },
           text: {
+            // Body text sits a step below `strong` so the two are actually
+            // distinguishable — at neutral.900/neutral.100 `default` was within
+            // ~1.1:1 of `strong` and the hierarchy collapsed. neutral.700 / dark
+            // neutral.300 keep AA (≈10.4:1 / ≈12:1) while opening the gap.
             default: {
               value: {
-                base: '{colors.neutral.900}',
-                _dark: '{colors.neutral.100}',
+                base: '{colors.neutral.700}',
+                _dark: '{colors.neutral.300}',
               },
             },
             strong: {
