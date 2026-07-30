@@ -46,6 +46,13 @@ export const Panel = () => (
   </div>
 );
 
+const captionClassName = css({
+  fontSize: 'sm',
+  color: 'text.muted',
+});
+
+// `size` sets the type step as well as the box: `sm` is 12px, `md`/`lg` sit at
+// 14px, so a small button reads as smaller text, not just a shorter box.
 export const Sizes = () => (
   <div className={frameClassName}>
     <div className={inlineRowClassName}>
@@ -53,6 +60,9 @@ export const Sizes = () => (
       <Button size="md">Medium</Button>
       <Button size="lg">Large</Button>
     </div>
+    <p className={captionClassName}>
+      Small drops the label to 12px; medium and large hold at 14px.
+    </p>
   </div>
 );
 
