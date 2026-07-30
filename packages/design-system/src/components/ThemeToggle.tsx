@@ -3,6 +3,7 @@ import { Laptop, Moon, Sun } from 'lucide-react';
 import { useTheme, type ThemeMode } from '../theme/useTheme';
 
 export type ThemeToggleVariant = 'segmented' | 'icon';
+export type ThemeToggleAppearance = 'chip' | 'bare';
 
 export type ThemeToggleProps = {
   /**
@@ -10,6 +11,12 @@ export type ThemeToggleProps = {
    * single compact button that cycles auto -> light -> dark.
    */
   variant?: ThemeToggleVariant;
+  /**
+   * Chrome for the `icon` variant. `chip` (default) is the bordered, filled
+   * chip; `bare` drops border/background/radius so the button inherits an
+   * enclosing toolbar or pill surface. Ignored by the `segmented` variant.
+   */
+  appearance?: ThemeToggleAppearance;
   className?: string;
 };
 
@@ -65,6 +72,7 @@ function ThemeIcon({ mode }: { mode: ThemeMode }) {
 
 export function ThemeToggle({
   variant = 'segmented',
+  appearance = 'chip',
   className,
 }: ThemeToggleProps = {}) {
   const { mode, setMode } = useTheme();
@@ -81,8 +89,12 @@ export function ThemeToggle({
           slots.root,
           `${slots.root}--variant_icon`,
           slots.iconButton,
+          // `chip` is the base iconButton look and emits no class; only `bare`
+          // carries a variant class.
+          appearance === 'bare' && `${slots.iconButton}--appearance_bare`,
           className,
         )}
+        data-appearance={appearance}
         aria-label={`Theme: ${mode}. Switch to ${upcomingLabel}.`}
         title={`Theme: ${mode}`}
         data-scope="theme-toggle"

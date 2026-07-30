@@ -3,6 +3,7 @@ import { definePreset } from '@pandacss/dev';
 import { badgeRecipe } from './recipes/badge.recipe';
 import { buttonRecipe } from './recipes/button.recipe';
 import { codeRecipe } from './recipes/code.recipe';
+import { dataTableRecipe } from './recipes/dataTable.recipe';
 import { drawerRecipe } from './recipes/drawer.recipe';
 import { emptyStateRecipe } from './recipes/emptyState.recipe';
 import { indicatorRecipe } from './recipes/indicator.recipe';
@@ -292,6 +293,14 @@ const shadows = {
 
 export const designSystemPreset = definePreset({
   name: 'design-system',
+  // Tell the UA which scheme is active so native surfaces (scrollbars, caret,
+  // spellcheck, <select> popups) match the theme. The theme layer sets `.dark`
+  // + `data-theme` on <html>; without `color-scheme` a dark page keeps
+  // light-painted scrollbars. Preset globalCss merges into every consumer.
+  globalCss: {
+    ':root': { colorScheme: 'light' },
+    '.dark, [data-theme="dark"]': { colorScheme: 'dark' },
+  },
   theme: {
     extend: {
       keyframes,
@@ -416,6 +425,20 @@ export const designSystemPreset = definePreset({
             },
             selected: {
               value: { base: '{colors.blue.100}', _dark: '{colors.blue.900}' },
+            },
+          },
+          scrollbar: {
+            thumb: {
+              value: {
+                base: '{colors.neutral.300}',
+                _dark: '{colors.neutral.600}',
+              },
+            },
+            track: {
+              value: {
+                base: '{colors.neutral.100}',
+                _dark: '{colors.neutral.800}',
+              },
             },
           },
           fg: {
@@ -567,6 +590,7 @@ export const designSystemPreset = definePreset({
         themeToggle: themeToggleRecipe,
         sidebarLayout: sidebarLayoutRecipe,
         panel: panelRecipe,
+        dataTable: dataTableRecipe,
       },
     },
   },

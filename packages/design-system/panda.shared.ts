@@ -18,6 +18,7 @@ import { sectionHeadingRecipe } from './src/recipes/sectionHeading.recipe';
 import { segmentedControlRecipe } from './src/recipes/segmentedControl.recipe';
 import { selectRecipe } from './src/recipes/select.recipe';
 import { sidebarGridRecipe } from './src/recipes/sidebarGrid.recipe';
+import { dataTableRecipe } from './src/recipes/dataTable.recipe';
 import { panelRecipe } from './src/recipes/panel.recipe';
 import { sidebarLayoutRecipe } from './src/recipes/sidebarLayout.recipe';
 import { statRowRecipe, statTileRecipe } from './src/recipes/statTile.recipe';
@@ -192,6 +193,12 @@ export const designSystemPandaConfig = {
   staticCss: {
     recipes: designSystemStaticCssRecipes,
   },
+  // Tell the UA which scheme is active so native surfaces (scrollbars, caret,
+  // <select> popups) match the theme flipped on <html>.
+  globalCss: {
+    ':root': { colorScheme: 'light' },
+    '.dark, [data-theme="dark"]': { colorScheme: 'dark' },
+  },
   studio: {
     logo: 'UI',
   },
@@ -313,6 +320,14 @@ export const designSystemPandaConfig = {
               value: { base: '{colors.blue.100}', _dark: '{colors.blue.900}' },
             },
           },
+          scrollbar: {
+            thumb: {
+              value: { base: '{colors.neutral.300}', _dark: '{colors.neutral.600}' },
+            },
+            track: {
+              value: { base: '{colors.neutral.100}', _dark: '{colors.neutral.800}' },
+            },
+          },
           fg: {
             default: {
               value: { base: '{colors.neutral.900}', _dark: '{colors.neutral.100}' },
@@ -381,6 +396,7 @@ export const designSystemPandaConfig = {
         themeToggle: themeToggleRecipe,
         sidebarLayout: sidebarLayoutRecipe,
         panel: panelRecipe,
+        dataTable: dataTableRecipe,
       },
     },
   },

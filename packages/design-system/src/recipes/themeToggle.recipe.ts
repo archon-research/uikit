@@ -7,6 +7,9 @@ import { defineSlotRecipe } from '@pandacss/dev';
  *    attribute (runtime state), not a variant class — mirroring the
  *    `segmentedControl` recipe's `data-state` approach.
  *  - `icon`: a single compact icon button that cycles auto -> light -> dark.
+ *    Its `appearance` chooses the chrome: `chip` (default) is the bordered,
+ *    filled chip; `bare` drops border/background/radius so it inherits an
+ *    enclosing toolbar or pill surface.
  *
  * `input` is the visually-hidden native radio (segmented form). All colors are
  * semantic tokens so a consumer `className` composed last overrides via the
@@ -103,8 +106,28 @@ export const themeToggleRecipe = defineSlotRecipe({
         },
       },
     },
+    // Chrome for the `icon` form. `chip` (default) keeps the bordered, filled
+    // 36px chip; `bare` strips border, background, and radius so the button
+    // inherits an enclosing toolbar or pill surface instead of double-drawing
+    // one of its own.
+    appearance: {
+      chip: {},
+      bare: {
+        iconButton: {
+          borderWidth: '0',
+          borderColor: 'transparent',
+          bg: 'transparent',
+          borderRadius: 'none',
+          _hover: {
+            bg: 'transparent',
+            color: 'text.default',
+          },
+        },
+      },
+    },
   },
   defaultVariants: {
     variant: 'segmented',
+    appearance: 'chip',
   },
 });

@@ -67,7 +67,9 @@ export const panelRecipe = defineSlotRecipe({
     },
     density: {
       normal: { root: { p: '4' } },
-      compact: { root: { p: '3' } },
+      // Compact also drops the meta line to the smaller `metaText` step so the
+      // header reads as dense, not just the padding.
+      compact: { root: { p: '3' }, meta: { textStyle: 'metaText' } },
     },
     titleTransform: {
       none: {},

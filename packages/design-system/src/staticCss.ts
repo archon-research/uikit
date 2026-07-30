@@ -47,4 +47,5 @@ export const designSystemStaticCssRecipes = {
   themeToggle: ['*'],
   sidebarLayout: ['*'],
   panel: ['*'],
+  dataTable: ['*'],
 } satisfies Record<string, ['*']>;

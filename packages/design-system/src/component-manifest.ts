@@ -148,10 +148,10 @@ export const designSystemComponentManifest = [
   {
     exportName: 'DataTable',
     behaviorSource: 'tanstack-react-table',
-    styleOwner: 'design-system',
+    styleOwner: 'design-system-preset',
     storyBucket: 'organisms',
     contractScope: null,
-    recipeKey: null,
+    recipeKey: 'dataTable',
   },
   {
     exportName: 'EmptyState',
