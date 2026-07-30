@@ -289,6 +289,15 @@ const shadows = {
         '0 2px 4px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)',
     },
   },
+  // Floating-overlay elevation (modals, popovers, date pickers) — a step above
+  // the resting `elevation` token.
+  overlay: {
+    value: {
+      base: '0 12px 32px -8px rgba(9, 9, 11, 0.25), 0 4px 12px -4px rgba(9, 9, 11, 0.12)',
+      _dark:
+        '0 16px 40px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)',
+    },
+  },
 };
 
 export const designSystemPreset = definePreset({
@@ -314,6 +323,22 @@ export const designSystemPreset = definePreset({
         fontSizes: {
           '3xs': { value: '0.625rem' }, // 10px — micro labels
           '2xs': { value: '0.6875rem' }, // 11px (was Panda default 8px)
+        },
+        // Layering scale for stacked surfaces (dropdowns, drawers, modals,
+        // popovers, toasts, tooltips) so consumers stop hand-picking z-indexes.
+        zIndex: {
+          hide: { value: -1 },
+          base: { value: 0 },
+          docked: { value: 10 },
+          dropdown: { value: 1000 },
+          sticky: { value: 1100 },
+          banner: { value: 1200 },
+          overlay: { value: 1300 },
+          modal: { value: 1400 },
+          popover: { value: 1500 },
+          skipNav: { value: 1600 },
+          toast: { value: 1700 },
+          tooltip: { value: 1800 },
         },
       },
       semanticTokens: {
@@ -395,6 +420,14 @@ export const designSystemPreset = definePreset({
                 _dark: '{colors.amber.300}',
               },
             },
+            // Theme-invariant light text for always-dark fills (e.g. tooltips);
+            // pair with `overlay.tooltip`.
+            inverse: {
+              value: {
+                base: '{colors.neutral.50}',
+                _dark: '{colors.neutral.50}',
+              },
+            },
           },
           border: {
             hairline: {
@@ -456,6 +489,23 @@ export const designSystemPreset = definePreset({
             track: {
               value: {
                 base: '{colors.neutral.100}',
+                _dark: '{colors.neutral.800}',
+              },
+            },
+          },
+          // Scrims and always-dark floating fills that can't be a surface step.
+          overlay: {
+            // Modal/drawer backdrop scrim.
+            backdrop: {
+              value: {
+                base: 'rgba(9, 9, 11, 0.55)',
+                _dark: 'rgba(0, 0, 0, 0.65)',
+              },
+            },
+            // Always-dark tooltip fill (theme-invariant); use with text.inverse.
+            tooltip: {
+              value: {
+                base: '{colors.neutral.800}',
                 _dark: '{colors.neutral.800}',
               },
             },
@@ -533,6 +583,18 @@ export const designSystemPreset = definePreset({
               },
               critical: {
                 value: { base: '{colors.red.600}', _dark: '{colors.red.300}' },
+              },
+              quaternary: {
+                value: {
+                  base: '{colors.amber.600}',
+                  _dark: '{colors.amber.300}',
+                },
+              },
+              quinary: {
+                value: {
+                  base: '{colors.pink.600}',
+                  _dark: '{colors.pink.300}',
+                },
               },
             },
           },
