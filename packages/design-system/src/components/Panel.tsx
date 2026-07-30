@@ -94,7 +94,13 @@ export function Panel({
           {meta != null || actions != null ? (
             <div className="panel__trailing" data-part="trailing">
               {meta != null ? (
-                <div className="panel__meta" data-part="meta">
+                <div
+                  className={cx(
+                    'panel__meta',
+                    density === 'compact' && 'panel__meta--density_compact',
+                  )}
+                  data-part="meta"
+                >
                   {meta}
                 </div>
               ) : null}

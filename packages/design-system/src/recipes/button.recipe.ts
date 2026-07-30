@@ -67,18 +67,25 @@ export const buttonRecipe = defineRecipe({
         },
       },
     },
+    // Box metrics AND type step. `size` now sets font-size too, so a default
+    // button no longer inherits the larger body step. Item and compact-panel
+    // buttons still get their type from `itemDensity`/`panelDensity`, which are
+    // declared after `size` and win the cascade.
     size: {
       sm: {
         h: '6',
         px: '2',
+        fontSize: 'xs',
       },
       md: {
         h: '8',
         px: '2.5',
+        fontSize: 'sm',
       },
       lg: {
         h: '9',
         px: '3',
+        fontSize: 'sm',
       },
     },
     // Item padding/type. Applied by the component only when variant==='item'.

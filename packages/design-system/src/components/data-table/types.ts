@@ -76,5 +76,11 @@ declare module '@tanstack/react-table' {
      * Defaults to `'left'` when omitted.
      */
     align?: DataTableColumnAlign;
+    /**
+     * Render this column's body cells in the mono font with tabular figures so
+     * numeric values align down the column. Pair with `align: 'right'` for
+     * currency/amount columns. Defaults to `false` when omitted.
+     */
+    mono?: boolean;
   }
 }

@@ -20,3 +20,4 @@ export { emptyStateRecipe } from './emptyState.recipe';
 export { themeToggleRecipe } from './themeToggle.recipe';
 export { sidebarLayoutRecipe } from './sidebarLayout.recipe';
 export { panelRecipe } from './panel.recipe';
+export { dataTableRecipe } from './dataTable.recipe';
