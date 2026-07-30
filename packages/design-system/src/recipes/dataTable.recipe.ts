@@ -96,6 +96,9 @@ export const dataTableRecipe = defineSlotRecipe({
       borderBottomColor: 'border.subtle',
       py: '3.5',
       px: '4',
+      // Set an explicit body size so cells don't inherit page body text; the
+      // density variant steps it down for dense tables.
+      fontSize: 'sm',
       textAlign: 'left',
     },
     magnitudeCell: {
@@ -140,11 +143,14 @@ export const dataTableRecipe = defineSlotRecipe({
     },
   },
   variants: {
+    // Density carries both padding and a type step: comfortable is the base
+    // (header `xs`, body `sm`); compact tightens padding and drops header to
+    // `2xs` / body to `xs` for dense tables.
     density: {
       comfortable: {},
       compact: {
-        headerCell: { py: '1.5', px: '3' },
-        bodyCell: { py: '1.5', px: '3' },
+        headerCell: { py: '1.5', px: '3', fontSize: '2xs' },
+        bodyCell: { py: '1.5', px: '3', fontSize: 'xs' },
       },
     },
     align: {
