@@ -421,6 +421,29 @@ export const designSystemPandaConfig = {
               },
             },
           },
+          // Categorical (status-free) encoding; hue order matches chart.series.
+          categorical: {
+            '1': {
+              bg: { value: { base: '{colors.blue.50}', _dark: '{colors.blue.950}' } },
+              fg: { value: { base: '{colors.blue.700}', _dark: '{colors.blue.300}' } },
+            },
+            '2': {
+              bg: { value: { base: '{colors.teal.50}', _dark: '{colors.teal.950}' } },
+              fg: { value: { base: '{colors.teal.700}', _dark: '{colors.teal.300}' } },
+            },
+            '3': {
+              bg: { value: { base: '{colors.violet.50}', _dark: '{colors.violet.950}' } },
+              fg: { value: { base: '{colors.violet.700}', _dark: '{colors.violet.300}' } },
+            },
+            '4': {
+              bg: { value: { base: '{colors.amber.50}', _dark: '{colors.amber.950}' } },
+              fg: { value: { base: '{colors.amber.800}', _dark: '{colors.amber.300}' } },
+            },
+            '5': {
+              bg: { value: { base: '{colors.pink.50}', _dark: '{colors.pink.950}' } },
+              fg: { value: { base: '{colors.pink.700}', _dark: '{colors.pink.300}' } },
+            },
+          },
           // ── colorPalette ROLE tokens (role-based, on the 50-950 scale) ──
           ...colorPaletteRoles,
         },
