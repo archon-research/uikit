@@ -5,6 +5,7 @@
     "access": "public"
   },
   "type": "module",
+  "sideEffects": false,
   "files": [
     "dist",
     "src"
@@ -23,6 +24,14 @@
     "./panda-preset": {
       "types": "./dist/panda-preset.d.ts",
       "default": "./dist/panda-preset.js"
+    },
+    "./data-table": {
+      "types": "./dist/components/data-table/index.d.ts",
+      "default": "./dist/components/data-table/index.js"
+    },
+    "./drawer": {
+      "types": "./dist/components/Drawer.d.ts",
+      "default": "./dist/components/Drawer.js"
     }
   },
   "scripts": {
@@ -33,7 +42,8 @@
     "lint": "oxlint -c oxlint.config.ts src",
     "lint:fix": "oxlint -c oxlint.config.ts --fix src",
     "format": "oxfmt -c oxfmt.config.ts --write src",
-    "format:check": "oxfmt -c oxfmt.config.ts --check src"
+    "format:check": "oxfmt -c oxfmt.config.ts --check src",
+    "test": "vitest run"
   },
   "dependencies": {
     "@ark-ui/react": "5.37.2",
@@ -50,6 +60,7 @@
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "oxfmt": "0.59.0",
-    "oxlint": "1.74.0"
+    "oxlint": "1.74.0",
+    "vitest": "^4.1.9"
   }
 }
