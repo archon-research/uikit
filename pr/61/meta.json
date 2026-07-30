@@ -11,10 +11,34 @@
         "Atoms",
         "Badge"
       ],
-      "locStart": 36,
-      "locEnd": 47,
+      "locStart": 83,
+      "locEnd": 100,
       "filePath": "src/stories/atoms/badge.stories.tsx",
       "namedExport": "InContext",
+      "meta": {}
+    },
+    "atoms--badge--matrix": {
+      "name": "Matrix",
+      "levels": [
+        "Atoms",
+        "Badge"
+      ],
+      "locStart": 33,
+      "locEnd": 52,
+      "filePath": "src/stories/atoms/badge.stories.tsx",
+      "namedExport": "Matrix",
+      "meta": {}
+    },
+    "atoms--badge--sizes": {
+      "name": "Sizes",
+      "levels": [
+        "Atoms",
+        "Badge"
+      ],
+      "locStart": 54,
+      "locEnd": 65,
+      "filePath": "src/stories/atoms/badge.stories.tsx",
+      "namedExport": "Sizes",
       "meta": {}
     },
     "atoms--badge--tones": {
@@ -23,10 +47,34 @@
         "Atoms",
         "Badge"
       ],
-      "locStart": 23,
-      "locEnd": 34,
+      "locStart": 68,
+      "locEnd": 81,
       "filePath": "src/stories/atoms/badge.stories.tsx",
       "namedExport": "Tones",
+      "meta": {}
+    },
+    "atoms--button--density": {
+      "name": "Density",
+      "levels": [
+        "Atoms",
+        "Button"
+      ],
+      "locStart": 96,
+      "locEnd": 106,
+      "filePath": "src/stories/atoms/button.stories.tsx",
+      "namedExport": "Density",
+      "meta": {}
+    },
+    "atoms--button--emphasis": {
+      "name": "Emphasis",
+      "levels": [
+        "Atoms",
+        "Button"
+      ],
+      "locStart": 71,
+      "locEnd": 93,
+      "filePath": "src/stories/atoms/button.stories.tsx",
+      "namedExport": "Emphasis",
       "meta": {}
     },
     "atoms--button--icon-only": {
@@ -35,8 +83,8 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 71,
-      "locEnd": 87,
+      "locStart": 137,
+      "locEnd": 156,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "IconOnly",
       "meta": {}
@@ -47,8 +95,8 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 42,
-      "locEnd": 69,
+      "locStart": 108,
+      "locEnd": 135,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "Item",
       "meta": {}
@@ -59,10 +107,82 @@
         "Atoms",
         "Button"
       ],
-      "locStart": 23,
-      "locEnd": 40,
+      "locStart": 30,
+      "locEnd": 47,
       "filePath": "src/stories/atoms/button.stories.tsx",
       "namedExport": "Panel",
+      "meta": {}
+    },
+    "atoms--button--sizes": {
+      "name": "Sizes",
+      "levels": [
+        "Atoms",
+        "Button"
+      ],
+      "locStart": 56,
+      "locEnd": 67,
+      "filePath": "src/stories/atoms/button.stories.tsx",
+      "namedExport": "Sizes",
+      "meta": {}
+    },
+    "atoms--code--block": {
+      "name": "Block",
+      "levels": [
+        "Atoms",
+        "Code"
+      ],
+      "locStart": 64,
+      "locEnd": 77,
+      "filePath": "src/stories/atoms/code.stories.tsx",
+      "namedExport": "Block",
+      "meta": {}
+    },
+    "atoms--code--both": {
+      "name": "Both",
+      "levels": [
+        "Atoms",
+        "Code"
+      ],
+      "locStart": 80,
+      "locEnd": 92,
+      "filePath": "src/stories/atoms/code.stories.tsx",
+      "namedExport": "Both",
+      "meta": {}
+    },
+    "atoms--code--inline": {
+      "name": "Inline",
+      "levels": [
+        "Atoms",
+        "Code"
+      ],
+      "locStart": 31,
+      "locEnd": 39,
+      "filePath": "src/stories/atoms/code.stories.tsx",
+      "namedExport": "Inline",
+      "meta": {}
+    },
+    "atoms--code--inline-in-prose": {
+      "name": "Inline in prose",
+      "levels": [
+        "Atoms",
+        "Code"
+      ],
+      "locStart": 50,
+      "locEnd": 61,
+      "filePath": "src/stories/atoms/code.stories.tsx",
+      "namedExport": "InlineInProse",
+      "meta": {}
+    },
+    "atoms--indicator--color-palette-override": {
+      "name": "Color palette override",
+      "levels": [
+        "Atoms",
+        "Indicator"
+      ],
+      "locStart": 62,
+      "locEnd": 84,
+      "filePath": "src/stories/atoms/indicator.stories.tsx",
+      "namedExport": "ColorPaletteOverride",
       "meta": {}
     },
     "atoms--indicator--dot-only": {
@@ -71,8 +191,8 @@
         "Atoms",
         "Indicator"
       ],
-      "locStart": 47,
-      "locEnd": 56,
+      "locStart": 49,
+      "locEnd": 58,
       "filePath": "src/stories/atoms/indicator.stories.tsx",
       "namedExport": "DotOnly",
       "meta": {}
@@ -83,8 +203,8 @@
         "Atoms",
         "Indicator"
       ],
-      "locStart": 78,
-      "locEnd": 93,
+      "locStart": 106,
+      "locEnd": 121,
       "filePath": "src/stories/atoms/indicator.stories.tsx",
       "namedExport": "InContext",
       "meta": {}
@@ -95,8 +215,8 @@
         "Atoms",
         "Indicator"
       ],
-      "locStart": 58,
-      "locEnd": 76,
+      "locStart": 86,
+      "locEnd": 104,
       "filePath": "src/stories/atoms/indicator.stories.tsx",
       "namedExport": "Sizes",
       "meta": {}
@@ -107,8 +227,8 @@
         "Atoms",
         "Indicator"
       ],
-      "locStart": 32,
-      "locEnd": 45,
+      "locStart": 33,
+      "locEnd": 47,
       "filePath": "src/stories/atoms/indicator.stories.tsx",
       "namedExport": "Statuses",
       "meta": {}
@@ -161,6 +281,54 @@
       "namedExport": "Default",
       "meta": {}
     },
+    "atoms--sparkline--area": {
+      "name": "Area",
+      "levels": [
+        "Atoms",
+        "Sparkline"
+      ],
+      "locStart": 66,
+      "locEnd": 74,
+      "filePath": "src/stories/atoms/sparkline.stories.tsx",
+      "namedExport": "Area",
+      "meta": {}
+    },
+    "atoms--sparkline--in-metric-rail": {
+      "name": "In metric rail",
+      "levels": [
+        "Atoms",
+        "Sparkline"
+      ],
+      "locStart": 94,
+      "locEnd": 102,
+      "filePath": "src/stories/atoms/sparkline.stories.tsx",
+      "namedExport": "InMetricRail",
+      "meta": {}
+    },
+    "atoms--sparkline--line": {
+      "name": "Line",
+      "levels": [
+        "Atoms",
+        "Sparkline"
+      ],
+      "locStart": 54,
+      "locEnd": 63,
+      "filePath": "src/stories/atoms/sparkline.stories.tsx",
+      "namedExport": "Line",
+      "meta": {}
+    },
+    "atoms--sparkline--sizes": {
+      "name": "Sizes",
+      "levels": [
+        "Atoms",
+        "Sparkline"
+      ],
+      "locStart": 77,
+      "locEnd": 91,
+      "filePath": "src/stories/atoms/sparkline.stories.tsx",
+      "namedExport": "Sizes",
+      "meta": {}
+    },
     "atoms--switch--disabled": {
       "name": "Disabled",
       "levels": [
@@ -197,6 +365,78 @@
       "namedExport": "On",
       "meta": {}
     },
+    "atoms--textinput--default": {
+      "name": "Default",
+      "levels": [
+        "Atoms",
+        "Textinput"
+      ],
+      "locStart": 20,
+      "locEnd": 24,
+      "filePath": "src/stories/atoms/text-input.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "atoms--textinput--disabled": {
+      "name": "Disabled",
+      "levels": [
+        "Atoms",
+        "Textinput"
+      ],
+      "locStart": 62,
+      "locEnd": 66,
+      "filePath": "src/stories/atoms/text-input.stories.tsx",
+      "namedExport": "Disabled",
+      "meta": {}
+    },
+    "atoms--textinput--error": {
+      "name": "Error",
+      "levels": [
+        "Atoms",
+        "Textinput"
+      ],
+      "locStart": 38,
+      "locEnd": 47,
+      "filePath": "src/stories/atoms/text-input.stories.tsx",
+      "namedExport": "Error",
+      "meta": {}
+    },
+    "atoms--textinput--required": {
+      "name": "Required",
+      "levels": [
+        "Atoms",
+        "Textinput"
+      ],
+      "locStart": 50,
+      "locEnd": 59,
+      "filePath": "src/stories/atoms/text-input.stories.tsx",
+      "namedExport": "Required",
+      "meta": {}
+    },
+    "atoms--textinput--textarea-field": {
+      "name": "Textarea field",
+      "levels": [
+        "Atoms",
+        "Textinput"
+      ],
+      "locStart": 69,
+      "locEnd": 78,
+      "filePath": "src/stories/atoms/text-input.stories.tsx",
+      "namedExport": "TextareaField",
+      "meta": {}
+    },
+    "atoms--textinput--with-label-and-helper": {
+      "name": "With label and helper",
+      "levels": [
+        "Atoms",
+        "Textinput"
+      ],
+      "locStart": 27,
+      "locEnd": 35,
+      "filePath": "src/stories/atoms/text-input.stories.tsx",
+      "namedExport": "WithLabelAndHelper",
+      "meta": {}
+    },
     "atoms--tree-row--branch-rows": {
       "name": "Branch rows",
       "levels": [
@@ -219,6 +459,78 @@
       "locEnd": 82,
       "filePath": "src/stories/atoms/tree-row.stories.tsx",
       "namedExport": "NestedRows",
+      "meta": {}
+    },
+    "molecules--panel--density": {
+      "name": "Density",
+      "levels": [
+        "Molecules",
+        "Panel"
+      ],
+      "locStart": 113,
+      "locEnd": 126,
+      "filePath": "src/stories/molecules/panel.stories.tsx",
+      "namedExport": "Density",
+      "meta": {}
+    },
+    "molecules--panel--meta-size": {
+      "name": "Meta size",
+      "levels": [
+        "Molecules",
+        "Panel"
+      ],
+      "locStart": 128,
+      "locEnd": 148,
+      "filePath": "src/stories/molecules/panel.stories.tsx",
+      "namedExport": "MetaSize",
+      "meta": {}
+    },
+    "molecules--panel--surfaces": {
+      "name": "Surfaces",
+      "levels": [
+        "Molecules",
+        "Panel"
+      ],
+      "locStart": 33,
+      "locEnd": 49,
+      "filePath": "src/stories/molecules/panel.stories.tsx",
+      "namedExport": "Surfaces",
+      "meta": {}
+    },
+    "molecules--panel--title-size": {
+      "name": "Title size",
+      "levels": [
+        "Molecules",
+        "Panel"
+      ],
+      "locStart": 70,
+      "locEnd": 81,
+      "filePath": "src/stories/molecules/panel.stories.tsx",
+      "namedExport": "TitleSize",
+      "meta": {}
+    },
+    "molecules--panel--title-transform": {
+      "name": "Title transform",
+      "levels": [
+        "Molecules",
+        "Panel"
+      ],
+      "locStart": 52,
+      "locEnd": 65,
+      "filePath": "src/stories/molecules/panel.stories.tsx",
+      "namedExport": "TitleTransform",
+      "meta": {}
+    },
+    "molecules--panel--with-meta-and-actions": {
+      "name": "With meta and actions",
+      "levels": [
+        "Molecules",
+        "Panel"
+      ],
+      "locStart": 85,
+      "locEnd": 109,
+      "filePath": "src/stories/molecules/panel.stories.tsx",
+      "namedExport": "WithMetaAndActions",
       "meta": {}
     },
     "molecules--rangepicker--custom-selection": {
@@ -317,6 +629,18 @@
       "namedExport": "Disabled",
       "meta": {}
     },
+    "molecules--select--width-override": {
+      "name": "Width override",
+      "levels": [
+        "Molecules",
+        "Select"
+      ],
+      "locStart": 67,
+      "locEnd": 85,
+      "filePath": "src/stories/molecules/select.stories.tsx",
+      "namedExport": "WidthOverride",
+      "meta": {}
+    },
     "molecules--skeleton-rows--compact": {
       "name": "Compact",
       "levels": [
@@ -365,6 +689,66 @@
       "namedExport": "Dense",
       "meta": {}
     },
+    "molecules--stattile--density": {
+      "name": "Density",
+      "levels": [
+        "Molecules",
+        "Stattile"
+      ],
+      "locStart": 63,
+      "locEnd": 83,
+      "filePath": "src/stories/molecules/stat-tile.stories.tsx",
+      "namedExport": "Density",
+      "meta": {}
+    },
+    "molecules--stattile--label-case": {
+      "name": "Label case",
+      "levels": [
+        "Molecules",
+        "Stattile"
+      ],
+      "locStart": 52,
+      "locEnd": 60,
+      "filePath": "src/stories/molecules/stat-tile.stories.tsx",
+      "namedExport": "LabelCase",
+      "meta": {}
+    },
+    "molecules--stattile--row": {
+      "name": "Row",
+      "levels": [
+        "Molecules",
+        "Stattile"
+      ],
+      "locStart": 24,
+      "locEnd": 33,
+      "filePath": "src/stories/molecules/stat-tile.stories.tsx",
+      "namedExport": "Row",
+      "meta": {}
+    },
+    "molecules--stattile--single": {
+      "name": "Single",
+      "levels": [
+        "Molecules",
+        "Stattile"
+      ],
+      "locStart": 86,
+      "locEnd": 90,
+      "filePath": "src/stories/molecules/stat-tile.stories.tsx",
+      "namedExport": "Single",
+      "meta": {}
+    },
+    "molecules--stattile--tones": {
+      "name": "Tones",
+      "levels": [
+        "Molecules",
+        "Stattile"
+      ],
+      "locStart": 36,
+      "locEnd": 49,
+      "filePath": "src/stories/molecules/stat-tile.stories.tsx",
+      "namedExport": "Tones",
+      "meta": {}
+    },
     "molecules--surface-message--dashed-with-actions": {
       "name": "Dashed with actions",
       "levels": [
@@ -407,10 +791,34 @@
         "Molecules",
         "Theme toggle"
       ],
-      "locStart": 17,
-      "locEnd": 23,
+      "locStart": 26,
+      "locEnd": 32,
       "filePath": "src/stories/molecules/theme-toggle.stories.tsx",
       "namedExport": "Default",
+      "meta": {}
+    },
+    "molecules--theme-toggle--icon": {
+      "name": "Icon",
+      "levels": [
+        "Molecules",
+        "Theme toggle"
+      ],
+      "locStart": 38,
+      "locEnd": 45,
+      "filePath": "src/stories/molecules/theme-toggle.stories.tsx",
+      "namedExport": "Icon",
+      "meta": {}
+    },
+    "molecules--theme-toggle--icon-bare": {
+      "name": "Icon bare",
+      "levels": [
+        "Molecules",
+        "Theme toggle"
+      ],
+      "locStart": 64,
+      "locEnd": 75,
+      "filePath": "src/stories/molecules/theme-toggle.stories.tsx",
+      "namedExport": "IconBare",
       "meta": {}
     },
     "organisms--async-state-renderer--empty": {
@@ -509,14 +917,26 @@
       "namedExport": "SinglePending",
       "meta": {}
     },
+    "organisms--data-table--compact-density": {
+      "name": "Compact density",
+      "levels": [
+        "Organisms",
+        "Data table"
+      ],
+      "locStart": 305,
+      "locEnd": 344,
+      "filePath": "src/stories/organisms/data-table.stories.tsx",
+      "namedExport": "CompactDensity",
+      "meta": {}
+    },
     "organisms--data-table--controlled-state": {
       "name": "Controlled state",
       "levels": [
         "Organisms",
         "Data table"
       ],
-      "locStart": 111,
-      "locEnd": 163,
+      "locStart": 158,
+      "locEnd": 210,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "ControlledState",
       "meta": {}
@@ -527,8 +947,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 53,
-      "locEnd": 68,
+      "locStart": 100,
+      "locEnd": 115,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "Default",
       "meta": {}
@@ -539,8 +959,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 184,
-      "locEnd": 199,
+      "locStart": 231,
+      "locEnd": 246,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "HeaderCasingPolicy",
       "meta": {}
@@ -551,8 +971,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 70,
-      "locEnd": 85,
+      "locStart": 117,
+      "locEnd": 132,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "Loading",
       "meta": {}
@@ -563,10 +983,34 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 261,
-      "locEnd": 305,
+      "locStart": 406,
+      "locEnd": 450,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "MagnitudeColumns",
+      "meta": {}
+    },
+    "organisms--data-table--numeric-mono-column": {
+      "name": "Numeric mono column",
+      "levels": [
+        "Organisms",
+        "Data table"
+      ],
+      "locStart": 276,
+      "locEnd": 303,
+      "filePath": "src/stories/organisms/data-table.stories.tsx",
+      "namedExport": "NumericMonoColumn",
+      "meta": {}
+    },
+    "organisms--data-table--right-aligned-numeric-column": {
+      "name": "Right aligned numeric column",
+      "levels": [
+        "Organisms",
+        "Data table"
+      ],
+      "locStart": 248,
+      "locEnd": 274,
+      "filePath": "src/stories/organisms/data-table.stories.tsx",
+      "namedExport": "RightAlignedNumericColumn",
       "meta": {}
     },
     "organisms--data-table--row-selection": {
@@ -575,10 +1019,34 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 87,
-      "locEnd": 109,
+      "locStart": 134,
+      "locEnd": 156,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "RowSelection",
+      "meta": {}
+    },
+    "organisms--drawer--default": {
+      "name": "Default",
+      "levels": [
+        "Organisms",
+        "Drawer"
+      ],
+      "locStart": 45,
+      "locEnd": 89,
+      "filePath": "src/stories/organisms/drawer.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "organisms--drawer--open-by-default": {
+      "name": "Open by default",
+      "levels": [
+        "Organisms",
+        "Drawer"
+      ],
+      "locStart": 92,
+      "locEnd": 126,
+      "filePath": "src/stories/organisms/drawer.stories.tsx",
+      "namedExport": "OpenByDefault",
       "meta": {}
     },
     "organisms--empty-state--compact-with-action": {
@@ -603,6 +1071,18 @@
       "locEnd": 35,
       "filePath": "src/stories/organisms/empty-state.stories.tsx",
       "namedExport": "Default",
+      "meta": {}
+    },
+    "organisms--empty-state--stretch": {
+      "name": "Stretch",
+      "levels": [
+        "Organisms",
+        "Empty state"
+      ],
+      "locStart": 48,
+      "locEnd": 56,
+      "filePath": "src/stories/organisms/empty-state.stories.tsx",
+      "namedExport": "Stretch",
       "meta": {}
     },
     "organisms--error-boundary--custom-fallback": {
@@ -903,6 +1383,30 @@
       "namedExport": "Default",
       "meta": {}
     },
+    "templates--pageshell--default": {
+      "name": "Default",
+      "levels": [
+        "Templates",
+        "Pageshell"
+      ],
+      "locStart": 47,
+      "locEnd": 70,
+      "filePath": "src/stories/templates/page-shell.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "templates--pageshell--narrow-max-width": {
+      "name": "Narrow max width",
+      "levels": [
+        "Templates",
+        "Pageshell"
+      ],
+      "locStart": 73,
+      "locEnd": 88,
+      "filePath": "src/stories/templates/page-shell.stories.tsx",
+      "namedExport": "NarrowMaxWidth",
+      "meta": {}
+    },
     "templates--risk-detail-drawer--default": {
       "name": "Default",
       "levels": [
@@ -939,14 +1443,38 @@
       "namedExport": "DrawerOpenPerformance",
       "meta": {}
     },
+    "templates--sidebargrid--default": {
+      "name": "Default",
+      "levels": [
+        "Templates",
+        "Sidebargrid"
+      ],
+      "locStart": 89,
+      "locEnd": 93,
+      "filePath": "src/stories/templates/sidebar-grid.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
+    "templates--sidebargrid--wide-rail": {
+      "name": "Wide rail",
+      "levels": [
+        "Templates",
+        "Sidebargrid"
+      ],
+      "locStart": 96,
+      "locEnd": 100,
+      "filePath": "src/stories/templates/sidebar-grid.stories.tsx",
+      "namedExport": "WideRail",
+      "meta": {}
+    },
     "templates--sidebar-layout--default": {
       "name": "Default",
       "levels": [
         "Templates",
         "Sidebar layout"
       ],
-      "locStart": 147,
-      "locEnd": 158,
+      "locStart": 157,
+      "locEnd": 168,
       "filePath": "src/stories/templates/sidebar-layout.stories.tsx",
       "namedExport": "Default",
       "meta": {}
