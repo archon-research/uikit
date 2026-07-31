@@ -28,11 +28,13 @@ const captionClassName = css({
 // Every status the Indicator can render. `pending` pulses to read as
 // "in transition".
 const STATUSES = ['idle', 'ready', 'active', 'pending', 'error'] as const;
+const PALETTES = ['neutral', 'green', 'red', 'amber', 'blue'] as const;
 
 export const Statuses = () => (
   <div className={frameClassName}>
     <p className={captionClassName}>
-      The status dot drives colour and (for <code>pending</code>) a pulse.
+      Status drives colour (via a dark-aware colorPalette role) and, for{' '}
+      <code>pending</code>, a pulse.
     </p>
     <div className={rowClassName}>
       {STATUSES.map((status) => (
@@ -51,6 +53,32 @@ export const DotOnly = () => (
       {STATUSES.map((status) => (
         <Indicator key={status} status={status} aria-label={status} />
       ))}
+    </div>
+  </div>
+);
+
+// An explicit colorPalette overrides the status hue (the pulse still follows
+// status — here `pending` keeps pulsing while showing the blue palette).
+export const ColorPaletteOverride = () => (
+  <div className={frameClassName}>
+    <p className={captionClassName}>
+      <code>colorPalette</code> overrides the hue picked by <code>status</code>.
+    </p>
+    <div className={rowClassName}>
+      {PALETTES.map((colorPalette) => (
+        <Indicator
+          key={colorPalette}
+          status="active"
+          colorPalette={colorPalette}
+        >
+          {colorPalette}
+        </Indicator>
+      ))}
+    </div>
+    <div className={rowClassName}>
+      <Indicator status="pending" colorPalette="blue">
+        pending + blue
+      </Indicator>
     </div>
   </div>
 );

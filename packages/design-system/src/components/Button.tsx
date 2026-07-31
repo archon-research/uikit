@@ -1,140 +1,98 @@
 import { type ButtonHTMLAttributes, type CSSProperties } from 'react';
 
 export type ButtonVariant = 'panel' | 'item';
-export type ButtonSize = 'md' | 'lg';
+export type ButtonSize = 'sm' | 'md' | 'lg';
 export type ButtonDensity = 'comfortable' | 'compact';
+export type ButtonEmphasis = 'default' | 'solid';
+export type ButtonColorPalette =
+  | 'neutral'
+  | 'gray'
+  | 'green'
+  | 'red'
+  | 'amber'
+  | 'blue';
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
   iconOnly?: boolean;
   density?: ButtonDensity;
+  /** Fill emphasis. `solid` produces a CTA/destructive fill via `colorPalette`. */
+  emphasis?: ButtonEmphasis;
+  /** Hue for `emphasis="solid"` (and any colorPalette-driven state). */
+  colorPalette?: ButtonColorPalette;
   selected?: boolean;
   tone?: 'default' | 'subdued';
   gap?: number | string;
 };
 
-const panelBaseStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 6,
-  borderWidth: 1,
-  borderStyle: 'solid',
-  borderColor: 'var(--colors-border-subtle, #d0d5dd)',
-  borderRadius: 8,
-  background: 'var(--colors-surface-default, #ffffff)',
-  color: 'var(--colors-text-default, #111827)',
-  textDecoration: 'none',
-  cursor: 'pointer',
-  fontSize: 13,
-  lineHeight: 1.3,
-};
-
-const panelDisabledStyle: CSSProperties = {
-  opacity: 0.5,
-  cursor: 'not-allowed',
-};
-
-const panelSizeStyleMap: Record<ButtonSize, CSSProperties> = {
-  md: {
-    height: 32,
-    paddingInline: 10,
-  },
-  lg: {
-    height: 36,
-    paddingInline: 12,
-  },
-};
-
-const itemBaseStyle: CSSProperties = {
-  display: 'flex',
-  width: '100%',
-  alignItems: 'baseline',
-  gap: 8,
-  textAlign: 'left',
-  borderRadius: 8,
-  borderWidth: 1,
-  borderStyle: 'solid',
-  borderColor: 'transparent',
-  background: 'transparent',
-  color: 'var(--colors-text-default, #111827)',
-  cursor: 'pointer',
-  transitionDuration: '120ms',
-  transitionProperty: 'background-color, color, border-color, box-shadow',
-};
-
-const itemDensityStyleMap: Record<ButtonDensity, CSSProperties> = {
-  comfortable: {
-    paddingInline: 8,
-    paddingBlock: 6,
-    fontSize: 14,
-  },
-  compact: {
-    paddingInline: 8,
-    paddingBlock: 4,
-    fontSize: 12,
-  },
-};
-
-const itemSelectedStyle: CSSProperties = {
-  background: 'var(--colors-interactive-selected, #eef4ff)',
-};
-
-const itemSubduedStyle: CSSProperties = {
-  color: 'var(--colors-text-muted, #667085)',
-};
+/**
+ * Class names emitted by the `button` recipe (registered in the preset +
+ * staticCss). The design-system package builds with `tsc` and ships no
+ * generated `styled-system`, so the recipe cannot be imported; it is applied by
+ * its stable Panda class names instead (base `button`, variant
+ * `button--${key}_${value}`). Consumer `className` composes LAST.
+ */
+const cx = (...classes: Array<string | false | null | undefined>): string =>
+  classes.filter(Boolean).join(' ');
 
 export function Button({
   variant = 'panel',
   size = 'md',
   iconOnly = false,
   density = 'comfortable',
+  emphasis = 'default',
+  colorPalette = 'neutral',
   selected = false,
   tone = 'default',
   gap,
+  className,
   style,
   disabled,
   type = 'button',
   ...props
 }: ButtonProps) {
-  const computedStyle: CSSProperties =
-    variant === 'item'
-      ? {
-          ...itemBaseStyle,
-          ...itemDensityStyleMap[density],
-          ...(selected ? itemSelectedStyle : undefined),
-          ...(tone === 'subdued' ? itemSubduedStyle : undefined),
-          ...(disabled ? panelDisabledStyle : undefined),
-        }
-      : {
-          ...panelBaseStyle,
-          ...panelSizeStyleMap[size],
-          ...(iconOnly
-            ? {
-                width: size === 'lg' ? 36 : 32,
-                paddingInline: 0,
-                justifyContent: 'center',
-                gap: 0,
-              }
-            : undefined),
-          ...(disabled ? panelDisabledStyle : undefined),
-        };
+  // Emit ONLY non-empty single-variant classes (staticCss ['*'] covers these;
+  // it does NOT cover compoundVariants). Density is translated to the
+  // variant-specific class: item -> itemDensity always; panel -> panelDensity
+  // only for `compact` (comfortable panels are driven by `size`).
+  const recipeClassName = cx(
+    'button',
+    `button--variant_${variant}`,
+    `button--size_${size}`,
+    `button--colorPalette_${colorPalette}`,
+    variant === 'item' && `button--itemDensity_${density}`,
+    variant === 'panel' &&
+      density === 'compact' &&
+      'button--panelDensity_compact',
+    emphasis === 'solid' && 'button--emphasis_solid',
+    tone === 'subdued' && 'button--tone_subdued',
+    selected && 'button--selected_true',
+    iconOnly && 'button--iconOnly_true',
+    // Square width only applies to icon-only panel buttons.
+    iconOnly && variant === 'panel' && `button--iconSize_${size}`,
+  );
+
+  // `gap` remains an inline escape hatch (an arbitrary dimension, not a token);
+  // everything colour/metric-related now flows through the recipe.
+  const inlineStyle: CSSProperties | undefined =
+    gap !== undefined || style
+      ? { ...(gap !== undefined ? { gap } : undefined), ...style }
+      : undefined;
 
   return (
     <button
       {...props}
       type={type}
       disabled={disabled}
-      style={{
-        ...computedStyle,
-        ...(gap !== undefined ? { gap } : undefined),
-        ...style,
-      }}
+      className={cx(recipeClassName, className)}
+      style={inlineStyle}
       data-scope="button"
       data-part="root"
       data-variant={variant}
-      data-size={variant === 'panel' ? size : undefined}
-      data-density={variant === 'item' ? density : undefined}
+      data-size={size}
+      data-density={density}
+      data-emphasis={emphasis}
       data-tone={tone}
       data-disabled={disabled ? '' : undefined}
       data-selected={selected ? '' : undefined}

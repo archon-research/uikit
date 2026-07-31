@@ -2,15 +2,29 @@ import { defineRecipe } from '@pandacss/dev';
 
 export const panelSectionRecipe = defineRecipe({
   className: 'panelSection',
-  description: 'Reusable panel section block with border and spacing presets.',
+  description:
+    'Reusable panel section block with border, surface, and spacing presets.',
   base: {
     borderWidth: '1px',
     borderStyle: 'solid',
     borderColor: 'border.subtle',
     borderRadius: 'md',
-    bg: 'surface.subtle',
   },
   variants: {
+    // Additive 3-step surface ramp. `recessed` reproduces the previous
+    // hard-coded `bg: 'surface.subtle'` so the bare recipe stays non-breaking;
+    // callers that want a raised container opt into `raised`/`canvas`.
+    surface: {
+      canvas: {
+        bg: 'surface.canvas',
+      },
+      raised: {
+        bg: 'surface.default',
+      },
+      recessed: {
+        bg: 'surface.subtle',
+      },
+    },
     density: {
       compact: {
         p: '3',
@@ -21,6 +35,7 @@ export const panelSectionRecipe = defineRecipe({
     },
   },
   defaultVariants: {
+    surface: 'recessed',
     density: 'normal',
   },
 });

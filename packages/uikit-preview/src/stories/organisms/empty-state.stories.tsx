@@ -44,3 +44,13 @@ export const CompactWithAction = () => (
     />
   </div>
 );
+
+export const Stretch = () => (
+  <div className={wrapperClassName}>
+    <EmptyState
+      title="No results in this panel"
+      description="Stretch fills the container width instead of the centered max-width column."
+      stretch
+    />
+  </div>
+);
