@@ -153,6 +153,22 @@ resolve to a stale registry version. A consumer `.npmrc` with `min-release-age` 
 cause — npm rejects a fresh prerelease with `ETARGET`. Re-run with an override (e.g.
 `--min-release-age=0`) or link those packages manually.
 
+### The CLI cannot repair a stale copy of itself
+
+`link` links `@archon-research/*` into the consumer — and that includes `uikit-cli` itself. So
+`npm run uikit:link` runs whatever `uikit-cli` is currently in the consumer's `node_modules`: if
+that copy is **stale**, the old code runs, and no source fix can change the run that needs it (a
+stale binary can't even report its own staleness). When developing the CLI, or right after pulling
+CLI changes, bypass the linked copy and invoke the monorepo's freshly-built binary directly so you
+always run current code:
+
+```bash
+npm run build --workspace packages/uikit-cli   # in the uikit checkout
+node <path-to-uikit>/packages/uikit-cli/dist/cli.js link --uikit-root <path-to-uikit>
+```
+
+Or install the published version from the registry, which sidesteps linking entirely.
+
 ## Development workflow
 
 In a consumer workspace:
