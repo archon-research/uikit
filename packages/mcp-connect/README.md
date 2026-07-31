@@ -39,19 +39,23 @@ The four `indicatorStatus` values map to:
 | `connected` | a harness has attached (derived from harness activity recency) |
 | `reconnecting` | the relay socket dropped and is retrying |
 
-### `ConfirmToolCallDialog` + `useConfirmationQueue`
+### `ConfirmToolCallDialog`
 
-A guarded write from a harness must be approved by the user. `useConfirmationQueue` consumes confirmation events from the relay back-channel and exposes the active `PendingCallRecord` (as `activePendingCall`) plus `approve` / `deny`; `ConfirmToolCallDialog` renders it (tool name, summary, arguments, a countdown to expiry, and a queue badge). Render the dialog at the app root so it works regardless of the connection modal.
+A guarded write from a harness must be approved by the user. The confirmation state is owned by `useRelaySession` (from `@archon-research/webmcp`), which surfaces the active `PendingCallRecord` (as `pendingConfirmation`), a `pendingQueueLength`, and `approve` / `deny`; `ConfirmToolCallDialog` renders it (tool name, summary, arguments, a countdown to expiry, and a queue badge). Render the dialog at the app root so it works regardless of the connection modal.
 
 ```tsx
-import { ConfirmToolCallDialog, useConfirmationQueue } from '@archon-research/mcp-connect';
+import { ConfirmToolCallDialog } from '@archon-research/mcp-connect';
+import { useRelaySession } from '@archon-research/webmcp';
 
-function ConfirmationSurface({ backChannel }: { backChannel: WebSocket | null }) {
-  const { activePendingCall, queueLength, approve, deny } = useConfirmationQueue({ backChannel });
+function ConfirmationSurface() {
+  const { pendingConfirmation, pendingQueueLength, approve, deny } = useRelaySession({
+    relayBaseUrl,
+    storageKey,
+  });
   return (
     <ConfirmToolCallDialog
-      pendingCall={activePendingCall}
-      queueLength={queueLength}
+      pendingCall={pendingConfirmation}
+      queueLength={pendingQueueLength}
       onApprove={approve}
       onDeny={deny}
     />
@@ -63,8 +67,9 @@ function ConfirmationSurface({ backChannel }: { backChannel: WebSocket | null })
 
 - `HarnessConnect` (+ `HarnessConnectProps`)
 - `ConfirmToolCallDialog` (+ `ConfirmToolCallDialogProps`)
-- `useConfirmationQueue` (+ option/result types)
 - Types: `HarnessIndicatorStatus`, `PendingCallRecord`, `PendingCallStatus`, `ConfirmationDecision`, `ConfirmationRequestEvent`, `ConfirmationExpiredEvent`
+
+The confirmation-queue hook that fed `ConfirmToolCallDialog` lives in `@archon-research/webmcp` as `useRelaySession` — this package intentionally exports only presentational components.
 
 ## Preview
 
