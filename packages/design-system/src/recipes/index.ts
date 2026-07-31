@@ -24,3 +24,4 @@ export { dataTableRecipe } from './dataTable.recipe.js';
 export { chipRecipe } from './chip.recipe.js';
 export { facetedMultiSelectRecipe } from './facetedMultiSelect.recipe.js';
 export { rangeSliderRecipe } from './rangeSlider.recipe.js';
+export { playbackBarRecipe } from './playbackBar.recipe.js';

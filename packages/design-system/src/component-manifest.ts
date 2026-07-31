@@ -445,4 +445,12 @@ export const designSystemComponentManifest = [
     contractScope: null,
     recipeKey: null,
   },
+  {
+    exportName: 'PlaybackBar',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'organisms',
+    contractScope: 'playback-bar',
+    recipeKey: 'playbackBar',
+  },
 ] as const satisfies readonly DesignSystemComponentManifestEntry[];

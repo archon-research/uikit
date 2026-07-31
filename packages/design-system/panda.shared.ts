@@ -23,6 +23,7 @@ import { selectRecipe } from './src/recipes/select.recipe';
 import { sidebarGridRecipe } from './src/recipes/sidebarGrid.recipe';
 import { dataTableRecipe } from './src/recipes/dataTable.recipe';
 import { panelRecipe } from './src/recipes/panel.recipe';
+import { playbackBarRecipe } from './src/recipes/playbackBar.recipe';
 import { sidebarLayoutRecipe } from './src/recipes/sidebarLayout.recipe';
 import { statRowRecipe, statTileRecipe } from './src/recipes/statTile.recipe';
 import { surfaceMessageRecipe } from './src/recipes/surfaceMessage.recipe';
@@ -480,6 +481,7 @@ export const designSystemPandaConfig = {
         chip: chipRecipe,
         facetedMultiSelect: facetedMultiSelectRecipe,
         rangeSlider: rangeSliderRecipe,
+        playbackBar: playbackBarRecipe,
       },
     },
   },
