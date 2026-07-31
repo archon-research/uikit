@@ -99,11 +99,14 @@ When co-development is complete, restore published versions from npm:
 The CLI manages local development links by:
 
 1. Auto-registering local `@archon-research/*` packages from your uikit checkout via `npm link`
-2. Linking only consumer workspaces that actually depend on those packages
+2. Linking only the consumer workspaces that actually depend on those packages
 3. Cleaning up shadow installs and Vite caches to ensure symlinks work correctly
 4. Using `--preserve-symlinks` flag and bundling to avoid ES module resolution issues
 
-The CLI automatically detects the consumer workspace root and all dependent packages, working from any directory within the workspace.
+The CLI automatically detects the consumer root and all dependent packages, working from any
+directory within the project. Both consumer shapes are supported: an **npm-workspaces monorepo**
+(the root with a `workspaces` field), and a **single package** that installs uikit directly (no
+`workspaces` field) — in the single-package case the root package is linked directly.
 
 The CLI auto-discovers the local uikit monorepo for typical sibling-checkout layouts.
 
@@ -129,6 +132,42 @@ Run with `--verify` flag to check link status:
 ```bash
 ./node_modules/.bin/uikit-cli link --verify
 ```
+
+### `useTheme must be used within ThemeProvider` (duplicated React context) after linking
+
+With `resolve.preserveSymlinks: true` (which linking relies on) Vite can serve a linked package
+under **two** URLs at once — `/node_modules/…` (the root symlink) and `/@fs/…` (the real path) —
+producing two module graphs and two copies of singletons like `ThemeContext`. A component and its
+`ThemeProvider` then hold different context objects and the hook throws. This is a link artifact,
+not a bug in the app or the design system.
+
+To confirm: look for the same module served at both URLs in the dev server (both HTTP 200). To
+recover: run `uikit-cli unlink` and restart the dev server (touch the Vite config so it
+re-optimizes) — the module collapses back to a single URL. To stay linked, add the linked
+package(s) plus `react`/`react-dom` to your Vite `resolve.dedupe`, or drop `preserveSymlinks`.
+
+### A partial link reported as success
+
+If `link` prints that some packages did **not** link (PARTIAL), the named packages may still
+resolve to a stale registry version. A consumer `.npmrc` with `min-release-age` is the usual
+cause — npm rejects a fresh prerelease with `ETARGET`. Re-run with an override (e.g.
+`--min-release-age=0`) or link those packages manually.
+
+### The CLI cannot repair a stale copy of itself
+
+`link` links `@archon-research/*` into the consumer — and that includes `uikit-cli` itself. So
+`npm run uikit:link` runs whatever `uikit-cli` is currently in the consumer's `node_modules`: if
+that copy is **stale**, the old code runs, and no source fix can change the run that needs it (a
+stale binary can't even report its own staleness). When developing the CLI, or right after pulling
+CLI changes, bypass the linked copy and invoke the monorepo's freshly-built binary directly so you
+always run current code:
+
+```bash
+npm run build --workspace packages/uikit-cli   # in the uikit checkout
+node <path-to-uikit>/packages/uikit-cli/dist/cli.js link --uikit-root <path-to-uikit>
+```
+
+Or install the published version from the registry, which sidesteps linking entirely.
 
 ## Development workflow
 

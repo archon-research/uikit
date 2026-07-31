@@ -38,6 +38,30 @@ tokens, each with a `_dark` variant):
 | Text / tooltip text | `--colors-text-*` (e.g. `--colors-text-muted`) |
 | Surface / tooltip background | `--colors-surface-default` |
 
+For more than three ordinal series the design system also provides
+`--colors-chart-series-quaternary` and `-quinary` (`positive`/`critical` stay
+*semantic*, not ordinal slots 4–5). `chartTokens` can be extended onto them
+without a new contract.
+
+#### Enforcement across the package boundary
+
+These variables are the only coupling between this package and the design
+system: charting reads them at runtime and never imports design-system code, so
+every read carries a hex fallback. That fallback means a mismatch fails
+*silently and in the safe-looking direction* — as it did for the whole `0.7.0`
+era, when `chart.*` did not exist upstream yet and every chart quietly ran on its
+fallback. Two guards now make the contract explicit rather than by-convention:
+
+- **Optional peer dependency.** `@archon-research/design-system` is declared as an
+  *optional* `peerDependency` (spec `*`, following the monorepo's unversioned
+  internal-dependency convention): charting still renders on its fallbacks without
+  it, but the dependency graph now records who owns these variables. The
+  `chart.*` tokens were introduced in design-system `0.8.0`; that is the effective
+  version floor for themed (non-fallback) charts.
+- **Detection.** `uikit-cli doctor` scans a consumer's generated CSS and flags any
+  `--colors-chart-*` read that resolves to nothing, turning a silent fallback into
+  a CI failure. Run it after `panda codegen`.
+
 The package exposes:
 
 - `chartTokens`: the role-to-`var(...)`-string map above (single source).

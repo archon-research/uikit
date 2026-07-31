@@ -41,6 +41,10 @@ export const dataTableRecipe = defineSlotRecipe({
   ],
   base: {
     root: {
+      // Wide tables scroll horizontally here — which also clips any overlay
+      // anchored to a header/body cell (a tooltip, a filter popover). Such
+      // overlays must be rendered through the re-exported `Portal` to escape
+      // this scroll container; the clipping is intrinsic to an overflow box.
       overflowX: 'auto',
       borderRadius: 'md',
       borderWidth: '1px',
@@ -83,12 +87,30 @@ export const dataTableRecipe = defineSlotRecipe({
       textTransform: 'inherit',
       letterSpacing: 'inherit',
       cursor: 'pointer',
+      // Match the focus-ring convention used by select/themeToggle so sortable
+      // headers aren't the one interactive element with only the UA ring.
+      _focusVisible: {
+        outlineWidth: '2px',
+        outlineStyle: 'solid',
+        outlineColor: 'border.strong',
+        outlineOffset: '1px',
+        borderRadius: 'xs',
+      },
     },
     bodyRow: {
       cursor: 'default',
       bg: 'surface.default',
       transitionProperty: 'background-color',
       transitionDuration: 'fast',
+      // Rows are keyboard-focusable (tabIndex={0}); give them a designed ring
+      // instead of leaving only the UA outline. Inset so it stays inside the
+      // table's own border.
+      _focusVisible: {
+        outlineWidth: '2px',
+        outlineStyle: 'solid',
+        outlineColor: 'border.strong',
+        outlineOffset: '-2px',
+      },
     },
     bodyCell: {
       borderBottomWidth: '1px',
@@ -145,23 +167,33 @@ export const dataTableRecipe = defineSlotRecipe({
   variants: {
     // Density carries both padding and a type step: comfortable is the base
     // (header `xs`, body `sm`); compact tightens padding and drops header to
-    // `2xs` / body to `xs` for dense tables.
+    // `2xs` / body to `xs` for dense tables. It also steps the inline magnitude
+    // value/caption down so a dense table's money column shrinks with the rest.
     density: {
       comfortable: {},
       compact: {
         headerCell: { py: '1.5', px: '3', fontSize: '2xs' },
         bodyCell: { py: '1.5', px: '3', fontSize: 'xs' },
+        magnitudeValue: { fontSize: 'xs' },
+        magnitudeValueText: { fontSize: '2xs' },
       },
     },
+    // Alignment reaches the magnitude slots too, so a right-aligned money
+    // column and its inline bar align together instead of being mutually
+    // exclusive. Harmless on columns without a magnitude cell.
     align: {
       left: {},
       center: {
         headerCell: { textAlign: 'center' },
         bodyCell: { textAlign: 'center' },
+        magnitudeCell: { justifyItems: 'center' },
+        magnitudeValue: { textAlign: 'center' },
       },
       right: {
         headerCell: { textAlign: 'right' },
         bodyCell: { textAlign: 'right' },
+        magnitudeCell: { justifyItems: 'end' },
+        magnitudeValue: { textAlign: 'right' },
       },
     },
     sortable: {

@@ -31,7 +31,7 @@ const detailsClassName = css({
   borderRadius: 'md',
   bg: 'surface.subtle',
   fontSize: 'xs',
-  color: 'text.subtle',
+  color: 'text.muted',
 });
 
 type ControlledState = {

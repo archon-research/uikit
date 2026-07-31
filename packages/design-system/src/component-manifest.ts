@@ -45,6 +45,21 @@ export type DesignSystemComponentManifestEntry = {
   recipeKey: string | null;
 };
 
+/**
+ * The colorPalettes that carry full role sub-tokens
+ * (solid/subtle/surface/outline/plain, each with bg/fg/border). Constrain a
+ * component's `colorPalette` prop to this so consumers can't select a hue the
+ * preset doesn't fully theme. `gray` is an alias of `neutral`, kept for
+ * back-compat.
+ */
+export type ColorPalette =
+  | 'neutral'
+  | 'gray'
+  | 'green'
+  | 'red'
+  | 'amber'
+  | 'blue';
+
 export const designSystemComponentManifest = [
   {
     exportName: 'Button',
@@ -240,6 +255,14 @@ export const designSystemComponentManifest = [
   },
   {
     exportName: 'Dialog',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'consumer',
+    storyBucket: null,
+    contractScope: null,
+    recipeKey: null,
+  },
+  {
+    exportName: 'Portal',
     behaviorSource: 'ark-ui',
     styleOwner: 'consumer',
     storyBucket: null,

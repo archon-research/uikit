@@ -17,10 +17,7 @@ export const segmentedControlRecipe = defineSlotRecipe({
       p: '0.5',
     },
     item: {
-      '&[data-pressed]': {
-        bg: 'interactive.selected',
-        color: 'text.default',
-      },
+      // Ark/zag emits `data-state="on"` for the active item.
       '&[data-state="on"]': {
         bg: 'interactive.selected',
         color: 'text.default',

@@ -5,7 +5,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import type { ButtonDensity } from './Button';
+import type { ButtonDensity } from './Button.js';
 
 export type TreeRowProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   label: ReactNode;

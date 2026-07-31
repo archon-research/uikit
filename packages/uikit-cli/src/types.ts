@@ -1,4 +1,10 @@
-export type CommandMode = 'link' | 'unlink' | 'register' | 'lint' | 'format';
+export type CommandMode =
+  | 'link'
+  | 'unlink'
+  | 'register'
+  | 'lint'
+  | 'format'
+  | 'doctor';
 
 export type WorkspaceInfo = {
   name: string | null;

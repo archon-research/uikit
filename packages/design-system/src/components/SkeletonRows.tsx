@@ -4,6 +4,9 @@ type SkeletonRowsProps = {
   rows?: number;
   columns?: number;
   firstColumnTall?: boolean;
+  /** Applied to each skeleton `<tr>`. */
+  className?: string;
+  style?: CSSProperties;
 };
 
 const rowStyle: CSSProperties = {
@@ -26,9 +29,11 @@ export function SkeletonRows({
   rows = 6,
   columns = 6,
   firstColumnTall = true,
+  className,
+  style,
 }: SkeletonRowsProps = {}) {
   return Array.from({ length: rows }, (_row, rowIndex) => (
-    <tr key={rowIndex} style={rowStyle}>
+    <tr key={rowIndex} className={className} style={{ ...rowStyle, ...style }}>
       {Array.from({ length: columns }, (_cell, cellIndex) => (
         <td key={cellIndex} style={cellStyle} aria-hidden="true">
           <div

@@ -1,28 +1,28 @@
 import { definePreset } from '@pandacss/dev';
 
-import { badgeRecipe } from './recipes/badge.recipe';
-import { buttonRecipe } from './recipes/button.recipe';
-import { codeRecipe } from './recipes/code.recipe';
-import { dataTableRecipe } from './recipes/dataTable.recipe';
-import { drawerRecipe } from './recipes/drawer.recipe';
-import { emptyStateRecipe } from './recipes/emptyState.recipe';
-import { indicatorRecipe } from './recipes/indicator.recipe';
-import { inputRecipe } from './recipes/input.recipe';
-import { interactiveItemRecipe } from './recipes/interactiveItem.recipe';
-import { pageShellRecipe } from './recipes/pageShell.recipe';
-import { panelRecipe } from './recipes/panel.recipe';
-import { panelActionRecipe } from './recipes/panelAction.recipe';
-import { panelSectionRecipe } from './recipes/panelSection.recipe';
-import { searchInputRecipe } from './recipes/searchInput.recipe';
-import { sectionHeadingRecipe } from './recipes/sectionHeading.recipe';
-import { segmentedControlRecipe } from './recipes/segmentedControl.recipe';
-import { selectRecipe } from './recipes/select.recipe';
-import { sidebarGridRecipe } from './recipes/sidebarGrid.recipe';
-import { sidebarLayoutRecipe } from './recipes/sidebarLayout.recipe';
-import { statRowRecipe, statTileRecipe } from './recipes/statTile.recipe';
-import { surfaceMessageRecipe } from './recipes/surfaceMessage.recipe';
-import { switchRecipe } from './recipes/switch.recipe';
-import { themeToggleRecipe } from './recipes/themeToggle.recipe';
+import { badgeRecipe } from './recipes/badge.recipe.js';
+import { buttonRecipe } from './recipes/button.recipe.js';
+import { codeRecipe } from './recipes/code.recipe.js';
+import { dataTableRecipe } from './recipes/dataTable.recipe.js';
+import { drawerRecipe } from './recipes/drawer.recipe.js';
+import { emptyStateRecipe } from './recipes/emptyState.recipe.js';
+import { indicatorRecipe } from './recipes/indicator.recipe.js';
+import { inputRecipe } from './recipes/input.recipe.js';
+import { interactiveItemRecipe } from './recipes/interactiveItem.recipe.js';
+import { pageShellRecipe } from './recipes/pageShell.recipe.js';
+import { panelRecipe } from './recipes/panel.recipe.js';
+import { panelActionRecipe } from './recipes/panelAction.recipe.js';
+import { panelSectionRecipe } from './recipes/panelSection.recipe.js';
+import { searchInputRecipe } from './recipes/searchInput.recipe.js';
+import { sectionHeadingRecipe } from './recipes/sectionHeading.recipe.js';
+import { segmentedControlRecipe } from './recipes/segmentedControl.recipe.js';
+import { selectRecipe } from './recipes/select.recipe.js';
+import { sidebarGridRecipe } from './recipes/sidebarGrid.recipe.js';
+import { sidebarLayoutRecipe } from './recipes/sidebarLayout.recipe.js';
+import { statRowRecipe, statTileRecipe } from './recipes/statTile.recipe.js';
+import { surfaceMessageRecipe } from './recipes/surfaceMessage.recipe.js';
+import { switchRecipe } from './recipes/switch.recipe.js';
+import { themeToggleRecipe } from './recipes/themeToggle.recipe.js';
 
 /**
  * BREAKING VALUE-CHANGES (batch into the next major):
@@ -289,6 +289,15 @@ const shadows = {
         '0 2px 4px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)',
     },
   },
+  // Floating-overlay elevation (modals, popovers, date pickers) — a step above
+  // the resting `elevation` token.
+  overlay: {
+    value: {
+      base: '0 12px 32px -8px rgba(9, 9, 11, 0.25), 0 4px 12px -4px rgba(9, 9, 11, 0.12)',
+      _dark:
+        '0 16px 40px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)',
+    },
+  },
 };
 
 export const designSystemPreset = definePreset({
@@ -314,6 +323,22 @@ export const designSystemPreset = definePreset({
         fontSizes: {
           '3xs': { value: '0.625rem' }, // 10px — micro labels
           '2xs': { value: '0.6875rem' }, // 11px (was Panda default 8px)
+        },
+        // Layering scale for stacked surfaces (dropdowns, drawers, modals,
+        // popovers, toasts, tooltips) so consumers stop hand-picking z-indexes.
+        zIndex: {
+          hide: { value: -1 },
+          base: { value: 0 },
+          docked: { value: 10 },
+          dropdown: { value: 1000 },
+          sticky: { value: 1100 },
+          banner: { value: 1200 },
+          overlay: { value: 1300 },
+          modal: { value: 1400 },
+          popover: { value: 1500 },
+          skipNav: { value: 1600 },
+          toast: { value: 1700 },
+          tooltip: { value: 1800 },
         },
       },
       semanticTokens: {
@@ -355,10 +380,14 @@ export const designSystemPreset = definePreset({
             },
           },
           text: {
+            // Body text sits a step below `strong` so the two are actually
+            // distinguishable — at neutral.900/neutral.100 `default` was within
+            // ~1.1:1 of `strong` and the hierarchy collapsed. neutral.700 / dark
+            // neutral.300 keep AA (≈10.4:1 / ≈12:1) while opening the gap.
             default: {
               value: {
-                base: '{colors.neutral.900}',
-                _dark: '{colors.neutral.100}',
+                base: '{colors.neutral.700}',
+                _dark: '{colors.neutral.300}',
               },
             },
             strong: {
@@ -389,6 +418,14 @@ export const designSystemPreset = definePreset({
               value: {
                 base: '{colors.amber.600}',
                 _dark: '{colors.amber.300}',
+              },
+            },
+            // Theme-invariant light text for always-dark fills (e.g. tooltips);
+            // pair with `overlay.tooltip`.
+            inverse: {
+              value: {
+                base: '{colors.neutral.50}',
+                _dark: '{colors.neutral.50}',
               },
             },
           },
@@ -424,7 +461,24 @@ export const designSystemPreset = definePreset({
               value: { base: '{colors.blue.50}', _dark: '{colors.blue.950}' },
             },
             selected: {
-              value: { base: '{colors.blue.100}', _dark: '{colors.blue.900}' },
+              // A subtle blue-tinted selection. The dark value is a low-mix tint,
+              // not a saturated fill — `blue.900` read as an error block on dense
+              // dark tables.
+              value: {
+                base: '{colors.blue.100}',
+                _dark:
+                  'color-mix(in srgb, {colors.blue.500} 24%, {colors.surface.default})',
+              },
+            },
+            // A theme-invariant FILL for primary actions (e.g. the recovery
+            // button in ErrorState/ErrorBoundary, RangePicker's apply) — white
+            // label text on it is AA (5.17:1) in both themes. It is NOT a text
+            // color: as foreground on the dark surface it is ~3.47:1 and fails
+            // AA. For accent *text*, use `text.link` (dark-aware, 9.94:1 on the
+            // dark surface). Components read `var(--colors-interactive-accent, …)`
+            // from inline styles, so this token must stay defined.
+            accent: {
+              value: { base: '{colors.blue.600}', _dark: '{colors.blue.600}' },
             },
           },
           scrollbar: {
@@ -437,6 +491,23 @@ export const designSystemPreset = definePreset({
             track: {
               value: {
                 base: '{colors.neutral.100}',
+                _dark: '{colors.neutral.800}',
+              },
+            },
+          },
+          // Scrims and always-dark floating fills that can't be a surface step.
+          overlay: {
+            // Modal/drawer backdrop scrim.
+            backdrop: {
+              value: {
+                base: 'rgba(9, 9, 11, 0.55)',
+                _dark: 'rgba(0, 0, 0, 0.65)',
+              },
+            },
+            // Always-dark tooltip fill (theme-invariant); use with text.inverse.
+            tooltip: {
+              value: {
+                base: '{colors.neutral.800}',
                 _dark: '{colors.neutral.800}',
               },
             },
@@ -514,6 +585,86 @@ export const designSystemPreset = definePreset({
               },
               critical: {
                 value: { base: '{colors.red.600}', _dark: '{colors.red.300}' },
+              },
+              quaternary: {
+                value: {
+                  base: '{colors.amber.600}',
+                  _dark: '{colors.amber.300}',
+                },
+              },
+              quinary: {
+                value: {
+                  base: '{colors.pink.600}',
+                  _dark: '{colors.pink.300}',
+                },
+              },
+            },
+          },
+          // Categorical (status-free) encoding: 5 visually distinct hues for
+          // grouping, category chips, and legends — NOT status (no red=alarm /
+          // green=ok baggage). `bg` is a subtle fill, `fg` is AA-legible label
+          // text on that fill, both dark-aware. Hue order matches chart.series so
+          // a chip and its series line read as the same category.
+          categorical: {
+            '1': {
+              bg: {
+                value: { base: '{colors.blue.50}', _dark: '{colors.blue.950}' },
+              },
+              fg: {
+                value: {
+                  base: '{colors.blue.700}',
+                  _dark: '{colors.blue.300}',
+                },
+              },
+            },
+            '2': {
+              bg: {
+                value: { base: '{colors.teal.50}', _dark: '{colors.teal.950}' },
+              },
+              fg: {
+                value: {
+                  base: '{colors.teal.700}',
+                  _dark: '{colors.teal.300}',
+                },
+              },
+            },
+            '3': {
+              bg: {
+                value: {
+                  base: '{colors.violet.50}',
+                  _dark: '{colors.violet.950}',
+                },
+              },
+              fg: {
+                value: {
+                  base: '{colors.violet.700}',
+                  _dark: '{colors.violet.300}',
+                },
+              },
+            },
+            '4': {
+              bg: {
+                value: {
+                  base: '{colors.amber.50}',
+                  _dark: '{colors.amber.950}',
+                },
+              },
+              fg: {
+                value: {
+                  base: '{colors.amber.800}',
+                  _dark: '{colors.amber.300}',
+                },
+              },
+            },
+            '5': {
+              bg: {
+                value: { base: '{colors.pink.50}', _dark: '{colors.pink.950}' },
+              },
+              fg: {
+                value: {
+                  base: '{colors.pink.700}',
+                  _dark: '{colors.pink.300}',
+                },
               },
             },
           },

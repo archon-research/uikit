@@ -1,6 +1,6 @@
 import { Laptop, Moon, Sun } from 'lucide-react';
 
-import { useTheme, type ThemeMode } from '../theme/useTheme';
+import { useTheme, type ThemeMode } from '../theme/useTheme.js';
 
 export type ThemeToggleVariant = 'segmented' | 'icon';
 export type ThemeToggleAppearance = 'chip' | 'bare';

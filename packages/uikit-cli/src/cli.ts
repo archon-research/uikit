@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { NpmCommandExecutor } from './command-executor.js';
+import { DoctorCommand } from './commands/doctor.js';
 import { FormatCommand } from './commands/format.js';
 import { LinkCommand } from './commands/link.js';
 import { LintCommand } from './commands/lint.js';
@@ -24,7 +25,7 @@ function parseArgs(argv: string[]): ParsedArgs {
   const args = argv.slice(2);
   if (args.length === 0) {
     throw new Error(
-      'Usage: uikit-cli <register|link|unlink|lint|format> [--verify] [--debug] [--uikit-root <path>] [args...]',
+      'Usage: uikit-cli <register|link|unlink|lint|format|doctor> [--verify] [--debug] [--uikit-root <path>] [args...]',
     );
   }
 
@@ -35,6 +36,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     'register',
     'link',
     'unlink',
+    'doctor',
   ];
 
   if (!validModes.includes(mode)) {
@@ -94,7 +96,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
   }
 
-  if (!uikitRoot && mode !== 'lint' && mode !== 'format') {
+  if (!uikitRoot && mode !== 'lint' && mode !== 'format' && mode !== 'doctor') {
     // Try to find from consumer
     try {
       const tempConsumerRoot = discovery.findConsumerRoot(process.cwd());
@@ -107,7 +109,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
   }
 
-  if (!uikitRoot && mode !== 'lint' && mode !== 'format') {
+  if (!uikitRoot && mode !== 'lint' && mode !== 'format' && mode !== 'doctor') {
     // Try walking up from cwd
     const foundRoot = discovery.findUIKitRoot(process.cwd());
     if (foundRoot) {
@@ -115,7 +117,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
   }
 
-  if (!uikitRoot && mode !== 'lint' && mode !== 'format') {
+  if (!uikitRoot && mode !== 'lint' && mode !== 'format' && mode !== 'doctor') {
     throw new Error(
       'Could not find uikit root directory.\n' +
         'Tried:\n' +
@@ -164,11 +166,20 @@ function ensureCliBinaryBuilt(
 function linkCliIntoConsumer(
   consumerRoot: string,
   executor: NpmCommandExecutor,
+  logger: ConsoleLogger,
 ): void {
-  executor.exec(
+  const result = executor.exec(
     'npm link "@archon-research/uikit-cli" --package-lock=false --save=false --no-workspaces',
     { cwd: consumerRoot },
   );
+  if (!result.success) {
+    logger.warn(
+      'Could not link the local @archon-research/uikit-cli — you may be running ' +
+        'the registry version, which can lag behind the local one (e.g. missing ' +
+        '`doctor --codegen`). A consumer .npmrc with `min-release-age` can reject ' +
+        'a fresh prerelease with ETARGET here.',
+    );
+  }
 }
 
 /**
@@ -207,6 +218,13 @@ try {
     process.exit(0);
   }
 
+  // Doctor scans the consumer's generated CSS; it runs in the consumer cwd and
+  // needs no uikit root. Non-zero exit on findings so it gates CI.
+  if (mode === 'doctor') {
+    const doctorCmd = new DoctorCommand(fs, logger, executor);
+    process.exit(doctorCmd.execute(commandArgs) ? 0 : 1);
+  }
+
   // Handle register command
   if (mode === 'register') {
     ensureCliBinaryBuilt(uikitRoot, executor);
@@ -231,7 +249,7 @@ try {
   ensureCliBinaryBuilt(uikitRoot, executor);
   const registerCmd = new RegisterCommand(discovery, executor, logger);
   registerCmd.execute(uikitRoot);
-  linkCliIntoConsumer(consumerRoot, executor);
+  linkCliIntoConsumer(consumerRoot, executor, logger);
 
   if (mode === 'link') {
     const linkCmd = new LinkCommand(discovery, executor, validator, fs, logger);

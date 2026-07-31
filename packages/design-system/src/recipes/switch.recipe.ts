@@ -2,7 +2,7 @@ import { defineSlotRecipe } from '@pandacss/dev';
 
 export const switchRecipe = defineSlotRecipe({
   className: 'toggleSwitch',
-  description: 'Toggle switch built on Base UI Switch.',
+  description: 'Toggle switch built on Ark UI Switch.',
   slots: ['root', 'thumb'],
   base: {
     root: {
@@ -20,7 +20,9 @@ export const switchRecipe = defineSlotRecipe({
       flexShrink: '0',
       transitionDuration: 'fast',
       transitionProperty: 'background-color, border-color',
-      '&[data-checked]': {
+      // Ark's Switch emits `data-state="checked"`; keep `data-checked` too so
+      // the recipe works regardless of the primitive's attribute convention.
+      '&[data-checked], &[data-state="checked"]': {
         bg: 'gray.800',
         borderColor: 'gray.700',
         _dark: {
@@ -43,7 +45,7 @@ export const switchRecipe = defineSlotRecipe({
       transitionDuration: 'fast',
       transitionProperty: 'transform, background-color',
       transform: 'translateX(2px)',
-      '[data-checked] &': {
+      '[data-checked] &, [data-state="checked"] &': {
         transform: 'translateX(calc(2.25rem - 100% - 2px))',
         bg: 'white',
         _dark: {

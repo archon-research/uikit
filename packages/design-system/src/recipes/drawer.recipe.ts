@@ -17,9 +17,7 @@ export const drawerRecipe = defineSlotRecipe({
       position: 'fixed',
       inset: '0',
       zIndex: '50',
-      // Scrim: no semantic overlay token exists yet; a bg.overlay token (A1)
-      // would replace this literal.
-      bg: 'rgba(15, 23, 42, 0.55)',
+      bg: 'overlay.backdrop',
       opacity: '0',
       transitionProperty: 'opacity',
       transitionDuration: 'normal',
@@ -42,7 +40,6 @@ export const drawerRecipe = defineSlotRecipe({
       display: 'flex',
       flexDirection: 'column',
       gap: '4',
-      width: 'min(28rem, 100vw)',
       maxWidth: '100vw',
       height: '100%',
       p: '5',
@@ -106,5 +103,17 @@ export const drawerRecipe = defineSlotRecipe({
         outlineOffset: '1px',
       },
     },
+  },
+  variants: {
+    // Panel width. `md` preserves the previous fixed width; `sm`/`lg` give
+    // consumers a wider/narrower drawer without a hardcoded override.
+    size: {
+      sm: { content: { width: 'min(22rem, 100vw)' } },
+      md: { content: { width: 'min(28rem, 100vw)' } },
+      lg: { content: { width: 'min(40rem, 100vw)' } },
+    },
+  },
+  defaultVariants: {
+    size: 'md',
   },
 });

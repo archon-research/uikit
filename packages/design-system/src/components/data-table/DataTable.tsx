@@ -2,13 +2,13 @@ import { Progress } from '@ark-ui/react/progress';
 import { flexRender, type Table } from '@tanstack/react-table';
 import type { CSSProperties, ReactNode } from 'react';
 
-import { SkeletonRows } from '../SkeletonRows';
+import { SkeletonRows } from '../SkeletonRows.js';
 import {
   createMagnitudeStateMap,
   formatMagnitudeValueText,
   normalizeMagnitudeValue,
-} from './magnitude';
-import type { DataTableColumnAlign, DataTableDensity } from './types';
+} from './magnitude.js';
+import type { DataTableColumnAlign, DataTableDensity } from './types.js';
 
 /**
  * The design-system package builds with `tsc` and ships no generated
@@ -143,7 +143,7 @@ export function DataTable<TData>({
                             header.getContext(),
                           )}
                         </span>
-                        <span>
+                        <span aria-hidden="true">
                           {sorted === 'asc'
                             ? '↑'
                             : sorted === 'desc'

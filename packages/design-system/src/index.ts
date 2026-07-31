@@ -1,24 +1,25 @@
-export * from './recipes/index';
-export { designSystemStaticCssRecipes } from './staticCss';
+export * from './recipes/index.js';
+export { designSystemStaticCssRecipes } from './staticCss.js';
 export {
   designSystemComponentManifest,
   type DesignSystemBehaviorSource,
   type DesignSystemComponentManifestEntry,
   type DesignSystemStoryBucket,
   type DesignSystemStyleOwner,
-} from './component-manifest';
+} from './component-manifest.js';
+export type { ColorPalette } from './component-manifest.js';
 export {
   SidebarLayout,
   type SidebarLayoutProps,
-} from './layouts/SidebarLayout';
-export { ThemeProvider } from './theme/ThemeProvider';
+} from './layouts/SidebarLayout.js';
+export { ThemeProvider } from './theme/ThemeProvider.js';
 export {
   useTheme,
   type ThemeContextValue,
   type ThemeMode,
-} from './theme/useTheme';
-export { SkeletonRows } from './components/SkeletonRows';
-export { SkeletonStack } from './components/SkeletonStack';
+} from './theme/useTheme.js';
+export { SkeletonRows } from './components/SkeletonRows.js';
+export { SkeletonStack } from './components/SkeletonStack.js';
 export {
   SurfaceMessage,
   SurfaceMessageRoot,
@@ -31,35 +32,35 @@ export {
   type SurfaceMessageBodyProps,
   type SurfaceMessageActionsProps,
   type SurfaceMessageTone,
-} from './components/SurfaceMessage';
+} from './components/SurfaceMessage.js';
 export {
   ThemeToggle,
   type ThemeToggleVariant,
   type ThemeToggleProps,
-} from './components/ThemeToggle';
-export { Button } from './components/Button';
-export { TreeRow, type TreeRowProps } from './components/TreeRow';
-export { Badge } from './components/Badge';
+} from './components/ThemeToggle.js';
+export { Button } from './components/Button.js';
+export { TreeRow, type TreeRowProps } from './components/TreeRow.js';
+export { Badge } from './components/Badge.js';
 export type {
   BadgeTone,
   BadgeVariant,
   BadgeColorPalette,
   BadgeSize,
-} from './components/Badge';
+} from './components/Badge.js';
 export type {
   ButtonVariant,
   ButtonSize,
   ButtonDensity,
   ButtonEmphasis,
   ButtonColorPalette,
-} from './components/Button';
-export { SearchInput } from './components/SearchInput';
+} from './components/Button.js';
+export { SearchInput } from './components/SearchInput.js';
 export {
   Select,
   StyledSelect,
   type SelectProps,
   type StyledSelectProps,
-} from './components/StyledSelect';
+} from './components/StyledSelect.js';
 export {
   RangePicker,
   DEFAULT_RANGE_PRESET,
@@ -69,13 +70,13 @@ export {
   type RangePickerProps,
   type RangePreset,
   type TimeRange,
-} from './components/RangePicker';
-export { LoadingIndicator } from './components/LoadingIndicator';
-export { EmptyState } from './components/EmptyState';
-export { ErrorState } from './components/ErrorState';
-export { ErrorBoundary } from './components/ErrorBoundary';
-export { AsyncStateRenderer } from './components/AsyncStateRenderer';
-export * from './components/data-table';
+} from './components/RangePicker.js';
+export { LoadingIndicator } from './components/LoadingIndicator.js';
+export { EmptyState } from './components/EmptyState.js';
+export { ErrorState } from './components/ErrorState.js';
+export { ErrorBoundary } from './components/ErrorBoundary.js';
+export { AsyncStateRenderer } from './components/AsyncStateRenderer.js';
+export * from './components/data-table/index.js';
 export { Avatar } from '@ark-ui/react/avatar';
 export { Menu } from '@ark-ui/react/menu';
 export { Slider } from '@ark-ui/react/slider';
@@ -97,21 +98,22 @@ export { Toggle } from '@ark-ui/react/toggle';
 export { ToggleGroup } from '@ark-ui/react/toggle-group';
 export { Switch } from '@ark-ui/react/switch';
 export { Dialog } from '@ark-ui/react/dialog';
+export { Portal } from '@ark-ui/react/portal';
 export {
   Indicator,
   type IndicatorStatus,
   type IndicatorColorPalette,
-} from './components/Indicator';
+} from './components/Indicator.js';
 export {
   TextInput,
   Textarea,
   type TextInputProps,
   type TextareaProps,
-} from './components/TextInput';
-export { Drawer } from './components/Drawer';
+} from './components/TextInput.js';
+export { Drawer } from './components/Drawer.js';
 export { Field } from '@ark-ui/react/field';
 export { Progress } from '@ark-ui/react/progress';
-export { Sparkline, type SparklineProps } from './components/Sparkline';
+export { Sparkline, type SparklineProps } from './components/Sparkline.js';
 export {
   Panel,
   type PanelProps,
@@ -120,7 +122,7 @@ export {
   type PanelTitleTransform,
   type PanelTitleSize,
   type PanelMetaSize,
-} from './components/Panel';
+} from './components/Panel.js';
 export {
   StatTile,
   StatRow,
@@ -128,12 +130,12 @@ export {
   type StatRowProps,
   type StatTileTone,
   type StatTileLabelCase,
-} from './components/StatTile';
+} from './components/StatTile.js';
 export {
   Code,
   CodeBlock,
   type CodeProps,
   type CodeBlockProps,
-} from './components/Code';
-export { PageShell, type PageShellProps } from './layouts/PageShell';
-export { SidebarGrid, type SidebarGridProps } from './layouts/SidebarGrid';
+} from './components/Code.js';
+export { PageShell, type PageShellProps } from './layouts/PageShell.js';
+export { SidebarGrid, type SidebarGridProps } from './layouts/SidebarGrid.js';

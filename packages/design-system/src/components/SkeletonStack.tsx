@@ -3,6 +3,8 @@ import { type CSSProperties } from 'react';
 type SkeletonStackProps = {
   count?: number;
   itemHeight?: number;
+  className?: string;
+  style?: CSSProperties;
 };
 
 const wrapperStyle: CSSProperties = {
@@ -13,9 +15,11 @@ const wrapperStyle: CSSProperties = {
 export function SkeletonStack({
   count = 6,
   itemHeight = 64,
+  className,
+  style,
 }: SkeletonStackProps = {}) {
   return (
-    <div style={wrapperStyle}>
+    <div className={className} style={{ ...wrapperStyle, ...style }}>
       {Array.from({ length: count }, (_, index) => (
         <div
           key={index}

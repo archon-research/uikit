@@ -43,12 +43,21 @@ function DrawerPositioner({
   );
 }
 
+type DrawerSize = 'sm' | 'md' | 'lg';
+
 function DrawerContent({
   className,
+  size = 'md',
   ...props
-}: ComponentPropsWithoutRef<typeof ArkDrawer.Content>) {
+}: ComponentPropsWithoutRef<typeof ArkDrawer.Content> & {
+  /** Panel width. Defaults to `md`. */
+  size?: DrawerSize;
+}) {
   return (
-    <ArkDrawer.Content {...props} className={cx(slots.content, className)} />
+    <ArkDrawer.Content
+      {...props}
+      className={cx(slots.content, `drawer__content--size_${size}`, className)}
+    />
   );
 }
 

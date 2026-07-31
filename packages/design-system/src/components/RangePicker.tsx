@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 
-import { StyledSelect } from './StyledSelect';
+import { StyledSelect } from './StyledSelect.js';
 
 export type RangePreset =
   | '1h'
@@ -40,6 +40,9 @@ export type RangePickerProps = {
   preset: RangePreset;
   range: TimeRange;
   onChange: (preset: RangePreset, range: TimeRange) => void;
+  className?: string;
+  /** Merged onto the root after the defaults, so it can override the layout. */
+  style?: CSSProperties;
 };
 
 const PRESETS: { label: string; value: RangePreset }[] = [
@@ -104,7 +107,7 @@ const customModalStyle: CSSProperties = {
   borderStyle: 'solid',
   borderColor: 'var(--colors-border-default, #d0d5dd)',
   background: 'var(--colors-surface-default, #ffffff)',
-  boxShadow: '0 18px 48px rgba(0, 0, 0, 0.35)',
+  boxShadow: 'var(--shadows-overlay, 0 18px 48px rgba(0, 0, 0, 0.35))',
   display: 'grid',
   gap: 16,
   padding: 16,
@@ -160,11 +163,11 @@ function getModalActionButtonStyle(variant: 'ghost' | 'solid'): CSSProperties {
         : 'var(--colors-border-default, #d0d5dd)',
     background:
       variant === 'solid'
-        ? 'var(--colors-interactive-default, #155eef)'
+        ? 'var(--colors-interactive-accent, #2563eb)'
         : 'var(--colors-surface-default, #ffffff)',
     color:
       variant === 'solid'
-        ? 'var(--colors-text-inverted, #ffffff)'
+        ? 'var(--colors-text-inverse, #ffffff)'
         : 'var(--colors-text-default, #111827)',
     cursor: 'pointer',
     fontSize: 14,
@@ -279,7 +282,13 @@ function fromDateTimeLocalValue(value: string): string | undefined {
   return parseTimestamp(value)?.toISOString();
 }
 
-export function RangePicker({ preset, range, onChange }: RangePickerProps) {
+export function RangePicker({
+  preset,
+  range,
+  onChange,
+  className,
+  style,
+}: RangePickerProps) {
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [draftRange, setDraftRange] = useState<DraftRange>(range);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -376,7 +385,7 @@ export function RangePicker({ preset, range, onChange }: RangePickerProps) {
     : null;
 
   return (
-    <div style={rootStyle}>
+    <div className={className} style={{ ...rootStyle, ...style }}>
       <StyledSelect
         aria-label="Select activity range"
         value={selectedValue}

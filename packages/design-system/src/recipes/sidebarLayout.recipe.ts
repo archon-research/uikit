@@ -148,4 +148,38 @@ export const sidebarLayoutRecipe = defineSlotRecipe({
       bg: 'border.subtle',
     },
   },
+  variants: {
+    // `split` (default) is the resizable Ark Splitter layout. `stacked` is the
+    // narrow-width fallback the component swaps to below its `collapseBelow`
+    // breakpoint: sidebar and main become a single scrolling column (no
+    // Splitter, so no inline flex-basis to fight), the sidebar spans full width
+    // with a bottom rule instead of an inline-end one, and the root scrolls
+    // instead of clipping.
+    layout: {
+      split: {},
+      stacked: {
+        root: { height: '100vh', overflowX: 'hidden', overflowY: 'auto' },
+        horizontalSplitter: {
+          flexDirection: 'column',
+          height: 'auto',
+          minHeight: 'full',
+        },
+        sidebar: {
+          width: 'full',
+          height: 'auto',
+          overflow: 'visible',
+          borderInlineEndWidth: '0',
+          borderBottomWidth: '1px',
+          borderBottomStyle: 'solid',
+          borderColor: 'border.subtle',
+        },
+        main: { width: 'full', height: 'auto' },
+        mainColumn: { height: 'auto' },
+        content: { flex: 'none' },
+      },
+    },
+  },
+  defaultVariants: {
+    layout: 'split',
+  },
 });

@@ -3,6 +3,8 @@ import { type CSSProperties } from 'react';
 
 type LoadingIndicatorProps = {
   message: string;
+  className?: string;
+  style?: CSSProperties;
 };
 
 const wrapperStyle: CSSProperties = {
@@ -37,9 +39,13 @@ function SpinnerIcon() {
   );
 }
 
-export function LoadingIndicator({ message }: LoadingIndicatorProps) {
+export function LoadingIndicator({
+  message,
+  className,
+  style,
+}: LoadingIndicatorProps) {
   return (
-    <p style={wrapperStyle}>
+    <p className={className} style={{ ...wrapperStyle, ...style }}>
       <SpinnerIcon />
       <span>{message}</span>
     </p>

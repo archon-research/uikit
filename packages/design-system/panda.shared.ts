@@ -178,6 +178,12 @@ const shadows = {
       _dark: '0 2px 4px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)',
     },
   },
+  overlay: {
+    value: {
+      base: '0 12px 32px -8px rgba(9, 9, 11, 0.25), 0 4px 12px -4px rgba(9, 9, 11, 0.12)',
+      _dark: '0 16px 40px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)',
+    },
+  },
 };
 
 export const designSystemPandaConfig = {
@@ -212,6 +218,20 @@ export const designSystemPandaConfig = {
         fontSizes: {
           '3xs': { value: '0.625rem' }, // 10px
           '2xs': { value: '0.6875rem' }, // 11px (was Panda default 8px)
+        },
+        zIndex: {
+          hide: { value: -1 },
+          base: { value: 0 },
+          docked: { value: 10 },
+          dropdown: { value: 1000 },
+          sticky: { value: 1100 },
+          banner: { value: 1200 },
+          overlay: { value: 1300 },
+          modal: { value: 1400 },
+          popover: { value: 1500 },
+          skipNav: { value: 1600 },
+          toast: { value: 1700 },
+          tooltip: { value: 1800 },
         },
       },
       // This shared config (consumed by uikit-preview) previously defined NO
@@ -271,7 +291,7 @@ export const designSystemPandaConfig = {
           },
           text: {
             default: {
-              value: { base: '{colors.neutral.900}', _dark: '{colors.neutral.100}' },
+              value: { base: '{colors.neutral.700}', _dark: '{colors.neutral.300}' },
             },
             strong: {
               value: { base: '{colors.neutral.950}', _dark: '{colors.white}' },
@@ -293,6 +313,9 @@ export const designSystemPandaConfig = {
             },
             warning: {
               value: { base: '{colors.amber.600}', _dark: '{colors.amber.300}' },
+            },
+            inverse: {
+              value: { base: '{colors.neutral.50}', _dark: '{colors.neutral.50}' },
             },
           },
           border: {
@@ -317,7 +340,14 @@ export const designSystemPandaConfig = {
               value: { base: '{colors.blue.50}', _dark: '{colors.blue.950}' },
             },
             selected: {
-              value: { base: '{colors.blue.100}', _dark: '{colors.blue.900}' },
+              value: {
+                base: '{colors.blue.100}',
+                _dark:
+                  'color-mix(in srgb, {colors.blue.500} 24%, {colors.surface.default})',
+              },
+            },
+            accent: {
+              value: { base: '{colors.blue.600}', _dark: '{colors.blue.600}' },
             },
           },
           scrollbar: {
@@ -326,6 +356,14 @@ export const designSystemPandaConfig = {
             },
             track: {
               value: { base: '{colors.neutral.100}', _dark: '{colors.neutral.800}' },
+            },
+          },
+          overlay: {
+            backdrop: {
+              value: { base: 'rgba(9, 9, 11, 0.55)', _dark: 'rgba(0, 0, 0, 0.65)' },
+            },
+            tooltip: {
+              value: { base: '{colors.neutral.800}', _dark: '{colors.neutral.800}' },
             },
           },
           fg: {
@@ -375,6 +413,35 @@ export const designSystemPandaConfig = {
               critical: {
                 value: { base: '{colors.red.600}', _dark: '{colors.red.300}' },
               },
+              quaternary: {
+                value: { base: '{colors.amber.600}', _dark: '{colors.amber.300}' },
+              },
+              quinary: {
+                value: { base: '{colors.pink.600}', _dark: '{colors.pink.300}' },
+              },
+            },
+          },
+          // Categorical (status-free) encoding; hue order matches chart.series.
+          categorical: {
+            '1': {
+              bg: { value: { base: '{colors.blue.50}', _dark: '{colors.blue.950}' } },
+              fg: { value: { base: '{colors.blue.700}', _dark: '{colors.blue.300}' } },
+            },
+            '2': {
+              bg: { value: { base: '{colors.teal.50}', _dark: '{colors.teal.950}' } },
+              fg: { value: { base: '{colors.teal.700}', _dark: '{colors.teal.300}' } },
+            },
+            '3': {
+              bg: { value: { base: '{colors.violet.50}', _dark: '{colors.violet.950}' } },
+              fg: { value: { base: '{colors.violet.700}', _dark: '{colors.violet.300}' } },
+            },
+            '4': {
+              bg: { value: { base: '{colors.amber.50}', _dark: '{colors.amber.950}' } },
+              fg: { value: { base: '{colors.amber.800}', _dark: '{colors.amber.300}' } },
+            },
+            '5': {
+              bg: { value: { base: '{colors.pink.50}', _dark: '{colors.pink.950}' } },
+              fg: { value: { base: '{colors.pink.700}', _dark: '{colors.pink.300}' } },
             },
           },
           // ── colorPalette ROLE tokens (role-based, on the 50-950 scale) ──
