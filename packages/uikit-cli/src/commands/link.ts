@@ -39,7 +39,8 @@ export class LinkCommand {
     this.logger.debug('Starting link command', { consumerRoot, uikitRoot });
 
     const uikitWorkspaces = this.discovery.loadWorkspaces(uikitRoot);
-    const consumerWorkspaces = this.discovery.loadWorkspaces(consumerRoot);
+    const consumerWorkspaces =
+      this.discovery.loadConsumerWorkspaces(consumerRoot);
 
     const uikitPackages = uikitWorkspaces.filter((ws) =>
       String(ws.name ?? '').startsWith('@archon-research/'),
@@ -160,6 +161,11 @@ export class LinkCommand {
     for (const [workspace, names] of neededByWorkspace.entries()) {
       const packageArgs = names.map((name) => `"${name}"`).join(' ');
       if (!packageArgs) continue;
+
+      // A single-package consumer surfaces as the root itself (location '').
+      // The root-level `npm link` above already linked it; there is no separate
+      // workspace node_modules to fix up, and `--workspace ""` is invalid.
+      if (workspace === '' || workspace === '.') continue;
 
       this.logger.debug(`Linking packages for workspace: ${workspace}`);
       const result = this.executor.exec(

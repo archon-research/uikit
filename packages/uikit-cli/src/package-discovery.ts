@@ -14,19 +14,36 @@ export class PackageDiscovery {
   }
 
   /**
-   * Find consumer workspace root by walking up looking for package.json with workspaces
+   * Find the consumer root by walking up from `startDir`. Prefers a monorepo
+   * root (a `package.json` with a `workspaces` field); if none exists anywhere
+   * up the tree, falls back to the nearest single package that depends on an
+   * `@archon-research/*` package — so link/unlink work for a plain
+   * non-workspaces consumer, not just a monorepo.
    */
   findConsumerRoot(startDir: string): string {
     let current = startDir;
+    let singlePackageRoot: string | null = null;
 
     while (true) {
       const pkgPath = path.join(current, 'package.json');
 
       if (this.fs.exists(pkgPath)) {
         try {
-          const pkg = this.fs.readJson<{ workspaces?: unknown }>(pkgPath);
+          const pkg = this.fs.readJson<{
+            workspaces?: unknown;
+            dependencies?: Record<string, string>;
+            devDependencies?: Record<string, string>;
+            peerDependencies?: Record<string, string>;
+            optionalDependencies?: Record<string, string>;
+          }>(pkgPath);
+          // A workspaces root always wins (unchanged monorepo behavior).
           if (pkg.workspaces) {
             return current;
+          }
+          // Otherwise remember the nearest package that consumes uikit, as a
+          // fallback if no workspaces root turns up above it.
+          if (singlePackageRoot === null && this.dependsOnUikit(pkg)) {
+            singlePackageRoot = current;
           }
         } catch {
           // Continue searching if parse fails
@@ -35,14 +52,39 @@ export class PackageDiscovery {
 
       const parent = path.dirname(current);
       if (parent === current) {
+        if (singlePackageRoot !== null) {
+          return singlePackageRoot;
+        }
         throw new Error(
-          `Could not find consumer workspace root (no package.json with workspaces field)\n` +
+          `Could not find a consumer root.\n` +
             `Searched from: ${startDir}\n` +
-            `Suggestion: Run from inside a workspace-based monorepo`,
+            `Found no package.json with a "workspaces" field, and none depending ` +
+            `on an @archon-research/* package.\n` +
+            `Run from inside your consumer project (a monorepo root or a single ` +
+            `package that installs uikit).`,
         );
       }
       current = parent;
     }
+  }
+
+  private dependsOnUikit(pkg: {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+    peerDependencies?: Record<string, string>;
+    optionalDependencies?: Record<string, string>;
+  }): boolean {
+    const fields = [
+      pkg.dependencies,
+      pkg.devDependencies,
+      pkg.peerDependencies,
+      pkg.optionalDependencies,
+    ];
+    return fields.some(
+      (field) =>
+        field &&
+        Object.keys(field).some((name) => name.startsWith('@archon-research/')),
+    );
   }
 
   /**
@@ -132,42 +174,64 @@ export class PackageDiscovery {
         );
       }
       for (const dir of resolved) {
-        const pkgPath = path.join(dir, 'package.json');
-        if (!this.fs.exists(pkgPath)) {
-          if (process.env.UIKIT_DEBUG) {
-            console.log(
-              '[DEBUG loadWorkspaces] Skipping (no package.json):',
-              dir,
-            );
-          }
-          continue;
-        }
-
-        try {
-          const pkg = this.fs.readJson<{
-            name?: string;
-            dependencies?: Record<string, string>;
-            devDependencies?: Record<string, string>;
-            peerDependencies?: Record<string, string>;
-            optionalDependencies?: Record<string, string>;
-          }>(pkgPath);
-
-          workspaces.push({
-            name: pkg.name ?? null,
-            location: path.relative(rootDir, dir),
-            path: dir,
-            dependencies: pkg.dependencies ?? {},
-            devDependencies: pkg.devDependencies ?? {},
-            peerDependencies: pkg.peerDependencies ?? {},
-            optionalDependencies: pkg.optionalDependencies ?? {},
-          });
-        } catch {
-          // Skip invalid package.json
+        const ws = this.readPackageAsWorkspace(rootDir, dir);
+        if (ws) {
+          workspaces.push(ws);
+        } else if (process.env.UIKIT_DEBUG) {
+          console.log(
+            '[DEBUG loadWorkspaces] Skipping (no/invalid package.json):',
+            dir,
+          );
         }
       }
     }
 
     return workspaces.filter((ws) => Boolean(ws.name));
+  }
+
+  /**
+   * Load consumer workspaces, falling back to the root package itself when the
+   * consumer is a single, non-workspaces package (`location: ''`). This is what
+   * lets link/unlink target a plain consumer, not only a monorepo.
+   */
+  loadConsumerWorkspaces(rootDir: string): WorkspaceInfo[] {
+    const workspaces = this.loadWorkspaces(rootDir);
+    if (workspaces.length > 0) {
+      return workspaces;
+    }
+    const root = this.readPackageAsWorkspace(rootDir, rootDir);
+    return root && root.name ? [root] : [];
+  }
+
+  /** Read a directory's package.json into a WorkspaceInfo, or null if absent/invalid. */
+  private readPackageAsWorkspace(
+    rootDir: string,
+    dir: string,
+  ): WorkspaceInfo | null {
+    const pkgPath = path.join(dir, 'package.json');
+    if (!this.fs.exists(pkgPath)) {
+      return null;
+    }
+    try {
+      const pkg = this.fs.readJson<{
+        name?: string;
+        dependencies?: Record<string, string>;
+        devDependencies?: Record<string, string>;
+        peerDependencies?: Record<string, string>;
+        optionalDependencies?: Record<string, string>;
+      }>(pkgPath);
+      return {
+        name: pkg.name ?? null,
+        location: path.relative(rootDir, dir),
+        path: dir,
+        dependencies: pkg.dependencies ?? {},
+        devDependencies: pkg.devDependencies ?? {},
+        peerDependencies: pkg.peerDependencies ?? {},
+        optionalDependencies: pkg.optionalDependencies ?? {},
+      };
+    } catch {
+      return null;
+    }
   }
 
   private getWorkspacePatterns(rootDir: string): string[] {

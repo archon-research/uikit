@@ -21,7 +21,7 @@ export class UnlinkCommand {
   ): void {
     // Load workspaces and determine requirements
     const uikitWorkspaces = discovery.loadWorkspaces(uikitRoot);
-    const consumerWorkspaces = discovery.loadWorkspaces(consumerRoot);
+    const consumerWorkspaces = discovery.loadConsumerWorkspaces(consumerRoot);
 
     const uikitPackages = uikitWorkspaces.filter((ws) =>
       String(ws.name ?? '').startsWith('@archon-research/'),
@@ -69,8 +69,11 @@ export class UnlinkCommand {
       }
     }
 
-    // Unlink per workspace
+    // Unlink per workspace. The single-package consumer surfaces as the root
+    // (location ''); the root-level unlink above already covered it and
+    // `--workspace ""` is invalid.
     for (const workspace of workspaces) {
+      if (workspace === '' || workspace === '.') continue;
       this.logger.debug(`Unlinking packages for workspace: ${workspace}`);
       this.executor.execQuiet(
         `npm unlink ${packageArgs} --workspace "${workspace}" --package-lock=false --save=false`,

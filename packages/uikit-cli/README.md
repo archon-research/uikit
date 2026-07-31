@@ -99,11 +99,14 @@ When co-development is complete, restore published versions from npm:
 The CLI manages local development links by:
 
 1. Auto-registering local `@archon-research/*` packages from your uikit checkout via `npm link`
-2. Linking only consumer workspaces that actually depend on those packages
+2. Linking only the consumer workspaces that actually depend on those packages
 3. Cleaning up shadow installs and Vite caches to ensure symlinks work correctly
 4. Using `--preserve-symlinks` flag and bundling to avoid ES module resolution issues
 
-The CLI automatically detects the consumer workspace root and all dependent packages, working from any directory within the workspace.
+The CLI automatically detects the consumer root and all dependent packages, working from any
+directory within the project. Both consumer shapes are supported: an **npm-workspaces monorepo**
+(the root with a `workspaces` field), and a **single package** that installs uikit directly (no
+`workspaces` field) — in the single-package case the root package is linked directly.
 
 The CLI auto-discovers the local uikit monorepo for typical sibling-checkout layouts.
 
