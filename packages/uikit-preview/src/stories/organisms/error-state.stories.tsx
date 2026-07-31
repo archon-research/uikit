@@ -57,3 +57,17 @@ export const Inline = () => (
     />
   </div>
 );
+
+// `tone="critical"` recolors the frame, icon, and title red so a genuine
+// failure reads as one (the default neutral tone reads as an empty state).
+export const Critical = () => (
+  <div className={wrapperClassName}>
+    <ErrorState
+      tone="critical"
+      title="Unable to load positions"
+      description="The account positions endpoint returned an error. Try again shortly."
+      errorMessage="Request failed with status 503"
+      onRetry={() => {}}
+    />
+  </div>
+);
