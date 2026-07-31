@@ -8,8 +8,8 @@ on:
     types:
       - opened
       - reopened
-      - ready_for_review
       - synchronize
+  merge_group:
 
 permissions:
   actions: read
@@ -17,6 +17,8 @@ permissions:
 
 jobs:
   detect-changes:
+    # Skipped on merge_group so queue runs execute every suite unconditionally.
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     outputs:
       lint: ${{ steps.changed-files.outputs.lint_any_changed }}
@@ -37,7 +39,9 @@ jobs:
 
   lint:
     needs: detect-changes
-    if: needs.detect-changes.outputs.lint == 'true'
+    if: |
+      !cancelled() &&
+      (github.event_name == 'merge_group' || needs.detect-changes.outputs.lint == 'true')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -63,7 +67,9 @@ jobs:
 
   check-agent-marketplace:
     needs: detect-changes
-    if: needs.detect-changes.outputs.agent_marketplace == 'true'
+    if: |
+      !cancelled() &&
+      (github.event_name == 'merge_group' || needs.detect-changes.outputs.agent_marketplace == 'true')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -83,7 +89,9 @@ jobs:
 
   test:
     needs: detect-changes
-    if: needs.detect-changes.outputs.demo_relay == 'true'
+    if: |
+      !cancelled() &&
+      (github.event_name == 'merge_group' || needs.detect-changes.outputs.demo_relay == 'true')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -108,7 +116,10 @@ jobs:
     needs:
       - detect-changes
       - lint
-    if: needs.detect-changes.outputs.visual_snapshots == 'true'
+    if: |
+      !cancelled() &&
+      needs.lint.result == 'success' &&
+      (github.event_name == 'merge_group' || needs.detect-changes.outputs.visual_snapshots == 'true')
     # Pinned to macos-26 (not macos-latest) so the runner matches the macOS
     # version snapshots are generated on. CoreText font metrics differ between
     # macOS major versions, so a mismatch reflows text and fails comparisons.
@@ -165,7 +176,7 @@ jobs:
     steps:
       - name: Check all jobs succeeded
         run: |
-          if [[ "${{ needs.detect-changes.result }}" != "success" ]]; then
+          if [[ "${{ github.event_name }}" != "merge_group" && "${{ needs.detect-changes.result }}" != "success" ]]; then
             echo "detect-changes did not succeed (result: '${{ needs.detect-changes.result }}')"
             exit 1
           fi
