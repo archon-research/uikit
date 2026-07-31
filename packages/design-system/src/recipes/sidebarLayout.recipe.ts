@@ -73,6 +73,8 @@ export const sidebarLayoutRecipe = defineSlotRecipe({
       bg: 'surface.default',
     },
     mainColumn: {
+      display: 'flex',
+      flexDirection: 'column',
       minWidth: '0',
       minHeight: '0',
       height: 'full',
