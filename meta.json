@@ -1181,6 +1181,18 @@
       "namedExport": "WithRetry",
       "meta": {}
     },
+    "organisms--filter-primitives--filter-bar": {
+      "name": "Filter bar",
+      "levels": [
+        "Organisms",
+        "Filter primitives"
+      ],
+      "locStart": 189,
+      "locEnd": 193,
+      "filePath": "src/stories/organisms/filter-primitives.stories.tsx",
+      "namedExport": "FilterBar",
+      "meta": {}
+    },
     "organisms--harness-connect--connected": {
       "name": "Connected",
       "levels": [
