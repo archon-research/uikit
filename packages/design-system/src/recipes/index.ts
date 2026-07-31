@@ -21,3 +21,6 @@ export { themeToggleRecipe } from './themeToggle.recipe.js';
 export { sidebarLayoutRecipe } from './sidebarLayout.recipe.js';
 export { panelRecipe } from './panel.recipe.js';
 export { dataTableRecipe } from './dataTable.recipe.js';
+export { chipRecipe } from './chip.recipe.js';
+export { facetedMultiSelectRecipe } from './facetedMultiSelect.recipe.js';
+export { rangeSliderRecipe } from './rangeSlider.recipe.js';

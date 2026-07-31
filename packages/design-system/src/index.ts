@@ -139,3 +139,22 @@ export {
 } from './components/Code.js';
 export { PageShell, type PageShellProps } from './layouts/PageShell.js';
 export { SidebarGrid, type SidebarGridProps } from './layouts/SidebarGrid.js';
+export {
+  Chip,
+  type ChipVariant,
+  type ChipColorPalette,
+  type ChipSize,
+} from './components/Chip.js';
+export {
+  FacetedMultiSelect,
+  type FacetOption,
+} from './components/FacetedMultiSelect.js';
+export {
+  RangeSlider,
+  type RangeSliderProps,
+} from './components/RangeSlider.js';
+export {
+  DateRangeFilter,
+  type DateRangeFilterProps,
+} from './components/DateRangeFilter.js';
+export * from './filter-state/index.js';

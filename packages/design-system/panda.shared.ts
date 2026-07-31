@@ -4,15 +4,18 @@ import { designSystemStaticCssRecipes } from './src/staticCss';
 
 import { badgeRecipe } from './src/recipes/badge.recipe';
 import { buttonRecipe } from './src/recipes/button.recipe';
+import { chipRecipe } from './src/recipes/chip.recipe';
 import { codeRecipe } from './src/recipes/code.recipe';
 import { drawerRecipe } from './src/recipes/drawer.recipe';
 import { emptyStateRecipe } from './src/recipes/emptyState.recipe';
+import { facetedMultiSelectRecipe } from './src/recipes/facetedMultiSelect.recipe';
 import { indicatorRecipe } from './src/recipes/indicator.recipe';
 import { inputRecipe } from './src/recipes/input.recipe';
 import { interactiveItemRecipe } from './src/recipes/interactiveItem.recipe';
 import { pageShellRecipe } from './src/recipes/pageShell.recipe';
 import { panelActionRecipe } from './src/recipes/panelAction.recipe';
 import { panelSectionRecipe } from './src/recipes/panelSection.recipe';
+import { rangeSliderRecipe } from './src/recipes/rangeSlider.recipe';
 import { searchInputRecipe } from './src/recipes/searchInput.recipe';
 import { sectionHeadingRecipe } from './src/recipes/sectionHeading.recipe';
 import { segmentedControlRecipe } from './src/recipes/segmentedControl.recipe';
@@ -474,6 +477,9 @@ export const designSystemPandaConfig = {
         sidebarLayout: sidebarLayoutRecipe,
         panel: panelRecipe,
         dataTable: dataTableRecipe,
+        chip: chipRecipe,
+        facetedMultiSelect: facetedMultiSelectRecipe,
+        rangeSlider: rangeSliderRecipe,
       },
     },
   },
