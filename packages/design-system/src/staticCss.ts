@@ -51,4 +51,5 @@ export const designSystemStaticCssRecipes = {
   chip: ['*'],
   facetedMultiSelect: ['*'],
   rangeSlider: ['*'],
+  playbackBar: ['*'],
 } satisfies Record<string, ['*']>;

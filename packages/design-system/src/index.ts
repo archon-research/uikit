@@ -158,3 +158,24 @@ export {
   type DateRangeFilterProps,
 } from './components/DateRangeFilter.js';
 export * from './filter-state/index.js';
+export {
+  PlaybackBar,
+  type PlaybackBarProps,
+  type PlaybackBarDensity,
+} from './components/PlaybackBar.js';
+export {
+  usePlayback,
+  createLiveSource,
+  createReplaySource,
+  type PlaybackMode,
+  type PlaybackStatus,
+  type StepDirection,
+  type UsePlaybackOptions,
+  type UsePlaybackResult,
+  type LivePlaybackSource,
+  type PlaybackBounds,
+  type PlaybackEvent,
+  type PlaybackSource,
+  type PlaybackSourceStatus,
+  type ReplayPlaybackSource,
+} from './playback/index.js';
