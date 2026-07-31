@@ -1,5 +1,7 @@
 import {
   getCoreRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
   getFilteredRowModel,
   getSortedRowModel,
   useReactTable,
@@ -30,16 +32,18 @@ export function useDataTable<T>(
   const [internalSorting, setInternalSorting] = React.useState<SortingState>(
     config.defaultSorting ?? [],
   );
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
+  const [internalColumnFilters, setInternalColumnFilters] =
+    React.useState<ColumnFiltersState>(config.defaultColumnFilters ?? []);
   const [internalGlobalFilter, setInternalGlobalFilter] = React.useState('');
 
   const sorting = config.sorting ?? internalSorting;
+  const columnFilters = config.columnFilters ?? internalColumnFilters;
   const globalFilter = config.globalFilter ?? internalGlobalFilter;
 
   const handleSortingChange: OnChangeFn<SortingState> =
     config.onSortingChange ?? setInternalSorting;
+  const handleColumnFiltersChange: OnChangeFn<ColumnFiltersState> =
+    config.onColumnFiltersChange ?? setInternalColumnFilters;
   const handleGlobalFilterChange =
     config.onGlobalFilterChange ?? setInternalGlobalFilter;
 
@@ -52,11 +56,16 @@ export function useDataTable<T>(
       globalFilter,
     },
     onSortingChange: handleSortingChange,
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: handleColumnFiltersChange,
     onGlobalFilterChange: handleGlobalFilterChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    // Faceted models back the DataTable's per-column `select` filter
+    // affordance (`column.getFacetedUniqueValues()`) — cheap to register
+    // unconditionally since faceting is computed lazily per-column on demand.
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
     globalFilterFn: 'includesString',
     enableSorting: config.enableSorting,
     enableGlobalFilter: config.enableSearch,

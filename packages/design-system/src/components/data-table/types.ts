@@ -1,5 +1,6 @@
 import type {
   ColumnDef,
+  ColumnFiltersState,
   RowData,
   OnChangeFn,
   SortingState,
@@ -47,6 +48,16 @@ export interface DataTableConfig {
   onGlobalFilterChange?: (filter: string) => void;
   defaultSorting?: SortingState;
   searchDebounceMs?: number;
+  /**
+   * Controlled per-column filter state. Uncontrolled by default (internal
+   * `useState`, seeded from `defaultColumnFilters`) — same controlled/
+   * uncontrolled pattern as `sorting`/`globalFilter`. Pair a column's entry
+   * with `meta.filterVariant` (see `types.ts`) so `DataTable` renders a filter
+   * affordance for it.
+   */
+  columnFilters?: ColumnFiltersState;
+  onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
+  defaultColumnFilters?: ColumnFiltersState;
 }
 
 export interface UrlSyncedTableStateAdapter {
@@ -68,6 +79,21 @@ export type TypedColumnDef<T> = ColumnDef<T> & {
   sortable?: boolean;
 };
 
+/**
+ * Per-column filter affordance `DataTable` renders in the (opt-in) filter row
+ * beneath the header. `'text'` is a free-text input filtered against
+ * `column.getFilterValue()`; `'select'` is a native `<select>` populated from
+ * `column.getFacetedUniqueValues()` (register `getFacetedRowModel`/
+ * `getFacetedUniqueValues` — `useDataTable` already does this). Omit to render
+ * no affordance for that column, even if it's otherwise filterable.
+ *
+ * `'select'` assumes exact-value matching; give the column an explicit
+ * `filterFn: 'equalsString'` (or a custom exact-match fn) in its `ColumnDef` —
+ * the table-wide `filterFns.auto` default resolves to a substring match, which
+ * can over-match when one facet value is a substring of another.
+ */
+export type DataTableFilterVariant = 'text' | 'select';
+
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
     magnitude?: DataTableMagnitudeConfig<TData>;
@@ -82,5 +108,10 @@ declare module '@tanstack/react-table' {
      * currency/amount columns. Defaults to `false` when omitted.
      */
     mono?: boolean;
+    /**
+     * Renders a per-column filter affordance in `DataTable`'s filter row. See
+     * `DataTableFilterVariant`. Omitted (default) renders no affordance.
+     */
+    filterVariant?: DataTableFilterVariant;
   }
 }
