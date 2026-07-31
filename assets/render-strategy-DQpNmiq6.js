@@ -1,0 +1,1 @@
+import{h as r,g as t}from"./runtime-C5R_nMu1.js";var[o,n]=t({name:"RenderStrategyContext",hookName:"useRenderStrategyContext",providerName:"<RenderStrategyPropsProvider />"}),s=e=>r()(e,["lazyMount","unmountOnExit"]);export{o as R,s,n as u};
