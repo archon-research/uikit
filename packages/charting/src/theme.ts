@@ -40,6 +40,21 @@ export const chartTokens = {
   grid: 'var(--colors-chart-grid, #e5e7eb)',
   surface: 'var(--colors-surface-default, #ffffff)',
   label: 'var(--colors-text-muted, #667085)',
+  /**
+   * Alpha-tinted semantic fill for a one-sided threshold breach (the region
+   * past a reference line). A `color-mix` tint of the same `critical` token
+   * used elsewhere, not a distinct color family — see `ReferenceBand` in
+   * `reference-band.tsx`.
+   */
+  breachFill:
+    'color-mix(in srgb, var(--colors-chart-series-critical, #dc2626) 14%, transparent)',
+  /**
+   * Alpha-tinted semantic fill for a symmetric/asymmetric confidence band.
+   * Tints the `tertiary` series token so bands read as a distinct family
+   * from the breach fill above.
+   */
+  bandFill:
+    'color-mix(in srgb, var(--colors-chart-series-tertiary, #7c3aed) 16%, transparent)',
 } as const;
 
 /** Token-driven theme for `<XYChart theme={chartTheme}>`. */
