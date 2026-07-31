@@ -1097,6 +1097,18 @@
       "namedExport": "CustomFallback",
       "meta": {}
     },
+    "organisms--error-state--critical": {
+      "name": "Critical",
+      "levels": [
+        "Organisms",
+        "Error state"
+      ],
+      "locStart": 63,
+      "locEnd": 73,
+      "filePath": "src/stories/organisms/error-state.stories.tsx",
+      "namedExport": "Critical",
+      "meta": {}
+    },
     "organisms--error-state--default": {
       "name": "Default",
       "levels": [
@@ -1107,6 +1119,18 @@
       "locEnd": 24,
       "filePath": "src/stories/organisms/error-state.stories.tsx",
       "namedExport": "Default",
+      "meta": {}
+    },
+    "organisms--error-state--inline": {
+      "name": "Inline",
+      "levels": [
+        "Organisms",
+        "Error state"
+      ],
+      "locStart": 49,
+      "locEnd": 59,
+      "filePath": "src/stories/organisms/error-state.stories.tsx",
+      "namedExport": "Inline",
       "meta": {}
     },
     "organisms--error-state--with-retry": {
@@ -1477,6 +1501,18 @@
       "locEnd": 168,
       "filePath": "src/stories/templates/sidebar-layout.stories.tsx",
       "namedExport": "Default",
+      "meta": {}
+    },
+    "templates--sidebar-layout--stacked": {
+      "name": "Stacked",
+      "levels": [
+        "Templates",
+        "Sidebar layout"
+      ],
+      "locStart": 186,
+      "locEnd": 198,
+      "filePath": "src/stories/templates/sidebar-layout.stories.tsx",
+      "namedExport": "Stacked",
       "meta": {}
     },
     "tokens--colors": {
