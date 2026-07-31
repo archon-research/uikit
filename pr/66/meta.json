@@ -869,6 +869,18 @@
       "namedExport": "Success",
       "meta": {}
     },
+    "organisms--charting-primitives--default": {
+      "name": "Default",
+      "levels": [
+        "Organisms",
+        "Charting primitives"
+      ],
+      "locStart": 366,
+      "locEnd": 375,
+      "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
+      "namedExport": "Default",
+      "meta": {}
+    },
     "organisms--confirm-tool-call-dialog--countdown-active": {
       "name": "Countdown active",
       "levels": [
