@@ -917,6 +917,30 @@
       "namedExport": "SinglePending",
       "meta": {}
     },
+    "organisms--data-table-virtualized--flash-on-update": {
+      "name": "Flash on update",
+      "levels": [
+        "Organisms",
+        "Data table virtualized"
+      ],
+      "locStart": 95,
+      "locEnd": 138,
+      "filePath": "src/stories/organisms/data-table-virtualized.stories.tsx",
+      "namedExport": "FlashOnUpdate",
+      "meta": {}
+    },
+    "organisms--data-table-virtualized--virtualized-with-faceted-filters": {
+      "name": "Virtualized with faceted filters",
+      "levels": [
+        "Organisms",
+        "Data table virtualized"
+      ],
+      "locStart": 71,
+      "locEnd": 93,
+      "filePath": "src/stories/organisms/data-table-virtualized.stories.tsx",
+      "namedExport": "VirtualizedWithFacetedFilters",
+      "meta": {}
+    },
     "organisms--data-table--compact-density": {
       "name": "Compact density",
       "levels": [
