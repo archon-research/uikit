@@ -16,6 +16,17 @@ import { defineSlotRecipe } from '@pandacss/dev';
  *   - `mono` renders a body column in the mono font with tabular figures so
  *     numeric values align down the column.
  *   - `sortable` / `selected` / `clickable` reflect per-cell/per-row state.
+ *   - `scrollable` sets `overflowY` on `root` — applied whenever `DataTable`
+ *     gets a `maxHeight` (bounded height is required for virtualization and is
+ *     otherwise opt-in, so this stays off by default).
+ *   - `stickyHeader` pins each header cell to the top of the scroll container
+ *     with an opaque background, so scrolled body rows don't show through it.
+ *     Defaults on whenever the table is height-bounded (`scrollable`).
+ *   - `flash` is the transient delta-highlight applied to a body cell whose
+ *     value changed since the previous render (`DataTable`'s `flashOnUpdate`).
+ *     `positive`/`critical` fade from the success/critical background tokens
+ *     for an inferred numeric increase/decrease; `neutral` (any other change)
+ *     reuses the existing `feedRowFlash` selection-tint fade.
  *
  * Uses semantic tokens only (surface / text / border / interactive), the mono
  * font token, and the spacing / font-size / radius / duration scales.
@@ -23,13 +34,17 @@ import { defineSlotRecipe } from '@pandacss/dev';
 export const dataTableRecipe = defineSlotRecipe({
   className: 'dataTable',
   description:
-    'Class-driven data table: bordered scroll frame, muted uppercase header, and body rows with selectable/clickable states. density sets cell padding (compact is genuinely dense), align sets per-column text alignment, mono renders a column in the mono font with tabular figures. Magnitude slots style the inline value bar.',
+    'Class-driven data table: bordered scroll frame, muted uppercase header, and body rows with selectable/clickable states. density sets cell padding (compact is genuinely dense), align sets per-column text alignment, mono renders a column in the mono font with tabular figures. scrollable + stickyHeader back a height-bounded/virtualized table; flash is the transient delta-highlight for streaming updates. Magnitude slots style the inline value bar.',
   slots: [
     'root',
     'table',
     'headerRow',
     'headerCell',
     'headerButton',
+    'filterRow',
+    'filterCell',
+    'filterInput',
+    'filterSelect',
     'bodyRow',
     'bodyCell',
     'magnitudeCell',
@@ -71,6 +86,40 @@ export const dataTableRecipe = defineSlotRecipe({
       textTransform: 'uppercase',
       color: 'text.muted',
       cursor: 'default',
+    },
+    filterRow: {
+      bg: 'surface.default',
+    },
+    filterCell: {
+      px: '4',
+      py: '1.5',
+      borderBottomWidth: '1px',
+      borderBottomStyle: 'solid',
+      borderBottomColor: 'border.subtle',
+    },
+    filterInput: {
+      width: 'full',
+      minWidth: '0',
+      fontSize: 'xs',
+      lineHeight: 'snug',
+      color: 'text.default',
+      bg: 'surface.default',
+      px: '2',
+      py: '1',
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderColor: 'border.subtle',
+      borderRadius: 'sm',
+      _focusVisible: {
+        outlineWidth: '2px',
+        outlineStyle: 'solid',
+        outlineColor: 'border.strong',
+        outlineOffset: '1px',
+      },
+    },
+    filterSelect: {
+      width: 'full',
+      minWidth: '0',
     },
     headerButton: {
       display: 'inline-flex',
@@ -173,6 +222,7 @@ export const dataTableRecipe = defineSlotRecipe({
       comfortable: {},
       compact: {
         headerCell: { py: '1.5', px: '3', fontSize: '2xs' },
+        filterCell: { py: '1', px: '3' },
         bodyCell: { py: '1.5', px: '3', fontSize: 'xs' },
         magnitudeValue: { fontSize: 'xs' },
         magnitudeValueText: { fontSize: '2xs' },
@@ -217,6 +267,39 @@ export const dataTableRecipe = defineSlotRecipe({
       },
       false: {},
     },
+    // Height-bounded scroll container — required for `virtualized`, also
+    // useful standalone (a tall-but-not-virtualized table with a fixed
+    // viewport). Off by default so non-scrolling consumers are unaffected.
+    scrollable: {
+      true: { root: { overflowY: 'auto' } },
+      false: {},
+    },
+    // Pins each header cell to the scroll container's top edge with an
+    // opaque background (matching headerRow's) so it doesn't turn
+    // transparent over scrolled body rows. `DataTable` defaults this on
+    // whenever `scrollable` is on.
+    stickyHeader: {
+      true: {
+        headerCell: {
+          position: 'sticky',
+          top: '0',
+          zIndex: 'docked',
+          bg: 'surface.subtle',
+        },
+      },
+      false: {},
+    },
+    // Transient delta-highlight for a body cell whose value changed since the
+    // previous render (`DataTable`'s `flashOnUpdate`). `positive`/`critical`
+    // fade from the success/critical background tokens for an inferred
+    // numeric increase/decrease; `neutral` covers any other change (reuses
+    // the existing `feedRowFlash` selection-tint fade).
+    flash: {
+      none: {},
+      positive: { bodyCell: { animation: 'dataTableFlashPositive' } },
+      critical: { bodyCell: { animation: 'dataTableFlashCritical' } },
+      neutral: { bodyCell: { animation: 'feedRowFlash' } },
+    },
   },
   defaultVariants: {
     density: 'comfortable',
@@ -225,5 +308,8 @@ export const dataTableRecipe = defineSlotRecipe({
     selected: false,
     clickable: false,
     mono: false,
+    scrollable: false,
+    stickyHeader: false,
+    flash: 'none',
   },
 });

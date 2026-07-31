@@ -235,6 +235,14 @@ const keyframes = {
     '0%': { backgroundColor: 'var(--colors-interactive-selected)' },
     '100%': { backgroundColor: 'transparent' },
   },
+  dataTableFlashPositive: {
+    '0%': { backgroundColor: 'var(--colors-bg-success)' },
+    '100%': { backgroundColor: 'transparent' },
+  },
+  dataTableFlashCritical: {
+    '0%': { backgroundColor: 'var(--colors-bg-critical)' },
+    '100%': { backgroundColor: 'transparent' },
+  },
   valueSettleIn: {
     '0%': { opacity: '0', transform: 'translateY(-0.25rem)' },
     '100%': { opacity: '1', transform: 'translateY(0)' },
@@ -254,6 +262,8 @@ const animationTokens = {
     value: 'indicatorPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
   },
   feedRowFlash: { value: 'feedRowFlash 1.2s ease-out' },
+  dataTableFlashPositive: { value: 'dataTableFlashPositive 1s ease-out' },
+  dataTableFlashCritical: { value: 'dataTableFlashCritical 1s ease-out' },
   valueSettleIn: { value: 'valueSettleIn 200ms ease-out' },
   edgeRun: { value: 'edgeRun 1s linear infinite' },
   drawerSlide: {
