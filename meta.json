@@ -1301,6 +1301,18 @@
       "namedExport": "ControlPreview",
       "meta": {}
     },
+    "organisms--playback-bar--live-vs-replay": {
+      "name": "Live vs replay",
+      "levels": [
+        "Organisms",
+        "Playback bar"
+      ],
+      "locStart": 136,
+      "locEnd": 188,
+      "filePath": "src/stories/organisms/playback-bar.stories.tsx",
+      "namedExport": "LiveVsReplay",
+      "meta": {}
+    },
     "organisms--visx-charts--default": {
       "name": "Default",
       "levels": [
