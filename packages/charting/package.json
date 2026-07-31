@@ -47,6 +47,12 @@
     "oxlint": "1.74.0"
   },
   "dependencies": {
-    "@visx/xychart": "4.0.0"
+    "@visx/annotation": "^4.0.0",
+    "@visx/brush": "^4.0.0",
+    "@visx/group": "^4.0.0",
+    "@visx/scale": "^4.0.0",
+    "@visx/shape": "^4.0.0",
+    "@visx/xychart": "4.0.0",
+    "@visx/zoom": "^4.0.0"
   }
 }

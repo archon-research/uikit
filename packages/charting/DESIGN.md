@@ -64,14 +64,19 @@ fallback. Two guards now make the contract explicit rather than by-convention:
 
 The package exposes:
 
-- `chartTokens`: the role-to-`var(...)`-string map above (single source).
+- `chartTokens`: the role-to-`var(...)`-string map above (single source), plus
+  `breachFill`/`bandFill` alpha tints for reference bands (see below).
 - `chartTheme`: `buildChartTheme(chartTokens)` from `@visx/xychart`, for `XYChart`
   consumers. `colors` is the ordered series array; `gridColor` and the axis/tick
   line styles and `svgLabel*` fills are wired from the same tokens.
+- `seriesColor`: the same series tokens, keyed by role (`primary`, `secondary`,
+  `tertiary`, `positive`, `critical`), for custom marks and legends that need a
+  single color rather than the full `chartTheme`.
 
-`XYChart` consumes `chartTheme`; any future primitive-based components (for
-example the planned `Sparkline`) read `chartTokens` directly. Both derive from
-the one token contract, so they render consistently.
+`XYChart` consumes `chartTheme`; primitive-based components (`ReferenceBand`,
+`CandlestickSeries`, `TimeRangeBrush`, `ChartLegend`, and the planned
+`Sparkline`) read `chartTokens`/`seriesColor` directly. All derive from the one
+token contract, so they render consistently.
 
 This package owns chart concerns only. Card chrome (a paneled container with a
 heading, actions, and footer) is generic and not chart-specific; compose it from
@@ -82,24 +87,147 @@ the design-system panel and heading recipes (`panelSection`, `sectionHeading`,
 
 Current (exported from the package root):
 
-- `chartTokens`, `chartTheme`: the theme contract above.
+- `chartTokens`, `chartTheme`, `seriesColor`: the theme contract above.
 - A curated set of visx re-exports: `XYChart`, `Axis`, `Grid`, `Tooltip`,
   `LineSeries`, `AreaSeries`, `BarSeries`, `BarGroup`, `BarStack`, `GlyphSeries`,
-  and `buildChartTheme`, so consumers depend on this package, not `@visx/*`.
+  `buildChartTheme`, plus the `Animated*` variants (`AnimatedAxis`,
+  `AnimatedGrid`, `AnimatedLineSeries`, `AnimatedAreaSeries`,
+  `AnimatedAreaStack`, `AnimatedBarSeries`, `AnimatedBarGroup`,
+  `AnimatedBarStack`, `AnimatedGlyphSeries`), `DataContext`, and
+  `EventEmitterProvider`, so consumers depend on this package, not `@visx/*`.
+  `DataContext` is the escape hatch for building custom marks that need the
+  chart's live `xScale`/`yScale` — see `CandlestickSeries` and `ReferenceBand`
+  below for the pattern. `EventEmitterProvider` is the shared event bus that
+  backs the cross-chart interaction layer below.
+- **`TimeRangeBrush`** (`brush.tsx`): a compact mini-area-chart with a
+  draggable selection (`@visx/brush`), reporting the selected numeric domain
+  window. Pair it with a main chart over the same numeric x-domain (epoch ms
+  or index).
+- **`ZoomPanOverlay`** (`zoom.tsx`): a transparent scroll-to-zoom /
+  drag-to-pan overlay (`@visx/zoom`). `XYChart`'s scales are declarative, so
+  this does not transform the chart's SVG directly — it computes a new
+  visible domain window from the zoom transform and hands it to
+  `onDomainChange`; the consumer re-renders `<XYChart>` with that window.
+- **`ReferenceBand`** (`reference-band.tsx`): one primitive, two
+  configurations — `mode="threshold"` (a dashed line via `@visx/annotation`
+  `LineSubject` plus a one-sided breach fill, for a limit or target line) and
+  `mode="band"` (a shaded symmetric/asymmetric confidence band with an
+  optional center line, for a confidence interval around an estimate). Must
+  be rendered as a child of `<XYChart>`.
+- **`CandlestickSeries`** (`candlestick.tsx`): an OHLC mark built on
+  `@visx/shape` (`Bar` for the body, `Line` for the wick), since `XYChart` has
+  no OHLC series type. Registers synthetic high/low entries into the chart's
+  data registry so the y-scale auto-extends to the candle extremes.
+- **`ChartLegend`** (`legend.tsx`): a provided, token-themed legend. Replaces
+  hand-rolled per-story legend markup.
+- **Cross-chart interaction layer** (`interaction.tsx`): see the dedicated
+  section below.
 
 Planned:
 
 - `Sparkline`: an axis-less mini line built on low-level primitives
   (`@visx/shape` `LinePath` + `@visx/scale`), not `XYChart`, so a metrics rail
-  does not pull the full `XYChart` bundle.
+  does not pull the full `XYChart` bundle. (Note: a `Sparkline` already exists
+  in `@archon-research/design-system` as a hand-rolled inline-SVG micro
+  primitive; if one lands here too, reconcile which package owns it before
+  both ship.)
 - Move the curated re-exports to subpaths (for example
   `@archon-research/charting/shape`, `/scale`, `/axis`, `/xychart`) covering the
   supported set: `scale, shape, axis, grid, group, curve, tooltip, responsive,
-  text, legend, glyph, gradient, xychart`. Niche packages (`geo, network,
-  hierarchy, wordcloud, brush, zoom`) stay out; a consumer that needs one adds it
-  directly. Subpaths (not one flat barrel) avoid name collisions across visx
-  packages and keep the type-checker fast. Set `"sideEffects": false` and ship
-  ESM so unused re-exports tree-shake.
+  text, legend, glyph, gradient, xychart`. Subpaths (not one flat barrel) avoid
+  name collisions across visx packages and keep the type-checker fast. Set
+  `"sideEffects": false` and ship ESM so unused re-exports tree-shake.
+
+### Governance: brush and zoom are now first-class dependencies
+
+Prior guidance in this file said niche visx packages (`brush`, `zoom`) should
+"stay out; a consumer that needs one adds it directly." That is overridden for
+`@visx/brush` and `@visx/zoom` specifically, for two reasons: (1) a
+time-range brush and scroll/drag zoom are exactly the "coordinate movement
+across stacked panels" problem this package exists to solve
+token-consistently, and a per-consumer reimplementation would fragment that
+visual language; (2) both need direct, non-trivial integration code
+(`TimeRangeBrush`, `ZoomPanOverlay`) that belongs in one reviewed place, not
+copy-pasted per dashboard. `@visx/annotation` and `@visx/shape` were already
+implicitly acceptable (transitive via `@visx/xychart`) and are now direct
+dependencies for the same reason: `ReferenceBand` and `CandlestickSeries` need
+their concrete APIs, not just their types. Treat future additions of niche
+visx packages the same way: default to "consumer adds it directly," override
+only when the integration code itself (not just the import) needs to be
+shared and reviewed once.
+
+## Cross-chart interaction layer (cross-filter + synced cursor)
+
+Each `<XYChart>` is otherwise an isolated island: it wraps itself in its own
+`DataProvider`/`TooltipProvider`/`EventEmitterProvider` whenever one isn't
+already present in context, so a stack of charts has no way to coordinate a
+hover or a selection. `src/interaction.tsx` closes that gap with three pieces:
+
+- **`SyncedChartGroup`** — a provider that wraps a stack of charts (and any
+  other widget) in one shared `DashboardInteractionProvider` (a React context
+  holding `timeRange`, `hoveredTimestamp`, a free-form `filters` bag, and
+  `highlightedKey`, with narrow selector hooks:
+  `useSelectedTimeRange`/`useHoveredTimestamp`/`useHighlightedKey`/
+  `useDashboardFilter`) plus one shared visx `EventEmitterProvider`. Because
+  `XYChart` only creates its own `EventEmitterProvider` when one is missing
+  from context, every `<XYChart>` nested inside a `SyncedChartGroup`
+  automatically shares the same mitt bus — the exact mechanism visx's own
+  multi-chart examples use for a synced crosshair.
+  - **Invariant:** the shared bus carries raw pixel coordinates
+    (`svgPoint`), computed relative to whichever chart's own SVG emitted the
+    event. Every `<XYChart>` in a group must therefore render at the same
+    `width` and the same left/right `margin`, and share the same x-domain, or
+    the synced cursor will land on the wrong pixel in the other panels.
+- **`useSyncedCursorHandlers(xAccessor)`** — wires an `<XYChart>`'s top-level
+  `onPointerMove`/`onPointerOut` to `hoveredTimestamp`, reading the timestamp
+  straight off the nearest datum (via the caller's own accessor) rather than
+  inverting a scale.
+- **`useTimeRangeBrushGesture()` + `<DragSelectionOverlay>`** — a minimal,
+  dependency-free drag-to-select gesture: the gesture hook tracks a drag from
+  an `<XYChart>`'s own pointer events (`svgPoint` is already local to that
+  chart), and `<DragSelectionOverlay>`, rendered as a child of that
+  `<XYChart>`, draws the live selection band and inverts the committed pixel
+  range through that chart's own `xScale` to publish a domain `timeRange` to
+  the group.
+
+`DragSelectionOverlay` is intentionally minimal — a fixed-height drag band
+with no resize handles, no zoom, no pan — scoped to "commit one time range on
+drag release." It is a lighter-weight alternative to the `@visx/brush`-backed
+`TimeRangeBrush` above: reach for `TimeRangeBrush` for a standalone,
+draggable-and-resizable mini-chart brush; reach for `useTimeRangeBrushGesture`
++ `<DragSelectionOverlay>` when the selection gesture should live directly on
+the main chart's own pointer events inside a `SyncedChartGroup`.
+
+### Governance decision: extend `charting`, not a new package
+
+The interaction layer lives in `packages/charting` rather than a separate
+dashboard-coordination package. Rationale:
+
+- It adds **no new dependency** beyond what `brush`/`zoom` already justify
+  above. `EventEmitterProvider` and `DataContext` are shipped by
+  `@visx/xychart`, the package's original dependency; this only widens the
+  curated re-export list, the same pattern already used for
+  `XYChart`/`Axis`/`Grid`/etc.
+- It stays theme-neutral: `DragSelectionOverlay`'s only visual opinion (the
+  selection fill) is a `chartTokens`-derived `var(...)` string, consistent
+  with "theme via tokens, never hardcode."
+- Every new primitive here is a generic cartesian-chart capability (a synced
+  cursor, a cross-filter bag, a drag-select gesture), not intrinsically tied
+  to one product surface — the same vocabulary applies to any stacked-panel
+  dashboard. A second package would duplicate the theme contract, the
+  `DESIGN.md` conventions, and the build/lint/publish plumbing for marginal
+  isolation benefit.
+
+### Known limitation
+
+`DashboardInteractionProvider`'s context value changes on every pointer move
+(`hoveredTimestamp` updates at pointer-move frequency), so every consumer of
+`useDashboardInteraction()` (and the narrower selector hooks, which all read
+from the same context value) re-renders on every hover tick. Fine for a
+handful of charts; if a dashboard grows to dozens of interaction-aware
+widgets, split `hoveredTimestamp` into its own higher-frequency context (or a
+ref + subscription model outside React state) so a hover doesn't re-render
+unrelated consumers like a filter bar.
 
 ## Usage patterns
 
@@ -137,8 +265,35 @@ needed. Bespoke charts use the curated re-exports plus `chartTokens` directly.
 
 ## Out of scope (for now)
 
-- Threshold and range bands (`@visx/annotation`) and gauges. Document and add when
-  a real use case appears.
+- Gauges.
+- Depth/order-book style step-and-fill charts — a distinct mark from
+  candlestick/OHLC; not built speculatively.
+- Session-shading (alternating background bands across a time axis) — thin
+  research evidence for a precise convention; illustrate later rather than
+  build now.
+- A true independent-domain secondary y-axis. The recommended pattern is two
+  stacked panels sharing one x-scale, with a cheap same-scale secondary axis
+  (`<Axis orientation="right">` with a `tickFormat` transform) covering the
+  common "same range, different units" case. Not implemented as a named
+  export this pass — confirmed to work via the existing `Axis` re-export and
+  worth reaching for directly before building anything new.
+
+## Follow-ups / not done yet
+
+- `ZoomPanOverlay`'s interaction rect currently sits on top of the wrapped
+  `<XYChart>`, which blocks that chart's own `Tooltip` hover while the overlay
+  is present. A future pass should either forward pointer events through to
+  the chart when not dragging, or expose a "read-only chart, tooltip lives on
+  the un-zoomed data" pattern.
+- `TimeRangeBrush` and `ZoomPanOverlay` both operate on a bare numeric domain
+  (epoch ms or index) rather than a typed `Date`/band domain, so pairing them
+  with a `band`-scale `<XYChart>` means the *consumer* is responsible for
+  converting the numeric window back into a slice of the original data array.
+  A future pass could offer a small `windowToSlice(data, domain, xAccessor)`
+  helper in this package to standardize that instead of leaving it to every
+  consumer.
+- The subpath-exports restructuring already `Planned` above (this pass kept
+  everything on the flat root barrel to match the existing package shape).
 
 ## Related
 
