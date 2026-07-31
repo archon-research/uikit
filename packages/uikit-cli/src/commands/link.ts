@@ -130,16 +130,22 @@ export class LinkCommand {
       }
     }
 
+    // Track link steps that failed so we never report a partial link as success.
+    const failures: string[] = [];
+
     // Link at root level
     const rootPackageArgs = [...allNames].map((name) => `"${name}"`).join(' ');
     if (rootPackageArgs) {
       this.logger.info('Linking packages at root level...');
-      this.executor.exec(
+      const result = this.executor.exec(
         `npm link ${rootPackageArgs} --package-lock=false --save=false`,
         {
           cwd: consumerRoot,
         },
       );
+      if (!result.success) {
+        failures.push(`root: ${[...allNames].join(', ')}`);
+      }
     }
 
     // Ensure symlinks point to correct targets
@@ -156,10 +162,13 @@ export class LinkCommand {
       if (!packageArgs) continue;
 
       this.logger.debug(`Linking packages for workspace: ${workspace}`);
-      this.executor.exec(
+      const result = this.executor.exec(
         `npm link ${packageArgs} --workspace "${workspace}" --package-lock=false --save=false`,
         { cwd: consumerRoot },
       );
+      if (!result.success) {
+        failures.push(`${workspace}: ${names.join(', ')}`);
+      }
 
       // Clean up shadow installs and Vite cache
       for (const name of names) {
@@ -176,6 +185,22 @@ export class LinkCommand {
       allNames,
       dirByName,
     );
+
+    if (failures.length > 0) {
+      this.logger.warn(
+        'Some packages did not link — the local link is PARTIAL, and those ' +
+          'names may resolve to a stale registry version instead:',
+      );
+      for (const failure of failures) {
+        this.logger.warn(`  ${failure}`);
+      }
+      this.logger.warn(
+        'A consumer .npmrc with `min-release-age` can reject a fresh prerelease ' +
+          'with ETARGET; re-run with an override (e.g. --min-release-age=0) or ' +
+          'link those packages manually.',
+      );
+      return;
+    }
 
     this.logger.info('✓ Linked local uikit packages into consumer workspaces.');
   }

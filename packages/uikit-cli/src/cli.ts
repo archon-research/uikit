@@ -166,11 +166,20 @@ function ensureCliBinaryBuilt(
 function linkCliIntoConsumer(
   consumerRoot: string,
   executor: NpmCommandExecutor,
+  logger: ConsoleLogger,
 ): void {
-  executor.exec(
+  const result = executor.exec(
     'npm link "@archon-research/uikit-cli" --package-lock=false --save=false --no-workspaces',
     { cwd: consumerRoot },
   );
+  if (!result.success) {
+    logger.warn(
+      'Could not link the local @archon-research/uikit-cli — you may be running ' +
+        'the registry version, which can lag behind the local one (e.g. missing ' +
+        '`doctor --codegen`). A consumer .npmrc with `min-release-age` can reject ' +
+        'a fresh prerelease with ETARGET here.',
+    );
+  }
 }
 
 /**
@@ -240,7 +249,7 @@ try {
   ensureCliBinaryBuilt(uikitRoot, executor);
   const registerCmd = new RegisterCommand(discovery, executor, logger);
   registerCmd.execute(uikitRoot);
-  linkCliIntoConsumer(consumerRoot, executor);
+  linkCliIntoConsumer(consumerRoot, executor, logger);
 
   if (mode === 'link') {
     const linkCmd = new LinkCommand(discovery, executor, validator, fs, logger);

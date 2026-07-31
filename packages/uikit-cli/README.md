@@ -130,6 +130,26 @@ Run with `--verify` flag to check link status:
 ./node_modules/.bin/uikit-cli link --verify
 ```
 
+### `useTheme must be used within ThemeProvider` (duplicated React context) after linking
+
+With `resolve.preserveSymlinks: true` (which linking relies on) Vite can serve a linked package
+under **two** URLs at once — `/node_modules/…` (the root symlink) and `/@fs/…` (the real path) —
+producing two module graphs and two copies of singletons like `ThemeContext`. A component and its
+`ThemeProvider` then hold different context objects and the hook throws. This is a link artifact,
+not a bug in the app or the design system.
+
+To confirm: look for the same module served at both URLs in the dev server (both HTTP 200). To
+recover: run `uikit-cli unlink` and restart the dev server (touch the Vite config so it
+re-optimizes) — the module collapses back to a single URL. To stay linked, add the linked
+package(s) plus `react`/`react-dom` to your Vite `resolve.dedupe`, or drop `preserveSymlinks`.
+
+### A partial link reported as success
+
+If `link` prints that some packages did **not** link (PARTIAL), the named packages may still
+resolve to a stale registry version. A consumer `.npmrc` with `min-release-age` is the usual
+cause — npm rejects a fresh prerelease with `ETARGET`. Re-run with an override (e.g.
+`--min-release-age=0`) or link those packages manually.
+
 ## Development workflow
 
 In a consumer workspace:
