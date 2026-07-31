@@ -98,10 +98,12 @@ npx @archon-research/uikit-cli doctor --codegen  # runs `panda cssgen` itself (P
 
 If you use the **Panda PostCSS plugin** there is no frozen `styled-system/styles.css` to point at —
 pass `--codegen` and doctor runs `panda cssgen --outfile` into a temp file, scans it, and cleans up.
-It errors (non-zero exit) when known recipe-variant classes are absent — meaning the
-`designSystemStaticCssRecipes` spread is missing — or when any `color`/`background`/`border-color`/
-`fill`/`stroke` declaration has an unresolved `token.path` value. Wire it after your codegen step
-in CI. (This is the same check that caught a real `text.subtle` typo in this repo's own preview.)
+It errors (non-zero exit) when **no** design-system recipe classes are present at all — meaning the
+`designSystemStaticCssRecipes` spread is missing entirely — or when any `color`/`background`/
+`border-color`/`fill`/`stroke` declaration has an unresolved `token.path` value. A deliberately
+**narrowed** `staticCss` map (only the recipes you use, for bundle size) still passes; the gate
+only flags the total-omission case. Wire it after your codegen step in CI. (This is the same check
+that caught a real `text.subtle` typo in this repo's own preview.)
 
 ---
 
