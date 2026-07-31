@@ -48,4 +48,7 @@ export const designSystemStaticCssRecipes = {
   sidebarLayout: ['*'],
   panel: ['*'],
   dataTable: ['*'],
+  chip: ['*'],
+  facetedMultiSelect: ['*'],
+  rangeSlider: ['*'],
 } satisfies Record<string, ['*']>;

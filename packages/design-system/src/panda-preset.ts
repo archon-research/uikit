@@ -2,10 +2,12 @@ import { definePreset } from '@pandacss/dev';
 
 import { badgeRecipe } from './recipes/badge.recipe.js';
 import { buttonRecipe } from './recipes/button.recipe.js';
+import { chipRecipe } from './recipes/chip.recipe.js';
 import { codeRecipe } from './recipes/code.recipe.js';
 import { dataTableRecipe } from './recipes/dataTable.recipe.js';
 import { drawerRecipe } from './recipes/drawer.recipe.js';
 import { emptyStateRecipe } from './recipes/emptyState.recipe.js';
+import { facetedMultiSelectRecipe } from './recipes/facetedMultiSelect.recipe.js';
 import { indicatorRecipe } from './recipes/indicator.recipe.js';
 import { inputRecipe } from './recipes/input.recipe.js';
 import { interactiveItemRecipe } from './recipes/interactiveItem.recipe.js';
@@ -13,6 +15,7 @@ import { pageShellRecipe } from './recipes/pageShell.recipe.js';
 import { panelRecipe } from './recipes/panel.recipe.js';
 import { panelActionRecipe } from './recipes/panelAction.recipe.js';
 import { panelSectionRecipe } from './recipes/panelSection.recipe.js';
+import { rangeSliderRecipe } from './recipes/rangeSlider.recipe.js';
 import { searchInputRecipe } from './recipes/searchInput.recipe.js';
 import { sectionHeadingRecipe } from './recipes/sectionHeading.recipe.js';
 import { segmentedControlRecipe } from './recipes/segmentedControl.recipe.js';
@@ -752,6 +755,9 @@ export const designSystemPreset = definePreset({
         sidebarLayout: sidebarLayoutRecipe,
         panel: panelRecipe,
         dataTable: dataTableRecipe,
+        chip: chipRecipe,
+        facetedMultiSelect: facetedMultiSelectRecipe,
+        rangeSlider: rangeSliderRecipe,
       },
     },
   },
