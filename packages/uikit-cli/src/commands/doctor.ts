@@ -6,18 +6,39 @@ import type { FileSystemOps } from '../fs-utils.js';
 import type { Logger } from '../logger.js';
 
 /**
- * Non-default recipe-variant classes that only appear in generated CSS when the
- * design system's `designSystemStaticCssRecipes` spread is wired into the
- * consumer's Panda `staticCss`. Panda emits *default* variants and variant-less
- * slot bases statically, so those are not reliable signals — a runtime-selected
- * variant is. Each entry is from a different recipe so a single missing class
- * still points at a global misconfiguration rather than one unused recipe.
+ * Design-system recipe class-name stems. A design-system recipe emits classes
+ * of the form `${className}--variant_x` (recipe) or `${className}__slot` (slot
+ * recipe) — and *only* when the `designSystemStaticCssRecipes` spread is wired
+ * into the consumer's Panda `staticCss`, because components apply these as
+ * runtime strings that Panda's extractor cannot see. So the presence of any one
+ * of these stems is the signal that `staticCss` is wired.
+ *
+ * The gate is deliberately "**at least one** present", not "all": a consumer
+ * only ships CSS for the recipes it actually uses, and a legitimately narrowed
+ * `staticCss` map is valid (and encouraged, for bundle size). We flag only the
+ * total-omission case — the headline failure where nothing runtime-selected
+ * emits at all. This list therefore does not need to be exhaustive or perfectly
+ * in sync with the library; it just needs a few stems any real consumer emits.
  */
-export const SENTINEL_RECIPE_CLASSES = [
-  'badge--variant_outline',
-  'button--variant_item',
-  'drawer__content--size_lg',
+export const DESIGN_SYSTEM_RECIPE_CLASSNAMES = [
+  'badge',
+  'button',
+  'drawer',
+  'dataTable',
+  'panel',
+  'statTile',
+  'toggleSwitch',
+  'segmentedControl',
+  'surfaceMessage',
+  'sidebarLayout',
 ] as const;
+
+/** True if any design-system recipe class is present (i.e. staticCss is wired). */
+function hasAnyRecipeClass(css: string): boolean {
+  return DESIGN_SYSTEM_RECIPE_CLASSNAMES.some(
+    (name) => css.includes(`.${name}--`) || css.includes(`.${name}__`),
+  );
+}
 
 /**
  * Color-ish CSS properties whose value, if written as a bare `token.path`,
@@ -30,7 +51,7 @@ const UNRESOLVED_TOKEN_DECL =
   /(color|background|background-color|border-color|fill|stroke|outline-color)\s*:\s*([a-z][\w-]*(?:\.[a-z0-9][\w-]*)+)\s*[;}]/gi;
 
 export type DoctorIssue =
-  | { kind: 'missing-static-css'; missing: string[] }
+  | { kind: 'missing-static-css' }
   | { kind: 'unresolved-token'; line: number; declaration: string };
 
 export type DoctorReport = {
@@ -47,9 +68,8 @@ export type DoctorReport = {
 export function scanGeneratedCss(css: string): DoctorReport {
   const issues: DoctorIssue[] = [];
 
-  const missing = SENTINEL_RECIPE_CLASSES.filter((cls) => !css.includes(cls));
-  if (missing.length > 0) {
-    issues.push({ kind: 'missing-static-css', missing: [...missing] });
+  if (!hasAnyRecipeClass(css)) {
+    issues.push({ kind: 'missing-static-css' });
   }
 
   const seen = new Set<string>();
@@ -172,15 +192,16 @@ export class DoctorCommand {
     for (const issue of report.issues) {
       if (issue.kind === 'missing-static-css') {
         this.logger.error(
-          `Recipe variant classes are missing from ${relative}: ` +
-            `${issue.missing.join(', ')}.\n` +
+          `No design-system recipe classes found in ${relative}.\n` +
             "  The design system's recipes are applied by class name, so Panda's\n" +
-            '  static extractor cannot see them. Spread the exported map into your\n' +
+            '  static extractor cannot see them — without `staticCss` they emit\n' +
+            '  nothing, and runtime-selected variants (status tones, dense tables,\n' +
+            '  drawer sizes) render unstyled. Spread the exported map into your\n' +
             '  Panda config `staticCss`:\n' +
             "    import { designSystemStaticCssRecipes } from '@archon-research/design-system/recipes';\n" +
             '    staticCss: { recipes: { ...designSystemStaticCssRecipes } }\n' +
-            '  then re-run `panda codegen`. Without it, runtime-selected variants\n' +
-            '  (badge/status tones, dense tables, drawer sizes) render unstyled.',
+            '  then re-run `panda codegen`. (A narrowed subset is fine — this only\n' +
+            '  flags the case where nothing is wired at all.)',
         );
       } else {
         this.logger.error(

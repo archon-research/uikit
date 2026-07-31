@@ -3,15 +3,12 @@ import { describe, expect, it } from 'vitest';
 import type { CommandExecutor } from '../command-executor.js';
 import type { FileSystemOps } from '../fs-utils.js';
 import type { Logger } from '../logger.js';
-import {
-  DoctorCommand,
-  SENTINEL_RECIPE_CLASSES,
-  scanGeneratedCss,
-} from './doctor.js';
+import { DoctorCommand, scanGeneratedCss } from './doctor.js';
 
-/** A stylesheet with every sentinel present and only resolved declarations. */
+/** A stylesheet with recipe classes present and only resolved declarations. */
 const healthyCss = `
-${SENTINEL_RECIPE_CLASSES.map((c) => `.${c} { color: var(--colors-text-default); }`).join('\n')}
+.badge--variant_outline { color: var(--colors-text-default); }
+.drawer__content--size_lg { width: min(40rem, 100vw); }
 .c_text\\.muted { color: var(--colors-text-muted); }
 .bg_surface { background: var(--colors-surface-default); }
 .stroke_series { stroke: var(--colors-chart-series-primary); }
@@ -24,17 +21,26 @@ describe('scanGeneratedCss', () => {
     expect(report.issues).toEqual([]);
   });
 
-  it('flags missing static-css sentinels', () => {
-    // Drop one sentinel; keep the rest.
-    const withoutOne = healthyCss.replace(
-      `.${SENTINEL_RECIPE_CLASSES[0]} `,
-      '.some_other_class ',
-    );
-    const report = scanGeneratedCss(withoutOne);
+  it('flags a stylesheet with no design-system recipe classes (staticCss unwired)', () => {
+    const css = `
+.c_text\\.muted { color: var(--colors-text-muted); }
+.bg_surface { background: var(--colors-surface-default); }
+`;
+    const report = scanGeneratedCss(css);
     expect(report.ok).toBe(false);
-    const issue = report.issues.find((i) => i.kind === 'missing-static-css');
-    expect(issue).toBeDefined();
-    expect(issue).toMatchObject({ missing: [SENTINEL_RECIPE_CLASSES[0]] });
+    expect(report.issues.some((i) => i.kind === 'missing-static-css')).toBe(
+      true,
+    );
+  });
+
+  it('passes a narrowed stylesheet that emits only one recipe (not all)', () => {
+    // Only Badge is wired — a valid narrowed staticCss map. The gate must not
+    // demand Drawer/DataTable/etc. that this consumer never uses.
+    const css =
+      '.badge--variant_outline { color: var(--colors-text-default); }';
+    const report = scanGeneratedCss(css);
+    expect(report.ok).toBe(true);
+    expect(report.issues).toEqual([]);
   });
 
   it('flags an unresolved token-path declaration with its line', () => {
