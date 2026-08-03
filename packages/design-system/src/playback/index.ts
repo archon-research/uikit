@@ -47,3 +47,10 @@ export {
   type PlaybackSourceStatus,
   type ReplayPlaybackSource,
 } from './types.js';
+export {
+  TRANSPORT_HOTKEYS,
+  useTransportHotkeys,
+  type TransportHotkeyAction,
+  type TransportHotkeySnapshot,
+  type UseTransportHotkeysOptions,
+} from './useTransportHotkeys.js';

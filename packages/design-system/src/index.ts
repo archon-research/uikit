@@ -167,6 +167,8 @@ export {
   usePlayback,
   createLiveSource,
   createReplaySource,
+  useTransportHotkeys,
+  TRANSPORT_HOTKEYS,
   type PlaybackMode,
   type PlaybackStatus,
   type StepDirection,
@@ -178,4 +180,7 @@ export {
   type PlaybackSource,
   type PlaybackSourceStatus,
   type ReplayPlaybackSource,
+  type TransportHotkeyAction,
+  type TransportHotkeySnapshot,
+  type UseTransportHotkeysOptions,
 } from './playback/index.js';
