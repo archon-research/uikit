@@ -461,6 +461,30 @@
       "namedExport": "NestedRows",
       "meta": {}
     },
+    "molecules--heat-cell--all-steps": {
+      "name": "All steps",
+      "levels": [
+        "Molecules",
+        "Heat cell"
+      ],
+      "locStart": 64,
+      "locEnd": 87,
+      "filePath": "src/stories/molecules/heat-cell.stories.tsx",
+      "namedExport": "AllSteps",
+      "meta": {}
+    },
+    "molecules--heat-cell--sector-heatmap": {
+      "name": "Sector heatmap",
+      "levels": [
+        "Molecules",
+        "Heat cell"
+      ],
+      "locStart": 38,
+      "locEnd": 61,
+      "filePath": "src/stories/molecules/heat-cell.stories.tsx",
+      "namedExport": "SectorHeatmap",
+      "meta": {}
+    },
     "molecules--panel--density": {
       "name": "Density",
       "levels": [
@@ -941,6 +965,18 @@
       "namedExport": "FlashOnUpdate",
       "meta": {}
     },
+    "organisms--data-table-virtualized--flash-on-update-two-phase": {
+      "name": "Flash on update two phase",
+      "levels": [
+        "Organisms",
+        "Data table virtualized"
+      ],
+      "locStart": 140,
+      "locEnd": 184,
+      "filePath": "src/stories/organisms/data-table-virtualized.stories.tsx",
+      "namedExport": "FlashOnUpdateTwoPhase",
+      "meta": {}
+    },
     "organisms--data-table-virtualized--virtualized-with-faceted-filters": {
       "name": "Virtualized with faceted filters",
       "levels": [
@@ -951,6 +987,18 @@
       "locEnd": 93,
       "filePath": "src/stories/organisms/data-table-virtualized.stories.tsx",
       "namedExport": "VirtualizedWithFacetedFilters",
+      "meta": {}
+    },
+    "organisms--data-table--column-resize-reorder-pin": {
+      "name": "Column resize reorder pin",
+      "levels": [
+        "Organisms",
+        "Data table"
+      ],
+      "locStart": 429,
+      "locEnd": 452,
+      "filePath": "src/stories/organisms/data-table.stories.tsx",
+      "namedExport": "ColumnResizeReorderPin",
       "meta": {}
     },
     "organisms--data-table--compact-density": {
@@ -1019,10 +1067,22 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 406,
-      "locEnd": 450,
+      "locStart": 488,
+      "locEnd": 532,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "MagnitudeColumns",
+      "meta": {}
+    },
+    "organisms--data-table--multi-row-selection": {
+      "name": "Multi row selection",
+      "levels": [
+        "Organisms",
+        "Data table"
+      ],
+      "locStart": 454,
+      "locEnd": 486,
+      "filePath": "src/stories/organisms/data-table.stories.tsx",
+      "namedExport": "MultiRowSelection",
       "meta": {}
     },
     "organisms--data-table--numeric-mono-column": {
@@ -1307,10 +1367,22 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 136,
-      "locEnd": 188,
+      "locStart": 139,
+      "locEnd": 191,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "LiveVsReplay",
+      "meta": {}
+    },
+    "organisms--playback-bar--with-transport-hotkeys": {
+      "name": "With transport hotkeys",
+      "levels": [
+        "Organisms",
+        "Playback bar"
+      ],
+      "locStart": 206,
+      "locEnd": 249,
+      "filePath": "src/stories/organisms/playback-bar.stories.tsx",
+      "namedExport": "WithTransportHotkeys",
       "meta": {}
     },
     "organisms--visx-charts--default": {
@@ -1573,6 +1645,54 @@
       "locEnd": 198,
       "filePath": "src/stories/templates/sidebar-layout.stories.tsx",
       "namedExport": "Stacked",
+      "meta": {}
+    },
+    "templates--split-layout--controlled-sizes": {
+      "name": "Controlled sizes",
+      "levels": [
+        "Templates",
+        "Split layout"
+      ],
+      "locStart": 177,
+      "locEnd": 213,
+      "filePath": "src/stories/templates/split-layout.stories.tsx",
+      "namedExport": "ControlledSizes",
+      "meta": {}
+    },
+    "templates--split-layout--nested-row-and-column": {
+      "name": "Nested row and column",
+      "levels": [
+        "Templates",
+        "Split layout"
+      ],
+      "locStart": 123,
+      "locEnd": 172,
+      "filePath": "src/stories/templates/split-layout.stories.tsx",
+      "namedExport": "NestedRowAndColumn",
+      "meta": {}
+    },
+    "templates--split-layout--three-way-row": {
+      "name": "Three way row",
+      "levels": [
+        "Templates",
+        "Split layout"
+      ],
+      "locStart": 52,
+      "locEnd": 86,
+      "filePath": "src/stories/templates/split-layout.stories.tsx",
+      "namedExport": "ThreeWayRow",
+      "meta": {}
+    },
+    "templates--split-layout--weighted-split": {
+      "name": "Weighted split",
+      "levels": [
+        "Templates",
+        "Split layout"
+      ],
+      "locStart": 89,
+      "locEnd": 118,
+      "filePath": "src/stories/templates/split-layout.stories.tsx",
+      "namedExport": "WeightedSplit",
       "meta": {}
     },
     "tokens--colors": {
