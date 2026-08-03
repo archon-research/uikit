@@ -58,6 +58,7 @@ const dataBinding = z.object({
 const widgetInteraction = z.object({
   reads: z.array(z.string().min(1)).optional(),
   writes: z.array(z.string().min(1)).optional(),
+  agentWritable: z.array(z.string().min(1)).optional(),
 });
 
 const thresholdRule = z.object({
@@ -199,9 +200,34 @@ export function validateDashboardSpec(
         message: `unknown component "${widget.component}"`,
       });
     }
+    // An agent-writable key that the widget cannot actually write is a policy
+    // that silently does nothing — worth catching at the gate. `writes` is the
+    // set of keys a widget produces; an `agentWritable` key must be one of them.
+    const writes = widget.interaction?.writes ?? [];
+    for (const exposed of widget.interaction?.agentWritable ?? []) {
+      if (!writes.includes(exposed)) {
+        issues.push({
+          path: `widgets.${key}.interaction.agentWritable`,
+          message: `"${exposed}" is marked agent-writable but is not in this widget's \`writes\``,
+        });
+      }
+    }
   }
 
   return issues.length > 0
     ? { ok: false, issues }
     : { ok: true, spec, issues: [] };
+}
+
+/**
+ * The set of interaction keys an agent is allowed to write, collected across
+ * every widget in the manifest. Default-deny: an empty set means an agent may
+ * read the dashboard but drive nothing.
+ */
+export function collectAgentWritableKeys(spec: DashboardSpec): Set<string> {
+  const keys = new Set<string>();
+  for (const widget of Object.values(spec.widgets)) {
+    for (const key of widget.interaction?.agentWritable ?? []) keys.add(key);
+  }
+  return keys;
 }

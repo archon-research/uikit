@@ -83,6 +83,18 @@ export type DataBinding = {
 export type WidgetInteraction = {
   reads?: string[];
   writes?: string[];
+  /**
+   * Per-field AGENT EXPOSURE: which of this widget's interaction keys an
+   * agent (a drive tool, a command bar) may write. **Default-deny**: a key a
+   * human can write through the UI is NOT agent-writable unless it is listed
+   * here.
+   *
+   * This is the manifest's half of the contract; a host app's agent-facing
+   * tools consult {@link collectAgentWritableKeys} and refuse anything
+   * outside it, so the agent surface is a declared, auditable property of
+   * the dashboard rather than "whatever setters happen to be in scope".
+   */
+  agentWritable?: string[];
 };
 
 export type ThresholdSeverity = 'success' | 'warning' | 'critical';

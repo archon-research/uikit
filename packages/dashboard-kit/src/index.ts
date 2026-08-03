@@ -31,8 +31,9 @@ export {
   type RegistryComponentProps,
 } from './registry.js';
 
-// Structural + referential manifest validation.
+// Structural + referential manifest validation, and the agent-exposure query.
 export {
+  collectAgentWritableKeys,
   dashboardSpecSchema,
   validateDashboardSpec,
   type ManifestIssue,

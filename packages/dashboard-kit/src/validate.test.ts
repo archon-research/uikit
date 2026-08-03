@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { DashboardSpec } from './schema.js';
-import { validateDashboardSpec } from './validate.js';
+import { collectAgentWritableKeys, validateDashboardSpec } from './validate.js';
 
 /**
  * A minimal, structurally valid spec: one widget placed by a single-widget
@@ -161,6 +161,34 @@ describe('validateDashboardSpec — referential', () => {
   });
 });
 
+describe('validateDashboardSpec — agentWritable', () => {
+  it('flags an agentWritable key not present in writes', () => {
+    const spec = baseSpec();
+    spec.widgets.a.interaction = {
+      writes: ['highlightedKey'],
+      agentWritable: ['selectedTimeRange'],
+    };
+    const result = validateDashboardSpec(spec);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(
+        result.issues.some(
+          (i) => i.path === 'widgets.a.interaction.agentWritable',
+        ),
+      ).toBe(true);
+    }
+  });
+
+  it('accepts an agentWritable key that is also written', () => {
+    const spec = baseSpec();
+    spec.widgets.a.interaction = {
+      writes: ['highlightedKey'],
+      agentWritable: ['highlightedKey'],
+    };
+    expect(validateDashboardSpec(spec).ok).toBe(true);
+  });
+});
+
 describe('validateDashboardSpec — knownComponents', () => {
   it('flags a component key outside the provided allow-list', () => {
     const spec = baseSpec();
@@ -179,6 +207,47 @@ describe('validateDashboardSpec — knownComponents', () => {
     const spec = baseSpec();
     expect(validateDashboardSpec(spec, { knownComponents: ['note'] }).ok).toBe(
       true,
+    );
+  });
+});
+
+describe('collectAgentWritableKeys', () => {
+  it('returns an empty set by default (default-deny)', () => {
+    expect(collectAgentWritableKeys(baseSpec()).size).toBe(0);
+  });
+
+  it('unions agentWritable keys across every widget', () => {
+    const spec: DashboardSpec = {
+      version: 1,
+      layout: {
+        type: 'split',
+        direction: 'row',
+        children: [
+          { type: 'widget', ref: 'a' },
+          { type: 'widget', ref: 'b' },
+        ],
+      },
+      widgets: {
+        a: {
+          id: 'a',
+          component: 'table',
+          interaction: {
+            writes: ['highlightedKey'],
+            agentWritable: ['highlightedKey'],
+          },
+        },
+        b: {
+          id: 'b',
+          component: 'note',
+          interaction: {
+            writes: ['selectedTimeRange'],
+            agentWritable: ['selectedTimeRange'],
+          },
+        },
+      },
+    };
+    expect(collectAgentWritableKeys(spec)).toEqual(
+      new Set(['highlightedKey', 'selectedTimeRange']),
     );
   });
 });
