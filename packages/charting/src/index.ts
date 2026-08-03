@@ -79,3 +79,12 @@ export type {
   PixelRange,
   TimeRange,
 } from './interaction.js';
+
+// Series downsampling / pixel conflation for large series.
+export {
+  DOWNSAMPLE_THRESHOLD,
+  downsample,
+  lttb,
+  minMaxPerPixel,
+} from './downsample.js';
+export type { DownsampleOptions, DownsampleStrategy } from './downsample.js';

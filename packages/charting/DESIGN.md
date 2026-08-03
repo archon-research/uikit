@@ -122,6 +122,9 @@ Current (exported from the package root):
   hand-rolled per-story legend markup.
 - **Cross-chart interaction layer** (`interaction.tsx`): see the dedicated
   section below.
+- **Series downsampling** (`downsample.ts`): `downsample`/`lttb`/
+  `minMaxPerPixel`, a pure pre-render data transform for series with more
+  points than a chart can usefully draw. See the dedicated section below.
 
 Planned:
 
@@ -265,6 +268,56 @@ function LegendChip({ seriesKey }: { seriesKey: string }) {
   return <Chip active={highlightedKey === seriesKey}>{seriesKey}</Chip>;
 }
 ```
+
+## Series downsampling / pixel conflation
+
+Past a few thousand points, handing a series straight to `LineSeries`/
+`AreaSeries` renders more path detail than a screen can show and than a
+pointer can hover meaningfully — this is a pure-data-transform problem, not a
+rendering one, so it lives here as a plain function rather than a new chart
+component. Apply `downsample` to a series' data *before* passing it to a
+`*Series` component; every visx behavior (tooltips, synced cursor, reference
+bands) keeps working against the returned array exactly as it would against
+the original, since it's still just an array of the same datum type.
+
+`src/downsample.ts` exports:
+
+- **`downsample(data, options)`** — the one call most consumers need.
+  `options` takes `x`/`y` accessors (same shape as a series' own
+  `xAccessor`/`yAccessor`), an optional `strategy` (`'lttb'` default,
+  `'minmax'`, or `'none'`), and an optional `threshold` (defaults to
+  `DOWNSAMPLE_THRESHOLD`, `1_000`). Returns `data` untouched — same array
+  reference, no allocation — when `data.length` is at or under the
+  threshold, so short series pay nothing for having gone through the call.
+- **`lttb(data, threshold, accessors)`** — Largest-Triangle-Three-Buckets,
+  the algorithm `downsample` dispatches to by default. Preserves visual
+  *shape* (peaks, troughs, inflections all survive), always keeps the first
+  and last point so the domain never shrinks, and returns exactly
+  `threshold` points. Right for most time series: exposure, P&L, an equity
+  curve.
+- **`minMaxPerPixel(data, columns, accessors)`** — buckets the x-domain into
+  `columns` columns and emits each column's min and max y, in x order.
+  Preserves *extremes* exactly, which `lttb` does not guarantee — right when
+  a spike must never be lost (a risk metric, VaR), at the cost of a slightly
+  "hairier" line than `lttb` would produce for the same point budget.
+- **`DOWNSAMPLE_THRESHOLD`** (`1_000`) — the shared default; past this many
+  points per series, conflate before rendering.
+
+```tsx
+import { AreaSeries, downsample } from '@archon-research/charting';
+
+const plotted = downsample(rawSeries, {
+  x: (d) => d.timestamp,
+  y: (d) => d.value,
+});
+
+<AreaSeries dataKey="value" data={plotted} xAccessor={(d) => d.timestamp} yAccessor={(d) => d.value} />
+```
+
+Both algorithms are generic over the datum type `T` via the `x`/`y`
+accessors — same shape as visx's own series accessors — so `downsample`
+composes directly with whatever a chart's data already looks like; there is
+no HATT- or product-specific datum shape baked in.
 
 ## Usage patterns
 
