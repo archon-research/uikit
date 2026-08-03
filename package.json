@@ -45,6 +45,9 @@
     "semantic-release": "25.0.8",
     "typescript": "7.0.2"
   },
+  "overrides": {
+    "conventional-changelog-writer": "^9.2.0"
+  },
   "optionalDependencies": {
     "@oxfmt/binding-linux-x64-gnu": "0.60.0",
     "@oxlint/binding-linux-x64-gnu": "1.75.0"
