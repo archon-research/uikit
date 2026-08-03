@@ -136,3 +136,49 @@ export const FlashOnUpdate = () => {
     </div>
   );
 };
+
+export const FlashOnUpdateTwoPhase = () => {
+  const [data, setData] = useState(() => buildRows(30));
+  const table = useDataTable(data, columns as never, {
+    enableSorting: true,
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setData((previous) =>
+        previous.map((row) =>
+          Math.random() < 0.2
+            ? {
+                ...row,
+                value: Math.max(
+                  0,
+                  row.value +
+                    (Math.random() < 0.5 ? -1 : 1) *
+                      Math.round(Math.random() * 800),
+                ),
+              }
+            : row,
+        ),
+      );
+    }, 1200);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className={wrapperClassName}>
+      <div className={css({ fontSize: 'sm', color: 'text.muted', mb: '4' })}>
+        Same live-update pattern as <code>FlashOnUpdate</code>, but with{' '}
+        <code>flashOnUpdate=&quot;two-phase&quot;</code>: the tint holds at full
+        strength (~400ms) then fades independently (~900ms), as an alpha-tinted
+        up/down background rather than a solid fill.
+      </div>
+      <DataTable
+        table={table}
+        isLoading={false}
+        getRowKey={(row: Row) => row.id}
+        flashOnUpdate="two-phase"
+      />
+    </div>
+  );
+};

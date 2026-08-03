@@ -247,6 +247,20 @@ const keyframes = {
     '0%': { backgroundColor: 'var(--colors-bg-critical)' },
     '100%': { backgroundColor: 'transparent' },
   },
+  // Two-phase flash (`DataTable`'s `flashOnUpdate="two-phase"`): hold the
+  // tint at full strength, then an independently-timed fade — as two
+  // separate keyframes rather than `dataTableFlashPositive`'s single
+  // ease-out, so the hold and fade durations can differ (see the
+  // `dataTableFlashTwoPhase` animation token below). Named generically
+  // (not `dataTable*`) because the hold/fade shape — tint via a CSS custom
+  // property, hold, then fade to transparent — isn't specific to tables.
+  flashHold: {
+    '0%, 100%': { backgroundColor: 'var(--data-table-flash-color)' },
+  },
+  flashFade: {
+    from: { backgroundColor: 'var(--data-table-flash-color)' },
+    to: { backgroundColor: 'transparent' },
+  },
   valueSettleIn: {
     '0%': { opacity: '0', transform: 'translateY(-0.25rem)' },
     '100%': { opacity: '1', transform: 'translateY(0)' },
@@ -268,6 +282,15 @@ const animationTokens = {
   feedRowFlash: { value: 'feedRowFlash 1.2s ease-out' },
   dataTableFlashPositive: { value: 'dataTableFlashPositive 1s ease-out' },
   dataTableFlashCritical: { value: 'dataTableFlashCritical 1s ease-out' },
+  // Report spec: hold ~300-500ms, then an independently-timed fade
+  // ~800-1000ms. The CSS `animation` shorthand takes comma-separated
+  // definitions, so both phases (and the fade's own delay, offset past the
+  // end of the hold) live in this one token — `DataTable` just sets
+  // `--data-table-flash-color` per direction (see the `dataTable` recipe's
+  // `flashTwoPhase` variant) and applies this animation unchanged.
+  dataTableFlashTwoPhase: {
+    value: 'flashHold 400ms linear both, flashFade 900ms ease-out 400ms both',
+  },
   valueSettleIn: { value: 'valueSettleIn 200ms ease-out' },
   edgeRun: { value: 'edgeRun 1s linear infinite' },
   drawerSlide: {

@@ -410,6 +410,51 @@ export const dataTableRecipe = defineSlotRecipe({
       critical: { bodyCell: { animation: 'dataTableFlashCritical' } },
       neutral: { bodyCell: { animation: 'feedRowFlash' } },
     },
+    // Two-phase delta-highlight (`DataTable`'s `flashOnUpdate="two-phase"`):
+    // hold ~400ms then an independently-timed fade ~900ms (the single
+    // `dataTableFlashTwoPhase` animation token), tinted per direction by
+    // setting the `--data-table-flash-color` custom property the `flashHold`/
+    // `flashFade` keyframes read from. `up`/`down` are the inferred numeric
+    // increase/decrease, alpha-tinted at 16% of the chart series
+    // positive/critical hue; `neutral` covers any other change (an
+    // "unchanged-refresh" — e.g. a re-render with the same computed display
+    // value) at 12% of muted text, per the alpha-usage convention research
+    // settled on for streaming-update tints. Independent of the single-phase
+    // `flash` variant above — a consumer picks one or the other via
+    // `flashOnUpdate`, never both at once.
+    flashTwoPhase: {
+      none: {},
+      up: {
+        bodyCell: {
+          '--data-table-flash-color':
+            'color-mix(in srgb, var(--colors-chart-series-positive) 16%, transparent)',
+          animation: 'dataTableFlashTwoPhase',
+          '@media (prefers-reduced-motion: reduce)': {
+            animationDuration: '1ms, 1ms',
+          },
+        },
+      },
+      down: {
+        bodyCell: {
+          '--data-table-flash-color':
+            'color-mix(in srgb, var(--colors-chart-series-critical) 16%, transparent)',
+          animation: 'dataTableFlashTwoPhase',
+          '@media (prefers-reduced-motion: reduce)': {
+            animationDuration: '1ms, 1ms',
+          },
+        },
+      },
+      neutral: {
+        bodyCell: {
+          '--data-table-flash-color':
+            'color-mix(in srgb, var(--colors-text-muted) 12%, transparent)',
+          animation: 'dataTableFlashTwoPhase',
+          '@media (prefers-reduced-motion: reduce)': {
+            animationDuration: '1ms, 1ms',
+          },
+        },
+      },
+    },
     // `table-layout: fixed` is what makes a resize drag (or a pinned
     // column's sticky offset) mean anything — with `auto`, the browser
     // re-derives widths from content and ignores both. `DataTable` turns
@@ -471,6 +516,7 @@ export const dataTableRecipe = defineSlotRecipe({
     scrollable: false,
     stickyHeader: false,
     flash: 'none',
+    flashTwoPhase: 'none',
     fixedLayout: false,
     pinned: 'none',
   },

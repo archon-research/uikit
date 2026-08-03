@@ -73,7 +73,7 @@ const DEFAULT_ESTIMATED_ROW_HEIGHT: Record<DataTableDensity, number> = {
  * virtualization is meaningless without a bounded scroll viewport. */
 const DEFAULT_VIRTUALIZED_MAX_HEIGHT = '640px';
 
-type CellFlashDirection = 'positive' | 'critical' | 'neutral' | 'none';
+export type CellFlashDirection = 'positive' | 'critical' | 'neutral' | 'none';
 
 type CellFlashEntry = {
   value: unknown;
@@ -83,10 +83,33 @@ type CellFlashEntry = {
 
 /**
  * Delta-highlight class is only emitted while a cell is actively flashing;
- * `none` is the slot base (no animation).
+ * `none` is the slot base (no animation). Exported (but not re-exported from
+ * `index.ts`/the package root) so `DataTable.flash.test.ts` can exercise the
+ * pure direction → class mapping without rendering.
  */
-const flashClass = (direction: CellFlashDirection): string | false =>
+export const flashClass = (direction: CellFlashDirection): string | false =>
   direction !== 'none' ? `dataTable__bodyCell--flash_${direction}` : false;
+
+/**
+ * The two-phase (`flashOnUpdate="two-phase"`) sibling of `flashClass`, over
+ * the recipe's `flashTwoPhase` variant. Reuses the same detected direction
+ * (`getCellFlashState` doesn't know or care which flash mode is active) but
+ * maps it onto the two-phase variant's own value names — `up`/`down` for an
+ * inferred numeric increase/decrease, `neutral` for any other change (an
+ * "unchanged-refresh").
+ */
+export const flashTwoPhaseClass = (
+  direction: CellFlashDirection,
+): string | false => {
+  if (direction === 'none') return false;
+  const value =
+    direction === 'positive'
+      ? 'up'
+      : direction === 'critical'
+        ? 'down'
+        : 'neutral';
+  return `dataTable__bodyCell--flashTwoPhase_${value}`;
+};
 
 /**
  * Diffs a single displayed cell's raw value against the previous render and
@@ -98,7 +121,7 @@ const flashClass = (direction: CellFlashDirection): string | false =>
  * unrelated re-renders (no new value) so the CSS animation — which fades out
  * on its own — is never cut off mid-fade by a class reset.
  */
-function getCellFlashState(
+export function getCellFlashState(
   flashMap: Map<string, CellFlashEntry>,
   cellKey: string,
   rawValue: unknown,
@@ -278,16 +301,24 @@ type DataTableProps<TData> = {
   stickyHeader?: boolean;
   /**
    * Briefly highlights a body cell whose value changed since the previous
-   * render — a token-themed background flash that fades via CSS animation,
-   * tinted by inferred direction (numeric increase → positive/green
-   * background token, decrease → critical/red; any other change → neutral).
-   * Off by default (additive/opt-in): diffing only runs, and only over the
-   * cells actually rendered this pass, when this is `true`. NOTE: "increase"
-   * is treated as "positive" purely by sign — it doesn't know whether a
-   * larger number is actually good for a given row (e.g. a metric where a
-   * higher value is actually worse, like an error count or latency).
+   * render, tinted by inferred direction (numeric increase → up, decrease →
+   * down; any other change → an "unchanged-refresh" neutral tint). Off by
+   * default (additive/opt-in): diffing only runs, and only over the cells
+   * actually rendered this pass, when this is set. NOTE: "increase" is
+   * treated as "up" purely by sign — it doesn't know whether a larger number
+   * is actually good for a given row (e.g. a metric where a higher value is
+   * actually worse, like an error count or latency).
+   *
+   * - `true` — the original single ease-out fade (~1s), from a solid
+   *   success/critical background token to transparent.
+   * - `'two-phase'` — hold the tint at full strength (~400ms) then an
+   *   independently-timed fade (~900ms), as an alpha-tinted (~16%) up/down
+   *   background over the chart series positive/critical hue (12% of muted
+   *   text for the neutral case) rather than a solid fill. Matches the
+   *   two-phase flash shape a fast-moving blotter/ticker table wants, where
+   *   a value can change again mid-fade.
    */
-  flashOnUpdate?: boolean;
+  flashOnUpdate?: boolean | 'two-phase';
   /**
    * Turns on the drag-to-reorder header affordance: drag a header to move
    * its column, backed by `table.setColumnOrder` (works whether
@@ -580,7 +611,10 @@ export function DataTable<TData>({
                 alignClass('bodyCell', align),
                 densityClass('bodyCell', density),
                 isMono && 'dataTable__bodyCell--mono_true',
-                flashOnUpdate && flashClass(flashState.direction),
+                flashOnUpdate &&
+                  (flashOnUpdate === 'two-phase'
+                    ? flashTwoPhaseClass(flashState.direction)
+                    : flashClass(flashState.direction)),
                 pinnedClass('bodyCell', pinned),
               )}
               data-part="body-cell"
