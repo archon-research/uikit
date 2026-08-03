@@ -161,14 +161,15 @@ shared and reviewed once.
 Each `<XYChart>` is otherwise an isolated island: it wraps itself in its own
 `DataProvider`/`TooltipProvider`/`EventEmitterProvider` whenever one isn't
 already present in context, so a stack of charts has no way to coordinate a
-hover or a selection. `src/interaction.tsx` closes that gap with three pieces:
+hover or a selection. `src/interaction.tsx` closes that gap with four pieces:
 
 - **`SyncedChartGroup`** — a provider that wraps a stack of charts (and any
   other widget) in one shared `DashboardInteractionProvider` (a React context
   holding `timeRange`, `hoveredTimestamp`, a free-form `filters` bag, and
   `highlightedKey`, with narrow selector hooks:
   `useSelectedTimeRange`/`useHoveredTimestamp`/`useHighlightedKey`/
-  `useDashboardFilter`) plus one shared visx `EventEmitterProvider`. Because
+  `useDashboardFilter`, plus the per-key `useInteractionValue` below) plus one
+  shared visx `EventEmitterProvider`. Because
   `XYChart` only creates its own `EventEmitterProvider` when one is missing
   from context, every `<XYChart>` nested inside a `SyncedChartGroup`
   automatically shares the same mitt bus — the exact mechanism visx's own
@@ -182,6 +183,10 @@ hover or a selection. `src/interaction.tsx` closes that gap with three pieces:
   `onPointerMove`/`onPointerOut` to `hoveredTimestamp`, reading the timestamp
   straight off the nearest datum (via the caller's own accessor) rather than
   inverting a scale.
+- **`useInteractionValue(key)`** — a per-key subscription so a widget bound
+  to one field (e.g. `highlightedKey`) is not re-rendered by unrelated,
+  hover-frequency updates (e.g. `hoveredTimestamp`). See the dedicated
+  section below.
 - **`useTimeRangeBrushGesture()` + `<DragSelectionOverlay>`** — a minimal,
   dependency-free drag-to-select gesture: the gesture hook tracks a drag from
   an `<XYChart>`'s own pointer events (`svgPoint` is already local to that
@@ -218,16 +223,48 @@ dashboard-coordination package. Rationale:
   `DESIGN.md` conventions, and the build/lint/publish plumbing for marginal
   isolation benefit.
 
-### Known limitation
+### Per-key subscription: `useInteractionValue`
 
 `DashboardInteractionProvider`'s context value changes on every pointer move
 (`hoveredTimestamp` updates at pointer-move frequency), so every consumer of
-`useDashboardInteraction()` (and the narrower selector hooks, which all read
-from the same context value) re-renders on every hover tick. Fine for a
-handful of charts; if a dashboard grows to dozens of interaction-aware
-widgets, split `hoveredTimestamp` into its own higher-frequency context (or a
-ref + subscription model outside React state) so a hover doesn't re-render
-unrelated consumers like a filter bar.
+`useDashboardInteraction()` — and the narrow selector hooks above, which all
+read from that same context value — re-renders on every hover tick, whether
+or not it reads `hoveredTimestamp`. Fine for a handful of charts; not fine
+once a dashboard has dozens of interaction-aware widgets (a filter bar, a
+blotter, a dozen legend chips) all re-rendering on every hover over any
+synced chart.
+
+`useInteractionValue(key)` is the fix: it subscribes to exactly one field of
+`DashboardInteractionState` via `useSyncExternalStore`, against a per-key
+store the provider maintains outside React state (a ref of the current
+values plus a `Map<key, Set<listener>>`, notified by each setter). A widget
+bound to `highlightedKey` via `useInteractionValue('highlightedKey')` is not
+notified, and does not re-render, when `hoveredTimestamp` changes.
+
+The mechanism that makes this safe rather than merely "usually fine": the
+store's `subscribe`/`getSnapshot` pair is carried in a *second*, internal
+context whose value never changes identity across the provider's renders
+(both close over refs, not state). React's context propagation only
+re-renders consumers of a context when that context's own value changes
+identity — so a component that calls only `useInteractionValue` and never
+touches `useDashboardInteraction()` is invisible to `hoveredTimestamp`
+updates at the context level, not just skipped via a `memo` comparison.
+
+`useDashboardInteraction()` and the narrow selector hooks are unchanged and
+remain the right choice for a widget that already needs several fields
+together (e.g. a brush overlay reading both `timeRange` and `hoveredTimestamp`)
+or that mutates state — `useInteractionValue` is read-only. Reach for it
+specifically for a leaf widget bound to one field, where hover-frequency
+re-renders would otherwise be wasted work.
+
+```tsx
+import { useInteractionValue } from '@archon-research/charting';
+
+function LegendChip({ seriesKey }: { seriesKey: string }) {
+  const highlightedKey = useInteractionValue('highlightedKey');
+  return <Chip active={highlightedKey === seriesKey}>{seriesKey}</Chip>;
+}
+```
 
 ## Usage patterns
 
