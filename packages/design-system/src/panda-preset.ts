@@ -8,6 +8,7 @@ import { dataTableRecipe } from './recipes/dataTable.recipe.js';
 import { drawerRecipe } from './recipes/drawer.recipe.js';
 import { emptyStateRecipe } from './recipes/emptyState.recipe.js';
 import { facetedMultiSelectRecipe } from './recipes/facetedMultiSelect.recipe.js';
+import { heatCellRecipe } from './recipes/heatCell.recipe.js';
 import { indicatorRecipe } from './recipes/indicator.recipe.js';
 import { inputRecipe } from './recipes/input.recipe.js';
 import { interactiveItemRecipe } from './recipes/interactiveItem.recipe.js';
@@ -842,6 +843,7 @@ export const designSystemPreset = definePreset({
         facetedMultiSelect: facetedMultiSelectRecipe,
         rangeSlider: rangeSliderRecipe,
         playbackBar: playbackBarRecipe,
+        heatCell: heatCellRecipe,
       },
     },
   },

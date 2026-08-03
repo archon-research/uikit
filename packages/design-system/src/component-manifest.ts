@@ -422,6 +422,14 @@ export const designSystemComponentManifest = [
     recipeKey: 'chip',
   },
   {
+    exportName: 'HeatCell',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'molecules',
+    contractScope: 'heat-cell',
+    recipeKey: 'heatCell',
+  },
+  {
     exportName: 'FacetedMultiSelect',
     behaviorSource: 'design-system',
     styleOwner: 'design-system-preset',

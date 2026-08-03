@@ -151,6 +151,11 @@ export {
   type ChipSize,
 } from './components/Chip.js';
 export {
+  HeatCell,
+  type HeatCellProps,
+  type HeatStep,
+} from './components/HeatCell.js';
+export {
   FacetedMultiSelect,
   type FacetOption,
 } from './components/FacetedMultiSelect.js';

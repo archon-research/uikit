@@ -53,4 +53,5 @@ export const designSystemStaticCssRecipes = {
   facetedMultiSelect: ['*'],
   rangeSlider: ['*'],
   playbackBar: ['*'],
+  heatCell: ['*'],
 } satisfies Record<string, ['*']>;

@@ -9,6 +9,7 @@ import { codeRecipe } from './src/recipes/code.recipe';
 import { drawerRecipe } from './src/recipes/drawer.recipe';
 import { emptyStateRecipe } from './src/recipes/emptyState.recipe';
 import { facetedMultiSelectRecipe } from './src/recipes/facetedMultiSelect.recipe';
+import { heatCellRecipe } from './src/recipes/heatCell.recipe';
 import { indicatorRecipe } from './src/recipes/indicator.recipe';
 import { inputRecipe } from './src/recipes/input.recipe';
 import { interactiveItemRecipe } from './src/recipes/interactiveItem.recipe';
@@ -550,6 +551,7 @@ export const designSystemPandaConfig = {
         facetedMultiSelect: facetedMultiSelectRecipe,
         rangeSlider: rangeSliderRecipe,
         playbackBar: playbackBarRecipe,
+        heatCell: heatCellRecipe,
       },
     },
   },
