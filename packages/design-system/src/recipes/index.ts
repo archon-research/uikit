@@ -19,6 +19,7 @@ export { searchInputRecipe } from './searchInput.recipe.js';
 export { emptyStateRecipe } from './emptyState.recipe.js';
 export { themeToggleRecipe } from './themeToggle.recipe.js';
 export { sidebarLayoutRecipe } from './sidebarLayout.recipe.js';
+export { splitLayoutRecipe } from './splitLayout.recipe.js';
 export { panelRecipe } from './panel.recipe.js';
 export { dataTableRecipe } from './dataTable.recipe.js';
 export { chipRecipe } from './chip.recipe.js';

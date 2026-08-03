@@ -25,6 +25,7 @@ import { dataTableRecipe } from './src/recipes/dataTable.recipe';
 import { panelRecipe } from './src/recipes/panel.recipe';
 import { playbackBarRecipe } from './src/recipes/playbackBar.recipe';
 import { sidebarLayoutRecipe } from './src/recipes/sidebarLayout.recipe';
+import { splitLayoutRecipe } from './src/recipes/splitLayout.recipe';
 import { statRowRecipe, statTileRecipe } from './src/recipes/statTile.recipe';
 import { surfaceMessageRecipe } from './src/recipes/surfaceMessage.recipe';
 import { switchRecipe } from './src/recipes/switch.recipe';
@@ -500,6 +501,7 @@ export const designSystemPandaConfig = {
         emptyState: emptyStateRecipe,
         themeToggle: themeToggleRecipe,
         sidebarLayout: sidebarLayoutRecipe,
+        splitLayout: splitLayoutRecipe,
         panel: panelRecipe,
         dataTable: dataTableRecipe,
         chip: chipRecipe,

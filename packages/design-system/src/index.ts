@@ -12,6 +12,11 @@ export {
   SidebarLayout,
   type SidebarLayoutProps,
 } from './layouts/SidebarLayout.js';
+export {
+  SplitLayout,
+  type SplitLayoutPanel,
+  type SplitLayoutProps,
+} from './layouts/SplitLayout.js';
 export { ThemeProvider } from './theme/ThemeProvider.js';
 export {
   useTheme,

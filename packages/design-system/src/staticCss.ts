@@ -46,6 +46,7 @@ export const designSystemStaticCssRecipes = {
   emptyState: ['*'],
   themeToggle: ['*'],
   sidebarLayout: ['*'],
+  splitLayout: ['*'],
   panel: ['*'],
   dataTable: ['*'],
   chip: ['*'],

@@ -222,6 +222,14 @@ export const designSystemComponentManifest = [
     recipeKey: 'sidebarLayout',
   },
   {
+    exportName: 'SplitLayout',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'templates',
+    contractScope: 'resize-handle',
+    recipeKey: 'splitLayout',
+  },
+  {
     exportName: 'Tabs',
     behaviorSource: 'ark-ui',
     styleOwner: 'consumer',

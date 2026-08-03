@@ -23,6 +23,7 @@ import { segmentedControlRecipe } from './recipes/segmentedControl.recipe.js';
 import { selectRecipe } from './recipes/select.recipe.js';
 import { sidebarGridRecipe } from './recipes/sidebarGrid.recipe.js';
 import { sidebarLayoutRecipe } from './recipes/sidebarLayout.recipe.js';
+import { splitLayoutRecipe } from './recipes/splitLayout.recipe.js';
 import { statRowRecipe, statTileRecipe } from './recipes/statTile.recipe.js';
 import { surfaceMessageRecipe } from './recipes/surfaceMessage.recipe.js';
 import { switchRecipe } from './recipes/switch.recipe.js';
@@ -777,6 +778,7 @@ export const designSystemPreset = definePreset({
         emptyState: emptyStateRecipe,
         themeToggle: themeToggleRecipe,
         sidebarLayout: sidebarLayoutRecipe,
+        splitLayout: splitLayoutRecipe,
         panel: panelRecipe,
         dataTable: dataTableRecipe,
         chip: chipRecipe,
