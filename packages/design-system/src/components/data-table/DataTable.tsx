@@ -6,9 +6,12 @@ import {
   type Table,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { Pin, PinOff } from 'lucide-react';
 import {
+  useCallback,
   useMemo,
   useRef,
+  useState,
   type CSSProperties,
   type ReactNode,
   type RefCallback,
@@ -53,7 +56,7 @@ const alignClass = (
 
 /** Compact is the only non-default density; comfortable is the slot base. */
 const densityClass = (
-  slot: 'headerCell' | 'bodyCell',
+  slot: 'headerCell' | 'bodyCell' | 'selectCell',
   density: DataTableDensity,
 ): string | false =>
   density === 'compact' ? `dataTable__${slot}--density_compact` : false;
@@ -189,6 +192,33 @@ function TextColumnFilter<TData>({
   );
 }
 
+/**
+ * The `pinned` slot-variant class, for a header/body cell whose column is
+ * currently pinned. `'none'` is the slot base (no class emitted).
+ */
+const pinnedClass = (
+  slot: 'headerCell' | 'bodyCell',
+  pinned: 'left' | 'right' | false,
+): string | false => (pinned ? `dataTable__${slot}--pinned_${pinned}` : false);
+
+/**
+ * Sticky pixel offset for a pinned column — the one part of pinning that's a
+ * genuine runtime value (depends on the actual rendered widths of the
+ * columns ahead of it), so it stays an inline style same as `minWidth`/
+ * `maxHeight` elsewhere in this component; the recipe's `pinned` variant
+ * supplies everything else (position/z-index/background/separator rule).
+ */
+function pinnedOffsetStyle<TData>(
+  column: Column<TData, unknown>,
+): CSSProperties {
+  const pinned = column.getIsPinned();
+  if (!pinned) return {};
+  return {
+    left: pinned === 'left' ? `${column.getStart('left')}px` : undefined,
+    right: pinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+  };
+}
+
 type DataTableProps<TData> = {
   table: Table<TData>;
   isLoading: boolean;
@@ -258,6 +288,25 @@ type DataTableProps<TData> = {
    * higher value is actually worse, like an error count or latency).
    */
   flashOnUpdate?: boolean;
+  /**
+   * Turns on the drag-to-reorder header affordance: drag a header to move
+   * its column, backed by `table.setColumnOrder` (works whether
+   * `useDataTable`'s `columnOrder` is controlled or left uncontrolled).
+   * Off by default (additive/opt-in) — column ordering itself needs no
+   * table-level enable flag in TanStack, so this is purely "does `DataTable`
+   * render the drag handle", independent of `enableColumnResizing`/
+   * `enableColumnPinning` below.
+   */
+  enableColumnReordering?: boolean;
+  /**
+   * Turns on the pin/unpin toggle button `DataTable` renders in each
+   * pinnable header cell (`column.getCanPin()`). Off by default
+   * (additive/opt-in). A column already pinned via controlled
+   * `useDataTable({ columnPinning })` state renders sticky regardless of
+   * this prop — it only gates the built-in toggle button, not the sticky
+   * styling itself.
+   */
+  enableColumnPinning?: boolean;
 };
 
 export function DataTable<TData>({
@@ -277,10 +326,14 @@ export function DataTable<TData>({
   overscan = 10,
   stickyHeader,
   flashOnUpdate = false,
+  enableColumnReordering = false,
+  enableColumnPinning = false,
 }: DataTableProps<TData>) {
   const magnitudeStateByColumn = createMagnitudeStateMap(table);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const flashMapRef = useRef<Map<string, CellFlashEntry>>(new Map());
+  const [dragColumnId, setDragColumnId] = useState<string | null>(null);
+  const [dropColumnId, setDropColumnId] = useState<string | null>(null);
 
   const resolvedMaxHeight =
     maxHeight ?? (virtualized ? DEFAULT_VIRTUALIZED_MAX_HEIGHT : undefined);
@@ -291,7 +344,27 @@ export function DataTable<TData>({
 
   const rows = table.getRowModel().rows;
   const showSkeleton = isLoading && rows.length === 0;
-  const leafColumnCount = table.getVisibleLeafColumns().length;
+
+  // Column resizing/pinning read straight off the `table` instance's own
+  // options/state rather than a parallel `DataTable` prop — the consumer
+  // already declared these via `useDataTable`'s config, so `DataTable` just
+  // renders what's actually wired up. Row selection follows the same
+  // pattern below.
+  const resizingEnabled = Boolean(table.options.enableColumnResizing);
+  const columnPinningState = table.getState().columnPinning;
+  const hasPinnedColumns =
+    (columnPinningState?.left?.length ?? 0) > 0 ||
+    (columnPinningState?.right?.length ?? 0) > 0;
+  // `table-layout: fixed` is required for either a resize drag or a pinned
+  // column's sticky offset to mean anything (see the recipe's `fixedLayout`
+  // variant), so it turns on whenever either is in play — even if
+  // `enableColumnPinning` (the toggle-button prop) is off but a consumer's
+  // own controlled `columnPinning` state already pinned a column.
+  const fixedLayout =
+    resizingEnabled || enableColumnPinning || hasPinnedColumns;
+  const rowSelectionEnabled = Boolean(table.options.enableRowSelection);
+  const leafColumnCount =
+    table.getVisibleLeafColumns().length + (rowSelectionEnabled ? 1 : 0);
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -311,9 +384,15 @@ export function DataTable<TData>({
 
   // `minWidth`/`maxHeight` are consumer-supplied runtime dimensions (any CSS
   // length), not styling decisions, so they stay inline styles; everything
-  // else is classes.
-  const tableStyle: CSSProperties | undefined =
-    minWidth != null ? { minWidth } : undefined;
+  // else is classes. Column widths only become explicit pixel values when
+  // `fixedLayout` is on — leaving them alone otherwise means an ordinary
+  // table keeps its natural, content-driven widths (TanStack's per-column
+  // default `size` of 150px would otherwise silently override every
+  // existing consumer's layout).
+  const tableStyle: CSSProperties | undefined = {
+    ...(minWidth != null ? { minWidth } : undefined),
+    ...(fixedLayout ? { width: table.getTotalSize() } : undefined),
+  };
   const rootStyle: CSSProperties | undefined =
     resolvedMaxHeight != null ? { maxHeight: resolvedMaxHeight } : undefined;
 
@@ -322,6 +401,29 @@ export function DataTable<TData>({
     (header) =>
       header.column.columnDef.meta?.filterVariant != null &&
       header.column.getCanFilter(),
+  );
+
+  // Column reorder is manual drag-and-drop over `table.setColumnOrder` —
+  // TanStack ships no built-in header DnD. `handleDrop` seeds the order from
+  // the table's current leaf-column order (whatever `columnOrder` resolves
+  // to when empty) so the very first drag has something to splice.
+  const handleColumnDrop = useCallback(
+    (targetColumnId: string) => {
+      table.setColumnOrder((current) => {
+        const order =
+          current.length > 0
+            ? [...current]
+            : table.getAllLeafColumns().map((column) => column.id);
+        const from = order.indexOf(dragColumnId ?? '');
+        const to = order.indexOf(targetColumnId);
+        if (from < 0 || to < 0 || from === to) return current;
+        order.splice(to, 0, order.splice(from, 1)[0] as string);
+        return order;
+      });
+      setDragColumnId(null);
+      setDropColumnId(null);
+    },
+    [dragColumnId, table],
   );
 
   function renderBodyRow(
@@ -359,6 +461,24 @@ export function DataTable<TData>({
         )}
         data-part="body-row"
       >
+        {rowSelectionEnabled ? (
+          <td
+            className={cx(
+              'dataTable__selectCell',
+              densityClass('selectCell', density),
+            )}
+            data-part="body-cell"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              aria-label={`Select row ${rowKey}`}
+              disabled={!row.getCanSelect()}
+              checked={row.getIsSelected()}
+              onChange={row.getToggleSelectedHandler()}
+            />
+          </td>
+        ) : null}
         {row.getVisibleCells().map((cell) => {
           const cellContent = flexRender(
             cell.column.columnDef.cell,
@@ -446,6 +566,8 @@ export function DataTable<TData>({
               )
             : { seq: 0, direction: 'none' as CellFlashDirection };
 
+          const pinned = cell.column.getIsPinned();
+
           return (
             <td
               key={
@@ -459,8 +581,13 @@ export function DataTable<TData>({
                 densityClass('bodyCell', density),
                 isMono && 'dataTable__bodyCell--mono_true',
                 flashOnUpdate && flashClass(flashState.direction),
+                pinnedClass('bodyCell', pinned),
               )}
               data-part="body-cell"
+              style={{
+                ...(fixedLayout ? { width: cell.column.getSize() } : undefined),
+                ...pinnedOffsetStyle(cell.column),
+              }}
             >
               {renderCell ? renderCell(content) : content}
             </td>
@@ -483,17 +610,51 @@ export function DataTable<TData>({
       data-part="root"
       data-density={density}
     >
-      <table className="dataTable__table" data-part="table" style={tableStyle}>
+      <table
+        className={cx(
+          'dataTable__table',
+          fixedLayout && 'dataTable__table--fixedLayout_true',
+        )}
+        data-part="table"
+        style={tableStyle}
+      >
         <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
+          {table.getHeaderGroups().map((headerGroup, headerGroupIndex) => (
             <tr
               key={headerGroup.id}
               className="dataTable__headerRow"
               data-part="header-row"
             >
+              {rowSelectionEnabled && headerGroupIndex === 0 ? (
+                <th
+                  className={cx(
+                    'dataTable__selectCell',
+                    densityClass('selectCell', density),
+                    resolvedStickyHeader &&
+                      'dataTable__selectCell--stickyHeader_true',
+                  )}
+                  data-part="header-cell"
+                >
+                  <input
+                    type="checkbox"
+                    aria-label="Select all rows"
+                    checked={table.getIsAllRowsSelected()}
+                    ref={(element) => {
+                      if (element) {
+                        element.indeterminate = table.getIsSomeRowsSelected();
+                      }
+                    }}
+                    onChange={table.getToggleAllRowsSelectedHandler()}
+                  />
+                </th>
+              ) : null}
               {headerGroup.headers.map((header) => {
                 const sorted = header.column.getIsSorted();
                 const canSort = header.column.getCanSort();
+                const canResize =
+                  resizingEnabled && header.column.getCanResize();
+                const canPin = enableColumnPinning && header.column.getCanPin();
+                const pinned = header.column.getIsPinned();
                 const align = header.column.columnDef.meta?.align;
                 const ariaSort = canSort
                   ? sorted === 'asc'
@@ -501,6 +662,17 @@ export function DataTable<TData>({
                     : sorted === 'desc'
                       ? 'descending'
                       : 'none'
+                  : undefined;
+                const columnLabel = String(header.column.columnDef.header);
+                const dragProps = enableColumnReordering
+                  ? {
+                      draggable: true,
+                      onDragStart: () => setDragColumnId(header.column.id),
+                      onDragEnd: () => {
+                        setDragColumnId(null);
+                        setDropColumnId(null);
+                      },
+                    }
                   : undefined;
 
                 return (
@@ -514,38 +686,138 @@ export function DataTable<TData>({
                       canSort && 'dataTable__headerCell--sortable_true',
                       resolvedStickyHeader &&
                         'dataTable__headerCell--stickyHeader_true',
+                      pinnedClass('headerCell', pinned),
+                      fixedLayout && 'dataTable__headerCell--fixedLayout_true',
                     )}
                     data-part="header-cell"
+                    data-dragging={
+                      enableColumnReordering &&
+                      dragColumnId === header.column.id
+                        ? 'true'
+                        : undefined
+                    }
+                    data-drop-target={
+                      enableColumnReordering &&
+                      dropColumnId === header.column.id
+                        ? 'true'
+                        : undefined
+                    }
+                    style={{
+                      ...(fixedLayout
+                        ? { width: header.getSize() }
+                        : undefined),
+                      ...pinnedOffsetStyle(header.column),
+                    }}
+                    onDragOver={
+                      enableColumnReordering
+                        ? (event) => {
+                            event.preventDefault();
+                            setDropColumnId(header.column.id);
+                          }
+                        : undefined
+                    }
+                    onDrop={
+                      enableColumnReordering
+                        ? () => handleColumnDrop(header.column.id)
+                        : undefined
+                    }
                   >
-                    {header.isPlaceholder ? null : canSort ? (
-                      <button
-                        type="button"
-                        onClick={header.column.getToggleSortingHandler()}
-                        className="dataTable__headerButton"
-                        data-part="header-button"
+                    {header.isPlaceholder ? null : (
+                      <div
+                        className="dataTable__headerInner"
+                        data-part="header-inner"
                       >
-                        <span>
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                        </span>
-                        <span aria-hidden="true">
-                          {sorted === 'asc'
-                            ? '↑'
-                            : sorted === 'desc'
-                              ? '↓'
-                              : '↕'}
-                        </span>
-                      </button>
-                    ) : (
-                      <span>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
+                        {canSort ? (
+                          <button
+                            type="button"
+                            onClick={header.column.getToggleSortingHandler()}
+                            className="dataTable__headerButton"
+                            data-part="header-button"
+                            {...dragProps}
+                          >
+                            <span>
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                            </span>
+                            <span aria-hidden="true">
+                              {sorted === 'asc'
+                                ? '↑'
+                                : sorted === 'desc'
+                                  ? '↓'
+                                  : '↕'}
+                            </span>
+                          </button>
+                        ) : (
+                          <span {...dragProps}>
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                          </span>
                         )}
-                      </span>
+                        {canPin ? (
+                          <button
+                            type="button"
+                            className="dataTable__pinToggle"
+                            data-part="pin-toggle"
+                            data-pinned={pinned ? 'true' : 'false'}
+                            aria-label={
+                              pinned
+                                ? `Unpin ${columnLabel}`
+                                : `Pin ${columnLabel} left`
+                            }
+                            title={pinned ? 'Unpin column' : 'Pin column left'}
+                            onClick={() =>
+                              header.column.pin(pinned ? false : 'left')
+                            }
+                          >
+                            {pinned ? <PinOff size={12} /> : <Pin size={12} />}
+                          </button>
+                        ) : null}
+                      </div>
                     )}
+                    {canResize ? (
+                      <div
+                        className="dataTable__resizeHandle"
+                        data-part="resize-handle"
+                        data-resizing={
+                          header.column.getIsResizing() ? 'true' : undefined
+                        }
+                        role="separator"
+                        aria-orientation="vertical"
+                        aria-label={`Resize ${columnLabel}`}
+                        tabIndex={0}
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        onKeyDown={(event) => {
+                          // Arrow-key resizing for keyboard users, since the
+                          // handle's drag gesture (pointer-only, straight from
+                          // TanStack's own resize handler) has no keyboard
+                          // equivalent otherwise. A fixed 10px step per press.
+                          if (
+                            event.key !== 'ArrowLeft' &&
+                            event.key !== 'ArrowRight'
+                          ) {
+                            return;
+                          }
+                          event.preventDefault();
+                          const delta = event.key === 'ArrowRight' ? 10 : -10;
+                          table.setColumnSizing((current) => ({
+                            ...current,
+                            [header.column.id]: Math.max(
+                              header.column.columnDef.minSize ?? 20,
+                              Math.min(
+                                header.column.columnDef.maxSize ??
+                                  Number.MAX_SAFE_INTEGER,
+                                header.column.getSize() + delta,
+                              ),
+                            ),
+                          }));
+                        }}
+                      />
+                    ) : null}
                   </th>
                 );
               })}

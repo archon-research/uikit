@@ -7,7 +7,11 @@ import {
   useReactTable,
   type ColumnDef,
   type ColumnFiltersState,
+  type ColumnOrderState,
+  type ColumnPinningState,
+  type ColumnSizingState,
   type OnChangeFn,
+  type RowSelectionState,
   type SortingState,
   type Table,
 } from '@tanstack/react-table';
@@ -27,7 +31,7 @@ import {
 export function useDataTable<T>(
   data: T[],
   columns: ColumnDef<T>[],
-  config: DataTableConfig = {},
+  config: DataTableConfig<T> = {},
 ): Table<T> {
   const [internalSorting, setInternalSorting] = React.useState<SortingState>(
     config.defaultSorting ?? [],
@@ -35,10 +39,24 @@ export function useDataTable<T>(
   const [internalColumnFilters, setInternalColumnFilters] =
     React.useState<ColumnFiltersState>(config.defaultColumnFilters ?? []);
   const [internalGlobalFilter, setInternalGlobalFilter] = React.useState('');
+  const [internalColumnSizing, setInternalColumnSizing] =
+    React.useState<ColumnSizingState>(config.defaultColumnSizing ?? {});
+  const [internalColumnOrder, setInternalColumnOrder] =
+    React.useState<ColumnOrderState>(config.defaultColumnOrder ?? []);
+  const [internalColumnPinning, setInternalColumnPinning] =
+    React.useState<ColumnPinningState>(
+      config.defaultColumnPinning ?? { left: [], right: [] },
+    );
+  const [internalRowSelection, setInternalRowSelection] =
+    React.useState<RowSelectionState>(config.defaultRowSelection ?? {});
 
   const sorting = config.sorting ?? internalSorting;
   const columnFilters = config.columnFilters ?? internalColumnFilters;
   const globalFilter = config.globalFilter ?? internalGlobalFilter;
+  const columnSizing = config.columnSizing ?? internalColumnSizing;
+  const columnOrder = config.columnOrder ?? internalColumnOrder;
+  const columnPinning = config.columnPinning ?? internalColumnPinning;
+  const rowSelection = config.rowSelection ?? internalRowSelection;
 
   const handleSortingChange: OnChangeFn<SortingState> =
     config.onSortingChange ?? setInternalSorting;
@@ -46,6 +64,14 @@ export function useDataTable<T>(
     config.onColumnFiltersChange ?? setInternalColumnFilters;
   const handleGlobalFilterChange =
     config.onGlobalFilterChange ?? setInternalGlobalFilter;
+  const handleColumnSizingChange: OnChangeFn<ColumnSizingState> =
+    config.onColumnSizingChange ?? setInternalColumnSizing;
+  const handleColumnOrderChange: OnChangeFn<ColumnOrderState> =
+    config.onColumnOrderChange ?? setInternalColumnOrder;
+  const handleColumnPinningChange: OnChangeFn<ColumnPinningState> =
+    config.onColumnPinningChange ?? setInternalColumnPinning;
+  const handleRowSelectionChange: OnChangeFn<RowSelectionState> =
+    config.onRowSelectionChange ?? setInternalRowSelection;
 
   return useReactTable({
     data,
@@ -54,10 +80,18 @@ export function useDataTable<T>(
       sorting,
       columnFilters,
       globalFilter,
+      columnSizing,
+      columnOrder,
+      columnPinning,
+      rowSelection,
     },
     onSortingChange: handleSortingChange,
     onColumnFiltersChange: handleColumnFiltersChange,
     onGlobalFilterChange: handleGlobalFilterChange,
+    onColumnSizingChange: handleColumnSizingChange,
+    onColumnOrderChange: handleColumnOrderChange,
+    onColumnPinningChange: handleColumnPinningChange,
+    onRowSelectionChange: handleRowSelectionChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -69,6 +103,15 @@ export function useDataTable<T>(
     globalFilterFn: 'includesString',
     enableSorting: config.enableSorting,
     enableGlobalFilter: config.enableSearch,
+    enableColumnResizing: config.enableColumnResizing,
+    // TanStack's own default is `'onEnd'`; `DataTable` is built for the live
+    // relayout feel of `'onChange'` (see the config JSDoc), so that's the
+    // default here rather than leaving it to TanStack's.
+    columnResizeMode: config.columnResizeMode ?? 'onChange',
+    enableRowSelection: config.enableRowSelection,
+    enableMultiRowSelection:
+      config.enableMultiRowSelection ?? Boolean(config.enableRowSelection),
+    getRowId: config.getRowId,
   });
 }
 

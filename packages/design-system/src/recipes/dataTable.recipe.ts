@@ -30,11 +30,34 @@ import { defineSlotRecipe } from '@pandacss/dev';
  *
  * Uses semantic tokens only (surface / text / border / interactive), the mono
  * font token, and the spacing / font-size / radius / duration scales.
+ *
+ * Column resize / reorder / pin + row-selection slots (added alongside
+ * `useDataTable`'s `columnSizing`/`columnOrder`/`columnPinning`/
+ * `rowSelection` config surface):
+ *   - `resizeHandle` is the drag grip `DataTable` renders in the right edge
+ *     of a resizable header cell; `&[data-resizing="true"]` highlights it
+ *     while the drag is live.
+ *   - `pinToggle` is the pin/unpin button `DataTable` renders in a header
+ *     cell when `enableColumnPinning` is on; `&[data-pinned="true"]` tints it
+ *     once the column is actually pinned.
+ *   - `headerCell`/`bodyCell` gain a `pinned` variant (`left`/`right`) for
+ *     the sticky-positioned, opaque-backed pinned column; the actual pixel
+ *     offset (`column.getStart()`/`getAfter()`) is a runtime value `DataTable`
+ *     sets inline, same convention as `minWidth`/`maxHeight`. `headerCell`
+ *     also gains `&[data-dragging="true"]`/`&[data-drop-target="true"]`
+ *     states for `DataTable`'s drag-to-reorder header affordance
+ *     (`enableColumnReordering`).
+ *   - `selectCell` is the narrow checkbox column `DataTable` renders (header
+ *     select-all + one per row) whenever the table's `rowSelection` feature
+ *     is on.
+ *   - `fixedLayout` switches `table` to `tableLayout: fixed` — required for
+ *     column widths (resizing) and sticky offsets (pinning) to mean anything;
+ *     `DataTable` turns it on whenever resizing or pinning is in play.
  */
 export const dataTableRecipe = defineSlotRecipe({
   className: 'dataTable',
   description:
-    'Class-driven data table: bordered scroll frame, muted uppercase header, and body rows with selectable/clickable states. density sets cell padding (compact is genuinely dense), align sets per-column text alignment, mono renders a column in the mono font with tabular figures. scrollable + stickyHeader back a height-bounded/virtualized table; flash is the transient delta-highlight for streaming updates. Magnitude slots style the inline value bar.',
+    'Class-driven data table: bordered scroll frame, muted uppercase header, and body rows with selectable/clickable states. density sets cell padding (compact is genuinely dense), align sets per-column text alignment, mono renders a column in the mono font with tabular figures. scrollable + stickyHeader back a height-bounded/virtualized table; flash is the transient delta-highlight for streaming updates. fixedLayout + pinned back column resize/pin; selectCell backs multi-row selection. Magnitude slots style the inline value bar.',
   slots: [
     'root',
     'table',
@@ -53,6 +76,10 @@ export const dataTableRecipe = defineSlotRecipe({
     'magnitudeProgressTrack',
     'magnitudeProgressRange',
     'magnitudeValueText',
+    'headerInner',
+    'resizeHandle',
+    'pinToggle',
+    'selectCell',
   ],
   base: {
     root: {
@@ -86,6 +113,13 @@ export const dataTableRecipe = defineSlotRecipe({
       textTransform: 'uppercase',
       color: 'text.muted',
       cursor: 'default',
+      // Drag-to-reorder affordance (`DataTable`'s `enableColumnReordering`):
+      // the dragged header dims, and the header under the pointer gets an
+      // accent rule on its leading edge as a drop-target indicator.
+      '&[data-dragging="true"]': { opacity: '0.5' },
+      '&[data-drop-target="true"]': {
+        boxShadow: 'inset 2px 0 0 0 var(--colors-interactive-accent)',
+      },
     },
     filterRow: {
       bg: 'surface.default',
@@ -125,6 +159,8 @@ export const dataTableRecipe = defineSlotRecipe({
       display: 'inline-flex',
       alignItems: 'center',
       gap: '1.5',
+      flex: '1',
+      minWidth: '0',
       borderWidth: '0',
       bg: 'transparent',
       p: '0',
@@ -212,6 +248,67 @@ export const dataTableRecipe = defineSlotRecipe({
       fontVariantNumeric: 'tabular-nums',
       justifySelf: 'end',
     },
+    // Lays the (possibly draggable/sortable) header label and the pin
+    // toggle button side by side as siblings — never nested inside one
+    // interactive element, so a click on one never bubbles into the other.
+    headerInner: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '1.5',
+      minWidth: '0',
+    },
+    // `touchAction: none` matters here — without it, a touch drag on the
+    // handle scrolls the container instead of resizing the column.
+    resizeHandle: {
+      position: 'absolute',
+      insetBlock: '0',
+      insetInlineEnd: '0',
+      width: '5px',
+      cursor: 'col-resize',
+      userSelect: 'none',
+      touchAction: 'none',
+      bg: 'transparent',
+      '&:hover': { bg: 'border.strong' },
+      '&[data-resizing="true"]': { bg: 'interactive.accent' },
+    },
+    pinToggle: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '4.5',
+      height: '4.5',
+      flexShrink: '0',
+      borderRadius: 'xs',
+      borderWidth: '0',
+      p: '0',
+      color: 'text.muted',
+      bg: 'transparent',
+      cursor: 'pointer',
+      '&:hover': { color: 'text.default', bg: 'surface.hover' },
+      '&[data-pinned="true"]': { color: 'interactive.accent' },
+    },
+    // Self-contained (not composed with `headerCell`/`bodyCell`) so it never
+    // depends on cross-slot CSS source-order: it carries its own padding,
+    // background, and border, switched on the `data-part` attribute
+    // `DataTable` already sets on every header/body cell rather than a
+    // second slot per context.
+    selectCell: {
+      width: '10',
+      textAlign: 'center',
+      verticalAlign: 'middle',
+      '&[data-part="header-cell"]': {
+        py: '3',
+        px: '4',
+        bg: 'surface.subtle',
+      },
+      '&[data-part="body-cell"]': {
+        py: '3.5',
+        px: '4',
+        borderBottomWidth: '1px',
+        borderBottomStyle: 'solid',
+        borderBottomColor: 'border.subtle',
+      },
+    },
   },
   variants: {
     // Density carries both padding and a type step: comfortable is the base
@@ -226,6 +323,10 @@ export const dataTableRecipe = defineSlotRecipe({
         bodyCell: { py: '1.5', px: '3', fontSize: 'xs' },
         magnitudeValue: { fontSize: 'xs' },
         magnitudeValueText: { fontSize: '2xs' },
+        selectCell: {
+          '&[data-part="header-cell"]': { py: '1.5', px: '3' },
+          '&[data-part="body-cell"]': { py: '1.5', px: '3' },
+        },
       },
     },
     // Alignment reaches the magnitude slots too, so a right-aligned money
@@ -286,6 +387,15 @@ export const dataTableRecipe = defineSlotRecipe({
           zIndex: 'docked',
           bg: 'surface.subtle',
         },
+        // Only the header-context instance of `selectCell` should stick —
+        // the body-context one (every row's checkbox cell) must not.
+        selectCell: {
+          '&[data-part="header-cell"]': {
+            position: 'sticky',
+            top: '0',
+            zIndex: 'docked',
+          },
+        },
       },
       false: {},
     },
@@ -300,6 +410,56 @@ export const dataTableRecipe = defineSlotRecipe({
       critical: { bodyCell: { animation: 'dataTableFlashCritical' } },
       neutral: { bodyCell: { animation: 'feedRowFlash' } },
     },
+    // `table-layout: fixed` is what makes a resize drag (or a pinned
+    // column's sticky offset) mean anything — with `auto`, the browser
+    // re-derives widths from content and ignores both. `DataTable` turns
+    // this on whenever `enableColumnResizing` or `enableColumnPinning` is in
+    // play; off by default so an ordinary table keeps its natural,
+    // content-driven column widths. `headerCell` needs `position: relative`
+    // as the resize handle's positioning context.
+    fixedLayout: {
+      true: {
+        table: { tableLayout: 'fixed' },
+        headerCell: { position: 'relative' },
+      },
+      false: {},
+    },
+    // Sticky-positioned, opaque-backed pinned column (`DataTable`'s
+    // `enableColumnPinning`). The pixel offset itself
+    // (`column.getStart()`/`getAfter()`) is a runtime value `DataTable` sets
+    // inline — this variant only supplies the position/z-index/background/
+    // separator-rule that don't depend on that offset.
+    pinned: {
+      none: {},
+      left: {
+        headerCell: {
+          position: 'sticky',
+          zIndex: 'docked',
+          bg: 'surface.subtle',
+          boxShadow: 'inset -1px 0 0 0 var(--colors-border-subtle)',
+        },
+        bodyCell: {
+          position: 'sticky',
+          zIndex: 'docked',
+          bg: 'surface.default',
+          boxShadow: 'inset -1px 0 0 0 var(--colors-border-subtle)',
+        },
+      },
+      right: {
+        headerCell: {
+          position: 'sticky',
+          zIndex: 'docked',
+          bg: 'surface.subtle',
+          boxShadow: 'inset 1px 0 0 0 var(--colors-border-subtle)',
+        },
+        bodyCell: {
+          position: 'sticky',
+          zIndex: 'docked',
+          bg: 'surface.default',
+          boxShadow: 'inset 1px 0 0 0 var(--colors-border-subtle)',
+        },
+      },
+    },
   },
   defaultVariants: {
     density: 'comfortable',
@@ -311,5 +471,7 @@ export const dataTableRecipe = defineSlotRecipe({
     scrollable: false,
     stickyHeader: false,
     flash: 'none',
+    fixedLayout: false,
+    pinned: 'none',
   },
 });

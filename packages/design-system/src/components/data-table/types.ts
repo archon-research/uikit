@@ -1,8 +1,14 @@
 import type {
   ColumnDef,
   ColumnFiltersState,
+  ColumnOrderState,
+  ColumnPinningState,
+  ColumnResizeMode,
+  ColumnSizingState,
   RowData,
+  RowSelectionState,
   OnChangeFn,
+  Row,
   SortingState,
 } from '@tanstack/react-table';
 
@@ -39,7 +45,7 @@ export interface DataTableMagnitudeConfig<TData> {
   ) => string | null;
 }
 
-export interface DataTableConfig {
+export interface DataTableConfig<T = unknown> {
   enableSearch?: boolean;
   enableSorting?: boolean;
   sorting?: SortingState;
@@ -58,6 +64,93 @@ export interface DataTableConfig {
   columnFilters?: ColumnFiltersState;
   onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
   defaultColumnFilters?: ColumnFiltersState;
+
+  /**
+   * Controlled column-sizing state (TanStack's `columnSizing` feature).
+   * Uncontrolled by default (internal `useState`, seeded from
+   * `defaultColumnSizing`) — same controlled/uncontrolled pattern as
+   * `sorting`. Pair with `enableColumnResizing` to turn on the drag handle
+   * `DataTable` renders in each resizable header cell.
+   */
+  columnSizing?: ColumnSizingState;
+  onColumnSizingChange?: OnChangeFn<ColumnSizingState>;
+  defaultColumnSizing?: ColumnSizingState;
+  /**
+   * Turns on TanStack's column-resizing feature and the drag handle
+   * `DataTable` renders in each resizable header cell (`DataTable` reads this
+   * straight off the returned `Table` instance — no separate `DataTable`
+   * prop). Off by default (additive/opt-in) — existing consumers are
+   * unaffected. Give a column `size`/`minSize`/`maxSize` in its `ColumnDef` to
+   * control its resizable range; set `enableResizing: false` on a column to
+   * exempt it.
+   */
+  enableColumnResizing?: boolean;
+  /**
+   * `'onChange'` (the default here, not TanStack's own default of `'onEnd'`)
+   * relayouts the table on every pointer move while dragging, for a
+   * live-resize feel — affordable because `DataTable` switches to
+   * `tableLayout: fixed` whenever resizing is on. `'onEnd'` waits until the
+   * drag finishes. Irrelevant unless `enableColumnResizing` is set.
+   */
+  columnResizeMode?: ColumnResizeMode;
+
+  /**
+   * Controlled column-order state (TanStack's `columnOrder` feature).
+   * Uncontrolled by default (internal `useState`, seeded from
+   * `defaultColumnOrder`) — same controlled/uncontrolled pattern as
+   * `sorting`. Column ordering needs no table-level enable flag in TanStack
+   * itself; pair this with `DataTable`'s `enableColumnReordering` prop for the
+   * drag-to-reorder header affordance.
+   */
+  columnOrder?: ColumnOrderState;
+  onColumnOrderChange?: OnChangeFn<ColumnOrderState>;
+  defaultColumnOrder?: ColumnOrderState;
+
+  /**
+   * Controlled column-pinning state (TanStack's `columnPinning` feature).
+   * Uncontrolled by default (internal `useState`, seeded from
+   * `defaultColumnPinning`) — same controlled/uncontrolled pattern as
+   * `sorting`. Pair with `DataTable`'s `enableColumnPinning` prop for the
+   * pin/unpin toggle button and sticky-positioned pinned cells; a column
+   * opts out of pinning with `enableColumnPinning: false` on its `ColumnDef`.
+   */
+  columnPinning?: ColumnPinningState;
+  onColumnPinningChange?: OnChangeFn<ColumnPinningState>;
+  defaultColumnPinning?: ColumnPinningState;
+
+  /**
+   * Controlled multi-row-selection state (TanStack's `rowSelection`
+   * feature). Uncontrolled by default (internal `useState`, seeded from
+   * `defaultRowSelection`) — same controlled/uncontrolled pattern as
+   * `sorting`. `DataTable` renders a checkbox column (header select-all +
+   * one per row) whenever this feature is turned on via `enableRowSelection`
+   * below — `DataTable` reads that straight off the returned `Table`
+   * instance, no separate `DataTable` prop.
+   */
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  defaultRowSelection?: RowSelectionState;
+  /**
+   * Turns on TanStack's row-selection feature. Off by default
+   * (additive/opt-in). Accepts a predicate to make only some rows
+   * selectable (TanStack renders/disables the checkbox per row via
+   * `row.getCanSelect()`), mirroring TanStack's own `enableRowSelection`
+   * table option.
+   */
+  enableRowSelection?: boolean | ((row: Row<T>) => boolean);
+  /**
+   * Allows selecting more than one row at once. Defaults to `true`
+   * whenever `enableRowSelection` is set (single-select is the unusual
+   * case); pass `false` explicitly for a single-select checkbox column.
+   */
+  enableMultiRowSelection?: boolean;
+  /**
+   * Stable per-row id, so selection (and pinning) state survives a sort or
+   * filter instead of tracking whatever row now sits at a given index.
+   * Defaults to TanStack's own index-based id when omitted. Mirrors
+   * TanStack's `getRowId` table option.
+   */
+  getRowId?: (row: T, index: number) => string;
 }
 
 export interface UrlSyncedTableStateAdapter {
