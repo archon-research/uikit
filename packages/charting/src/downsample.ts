@@ -13,10 +13,10 @@
  *   - {@link lttb} (Largest-Triangle-Three-Buckets) — the default. Preserves
  *     visual SHAPE: peaks, troughs, and inflections survive, so a
  *     downsampled line looks like the original line. Right for most time
- *     series (exposure, P&L, an equity curve).
+ *     series (a price, a running total, a rate).
  *   - {@link minMaxPerPixel} — preserves EXTREMES exactly by emitting the min
  *     and max of each x-bucket. Right when a spike must never be lost (a
- *     risk metric, VaR), at the cost of a slightly "hairier" line.
+ *     rare but critical value), at the cost of a slightly "hairier" line.
  */
 
 /** Past this many points per series, conflate before rendering. */

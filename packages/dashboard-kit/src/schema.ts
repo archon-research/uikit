@@ -69,7 +69,7 @@ export type LayoutNode = SplitLayoutNode | WidgetLayoutNode;
  * live tail, a replay cursor).
  */
 export type DataBinding = {
-  /** Data-source id, e.g. `"stream:allocator.exposure"`. */
+  /** Data-source id, e.g. `"stream:metrics.throughput"`. */
   source: string;
   /** Field name mapping: which field of a source record feeds which slot. */
   fields: Record<string, string>;

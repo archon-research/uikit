@@ -1,7 +1,7 @@
 import { defineSlotRecipe } from '@pandacss/dev';
 
 /**
- * `HeatCell`'s skin: one tile of a diverging heat/sector scale (green ↔ grey
+ * `HeatCell`'s skin: one tile of a diverging heat scale (green ↔ grey
  * ↔ red, saturation = magnitude, grey = flat), over the `colors.heat.*`
  * token family — a SEPARATE family from the categorical `chart.series.*`
  * ramp (see that family's own doc comment). Bucketed into the family's seven
@@ -19,7 +19,7 @@ import { defineSlotRecipe } from '@pandacss/dev';
 export const heatCellRecipe = defineSlotRecipe({
   className: 'heatCell',
   description:
-    'One tile of a diverging heat/sector scale (green<->grey<->red, saturation = magnitude, grey = flat) over the colors.heat.* token family. The step variant (seven fixed buckets) sets background + a legible foreground together.',
+    'One tile of a diverging heat scale (green<->grey<->red, saturation = magnitude, grey = flat) over the colors.heat.* token family. The step variant (seven fixed buckets) sets background + a legible foreground together.',
   slots: ['root', 'label', 'value', 'sub'],
   base: {
     root: {
