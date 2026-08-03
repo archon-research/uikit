@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@archon-research/charting": "*",
+    "@archon-research/dashboard-kit": "*",
     "@archon-research/design-system": "*",
     "@archon-research/mcp-connect": "*",
     "@archon-research/webmcp": "*",

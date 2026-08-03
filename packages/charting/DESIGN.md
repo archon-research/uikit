@@ -293,12 +293,12 @@ the original, since it's still just an array of the same datum type.
   the algorithm `downsample` dispatches to by default. Preserves visual
   *shape* (peaks, troughs, inflections all survive), always keeps the first
   and last point so the domain never shrinks, and returns exactly
-  `threshold` points. Right for most time series: exposure, P&L, an equity
-  curve.
+  `threshold` points. Right for most time series: a price, a running total, a
+  cumulative sum.
 - **`minMaxPerPixel(data, columns, accessors)`** — buckets the x-domain into
   `columns` columns and emits each column's min and max y, in x order.
   Preserves *extremes* exactly, which `lttb` does not guarantee — right when
-  a spike must never be lost (a risk metric, VaR), at the cost of a slightly
+  a spike must never be lost (a rare but critical value), at the cost of a slightly
   "hairier" line than `lttb` would produce for the same point budget.
 - **`DOWNSAMPLE_THRESHOLD`** (`1_000`) — the shared default; past this many
   points per series, conflate before rendering.
@@ -317,7 +317,7 @@ const plotted = downsample(rawSeries, {
 Both algorithms are generic over the datum type `T` via the `x`/`y`
 accessors — same shape as visx's own series accessors — so `downsample`
 composes directly with whatever a chart's data already looks like; there is
-no HATT- or product-specific datum shape baked in.
+no product-specific datum shape baked in.
 
 ## Usage patterns
 

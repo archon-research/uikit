@@ -1,5 +1,5 @@
 /**
- * One tile of a diverging heat/sector scale: green ↔ grey ↔ red,
+ * One tile of a diverging heat scale: green ↔ grey ↔ red,
  * saturation = magnitude, grey = flat. Built on the `colors.heat.*` token
  * family (light + dark), which is deliberately a SEPARATE family from the
  * categorical `chart.series.*` ramp used for chart-series/legend coloring —

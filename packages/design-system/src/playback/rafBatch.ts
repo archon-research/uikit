@@ -14,9 +14,8 @@
  * stop firing `requestAnimationFrame`, so the buffer just accumulates and
  * flushes in one go on return, rather than spinning a timer nobody can see.
  *
- * (Ported from the reasoning in the hatt-prep spike's `app/src/data/
- * rafBatch.ts`, adapted for `usePlayback`'s own live-subscribe path rather
- * than a downstream consumer's `onEvent` handler.)
+ * (Adapted for `usePlayback`'s own live-subscribe path rather than a
+ * consumer's `onEvent` handler.)
  */
 export type RafBatcher<T> = {
   /** Queue one item. It is delivered on the next animation frame. */
