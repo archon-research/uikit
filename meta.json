@@ -953,6 +953,18 @@
       "namedExport": "SinglePending",
       "meta": {}
     },
+    "organisms--dashboard-kit--sample-manifest": {
+      "name": "Sample manifest",
+      "levels": [
+        "Organisms",
+        "Dashboard kit"
+      ],
+      "locStart": 127,
+      "locEnd": 138,
+      "filePath": "src/stories/organisms/dashboard-kit.stories.tsx",
+      "namedExport": "SampleManifest",
+      "meta": {}
+    },
     "organisms--data-table-virtualized--flash-on-update": {
       "name": "Flash on update",
       "levels": [
