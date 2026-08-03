@@ -460,6 +460,48 @@ export const designSystemPandaConfig = {
               },
             },
           },
+          /**
+           * Diverging heat/sector scale — green ↔ grey ↔ red, saturation =
+           * magnitude, grey = flat. A SEPARATE token family from
+           * `chart.series.*` (never a third hue for neutral, and never
+           * repurposed from the categorical ramp's slots — see
+           * `research/palettes.md`'s closing note in the hatt-prep spike
+           * this was ported from). Seven fixed steps (`neg3…flat…pos3`)
+           * rather than a continuous gradient: bucketing reads more
+           * reliably than interpolation at tile size, and keeps the whole
+           * scale expressible as tokens instead of runtime color math.
+           * `fgStrong`/`fgSubtle` are the label colors for a saturated vs.
+           * low-saturation/flat cell, respectively.
+           */
+          heat: {
+            pos3: {
+              value: { base: '{colors.green.600}', _dark: '{colors.green.500}' },
+            },
+            pos2: {
+              value: { base: '{colors.green.400}', _dark: '{colors.green.700}' },
+            },
+            pos1: {
+              value: { base: '{colors.green.200}', _dark: '{colors.green.900}' },
+            },
+            flat: {
+              value: { base: '{colors.neutral.200}', _dark: '{colors.neutral.700}' },
+            },
+            neg1: {
+              value: { base: '{colors.red.200}', _dark: '{colors.red.900}' },
+            },
+            neg2: {
+              value: { base: '{colors.red.400}', _dark: '{colors.red.700}' },
+            },
+            neg3: {
+              value: { base: '{colors.red.600}', _dark: '{colors.red.500}' },
+            },
+            fgStrong: {
+              value: { base: '{colors.white}', _dark: '{colors.neutral.950}' },
+            },
+            fgSubtle: {
+              value: { base: '{colors.neutral.900}', _dark: '{colors.neutral.100}' },
+            },
+          },
           // Categorical (status-free) encoding; hue order matches chart.series.
           categorical: {
             '1': {
