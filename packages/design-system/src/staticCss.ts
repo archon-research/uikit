@@ -46,10 +46,12 @@ export const designSystemStaticCssRecipes = {
   emptyState: ['*'],
   themeToggle: ['*'],
   sidebarLayout: ['*'],
+  splitLayout: ['*'],
   panel: ['*'],
   dataTable: ['*'],
   chip: ['*'],
   facetedMultiSelect: ['*'],
   rangeSlider: ['*'],
   playbackBar: ['*'],
+  heatCell: ['*'],
 } satisfies Record<string, ['*']>;

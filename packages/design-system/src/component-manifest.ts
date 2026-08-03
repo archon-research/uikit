@@ -222,6 +222,14 @@ export const designSystemComponentManifest = [
     recipeKey: 'sidebarLayout',
   },
   {
+    exportName: 'SplitLayout',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'templates',
+    contractScope: 'resize-handle',
+    recipeKey: 'splitLayout',
+  },
+  {
     exportName: 'Tabs',
     behaviorSource: 'ark-ui',
     styleOwner: 'consumer',
@@ -412,6 +420,14 @@ export const designSystemComponentManifest = [
     storyBucket: 'atoms',
     contractScope: 'chip',
     recipeKey: 'chip',
+  },
+  {
+    exportName: 'HeatCell',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'molecules',
+    contractScope: 'heat-cell',
+    recipeKey: 'heatCell',
   },
   {
     exportName: 'FacetedMultiSelect',

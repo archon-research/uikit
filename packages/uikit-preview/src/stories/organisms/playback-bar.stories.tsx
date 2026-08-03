@@ -2,9 +2,12 @@ import {
   createLiveSource,
   createReplaySource,
   PlaybackBar,
+  TRANSPORT_HOTKEYS,
+  useTransportHotkeys,
   usePlayback,
   type LivePlaybackSource,
   type PlaybackEvent,
+  type TransportHotkeyAction,
 } from '@archon-research/design-system';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -183,6 +186,64 @@ export const LiveVsReplay = () => {
       </div>
 
       {mode === 'replay' ? <ReplayDemo /> : <LiveDemo />}
+    </div>
+  );
+};
+
+function describeAction(action: TransportHotkeyAction): string {
+  switch (action.kind) {
+    case 'play':
+      return 'play';
+    case 'pause':
+      return 'pause';
+    case 'step':
+      return `step ${action.direction}`;
+    case 'speed':
+      return `speed ×${action.speed}`;
+  }
+}
+
+export const WithTransportHotkeys = () => {
+  const source = useMemo(() => createReplaySource(replayLog), []);
+  const playback = usePlayback({ source, initialSpeed: 2 });
+  const [lastAction, setLastAction] = useState<string | null>(null);
+
+  useTransportHotkeys(playback, {
+    onAction: (action) => setLastAction(describeAction(action)),
+  });
+
+  return (
+    <div
+      className={css({ p: '6', display: 'grid', gap: '4', maxWidth: '3xl' })}
+    >
+      <div className={css({ fontSize: 'sm', color: 'text.muted' })}>
+        Click anywhere outside the inputs, then try the transport hotkeys — they
+        bind to <code>window</code>, so no element needs focus:
+        <ul className={css({ mt: '2', pl: '4' })}>
+          {TRANSPORT_HOTKEYS.map((hotkey) => (
+            <li key={hotkey.keys}>
+              <code>{hotkey.keys}</code> — {hotkey.does}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <PlaybackBar
+        mode={playback.mode}
+        status={playback.status}
+        clock={playback.clock}
+        bounds={playback.bounds}
+        speed={playback.speed}
+        onPlay={playback.play}
+        onPause={playback.pause}
+        onSpeedChange={playback.setSpeed}
+        onSeek={playback.seekTo}
+        onStepForward={() => playback.step('forward')}
+        onStepBackward={() => playback.step('backward')}
+      />
+      <div className={css({ fontSize: 'sm', color: 'text.muted' })}>
+        Last hotkey action: {lastAction ?? 'none yet'}
+      </div>
+      <EventList events={playback.events} />
     </div>
   );
 };

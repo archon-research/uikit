@@ -4,7 +4,7 @@ import {
   useDataTable,
 } from '@archon-research/design-system';
 import type { SortingState } from '@tanstack/react-table';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { css } from '../../../styled-system/css';
 
@@ -402,6 +402,88 @@ const linearMagnitudeColumns = [
       `$${row.original.amountUsd.toLocaleString('en-US')}`,
   },
 ];
+
+const resizableColumns = [
+  {
+    accessorKey: 'symbol',
+    header: 'Symbol',
+    size: 120,
+    cell: ({ row }: { row: { original: Row } }) => row.original.symbol,
+  },
+  {
+    accessorKey: 'chain',
+    header: 'Chain',
+    size: 160,
+    cell: ({ row }: { row: { original: Row } }) => row.original.chain,
+  },
+  {
+    accessorKey: 'amountUsd',
+    header: 'Amount (USD)',
+    size: 160,
+    meta: { align: 'right' as const, mono: true },
+    cell: ({ row }: { row: { original: Row } }) =>
+      `$${row.original.amountUsd.toLocaleString('en-US')}`,
+  },
+];
+
+export const ColumnResizeReorderPin = () => {
+  const table = useDataTable(rows, resizableColumns as never, {
+    enableSorting: true,
+    enableColumnResizing: true,
+  });
+
+  return (
+    <div className={wrapperClassName}>
+      <div className={css({ fontSize: 'sm', color: 'text.muted', mb: '4' })}>
+        Drag a header&apos;s right edge to resize (or focus the handle and use
+        the arrow keys), drag a header by its label to reorder, and use the pin
+        button to stick a column to the left edge while the table scrolls
+        horizontally.
+      </div>
+      <DataTable
+        table={table}
+        isLoading={false}
+        getRowKey={(row: Row) => `${row.chain}:${row.symbol}`}
+        enableColumnReordering
+        enableColumnPinning
+      />
+    </div>
+  );
+};
+
+export const MultiRowSelection = () => {
+  const [selectedRows, setSelectedRows] = useState<Row[]>([]);
+  const table = useDataTable(rows, columns as never, {
+    enableSorting: true,
+    enableRowSelection: true,
+  });
+
+  const selectedRowModel = table.getSelectedRowModel();
+  useEffect(() => {
+    setSelectedRows(selectedRowModel.rows.map((row) => row.original));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [table.getState().rowSelection]);
+
+  return (
+    <div className={wrapperClassName}>
+      <div className={css({ fontSize: 'sm', color: 'text.muted', mb: '4' })}>
+        Checkbox column backed by TanStack's `rowSelection` feature — select
+        all, or one row at a time.
+      </div>
+      <DataTable
+        table={table}
+        isLoading={false}
+        getRowKey={(row: Row) => `${row.chain}:${row.symbol}`}
+      />
+      <div className={css({ fontSize: 'sm', color: 'text.muted', mt: '4' })}>
+        Selected:{' '}
+        {selectedRows.length === 0
+          ? 'none'
+          : selectedRows.map((row) => row.symbol).join(', ')}
+      </div>
+    </div>
+  );
+};
 
 export const MagnitudeColumns = () => {
   const logTable = useDataTable(magnitudeRows, magnitudeColumns as never, {

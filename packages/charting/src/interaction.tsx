@@ -7,7 +7,10 @@ import { DataContext, EventEmitterProvider } from '@visx/xychart';
 // supplies that shared `EventEmitterProvider` (a mitt bus @visx/xychart already
 // depends on) alongside an app-level `DashboardInteractionProvider` so a stack
 // of charts - and any non-chart widget (a list row, a status strip) - can
-// read and drive one shared selection state.
+// read and drive one shared selection state. A separate per-key store (see
+// `useInteractionValue`) lets a widget subscribe to exactly one field of
+// that state, so a hover-frequency field (`hoveredTimestamp`) does not
+// re-render widgets bound to an unrelated field (`highlightedKey`).
 //
 // See packages/charting/DESIGN.md for the full contract and the governance
 // note on why this lives here rather than a new package.
@@ -19,6 +22,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from 'react';
 
@@ -39,16 +43,48 @@ export interface DashboardInteractionState {
   highlightedKey: string | null;
 }
 
+/** One field of {@link DashboardInteractionState} — the unit `useInteractionValue` subscribes to. */
+export type InteractionKey = keyof DashboardInteractionState;
+
 export interface DashboardInteractionApi extends DashboardInteractionState {
   setTimeRange: (range: TimeRange | null) => void;
   setHoveredTimestamp: (timestamp: number | null) => void;
   setFilter: (key: string, value: unknown) => void;
   clearFilter: (key: string) => void;
   setHighlightedKey: (key: string | null) => void;
+  /**
+   * Per-key change subscription backing {@link useInteractionValue}. Reach
+   * for it directly only if you need a bespoke `useSyncExternalStore`
+   * consumer; the intended entry point is `useInteractionValue`, not this
+   * field. Optional so a hand-rolled `DashboardInteractionApi` (e.g. in a
+   * test) that only implements the plain read/write contract stays valid —
+   * `useInteractionValue` falls back to a no-op subscription when absent.
+   */
+  subscribe?: (key: InteractionKey, onChange: () => void) => () => void;
 }
 
 const DashboardInteractionContext =
   createContext<DashboardInteractionApi | null>(null);
+
+/**
+ * Stable per-key store surface, carried in its own context so subscribing to
+ * it does not also subscribe to {@link DashboardInteractionContext}'s value
+ * (which changes identity on every `hoveredTimestamp` update — see the
+ * "hover-perf" note on {@link DashboardInteractionProvider}). The object
+ * itself never changes identity across renders of the provider: `subscribe`
+ * and `getSnapshot` both close over refs, not state, so React's context
+ * bailout (same value in, no re-render out) keeps consumers of *this*
+ * context from re-rendering when the provider re-renders for an unrelated
+ * reason.
+ */
+interface InteractionStore {
+  subscribe: (key: InteractionKey, onChange: () => void) => () => void;
+  getSnapshot: (
+    key: InteractionKey,
+  ) => DashboardInteractionState[InteractionKey];
+}
+
+const InteractionStoreContext = createContext<InteractionStore | null>(null);
 
 /**
  * Owns the shared interaction state. Usually reached via `SyncedChartGroup`
@@ -60,23 +96,118 @@ export function DashboardInteractionProvider({
 }: {
   children: ReactNode;
 }) {
-  const [timeRange, setTimeRange] = useState<TimeRange | null>(null);
-  const [hoveredTimestamp, setHoveredTimestamp] = useState<number | null>(null);
-  const [filters, setFilters] = useState<Record<string, unknown>>({});
-  const [highlightedKey, setHighlightedKey] = useState<string | null>(null);
+  const [timeRange, setTimeRangeState] = useState<TimeRange | null>(null);
+  const [hoveredTimestamp, setHoveredTimestampState] = useState<number | null>(
+    null,
+  );
+  const [filters, setFiltersState] = useState<Record<string, unknown>>({});
+  const [highlightedKey, setHighlightedKeyState] = useState<string | null>(
+    null,
+  );
 
-  const setFilter = useCallback((key: string, value: unknown) => {
-    setFilters((previous) => ({ ...previous, [key]: value }));
+  // The per-key store lives OUTSIDE React state on purpose. `valuesRef` is
+  // updated synchronously by every setter below (not just on commit), so a
+  // subscriber notified mid-event-handler always reads the fresh value —
+  // no waiting for this component's own re-render to land first. The
+  // `useState` above stays the source of truth for `DashboardInteractionApi`
+  // (full backward compatibility: existing consumers of
+  // `useDashboardInteraction`/the narrow selector hooks keep re-rendering on
+  // every change, exactly as before); `valuesRef` mirrors it for
+  // `useInteractionValue`'s per-key reads only.
+  const valuesRef = useRef<DashboardInteractionState>({
+    timeRange: null,
+    hoveredTimestamp: null,
+    filters: {},
+    highlightedKey: null,
+  });
+  const listenersRef = useRef<Map<InteractionKey, Set<() => void>> | null>(
+    null,
+  );
+  if (!listenersRef.current) listenersRef.current = new Map();
+
+  const notify = useCallback((key: InteractionKey) => {
+    for (const listener of listenersRef.current?.get(key) ?? []) listener();
   }, []);
 
-  const clearFilter = useCallback((key: string) => {
-    setFilters((previous) => {
-      if (!(key in previous)) return previous;
+  // Stable forever: closes over refs only, never over `timeRange` /
+  // `hoveredTimestamp` / etc, so its identity survives every state update
+  // above. That stability is what lets `InteractionStoreContext` skip
+  // re-rendering its consumers when this provider re-renders for an
+  // unrelated field (see the type's doc comment).
+  const subscribe = useCallback((key: InteractionKey, onChange: () => void) => {
+    const listeners = listenersRef.current!;
+    let set = listeners.get(key);
+    if (!set) {
+      set = new Set();
+      listeners.set(key, set);
+    }
+    set.add(onChange);
+    return () => {
+      set!.delete(onChange);
+    };
+  }, []);
+
+  const getSnapshot = useCallback(
+    (key: InteractionKey) => valuesRef.current[key],
+    [],
+  );
+
+  const setTimeRange = useCallback(
+    (range: TimeRange | null) => {
+      valuesRef.current.timeRange = range;
+      setTimeRangeState(range);
+      notify('timeRange');
+    },
+    [notify],
+  );
+
+  const setHoveredTimestamp = useCallback(
+    (timestamp: number | null) => {
+      valuesRef.current.hoveredTimestamp = timestamp;
+      setHoveredTimestampState(timestamp);
+      notify('hoveredTimestamp');
+    },
+    [notify],
+  );
+
+  const setHighlightedKey = useCallback(
+    (key: string | null) => {
+      valuesRef.current.highlightedKey = key;
+      setHighlightedKeyState(key);
+      notify('highlightedKey');
+    },
+    [notify],
+  );
+
+  const setFilter = useCallback(
+    (key: string, value: unknown) => {
+      const previous = valuesRef.current.filters;
+      if (Object.is(previous[key], value)) return;
+      const next = { ...previous, [key]: value };
+      valuesRef.current.filters = next;
+      setFiltersState(next);
+      notify('filters');
+    },
+    [notify],
+  );
+
+  const clearFilter = useCallback(
+    (key: string) => {
+      const previous = valuesRef.current.filters;
+      if (!(key in previous)) return;
       const next = { ...previous };
       delete next[key];
-      return next;
-    });
-  }, []);
+      valuesRef.current.filters = next;
+      setFiltersState(next);
+      notify('filters');
+    },
+    [notify],
+  );
+
+  const store = useMemo<InteractionStore>(
+    () => ({ subscribe, getSnapshot }),
+    [subscribe, getSnapshot],
+  );
 
   const value = useMemo<DashboardInteractionApi>(
     () => ({
@@ -89,21 +220,28 @@ export function DashboardInteractionProvider({
       setFilter,
       clearFilter,
       setHighlightedKey,
+      subscribe,
     }),
     [
       timeRange,
       hoveredTimestamp,
       filters,
       highlightedKey,
+      setTimeRange,
+      setHoveredTimestamp,
       setFilter,
       clearFilter,
+      setHighlightedKey,
+      subscribe,
     ],
   );
 
   return (
-    <DashboardInteractionContext.Provider value={value}>
-      {children}
-    </DashboardInteractionContext.Provider>
+    <InteractionStoreContext.Provider value={store}>
+      <DashboardInteractionContext.Provider value={value}>
+        {children}
+      </DashboardInteractionContext.Provider>
+    </InteractionStoreContext.Provider>
   );
 }
 
@@ -116,6 +254,44 @@ export function useDashboardInteraction(): DashboardInteractionApi {
     );
   }
   return context;
+}
+
+/**
+ * Reads exactly one field of {@link DashboardInteractionState}, re-rendering
+ * only when THAT field changes — unlike `useDashboardInteraction` and the
+ * narrow selector hooks below it (`useHoveredTimestamp`, `useHighlightedKey`,
+ * etc.), which all read from the same `DashboardInteractionContext` value and
+ * so all re-render on every change to ANY field (most consequentially,
+ * `hoveredTimestamp`, which updates at pointer-move frequency).
+ *
+ * Reach for this in a widget that only cares about one field — e.g. a
+ * legend or filter chip bound to `highlightedKey` — so it does not re-render
+ * on every hover tick over a synced chart. Built on `useSyncExternalStore`
+ * against the provider's per-key store (see `DashboardInteractionProvider`);
+ * falls back to a static read if used outside a provider that populates the
+ * store (should not happen via `SyncedChartGroup`/`DashboardInteractionProvider`).
+ */
+export function useInteractionValue<K extends InteractionKey>(
+  key: K,
+): DashboardInteractionState[K] {
+  const store = useContext(InteractionStoreContext);
+  if (!store) {
+    throw new Error(
+      'useInteractionValue must be used within a DashboardInteractionProvider (SyncedChartGroup provides one).',
+    );
+  }
+
+  const subscribeToKey = useCallback(
+    (onChange: () => void) => store.subscribe(key, onChange),
+    [store, key],
+  );
+
+  const getSnapshot = useCallback(
+    () => store.getSnapshot(key) as DashboardInteractionState[K],
+    [store, key],
+  );
+
+  return useSyncExternalStore(subscribeToKey, getSnapshot, getSnapshot);
 }
 
 /** Narrow selector hook for the shared time range (e.g. set by a brush). */

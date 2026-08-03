@@ -8,6 +8,7 @@ import { dataTableRecipe } from './recipes/dataTable.recipe.js';
 import { drawerRecipe } from './recipes/drawer.recipe.js';
 import { emptyStateRecipe } from './recipes/emptyState.recipe.js';
 import { facetedMultiSelectRecipe } from './recipes/facetedMultiSelect.recipe.js';
+import { heatCellRecipe } from './recipes/heatCell.recipe.js';
 import { indicatorRecipe } from './recipes/indicator.recipe.js';
 import { inputRecipe } from './recipes/input.recipe.js';
 import { interactiveItemRecipe } from './recipes/interactiveItem.recipe.js';
@@ -23,6 +24,7 @@ import { segmentedControlRecipe } from './recipes/segmentedControl.recipe.js';
 import { selectRecipe } from './recipes/select.recipe.js';
 import { sidebarGridRecipe } from './recipes/sidebarGrid.recipe.js';
 import { sidebarLayoutRecipe } from './recipes/sidebarLayout.recipe.js';
+import { splitLayoutRecipe } from './recipes/splitLayout.recipe.js';
 import { statRowRecipe, statTileRecipe } from './recipes/statTile.recipe.js';
 import { surfaceMessageRecipe } from './recipes/surfaceMessage.recipe.js';
 import { switchRecipe } from './recipes/switch.recipe.js';
@@ -247,6 +249,20 @@ const keyframes = {
     '0%': { backgroundColor: 'var(--colors-bg-critical)' },
     '100%': { backgroundColor: 'transparent' },
   },
+  // Two-phase flash (`DataTable`'s `flashOnUpdate="two-phase"`): hold the
+  // tint at full strength, then an independently-timed fade — as two
+  // separate keyframes rather than `dataTableFlashPositive`'s single
+  // ease-out, so the hold and fade durations can differ (see the
+  // `dataTableFlashTwoPhase` animation token below). Named generically
+  // (not `dataTable*`) because the hold/fade shape — tint via a CSS custom
+  // property, hold, then fade to transparent — isn't specific to tables.
+  flashHold: {
+    '0%, 100%': { backgroundColor: 'var(--data-table-flash-color)' },
+  },
+  flashFade: {
+    from: { backgroundColor: 'var(--data-table-flash-color)' },
+    to: { backgroundColor: 'transparent' },
+  },
   valueSettleIn: {
     '0%': { opacity: '0', transform: 'translateY(-0.25rem)' },
     '100%': { opacity: '1', transform: 'translateY(0)' },
@@ -268,6 +284,15 @@ const animationTokens = {
   feedRowFlash: { value: 'feedRowFlash 1.2s ease-out' },
   dataTableFlashPositive: { value: 'dataTableFlashPositive 1s ease-out' },
   dataTableFlashCritical: { value: 'dataTableFlashCritical 1s ease-out' },
+  // Report spec: hold ~300-500ms, then an independently-timed fade
+  // ~800-1000ms. The CSS `animation` shorthand takes comma-separated
+  // definitions, so both phases (and the fade's own delay, offset past the
+  // end of the hold) live in this one token — `DataTable` just sets
+  // `--data-table-flash-color` per direction (see the `dataTable` recipe's
+  // `flashTwoPhase` variant) and applies this animation unchanged.
+  dataTableFlashTwoPhase: {
+    value: 'flashHold 400ms linear both, flashFade 900ms ease-out 400ms both',
+  },
   valueSettleIn: { value: 'valueSettleIn 200ms ease-out' },
   edgeRun: { value: 'edgeRun 1s linear infinite' },
   drawerSlide: {
@@ -614,6 +639,63 @@ export const designSystemPreset = definePreset({
               },
             },
           },
+          /**
+           * Diverging heat/sector scale — green ↔ grey ↔ red, saturation =
+           * magnitude, grey = flat. A SEPARATE token family from
+           * `chart.series.*` (never a third hue for neutral, and never
+           * repurposed from the categorical ramp's slots — see
+           * `research/palettes.md`'s closing note in the hatt-prep spike
+           * this was ported from). Seven fixed steps (`neg3…flat…pos3`)
+           * rather than a continuous gradient: bucketing reads more
+           * reliably than interpolation at tile size, and keeps the whole
+           * scale expressible as tokens instead of runtime color math.
+           * `fgStrong`/`fgSubtle` are the label colors for a saturated vs.
+           * low-saturation/flat cell, respectively.
+           */
+          heat: {
+            pos3: {
+              value: {
+                base: '{colors.green.600}',
+                _dark: '{colors.green.500}',
+              },
+            },
+            pos2: {
+              value: {
+                base: '{colors.green.400}',
+                _dark: '{colors.green.700}',
+              },
+            },
+            pos1: {
+              value: {
+                base: '{colors.green.200}',
+                _dark: '{colors.green.900}',
+              },
+            },
+            flat: {
+              value: {
+                base: '{colors.neutral.200}',
+                _dark: '{colors.neutral.700}',
+              },
+            },
+            neg1: {
+              value: { base: '{colors.red.200}', _dark: '{colors.red.900}' },
+            },
+            neg2: {
+              value: { base: '{colors.red.400}', _dark: '{colors.red.700}' },
+            },
+            neg3: {
+              value: { base: '{colors.red.600}', _dark: '{colors.red.500}' },
+            },
+            fgStrong: {
+              value: { base: '{colors.white}', _dark: '{colors.neutral.950}' },
+            },
+            fgSubtle: {
+              value: {
+                base: '{colors.neutral.900}',
+                _dark: '{colors.neutral.100}',
+              },
+            },
+          },
           // Categorical (status-free) encoding: 5 visually distinct hues for
           // grouping, category chips, and legends — NOT status (no red=alarm /
           // green=ok baggage). `bg` is a subtle fill, `fg` is AA-legible label
@@ -754,12 +836,14 @@ export const designSystemPreset = definePreset({
         emptyState: emptyStateRecipe,
         themeToggle: themeToggleRecipe,
         sidebarLayout: sidebarLayoutRecipe,
+        splitLayout: splitLayoutRecipe,
         panel: panelRecipe,
         dataTable: dataTableRecipe,
         chip: chipRecipe,
         facetedMultiSelect: facetedMultiSelectRecipe,
         rangeSlider: rangeSliderRecipe,
         playbackBar: playbackBarRecipe,
+        heatCell: heatCellRecipe,
       },
     },
   },

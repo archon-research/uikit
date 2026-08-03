@@ -12,6 +12,11 @@ export {
   SidebarLayout,
   type SidebarLayoutProps,
 } from './layouts/SidebarLayout.js';
+export {
+  SplitLayout,
+  type SplitLayoutPanel,
+  type SplitLayoutProps,
+} from './layouts/SplitLayout.js';
 export { ThemeProvider } from './theme/ThemeProvider.js';
 export {
   useTheme,
@@ -146,6 +151,11 @@ export {
   type ChipSize,
 } from './components/Chip.js';
 export {
+  HeatCell,
+  type HeatCellProps,
+  type HeatStep,
+} from './components/HeatCell.js';
+export {
   FacetedMultiSelect,
   type FacetOption,
 } from './components/FacetedMultiSelect.js';
@@ -167,6 +177,8 @@ export {
   usePlayback,
   createLiveSource,
   createReplaySource,
+  useTransportHotkeys,
+  TRANSPORT_HOTKEYS,
   type PlaybackMode,
   type PlaybackStatus,
   type StepDirection,
@@ -178,4 +190,7 @@ export {
   type PlaybackSource,
   type PlaybackSourceStatus,
   type ReplayPlaybackSource,
+  type TransportHotkeyAction,
+  type TransportHotkeySnapshot,
+  type UseTransportHotkeysOptions,
 } from './playback/index.js';

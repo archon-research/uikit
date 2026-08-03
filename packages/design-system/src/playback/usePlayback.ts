@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { createRafBatcher } from './rafBatch.js';
 import type { PlaybackBounds, PlaybackEvent, PlaybackSource } from './types.js';
 
 export type PlaybackMode = 'live' | 'replay';
@@ -209,17 +210,27 @@ export function usePlayback<TPayload = unknown>({
     setLiveEvents([]);
     setLiveStatus(liveAutoplay ? 'connecting' : 'paused');
 
+    // A frame's worth of arriving events collapse into ONE `setLiveEvents`
+    // call (one array copy) instead of one per event — see rafBatch.ts.
+    // `onEvent` still fires per event, in arrival order, on flush: batching
+    // the state *commit* is the optimization, not the event contract a
+    // consumer observes.
+    const batcher = createRafBatcher<PlaybackEvent<TPayload>>((batch) => {
+      setLiveEvents((previous) => [...previous, ...batch]);
+      const last = batch[batch.length - 1];
+      if (last) setLiveClock(last.timestamp);
+      for (const event of batch) onEventRef.current?.(event);
+      setLiveStatus((current) =>
+        current === 'connecting' ? 'connected' : current,
+      );
+    });
+
     const unsubscribeEvents = source.subscribe((event) => {
       if (!livePlayingRef.current) {
         liveBufferRef.current.push(event);
         return;
       }
-      setLiveEvents((previous) => [...previous, event]);
-      setLiveClock(event.timestamp);
-      onEventRef.current?.(event);
-      setLiveStatus((current) =>
-        current === 'connecting' ? 'connected' : current,
-      );
+      batcher.push(event);
     });
 
     const unsubscribeStatus = source.subscribeStatus?.((status) => {
@@ -235,6 +246,7 @@ export function usePlayback<TPayload = unknown>({
     return () => {
       unsubscribeEvents();
       unsubscribeStatus?.();
+      batcher.dispose();
     };
   }, [source, liveAutoplay]);
 
