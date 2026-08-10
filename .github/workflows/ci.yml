@@ -119,7 +119,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.lint.result == 'success' &&
-      (github.event_name == 'merge_group' || github.event_name == 'pull_request' || needs.detect-changes.outputs.snapshot_files != '') # [debug] force run on PR for orphan-gate demo
+      (github.event_name == 'merge_group' || needs.detect-changes.outputs.snapshot_files != '')
     # Pinned to macos-26 (not macos-latest) so the runner matches the macOS
     # version snapshots are generated on. CoreText font metrics differ between
     # macOS major versions, so a mismatch reflows text and fails comparisons.
