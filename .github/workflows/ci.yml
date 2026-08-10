@@ -116,12 +116,10 @@ jobs:
     needs:
       - detect-changes
       - lint
-    # [debug] the `pull_request` clause below forces this job to run on the PR
-    # so the orphan-gate demo executes; reverted after the demo.
     if: |
       !cancelled() &&
       needs.lint.result == 'success' &&
-      (github.event_name == 'merge_group' || github.event_name == 'pull_request' || needs.detect-changes.outputs.snapshot_files != '')
+      (github.event_name == 'merge_group' || github.event_name == 'pull_request' || needs.detect-changes.outputs.snapshot_files != '') # [debug] force run on PR for orphan-gate demo
     # Pinned to macos-26 (not macos-latest) so the runner matches the macOS
     # version snapshots are generated on. CoreText font metrics differ between
     # macOS major versions, so a mismatch reflows text and fails comparisons.
