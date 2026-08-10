@@ -44,6 +44,23 @@
       groupName: "typescript",
     },
     {
+      // Keep semantic-release, the changelog preset it drives, and the
+      // conventional-changelog-writer override in lockstep: release-notes-generator
+      // ships bundled inside semantic-release itself, and a
+      // conventional-changelog-conventionalcommits bump landing on its own
+      // (see PR #52) silently broke changelog generation (only the version
+      // header rendered, no Features/Bug Fixes sections) without failing CI.
+      // See the writer override in package.json for the current workaround.
+      matchPackageNames: [
+        "semantic-release",
+        "@semantic-release/exec",
+        "@semantic-release/git",
+        "conventional-changelog-conventionalcommits",
+        "conventional-changelog-writer",
+      ],
+      groupName: "semantic-release-tooling",
+    },
+    {
       // Node dependencies - minor and patch only
       matchDatasources: ["npm"],
       matchUpdateTypes: ["minor", "patch"],
