@@ -72,7 +72,7 @@ export function Badge({
         `badge--size_${size}`,
         className,
       )}
-      style={{ letterSpacing: '0.5px', ...style }}
+      style={style}
       data-scope="badge"
       data-part="root"
       data-variant={variant}

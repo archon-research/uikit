@@ -75,11 +75,10 @@ export function Button({
 
   // `gap` remains an inline escape hatch (an arbitrary dimension, not a token);
   // everything colour/metric-related now flows through the recipe.
-  const inlineStyle: CSSProperties = {
-    letterSpacing: '0.5px',
-    ...(gap !== undefined ? { gap } : undefined),
-    ...style,
-  };
+  const inlineStyle: CSSProperties | undefined =
+    gap !== undefined || style
+      ? { ...(gap !== undefined ? { gap } : undefined), ...style }
+      : undefined;
 
   return (
     <button

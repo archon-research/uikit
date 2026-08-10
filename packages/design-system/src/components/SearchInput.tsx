@@ -55,7 +55,7 @@ function SearchIcon() {
       aria-hidden="true"
       className={slots.icon}
       size={16}
-      strokeWidth={3}
+      strokeWidth={1.9}
       absoluteStrokeWidth
     />
   );
