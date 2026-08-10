@@ -148,7 +148,7 @@ jobs:
       # is consumed by tests/snapshot.spec.ts. The merge_group run skips this step,
       # leaving the env unset so the full suite runs as the merge gate.
       - name: Scope snapshots to changed PNGs (pull requests only)
-        if: github.event_name != 'merge_group' && false # [debug] forced full run for benchmarking
+        if: github.event_name != 'merge_group'
         env:
           CHANGED_SNAPSHOTS: ${{ needs.detect-changes.outputs.snapshot_files }}
         run: |
