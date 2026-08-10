@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Update only the visual snapshots a local change actually affects, instead of
-// re-rendering all ~188 stories.
+// Default `snapshot:update`: re-render only the visual snapshots a local change
+// actually affects, instead of the whole suite. Use `snapshot:update:all` to
+// force a full re-render.
 //
 // How it works:
 //   1. Build the preview once. The `story-deps.json` Vite plugin (vite.config.ts)
