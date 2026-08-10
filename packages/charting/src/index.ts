@@ -80,6 +80,20 @@ export type {
   TimeRange,
 } from './interaction.js';
 
+// Responsive sizing: measure a container, derive width/height + axis margins.
+export {
+  ResponsiveChart,
+  useChartDimensions,
+  deriveLeftMargin,
+  FALLBACK_CHART_WIDTH,
+} from './responsive.js';
+export type {
+  ResponsiveChartProps,
+  ChartDimensions,
+  UseChartDimensionsOptions,
+  DeriveLeftMarginOptions,
+} from './responsive.js';
+
 // Series downsampling / pixel conflation for large series.
 export {
   DOWNSAMPLE_THRESHOLD,
