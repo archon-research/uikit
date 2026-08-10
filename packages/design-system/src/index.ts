@@ -127,6 +127,7 @@ export {
   type PanelTitleTransform,
   type PanelTitleSize,
   type PanelMetaSize,
+  type PanelState,
 } from './components/Panel.js';
 export {
   StatTile,
@@ -135,7 +136,41 @@ export {
   type StatRowProps,
   type StatTileTone,
   type StatTileLabelCase,
+  type StatTileAccent,
 } from './components/StatTile.js';
+export {
+  Figure,
+  type FigureProps,
+  type FigureTone,
+  type FigureSize,
+} from './components/Figure.js';
+export {
+  Meter,
+  meterPercent,
+  type MeterProps,
+  type MeterTone,
+  type MeterMarker,
+} from './components/Meter.js';
+export {
+  ProportionBar,
+  type ProportionBarProps,
+  type ProportionRow,
+} from './components/ProportionBar.js';
+export {
+  InfoTip,
+  type InfoTipProps,
+  type InfoTipAlign,
+} from './components/InfoTip.js';
+export {
+  FlashOnChange,
+  useValueFlash,
+  flashDirection,
+  type FlashOnChangeProps,
+  type FlashTone,
+  type FlashDirection,
+  type UseValueFlashOptions,
+  type UseValueFlashResult,
+} from './components/FlashOnChange.js';
 export {
   Code,
   CodeBlock,
@@ -143,7 +178,11 @@ export {
   type CodeBlockProps,
 } from './components/Code.js';
 export { PageShell, type PageShellProps } from './layouts/PageShell.js';
-export { SidebarGrid, type SidebarGridProps } from './layouts/SidebarGrid.js';
+export {
+  SidebarGrid,
+  type SidebarGridProps,
+  type SidebarGridCollapseBelow,
+} from './layouts/SidebarGrid.js';
 export {
   Chip,
   type ChipVariant,

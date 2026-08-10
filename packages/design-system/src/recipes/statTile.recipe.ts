@@ -67,11 +67,34 @@ export const statTileRecipe = defineSlotRecipe({
         },
       },
     },
+    // Leading-edge state stripe: a thicker colored left border that carries the
+    // tile's state as a few pixels of color, independent of `tone` (which
+    // recolors the value). A runtime hue is applied by the component as an
+    // inline `borderLeftColor` (which wins over these token colors), so an
+    // instrument's own color can drive the stripe without a build-time class.
+    // The discipline the value must still keep: an accent never carries state
+    // alone — the value or sub caption states it too.
+    accent: {
+      none: {},
+      neutral: {
+        root: { borderLeftWidth: '3px', borderLeftColor: 'border.strong' },
+      },
+      success: {
+        root: { borderLeftWidth: '3px', borderLeftColor: 'text.success' },
+      },
+      warning: {
+        root: { borderLeftWidth: '3px', borderLeftColor: 'text.warning' },
+      },
+      critical: {
+        root: { borderLeftWidth: '3px', borderLeftColor: 'text.critical' },
+      },
+    },
   },
   defaultVariants: {
     tone: 'default',
     labelCase: 'none',
     density: 'comfortable',
+    accent: 'none',
   },
 });
 

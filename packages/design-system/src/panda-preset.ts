@@ -8,10 +8,13 @@ import { dataTableRecipe } from './recipes/dataTable.recipe.js';
 import { drawerRecipe } from './recipes/drawer.recipe.js';
 import { emptyStateRecipe } from './recipes/emptyState.recipe.js';
 import { facetedMultiSelectRecipe } from './recipes/facetedMultiSelect.recipe.js';
+import { figureRecipe } from './recipes/figure.recipe.js';
+import { flashRecipe } from './recipes/flash.recipe.js';
 import { heatCellRecipe } from './recipes/heatCell.recipe.js';
 import { indicatorRecipe } from './recipes/indicator.recipe.js';
 import { inputRecipe } from './recipes/input.recipe.js';
 import { interactiveItemRecipe } from './recipes/interactiveItem.recipe.js';
+import { meterRecipe, proportionBarRecipe } from './recipes/meter.recipe.js';
 import { pageShellRecipe } from './recipes/pageShell.recipe.js';
 import { panelRecipe } from './recipes/panel.recipe.js';
 import { panelActionRecipe } from './recipes/panelAction.recipe.js';
@@ -29,6 +32,7 @@ import { statRowRecipe, statTileRecipe } from './recipes/statTile.recipe.js';
 import { surfaceMessageRecipe } from './recipes/surfaceMessage.recipe.js';
 import { switchRecipe } from './recipes/switch.recipe.js';
 import { themeToggleRecipe } from './recipes/themeToggle.recipe.js';
+import { infoTipRecipe, tooltipRecipe } from './recipes/tooltip.recipe.js';
 
 /**
  * BREAKING VALUE-CHANGES (batch into the next major):
@@ -802,6 +806,18 @@ export const designSystemPreset = definePreset({
             lineHeight: 'relaxed',
           },
         },
+        // Numeric/figure type: mono family with tabular figures and slightly
+        // tightened tracking so columns of numbers align and a headline figure
+        // and the row beneath it read as the same kind of value. Consumers reach
+        // for this (or the `Figure` atom / `figure` recipe) instead of
+        // re-declaring `fontVariantNumeric: 'tabular-nums'` at each call site.
+        figure: {
+          value: {
+            fontFamily: 'mono',
+            fontVariantNumeric: 'tabular-nums',
+            letterSpacing: '-0.02em',
+          },
+        },
         codeBlock: {
           value: {
             fontFamily: 'mono',
@@ -820,6 +836,9 @@ export const designSystemPreset = definePreset({
         code: codeRecipe,
         pageShell: pageShellRecipe,
         badge: badgeRecipe,
+        figure: figureRecipe,
+        tooltip: tooltipRecipe,
+        flash: flashRecipe,
       },
       slotRecipes: {
         surfaceMessage: surfaceMessageRecipe,
@@ -843,6 +862,9 @@ export const designSystemPreset = definePreset({
         rangeSlider: rangeSliderRecipe,
         playbackBar: playbackBarRecipe,
         heatCell: heatCellRecipe,
+        meter: meterRecipe,
+        proportionBar: proportionBarRecipe,
+        infoTip: infoTipRecipe,
       },
     },
   },

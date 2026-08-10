@@ -14,6 +14,7 @@ const cx = (...classes: Array<string | false | null | undefined>): string =>
 export type StatTileTone = 'default' | 'success' | 'critical';
 export type StatTileLabelCase = 'none' | 'upper';
 export type StatTileDensity = 'comfortable' | 'compact';
+export type StatTileAccent = 'neutral' | 'success' | 'warning' | 'critical';
 
 export type StatTileProps = HTMLAttributes<HTMLDivElement> & {
   label: ReactNode;
@@ -34,6 +35,19 @@ export type StatTileProps = HTMLAttributes<HTMLDivElement> & {
    * and sub caption as tighter micro type for information-dense layouts.
    */
   density?: StatTileDensity;
+  /**
+   * Leading-edge state stripe via the `statTile` `accent` slot variant. Off by
+   * default (no stripe, unchanged frame). A tone renders a 3px colored left
+   * border; keep the state in the value/sub too — an accent never carries it
+   * alone.
+   */
+  accent?: StatTileAccent;
+  /**
+   * Runtime hue for the accent stripe (any CSS color, e.g. an instrument's
+   * `var(--...)`). Applied as an inline `border-left-color` that overrides the
+   * `accent` tone color, and turns the stripe on (width) even without `accent`.
+   */
+  accentColor?: string;
 };
 
 export type StatRowProps = HTMLAttributes<HTMLDivElement>;
@@ -45,20 +59,34 @@ export function StatTile({
   tone = 'default',
   labelCase = 'none',
   density = 'comfortable',
+  accent,
+  accentColor,
   className,
+  style,
   ...rest
 }: StatTileProps) {
   const toneSuffix = tone === 'default' ? false : `--tone_${tone}`;
   const densitySuffix =
     density === 'comfortable' ? false : `--density_${density}`;
+  // A runtime color turns the stripe on even without an explicit `accent` tone
+  // (defaulting to `neutral` for the border width); the inline color then wins.
+  const resolvedAccent = accent ?? (accentColor != null ? 'neutral' : null);
+  const mergedStyle =
+    accentColor != null ? { borderLeftColor: accentColor, ...style } : style;
 
   return (
     <div
       {...rest}
-      className={cx('statTile__root', className)}
+      className={cx(
+        'statTile__root',
+        resolvedAccent && `statTile__root--accent_${resolvedAccent}`,
+        className,
+      )}
+      style={mergedStyle}
       data-scope="stat-tile"
       data-part="root"
       data-tone={tone}
+      data-accent={resolvedAccent ?? undefined}
     >
       <div
         className={cx(
