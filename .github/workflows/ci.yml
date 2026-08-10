@@ -137,6 +137,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Fail fast (before the build/render) if any committed snapshot PNG has no
+      # matching story — left behind when a story was removed or renamed.
+      - name: Check for orphaned snapshots
+        run: npm run snapshot:check-orphans --workspace @archon-research/uikit-preview
+
       - name: Build packages
         run: npm run build
 
