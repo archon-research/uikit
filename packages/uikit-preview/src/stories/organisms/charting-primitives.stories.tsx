@@ -6,6 +6,7 @@ import {
   Grid,
   LineSeries,
   ReferenceBand,
+  ResponsiveChart,
   SyncedChartGroup,
   TimeRangeBrush,
   XYChart,
@@ -370,6 +371,47 @@ export const Default = () => (
       <ReferenceBandPanels />
       <CandlestickPanel />
       <SyncedCursorPanel />
+    </div>
+  </ThemeProvider>
+);
+
+// `ResponsiveChart` measures its container and derives width/height from an
+// aspect ratio + height floor, so a pixel-sized `XYChart` sizes to a fluid
+// layout without the consumer wiring up a ResizeObserver and a fallback width.
+export const Responsive = () => (
+  <ThemeProvider>
+    <div className={pageClassName}>
+      <section className={panelClassName}>
+        <div className={css({ mb: '3' })}>
+          <p className={panelTitleClassName}>ResponsiveChart</p>
+          <p className={panelSubtitleClassName}>
+            The chart fills the container width; height follows{' '}
+            <code>aspect</code> with a <code>minHeight</code> floor.
+          </p>
+        </div>
+        <ResponsiveChart aspect={3} minHeight={180}>
+          {({ width, height }) => (
+            <XYChart
+              width={width}
+              height={height}
+              theme={chartTheme}
+              xScale={{ type: 'linear' }}
+              yScale={{ type: 'linear' }}
+            >
+              <Grid columns={false} numTicks={4} />
+              <Axis orientation="bottom" numTicks={6} />
+              <Axis orientation="left" numTicks={4} />
+              <LineSeries
+                dataKey="A"
+                data={SERIES}
+                xAccessor={xAccessor}
+                yAccessor={yAccessor}
+                stroke={seriesColor.primary}
+              />
+            </XYChart>
+          )}
+        </ResponsiveChart>
+      </section>
     </div>
   </ThemeProvider>
 );
