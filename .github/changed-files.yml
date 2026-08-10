@@ -17,10 +17,8 @@ demo_relay:
   - .github/workflows/deploy-relay.yml
   - .github/changed-files.yml
 
-visual_snapshots:
-  - packages/design-system/**
-  - packages/uikit-preview/**
-  - package.json
-  - package-lock.json
-  - .github/workflows/ci.yml
-  - .github/changed-files.yml
+# Only the committed snapshot PNGs. On pull requests the visual-snapshots job
+# checks exactly the stories whose PNGs changed here; the merge-queue run is
+# unconditional and re-checks the full suite (see ci.yml).
+visual_snapshot_files:
+  - packages/uikit-preview/tests/snapshot.spec.ts-snapshots/**

@@ -14,7 +14,9 @@
     "dev": "npm run generate && ladle serve",
     "snapshot:serve": "ladle preview --outDir dist --host 127.0.0.1 --port 61000",
     "snapshot:test": "playwright test",
-    "snapshot:update": "playwright test --update-snapshots",
+    "snapshot:update": "node scripts/affected-stories.mjs",
+    "snapshot:update:all": "playwright test --update-snapshots",
+    "snapshot:check-orphans": "node scripts/check-orphan-snapshots.mjs",
     "cf:test": "vitest run --config demo-relay/vitest.config.ts"
   },
   "dependencies": {
