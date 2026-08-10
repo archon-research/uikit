@@ -56,6 +56,7 @@ export function StatTile({
     <div
       {...rest}
       className={cx('statTile__root', className)}
+      style={{ letterSpacing: '0.5px' }}
       data-scope="stat-tile"
       data-part="root"
       data-tone={tone}
