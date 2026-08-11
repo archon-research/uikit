@@ -1,4 +1,4 @@
-import { type ReactNode, useId } from 'react';
+import { type ButtonHTMLAttributes, type ReactNode, useId } from 'react';
 
 /**
  * Class names emitted by the `infoTip` slot recipe (registered in the preset +
@@ -23,6 +23,15 @@ export type InfoTipProps = {
   trigger?: ReactNode;
   /** Class applied to the root wrapper. */
   className?: string;
+  /**
+   * Props spread onto the trigger `button` — e.g. `data-testid`, an `onClick`,
+   * or an explicit `aria-label` (which overrides `label`). Lets a consumer
+   * migrating off a hand-rolled tip keep its own test hook. The essential
+   * attributes (`type`, `aria-describedby`, the `infoTip__trigger` class, which
+   * is the stable test hook) stay owned by the component; a `className` here is
+   * merged, not replaced.
+   */
+  triggerProps?: ButtonHTMLAttributes<HTMLButtonElement>;
 };
 
 /**
@@ -37,6 +46,7 @@ export function InfoTip({
   align = 'start',
   trigger,
   className,
+  triggerProps,
 }: InfoTipProps) {
   const bubbleId = useId();
 
@@ -47,10 +57,11 @@ export function InfoTip({
       data-part="root"
     >
       <button
+        {...triggerProps}
         type="button"
-        className="infoTip__trigger"
+        className={cx('infoTip__trigger', triggerProps?.className)}
         data-part="trigger"
-        aria-label={label}
+        aria-label={triggerProps?.['aria-label'] ?? label}
         aria-describedby={bubbleId}
       >
         {trigger ?? <span aria-hidden="true">i</span>}
