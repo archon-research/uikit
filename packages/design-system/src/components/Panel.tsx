@@ -23,6 +23,7 @@ export type PanelDensity = 'compact' | 'normal';
 export type PanelTitleTransform = 'none' | 'upper';
 export type PanelTitleSize = 'md' | 'sm';
 export type PanelMetaSize = 'md' | 'sm';
+export type PanelAccent = 'neutral' | 'success' | 'warning' | 'critical';
 
 /**
  * A named body state. The four names stay distinct on purpose: `empty`
@@ -93,6 +94,19 @@ export type PanelProps = HTMLAttributes<HTMLDivElement> & {
   stateTitle?: string;
   /** Overrides the default body for `state`. Ignored unless `state` is set. */
   stateBody?: string;
+  /**
+   * Leading-edge state stripe via the `panel` `accent` slot variant, mirroring
+   * `StatTile`'s `accent`. Off by default (no stripe, unchanged frame). A tone
+   * renders a 3px colored left border; keep the state in the title/body too — an
+   * accent never carries it alone.
+   */
+  accent?: PanelAccent;
+  /**
+   * Runtime hue for the accent stripe (any CSS color, e.g. an instrument's
+   * `var(--...)`). Applied as an inline `border-left-color` that overrides the
+   * `accent` tone color, and turns the stripe on (width) even without `accent`.
+   */
+  accentColor?: string;
 };
 
 export function Panel({
@@ -107,12 +121,20 @@ export function Panel({
   state,
   stateTitle,
   stateBody,
+  accent,
+  accentColor,
   className,
+  style,
   children,
   ...rest
 }: PanelProps) {
   const hasHeader = title != null || meta != null || actions != null;
   const stateCopy = state != null ? PANEL_STATE_COPY[state] : null;
+  // A runtime color turns the stripe on even without an explicit `accent` tone
+  // (defaulting to `neutral` for the border width); the inline color then wins.
+  const resolvedAccent = accent ?? (accentColor != null ? 'neutral' : null);
+  const mergedStyle =
+    accentColor != null ? { borderLeftColor: accentColor, ...style } : style;
 
   return (
     <div
@@ -121,13 +143,16 @@ export function Panel({
         'panel__root',
         `panel__root--surface_${surface}`,
         `panel__root--density_${density}`,
+        resolvedAccent && `panel__root--accent_${resolvedAccent}`,
         className,
       )}
+      style={mergedStyle}
       data-scope="panel"
       data-part="root"
       data-surface={surface}
       data-density={density}
       data-panel-state={state}
+      data-accent={resolvedAccent ?? undefined}
     >
       {hasHeader ? (
         <div className="panel__header" data-part="header">

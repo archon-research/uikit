@@ -128,6 +128,7 @@ export {
   type PanelTitleSize,
   type PanelMetaSize,
   type PanelState,
+  type PanelAccent,
 } from './components/Panel.js';
 export {
   StatTile,

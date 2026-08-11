@@ -89,6 +89,27 @@ export const panelRecipe = defineSlotRecipe({
       md: {},
       sm: { meta: { textStyle: 'metaText' } },
     },
+    // Leading-edge state stripe, mirroring `StatTile`'s `accent`. A thicker
+    // colored left border that carries state as a few pixels of color. A runtime
+    // hue is applied by the component as an inline `borderLeftColor` (which wins
+    // over these token colors), so an instrument's own color can drive the
+    // stripe without a build-time class. An accent never carries state alone —
+    // the panel's title or body must still state it.
+    accent: {
+      none: {},
+      neutral: {
+        root: { borderLeftWidth: '3px', borderLeftColor: 'border.strong' },
+      },
+      success: {
+        root: { borderLeftWidth: '3px', borderLeftColor: 'text.success' },
+      },
+      warning: {
+        root: { borderLeftWidth: '3px', borderLeftColor: 'text.warning' },
+      },
+      critical: {
+        root: { borderLeftWidth: '3px', borderLeftColor: 'text.critical' },
+      },
+    },
   },
   defaultVariants: {
     surface: 'raised',
@@ -96,5 +117,6 @@ export const panelRecipe = defineSlotRecipe({
     titleTransform: 'none',
     titleSize: 'md',
     metaSize: 'md',
+    accent: 'none',
   },
 });
