@@ -146,3 +146,24 @@ export const MetaSize = () => (
     </p>
   </div>
 );
+
+// A leading-edge accent stripe carries state as a few pixels of color (mirrors
+// StatTile's accent). `accentColor` supplies a runtime hue, e.g. an instrument.
+export const Accent = () => (
+  <div className={frameClassName}>
+    <Panel accent="success" title="Within limits" meta="all checks green">
+      <p className={bodyClassName}>accent="success"</p>
+    </Panel>
+    <Panel accent="warning" title="Approaching limit" meta="82% of cap">
+      <p className={bodyClassName}>accent="warning"</p>
+    </Panel>
+    <Panel accent="critical" title="Breached" meta="over cap">
+      <p className={bodyClassName}>accent="critical"</p>
+    </Panel>
+    <Panel accentColor="var(--colors-chart-series-tertiary)" title="ETH-USD">
+      <p className={bodyClassName}>
+        accentColor="…" — a runtime hue (e.g. an instrument identity color).
+      </p>
+    </Panel>
+  </div>
+);

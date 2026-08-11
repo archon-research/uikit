@@ -63,3 +63,15 @@ export const Column = () => (
     </div>
   </div>
 );
+
+// `emptyValue` renders when the value is null/undefined (default em dash), so a
+// nullable figure needn't be guarded at the call site.
+export const EmptyValue = () => (
+  <div className={frameClassName}>
+    <div className={rowClassName}>
+      <Figure value="1,204.00" />
+      <Figure value={null} />
+      <Figure value={null} emptyValue="n/a" tone="muted" />
+    </div>
+  </div>
+);
