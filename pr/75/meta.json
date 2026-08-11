@@ -185,6 +185,18 @@
       "namedExport": "Column",
       "meta": {}
     },
+    "atoms--figure--empty-value": {
+      "name": "Empty value",
+      "levels": [
+        "Atoms",
+        "Figure"
+      ],
+      "locStart": 69,
+      "locEnd": 77,
+      "filePath": "src/stories/atoms/figure.stories.tsx",
+      "namedExport": "EmptyValue",
+      "meta": {}
+    },
     "atoms--figure--sizes": {
       "name": "Sizes",
       "levels": [
@@ -591,6 +603,18 @@
       "locEnd": 62,
       "filePath": "src/stories/molecules/meter.stories.tsx",
       "namedExport": "WithLimitMarker",
+      "meta": {}
+    },
+    "molecules--panel--accent": {
+      "name": "Accent",
+      "levels": [
+        "Molecules",
+        "Panel"
+      ],
+      "locStart": 152,
+      "locEnd": 169,
+      "filePath": "src/stories/molecules/panel.stories.tsx",
+      "namedExport": "Accent",
       "meta": {}
     },
     "molecules--panel--density": {

@@ -1,0 +1,1 @@
+import{p as c}from"./runtime-0kA6wj1w.js";import{j as t}from"./event-nsta_HED.js";import{c as n}from"./query-183tmxnL.js";function p(e){const i=()=>{const o=c(e);e.dispatchEvent(new o.MouseEvent("click"))};t()?n(e,"keyup",i):queueMicrotask(i)}export{p as c};
