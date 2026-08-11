@@ -31,6 +31,12 @@ export type FigureProps = Omit<HTMLAttributes<HTMLSpanElement>, 'children'> & {
    * number never breaks across its own digits.
    */
   wrap?: boolean;
+  /**
+   * Rendered when `value` is `null`/`undefined`, so a consumer formatting a
+   * nullable figure needn't guard every call site. Defaults to an em dash
+   * (`—`). Pass `''` to render nothing for an absent value.
+   */
+  emptyValue?: ReactNode;
 };
 
 /**
@@ -43,9 +49,11 @@ export function Figure({
   tone = 'default',
   size = 'md',
   wrap = false,
+  emptyValue = '—',
   className,
   ...rest
 }: FigureProps) {
+  const isEmpty = value == null;
   return (
     <span
       {...rest}
@@ -59,8 +67,9 @@ export function Figure({
       data-scope="figure"
       data-part="root"
       data-tone={tone}
+      data-empty={isEmpty || undefined}
     >
-      {value}
+      {isEmpty ? emptyValue : value}
     </span>
   );
 }
