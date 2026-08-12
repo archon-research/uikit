@@ -20,10 +20,11 @@ import {
   chartTheme,
   seriesColor,
   useHoveredTimestamp,
+  useSyncedCursor,
   useSyncedCursorHandlers,
 } from '@archon-research/charting';
 import { ThemeProvider } from '@archon-research/design-system';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { css } from '../../../styled-system/css';
 
@@ -660,6 +661,91 @@ export const Distribution = () => (
           <DistributionSeries data={SORTED_ASC} highlightCount={10} />
         </XYChart>
       </section>
+    </div>
+  </ThemeProvider>
+);
+
+// B3 pattern: an in-SVG ChartCursorLayer driven by the shared cursor across a
+// SyncedChartGroup. Each panel reads useHoveredTimestamp and passes it as the
+// controlled `cursor`, so hovering one panel moves the crosshair in both — no
+// bespoke PlotCrosshair, no visx event-bus reach-in. A fixed cursor is seeded
+// on mount here so the snapshot is deterministic.
+function SyncedCrosshairPanel({
+  title,
+  data,
+  color,
+  byIndex,
+}: {
+  title: string;
+  data: Point[];
+  color: string;
+  byIndex: Map<number, number>;
+}) {
+  const [hovered] = useHoveredTimestamp();
+  const handlers = useSyncedCursorHandlers<Point>((d) => d.index);
+  return (
+    <section className={panelClassName}>
+      <p className={panelTitleClassName}>{title}</p>
+      <XYChart
+        width={640}
+        height={180}
+        theme={chartTheme}
+        xScale={{ type: 'linear', domain: [0, 39] }}
+        yScale={{ type: 'linear', nice: true }}
+        onPointerMove={handlers.onPointerMove}
+        onPointerOut={handlers.onPointerOut}
+      >
+        <Grid columns={false} numTicks={4} />
+        <Axis orientation="bottom" numTicks={6} />
+        <Axis orientation="left" numTicks={4} />
+        <LineSeries
+          dataKey={title}
+          data={data}
+          xAccessor={xAccessor}
+          yAccessor={yAccessor}
+          stroke={color}
+        />
+        <ChartCursorLayer
+          stops={STOPS}
+          cursor={hovered}
+          keyboard={false}
+          series={[
+            { id: title, color, valueAt: (x) => byIndex.get(x) ?? null },
+          ]}
+        />
+      </XYChart>
+    </section>
+  );
+}
+
+function SeedCursor({ at }: { at: number }) {
+  const { set } = useSyncedCursor();
+  useEffect(() => {
+    set(at);
+  }, [set, at]);
+  return null;
+}
+
+export const SyncedCrosshair = () => (
+  <ThemeProvider>
+    <div className={pageClassName}>
+      <SyncedChartGroup>
+        <SeedCursor at={20} />
+        <div className={css({ display: 'grid', gap: '4' })}>
+          <SyncedCrosshairPanel
+            title="Account"
+            data={SERIES}
+            color={seriesColor.primary}
+            byIndex={A_BY_INDEX}
+          />
+          <SyncedCrosshairPanel
+            title="Benchmark"
+            data={SERIES_B}
+            color={seriesColor.secondary}
+            byIndex={B_BY_INDEX}
+          />
+        </div>
+      </SyncedChartGroup>
     </div>
   </ThemeProvider>
 );
