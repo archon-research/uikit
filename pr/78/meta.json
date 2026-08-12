@@ -1421,6 +1421,18 @@
       "namedExport": "Default",
       "meta": {}
     },
+    "organisms--data-table--expandable-rows": {
+      "name": "Expandable rows",
+      "levels": [
+        "Organisms",
+        "Data table"
+      ],
+      "locStart": 603,
+      "locEnd": 633,
+      "filePath": "src/stories/organisms/data-table.stories.tsx",
+      "namedExport": "ExpandableRows",
+      "meta": {}
+    },
     "organisms--data-table--header-casing-policy": {
       "name": "Header casing policy",
       "levels": [
@@ -1635,42 +1647,6 @@
       "locEnd": 36,
       "filePath": "src/stories/organisms/error-state.stories.tsx",
       "namedExport": "WithRetry",
-      "meta": {}
-    },
-    "organisms--expandabledatatable--default": {
-      "name": "Default",
-      "levels": [
-        "Organisms",
-        "Expandabledatatable"
-      ],
-      "locStart": 100,
-      "locEnd": 113,
-      "filePath": "src/stories/organisms/expandable-data-table.stories.tsx",
-      "namedExport": "Default",
-      "meta": {}
-    },
-    "organisms--expandabledatatable--identity-under-reorder": {
-      "name": "Identity under reorder",
-      "levels": [
-        "Organisms",
-        "Expandabledatatable"
-      ],
-      "locStart": 142,
-      "locEnd": 175,
-      "filePath": "src/stories/organisms/expandable-data-table.stories.tsx",
-      "namedExport": "IdentityUnderReorder",
-      "meta": {}
-    },
-    "organisms--expandabledatatable--virtualized": {
-      "name": "Virtualized",
-      "levels": [
-        "Organisms",
-        "Expandabledatatable"
-      ],
-      "locStart": 116,
-      "locEnd": 136,
-      "filePath": "src/stories/organisms/expandable-data-table.stories.tsx",
-      "namedExport": "Virtualized",
       "meta": {}
     },
     "organisms--filter-primitives--filter-bar": {

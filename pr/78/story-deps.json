@@ -94,11 +94,7 @@
       "packages/uikit-preview/src/stories/templates/allocation-grid-states.stories.tsx"
     ],
     "packages/design-system/dist/components/data-table/define-columns.js": [
-      "packages/uikit-preview/src/stories/organisms/data-table.stories.tsx",
-      "packages/uikit-preview/src/stories/organisms/expandable-data-table.stories.tsx"
-    ],
-    "packages/design-system/dist/components/data-table/ExpandableDataTable.js": [
-      "packages/uikit-preview/src/stories/organisms/expandable-data-table.stories.tsx"
+      "packages/uikit-preview/src/stories/organisms/data-table.stories.tsx"
     ],
     "packages/design-system/dist/components/data-table/hooks.js": [
       "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
@@ -392,7 +388,6 @@
       "packages/uikit-preview/src/stories/organisms/empty-state.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/error-boundary.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/error-state.stories.tsx",
-      "packages/uikit-preview/src/stories/organisms/expandable-data-table.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/filter-primitives.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/harness-connect.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/mcp-connect.stories.tsx",
@@ -533,9 +528,6 @@
     "packages/uikit-preview/src/stories/organisms/error-state.stories.tsx": [
       "packages/uikit-preview/src/stories/organisms/error-state.stories.tsx"
     ],
-    "packages/uikit-preview/src/stories/organisms/expandable-data-table.stories.tsx": [
-      "packages/uikit-preview/src/stories/organisms/expandable-data-table.stories.tsx"
-    ],
     "packages/uikit-preview/src/stories/organisms/filter-primitives.stories.tsx": [
       "packages/uikit-preview/src/stories/organisms/filter-primitives.stories.tsx"
     ],
@@ -658,7 +650,6 @@
       "packages/uikit-preview/src/stories/organisms/empty-state.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/error-boundary.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/error-state.stories.tsx",
-      "packages/uikit-preview/src/stories/organisms/expandable-data-table.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/filter-primitives.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/harness-connect.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/mcp-connect.stories.tsx",
@@ -718,7 +709,6 @@
       "packages/uikit-preview/src/stories/organisms/empty-state.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/error-boundary.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/error-state.stories.tsx",
-      "packages/uikit-preview/src/stories/organisms/expandable-data-table.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/filter-primitives.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/harness-connect.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/mcp-connect.stories.tsx",
@@ -792,7 +782,6 @@
       "packages/uikit-preview/src/stories/organisms/empty-state.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/error-boundary.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/error-state.stories.tsx",
-      "packages/uikit-preview/src/stories/organisms/expandable-data-table.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/filter-primitives.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/harness-connect.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/mcp-connect.stories.tsx",
@@ -870,7 +859,6 @@
       "packages/uikit-preview/src/stories/organisms/empty-state.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/error-boundary.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/error-state.stories.tsx",
-      "packages/uikit-preview/src/stories/organisms/expandable-data-table.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/filter-primitives.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/harness-connect.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/mcp-connect.stories.tsx",
