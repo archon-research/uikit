@@ -596,3 +596,38 @@ export const Toolbar = () => {
     </div>
   );
 };
+
+// Master/detail: `useDataTable({ getRowCanExpand })` + a `renderDetailPanel`
+// prop expand a row into a detail panel below it. A stable `getRowId` keeps a
+// row expanded across sorts/reorders; one row starts expanded here.
+export const ExpandableRows = () => {
+  const table = useDataTable<Row>(rows, toolbarColumns, {
+    enableSorting: true,
+    getRowId: (row) => row.symbol,
+    getRowCanExpand: () => true,
+    defaultExpanded: { WETH: true },
+  });
+  return (
+    <div className={wrapperClassName}>
+      <DataTable
+        table={table}
+        isLoading={false}
+        renderDetailPanel={(row) => (
+          <div
+            className={css({
+              display: 'grid',
+              gap: '1',
+              fontSize: 'sm',
+              color: 'text.muted',
+            })}
+          >
+            <div>
+              <strong>{row.symbol}</strong> on {row.chain}
+            </div>
+            <div>Amount: ${row.amountUsd.toLocaleString('en-US')}</div>
+          </div>
+        )}
+      />
+    </div>
+  );
+};
