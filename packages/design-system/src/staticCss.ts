@@ -57,7 +57,10 @@ export const designSystemStaticCssRecipes = {
   figure: ['*'],
   meter: ['*'],
   proportionBar: ['*'],
+  proportionList: ['*'],
   tooltip: ['*'],
   infoTip: ['*'],
   flash: ['*'],
+  statusPill: ['*'],
+  statusPillRow: ['*'],
 } satisfies Record<string, ['*']>;

@@ -17,7 +17,19 @@ export const meterRecipe = defineSlotRecipe({
   className: 'meter',
   description:
     'Range measurement (role=meter) with an optional limit marker inside the range. Fill/marker positions are set at runtime by the component; tone sets the fill hue via colorPalette role tokens.',
-  slots: ['root', 'header', 'label', 'valueText', 'track', 'fill', 'marker'],
+  slots: [
+    'root',
+    'header',
+    'label',
+    'valueText',
+    'track',
+    'fill',
+    'marker',
+    'scale',
+    'scaleBound',
+    'scaleMark',
+    'footer',
+  ],
   base: {
     root: {
       display: 'grid',
@@ -62,6 +74,29 @@ export const meterRecipe = defineSlotRecipe({
       bg: 'text.strong',
       transform: 'translateX(-50%)',
       // insetInlineStart (position) is set inline by the component.
+    },
+    // Scale row beneath the track: min/max bounds at the ends, marker labels
+    // positioned at their value. `position: relative` anchors the absolutely
+    // positioned marks; the bounds sit at the flow ends.
+    scale: {
+      position: 'relative',
+      display: 'flex',
+      justifyContent: 'space-between',
+      textStyle: 'metaText',
+      color: 'text.muted',
+    },
+    scaleBound: {
+      whiteSpace: 'nowrap',
+    },
+    scaleMark: {
+      position: 'absolute',
+      transform: 'translateX(-50%)',
+      whiteSpace: 'nowrap',
+      // insetInlineStart (position) is set inline by the component.
+    },
+    footer: {
+      textStyle: 'metaText',
+      color: 'text.muted',
     },
   },
   variants: {
@@ -141,6 +176,62 @@ export const proportionBarRecipe = defineSlotRecipe({
     legendValue: {
       textStyle: 'figure',
       color: 'text.strong',
+    },
+  },
+});
+
+/**
+ * `proportionList` slot recipe: N labelled bars on a common baseline (each row a
+ * label + value line above its own track), distinct from `proportionBar`'s
+ * single stacked bar. For a set of independent shares/weights/allocations, with
+ * an optional visually-hidden table mirror. Bar widths/colors are set at runtime
+ * by the component. Registered in the preset + staticCss.
+ */
+export const proportionListRecipe = defineSlotRecipe({
+  className: 'proportionList',
+  description:
+    'A list of labelled bars on a common baseline (one track per row) for independent shares, with an optional visually-hidden table mirror. Bar widths/colors are set at runtime by the component.',
+  slots: ['root', 'row', 'header', 'label', 'value', 'track', 'fill'],
+  base: {
+    root: {
+      display: 'grid',
+      gap: '2.5',
+      minWidth: '0',
+    },
+    row: {
+      display: 'grid',
+      gap: '1',
+      minWidth: '0',
+    },
+    header: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+      gap: '2',
+      fontSize: 'xs',
+    },
+    label: {
+      color: 'text.default',
+      minWidth: '0',
+    },
+    value: {
+      textStyle: 'figure',
+      color: 'text.strong',
+    },
+    track: {
+      position: 'relative',
+      width: 'full',
+      height: '2',
+      borderRadius: 'full',
+      bg: 'surface.subtle',
+      overflow: 'hidden',
+    },
+    fill: {
+      position: 'absolute',
+      insetBlock: '0',
+      insetInlineStart: '0',
+      borderRadius: 'full',
+      // width + background are set inline by the component.
     },
   },
 });

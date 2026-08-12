@@ -47,6 +47,9 @@ export const panelRecipe = defineSlotRecipe({
       fontSize: 'sm',
       lineHeight: 'relaxed',
       color: 'text.muted',
+      // A header must never force its container wider than the viewport; letting
+      // the meta slot shrink lets the header wrap instead of overflowing.
+      minWidth: '0',
     },
     actions: {
       display: 'flex',
@@ -110,6 +113,20 @@ export const panelRecipe = defineSlotRecipe({
         root: { borderLeftWidth: '3px', borderLeftColor: 'text.critical' },
       },
     },
+    // Corner radius from a token. Defaults to `md` (the previous fixed value);
+    // `none` squares the frame, `sm`/`lg` step it.
+    radius: {
+      none: { root: { borderRadius: 'none' } },
+      sm: { root: { borderRadius: 'sm' } },
+      md: { root: { borderRadius: 'md' } },
+      lg: { root: { borderRadius: 'lg' } },
+    },
+    // Let the header wrap when the title and trailing block can't share a line,
+    // instead of overflowing. Pairs with the `min-width: 0` on the meta slot.
+    headerWrap: {
+      false: {},
+      true: { header: { flexWrap: 'wrap' } },
+    },
   },
   defaultVariants: {
     surface: 'raised',
@@ -118,5 +135,7 @@ export const panelRecipe = defineSlotRecipe({
     titleSize: 'md',
     metaSize: 'md',
     accent: 'none',
+    radius: 'md',
+    headerWrap: false,
   },
 });

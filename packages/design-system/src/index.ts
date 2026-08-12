@@ -23,6 +23,16 @@ export {
   type ThemeContextValue,
   type ThemeMode,
 } from './theme/useTheme.js';
+export {
+  useIdentityPalette,
+  identityPalette,
+  IDENTITY_SLOT_COUNT,
+} from './theme/useIdentityPalette.js';
+export {
+  useMediaQuery,
+  usePrefersReducedMotion,
+  useSettled,
+} from './hooks/index.js';
 export { SkeletonRows } from './components/SkeletonRows.js';
 export { SkeletonStack } from './components/SkeletonStack.js';
 export {
@@ -129,6 +139,8 @@ export {
   type PanelMetaSize,
   type PanelState,
   type PanelAccent,
+  type PanelRadius,
+  type PanelSlotClassNames,
 } from './components/Panel.js';
 export {
   StatTile,
@@ -157,6 +169,18 @@ export {
   type ProportionBarProps,
   type ProportionRow,
 } from './components/ProportionBar.js';
+export {
+  ProportionList,
+  type ProportionListProps,
+  type ProportionListRow,
+} from './components/ProportionList.js';
+export {
+  StatusPill,
+  StatusPillRow,
+  type StatusPillProps,
+  type StatusPillRowProps,
+  type StatusPillTone,
+} from './components/StatusPill.js';
 export {
   InfoTip,
   type InfoTipProps,

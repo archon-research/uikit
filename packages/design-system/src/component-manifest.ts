@@ -509,4 +509,28 @@ export const designSystemComponentManifest = [
     contractScope: null,
     recipeKey: 'flash',
   },
+  {
+    exportName: 'ProportionList',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'molecules',
+    contractScope: 'proportion-list',
+    recipeKey: 'proportionList',
+  },
+  {
+    exportName: 'StatusPill',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'atoms',
+    contractScope: 'status-pill',
+    recipeKey: 'statusPill',
+  },
+  {
+    exportName: 'StatusPillRow',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'atoms',
+    contractScope: 'status-pill-row',
+    recipeKey: 'statusPillRow',
+  },
 ] as const satisfies readonly DesignSystemComponentManifestEntry[];

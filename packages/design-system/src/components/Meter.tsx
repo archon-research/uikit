@@ -42,6 +42,19 @@ export type MeterProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
   denominator?: ReactNode;
   /** Show the header row (label + readout). Defaults to true. */
   showHeader?: boolean;
+  /**
+   * Render a scale row beneath the track showing the `min` and `max` bounds at
+   * the ends and each marker's `label` positioned at its value — e.g.
+   * `0 · target · max`. Off by default.
+   */
+  showScale?: boolean;
+  /** Formats the `min`/`max` bounds in the scale row. Defaults to `String`. */
+  formatBound?: (value: number) => string;
+  /**
+   * A caption line beneath the track (and scale) — e.g. what the value is
+   * measured against, or the governing policy. Renders nothing when omitted.
+   */
+  footer?: ReactNode;
 };
 
 const TONE_COLOR_VAR: Record<MeterTone, string> = {
@@ -79,6 +92,9 @@ export function Meter({
   valueText,
   denominator,
   showHeader = true,
+  showScale = false,
+  formatBound = String,
+  footer,
   className,
   ...rest
 }: MeterProps) {
@@ -142,6 +158,35 @@ export function Meter({
           );
         })}
       </div>
+      {showScale ? (
+        <div className="meter__scale" data-part="scale">
+          <span className="meter__scaleBound" data-part="scale-min">
+            {formatBound(min)}
+          </span>
+          {markers?.map((marker, index) =>
+            marker.label != null ? (
+              <span
+                key={`scale-${marker.at}-${index}`}
+                className="meter__scaleMark"
+                data-part="scale-mark"
+                style={{
+                  insetInlineStart: `${meterPercent(marker.at, min, max)}%`,
+                }}
+              >
+                {marker.label}
+              </span>
+            ) : null,
+          )}
+          <span className="meter__scaleBound" data-part="scale-max">
+            {formatBound(max)}
+          </span>
+        </div>
+      ) : null}
+      {footer != null ? (
+        <div className="meter__footer" data-part="footer">
+          {footer}
+        </div>
+      ) : null}
     </div>
   );
 }

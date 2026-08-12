@@ -6,6 +6,8 @@ import {
   useState,
 } from 'react';
 
+import { usePrefersReducedMotion } from '../hooks/useMediaQuery.js';
+
 /**
  * Class names emitted by the `flash` recipe (registered in the preset +
  * staticCss). The design-system ships no generated `styled-system`, so the
@@ -39,25 +41,6 @@ export function flashDirection(
 const defaultToneFor = (direction: FlashDirection): FlashTone | null =>
   direction === 'up' ? 'positive' : direction === 'down' ? 'critical' : null;
 
-/** Private reduced-motion probe (legacy `addListener` fallback for jsdom). */
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return;
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReduced(media.matches);
-    update();
-    if (media.addEventListener) {
-      media.addEventListener('change', update);
-      return () => media.removeEventListener('change', update);
-    }
-    // Legacy Safari / jsdom.
-    media.addListener(update);
-    return () => media.removeListener(update);
-  }, []);
-  return reduced;
-}
-
 export type UseValueFlashOptions<T> = {
   /**
    * Map a change to a tone. Defaults to numeric direction (up → positive,
@@ -68,6 +51,17 @@ export type UseValueFlashOptions<T> = {
     value: T,
     previous: T,
   ) => FlashTone | null;
+  /**
+   * Custom direction comparator, overriding the default numeric comparison.
+   * Use for value types the default can't order meaningfully.
+   */
+  compare?: (next: T, previous: T) => FlashDirection;
+  /**
+   * Parse a value to a number before the default numeric comparison — e.g. to
+   * compare fixed-scale decimal *strings* by magnitude so `"100.10" → "100.100"`
+   * does not read as a change. Ignored when `compare` is provided.
+   */
+  parse?: (value: T) => number;
 };
 
 export type UseValueFlashResult = {
@@ -86,8 +80,8 @@ export function useValueFlash<T>(
   options: UseValueFlashOptions<T> = {},
 ): UseValueFlashResult {
   const previousRef = useRef<T>(value);
-  const toneForRef = useRef(options.toneFor);
-  toneForRef.current = options.toneFor;
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
   const [state, setState] = useState<UseValueFlashResult>({
     tone: null,
     direction: 'none',
@@ -97,12 +91,17 @@ export function useValueFlash<T>(
   useEffect(() => {
     const previous = previousRef.current;
     if (Object.is(previous, value)) return;
-    const direction = flashDirection(
-      value as unknown as number | string,
-      previous as unknown as number | string,
-    );
-    const tone = toneForRef.current
-      ? toneForRef.current(direction, value, previous)
+    const { compare, parse, toneFor } = optionsRef.current;
+    const direction = compare
+      ? compare(value, previous)
+      : parse
+        ? flashDirection(parse(value), parse(previous))
+        : flashDirection(
+            value as unknown as number | string,
+            previous as unknown as number | string,
+          );
+    const tone = toneFor
+      ? toneFor(direction, value, previous)
       : defaultToneFor(direction);
     previousRef.current = value;
     if (tone != null) {
@@ -122,6 +121,8 @@ export type FlashOnChangeProps = Omit<
   /** Display content. Defaults to `value`. */
   children?: ReactNode;
   toneFor?: UseValueFlashOptions<number | string>['toneFor'];
+  compare?: UseValueFlashOptions<number | string>['compare'];
+  parse?: UseValueFlashOptions<number | string>['parse'];
   /** Announce changes via a visually-hidden `role="status"`. Defaults to true. */
   announce?: boolean;
 };
@@ -142,11 +143,17 @@ export function FlashOnChange({
   value,
   children,
   toneFor,
+  compare,
+  parse,
   announce = true,
   className,
   ...rest
 }: FlashOnChangeProps) {
-  const { tone, direction, flashId } = useValueFlash(value, { toneFor });
+  const { tone, direction, flashId } = useValueFlash(value, {
+    toneFor,
+    compare,
+    parse,
+  });
   const reducedMotion = usePrefersReducedMotion();
   const [markerVisible, setMarkerVisible] = useState(false);
 

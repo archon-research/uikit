@@ -24,6 +24,18 @@ export type PanelTitleTransform = 'none' | 'upper';
 export type PanelTitleSize = 'md' | 'sm';
 export type PanelMetaSize = 'md' | 'sm';
 export type PanelAccent = 'neutral' | 'success' | 'warning' | 'critical';
+export type PanelRadius = 'none' | 'sm' | 'md' | 'lg';
+
+/** Per-slot className escape hatch for {@link Panel}. */
+export type PanelSlotClassNames = {
+  root?: string;
+  header?: string;
+  title?: string;
+  trailing?: string;
+  meta?: string;
+  actions?: string;
+  body?: string;
+};
 
 /**
  * A named body state. The four names stay distinct on purpose: `empty`
@@ -107,6 +119,22 @@ export type PanelProps = HTMLAttributes<HTMLDivElement> & {
    * `accent` tone color, and turns the stripe on (width) even without `accent`.
    */
   accentColor?: string;
+  /**
+   * Corner radius via the `panel` `radius` slot variant. Defaults to `md`
+   * (unchanged); `none` squares the frame.
+   */
+  radius?: PanelRadius;
+  /**
+   * Let the header wrap when the title and trailing block can't share a line,
+   * instead of forcing the panel wider. Off by default.
+   */
+  headerWrap?: boolean;
+  /**
+   * Per-slot `className` escape hatch, merged onto each slot's classes — so a
+   * consumer can style a slot (`header`, `meta`, …) without reaching in through
+   * a Panda class-name substring selector.
+   */
+  classNames?: PanelSlotClassNames;
 };
 
 export function Panel({
@@ -123,6 +151,9 @@ export function Panel({
   stateBody,
   accent,
   accentColor,
+  radius = 'md',
+  headerWrap = false,
+  classNames,
   className,
   style,
   children,
@@ -144,7 +175,9 @@ export function Panel({
         `panel__root--surface_${surface}`,
         `panel__root--density_${density}`,
         resolvedAccent && `panel__root--accent_${resolvedAccent}`,
+        radius !== 'md' && `panel__root--radius_${radius}`,
         className,
+        classNames?.root,
       )}
       style={mergedStyle}
       data-scope="panel"
@@ -155,7 +188,14 @@ export function Panel({
       data-accent={resolvedAccent ?? undefined}
     >
       {hasHeader ? (
-        <div className="panel__header" data-part="header">
+        <div
+          className={cx(
+            'panel__header',
+            headerWrap && 'panel__header--headerWrap_true',
+            classNames?.header,
+          )}
+          data-part="header"
+        >
           {title != null ? (
             <div
               className={cx(
@@ -163,6 +203,7 @@ export function Panel({
                 titleTransform !== 'none' &&
                   `panel__title--titleTransform_${titleTransform}`,
                 titleSize !== 'md' && `panel__title--titleSize_${titleSize}`,
+                classNames?.title,
               )}
               data-part="title"
             >
@@ -170,12 +211,16 @@ export function Panel({
             </div>
           ) : null}
           {meta != null || actions != null ? (
-            <div className="panel__trailing" data-part="trailing">
+            <div
+              className={cx('panel__trailing', classNames?.trailing)}
+              data-part="trailing"
+            >
               {meta != null ? (
                 <div
                   className={cx(
                     'panel__meta',
                     metaSize !== 'md' && `panel__meta--metaSize_${metaSize}`,
+                    classNames?.meta,
                   )}
                   data-part="meta"
                 >
@@ -183,7 +228,10 @@ export function Panel({
                 </div>
               ) : null}
               {actions != null ? (
-                <div className="panel__actions" data-part="actions">
+                <div
+                  className={cx('panel__actions', classNames?.actions)}
+                  data-part="actions"
+                >
                   {actions}
                 </div>
               ) : null}
@@ -191,7 +239,7 @@ export function Panel({
           ) : null}
         </div>
       ) : null}
-      <div className="panel__body" data-part="body">
+      <div className={cx('panel__body', classNames?.body)} data-part="body">
         {state != null && stateCopy != null ? (
           <SurfaceMessage
             tone={PANEL_STATE_TONE[state]}

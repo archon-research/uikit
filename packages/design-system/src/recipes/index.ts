@@ -28,6 +28,11 @@ export { rangeSliderRecipe } from './rangeSlider.recipe.js';
 export { playbackBarRecipe } from './playbackBar.recipe.js';
 export { heatCellRecipe } from './heatCell.recipe.js';
 export { figureRecipe } from './figure.recipe.js';
-export { meterRecipe, proportionBarRecipe } from './meter.recipe.js';
+export {
+  meterRecipe,
+  proportionBarRecipe,
+  proportionListRecipe,
+} from './meter.recipe.js';
 export { tooltipRecipe, infoTipRecipe } from './tooltip.recipe.js';
 export { flashRecipe } from './flash.recipe.js';
+export { statusPillRecipe, statusPillRowRecipe } from './statusPill.recipe.js';
