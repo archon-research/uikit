@@ -553,3 +553,46 @@ export const ReaderLayer = () => (
     </div>
   </ThemeProvider>
 );
+
+// `colorLabel` renders each legend label in its swatch color (a colored-label
+// legend), and works with the interactive toggle form.
+export const ColoredLegend = () => (
+  <ThemeProvider>
+    <div className={css({ p: '6', display: 'grid', gap: '4' })}>
+      <ChartLegend
+        shape="line"
+        colorLabel
+        items={[
+          { label: 'Account', color: seriesColor.primary },
+          { label: 'Benchmark', color: seriesColor.secondary, dash: true },
+          { label: 'Peer median', color: seriesColor.tertiary },
+        ]}
+      />
+      <ChartLegend
+        shape="line"
+        colorLabel
+        interactive
+        items={[
+          {
+            id: 'a',
+            label: 'Account',
+            color: seriesColor.primary,
+            emphasis: true,
+          },
+          {
+            id: 'b',
+            label: 'Benchmark',
+            color: seriesColor.secondary,
+            dash: true,
+          },
+          {
+            id: 'c',
+            label: 'Hidden',
+            color: seriesColor.tertiary,
+            hidden: true,
+          },
+        ]}
+      />
+    </div>
+  </ThemeProvider>
+);
