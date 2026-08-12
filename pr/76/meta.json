@@ -221,6 +221,18 @@
       "namedExport": "Sizes",
       "meta": {}
     },
+    "atoms--figure--text-style-token": {
+      "name": "Text style token",
+      "levels": [
+        "Atoms",
+        "Figure"
+      ],
+      "locStart": 105,
+      "locEnd": 146,
+      "filePath": "src/stories/atoms/figure.stories.tsx",
+      "namedExport": "TextStyleToken",
+      "meta": {}
+    },
     "atoms--figure--tones": {
       "name": "Tones",
       "levels": [
