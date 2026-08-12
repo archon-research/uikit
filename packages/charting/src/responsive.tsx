@@ -39,16 +39,18 @@ const deriveHeight = (
 };
 
 /**
- * Measures a container and derives chart `{ width, height }` from an aspect
- * ratio with a height floor — so a chart sizes to its fluid grid cell instead
- * of a hardcoded pixel height (four oscillating lines in 110px is the failure
- * this prevents). Returns a ref to attach to the measured element.
+ * Measures a container's width. Returns a ref to attach to the measured element
+ * and the observed width (falling back to `fallbackWidth` before measurement /
+ * without a `ResizeObserver`).
+ *
+ * This is the width-only primitive: a fixed-height or pixel-laid-out chart wants
+ * just the width and computes its own height, so it should reach for this rather
+ * than {@link useChartDimensions} (which also derives a height it would discard).
  */
-export function useChartDimensions(
-  options: UseChartDimensionsOptions = {},
-): [RefObject<HTMLDivElement | null>, ChartDimensions] {
+export function useContainerWidth(
+  fallbackWidth = FALLBACK_CHART_WIDTH,
+): [RefObject<HTMLDivElement | null>, number] {
   const ref = useRef<HTMLDivElement | null>(null);
-  const fallbackWidth = options.fallbackWidth ?? FALLBACK_CHART_WIDTH;
   const [width, setWidth] = useState(fallbackWidth);
 
   useEffect(() => {
@@ -64,6 +66,21 @@ export function useChartDimensions(
     return () => observer.disconnect();
   }, []);
 
+  return [ref, width];
+}
+
+/**
+ * Measures a container and derives chart `{ width, height }` from an aspect
+ * ratio with a height floor — so a chart sizes to its fluid grid cell instead
+ * of a hardcoded pixel height (four oscillating lines in 110px is the failure
+ * this prevents). Built on {@link useContainerWidth}; for a fixed-height chart
+ * that only needs the width, use that hook directly. Returns a ref to attach to
+ * the measured element.
+ */
+export function useChartDimensions(
+  options: UseChartDimensionsOptions = {},
+): [RefObject<HTMLDivElement | null>, ChartDimensions] {
+  const [ref, width] = useContainerWidth(options.fallbackWidth);
   return [ref, { width, height: deriveHeight(width, options) }];
 }
 

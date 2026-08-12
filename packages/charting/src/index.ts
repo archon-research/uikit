@@ -100,6 +100,7 @@ export type {
 export {
   ResponsiveChart,
   useChartDimensions,
+  useContainerWidth,
   deriveLeftMargin,
   FALLBACK_CHART_WIDTH,
 } from './responsive.js';
