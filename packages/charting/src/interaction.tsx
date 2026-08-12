@@ -311,6 +311,56 @@ export function useHoveredTimestamp() {
   return [hoveredTimestamp, setHoveredTimestamp] as const;
 }
 
+/**
+ * Supported way for a FOREIGN chart — one not built on `@visx/xychart` (raw
+ * SVG, canvas, WebGL) — to READ and BROADCAST the shared cursor timestamp
+ * WITHOUT importing from `@visx/*` or hardcoding visx's internal
+ * `'XYCHART_EVENT_SOURCE'` event-source string. It rides the same interaction
+ * store every other synced widget uses:
+ *
+ * - `timestamp` — the reactive current value; re-renders the caller only when
+ *   `hoveredTimestamp` changes (via {@link useInteractionValue}), not on every
+ *   change to an unrelated field.
+ * - `set` — publishes a new cursor timestamp to every synced panel (the
+ *   context `setHoveredTimestamp`).
+ * - `subscribe(cb)` — imperative, non-reactive subscription for a chart that
+ *   paints outside React (canvas/WebGL) and wants to redraw its own crosshair
+ *   on each change without re-rendering. `cb` receives the fresh value read
+ *   straight from the store; the returned function unsubscribes.
+ *
+ * Note: visx `<XYChart>` panels in the same `SyncedChartGroup` should reflect
+ * this shared cursor by rendering
+ * `<ChartCursorLayer cursor={hoveredTimestamp} … />` — the in-SVG,
+ * controllable crosshair — rather than relying on visx's internal tooltip
+ * event bus. Then a foreign chart only needs to call `set(...)`, and every
+ * panel (visx or not) reads the same timestamp.
+ */
+export function useSyncedCursor(): {
+  timestamp: number | null;
+  set: (timestamp: number | null) => void;
+  subscribe: (callback: (timestamp: number | null) => void) => () => void;
+} {
+  const store = useContext(InteractionStoreContext);
+  if (!store) {
+    throw new Error(
+      'useSyncedCursor must be used within a DashboardInteractionProvider (SyncedChartGroup provides one).',
+    );
+  }
+
+  const timestamp = useInteractionValue('hoveredTimestamp');
+  const { setHoveredTimestamp } = useDashboardInteraction();
+
+  const subscribe = useCallback(
+    (callback: (timestamp: number | null) => void) =>
+      store.subscribe('hoveredTimestamp', () => {
+        callback(store.getSnapshot('hoveredTimestamp') as number | null);
+      }),
+    [store],
+  );
+
+  return { timestamp, set: setHoveredTimestamp, subscribe };
+}
+
 /** Narrow selector hook for the emphasized series key. */
 export function useHighlightedKey() {
   const { highlightedKey, setHighlightedKey } = useDashboardInteraction();

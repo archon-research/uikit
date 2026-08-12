@@ -55,6 +55,7 @@
   "dependencies": {
     "@visx/annotation": "^4.0.0",
     "@visx/brush": "^4.0.0",
+    "@visx/curve": "^4.0.0",
     "@visx/group": "^4.0.0",
     "@visx/scale": "^4.0.0",
     "@visx/shape": "^4.0.0",

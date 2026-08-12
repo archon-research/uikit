@@ -6,6 +6,9 @@ export {
   XYChart,
   Axis,
   Grid,
+  // visx `Tooltip`'s `showVerticalCrosshair` renders the crosshair in a
+  // body-level portal, so it can detach from the plot on scroll; prefer
+  // `ChartCursorLayer` for an in-SVG crosshair that stays aligned with the plot.
   Tooltip,
   LineSeries,
   AreaSeries,
@@ -31,6 +34,18 @@ export {
   DataContext,
   EventEmitterProvider,
 } from '@visx/xychart';
+
+// Curve factories (re-exported from @visx/curve so consumers don't import
+// @visx/* directly), for the `curve` prop on Line/Area series.
+export {
+  curveLinear,
+  curveMonotoneX,
+  curveNatural,
+  curveStep,
+  curveStepAfter,
+  curveStepBefore,
+  curveBasis,
+} from '@visx/curve';
 
 // Time-range brush + zoom/pan.
 export { TimeRangeBrush } from './brush.js';
@@ -85,6 +100,7 @@ export {
   useHoveredTimestamp,
   useInteractionValue,
   useSelectedTimeRange,
+  useSyncedCursor,
   useSyncedCursorHandlers,
   useTimeRangeBrushGesture,
 } from './interaction.js';
@@ -110,6 +126,22 @@ export type {
   UseChartDimensionsOptions,
   DeriveLeftMarginOptions,
 } from './responsive.js';
+
+// Histogram + distribution marks (frequency bars, ordinal distribution with a
+// highlighted head) plus the pure binning/sorting helpers.
+export {
+  DEFAULT_BIN_COUNT,
+  DistributionSeries,
+  HistogramSeries,
+  histogramBins,
+  sortDistribution,
+} from './histogram.js';
+export type {
+  DistributionSeriesProps,
+  HistogramBin,
+  HistogramBinsOptions,
+  HistogramSeriesProps,
+} from './histogram.js';
 
 // Series downsampling / pixel conflation for large series.
 export {
