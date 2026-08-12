@@ -75,3 +75,21 @@ export const EmptyValue = () => (
     </div>
   </div>
 );
+
+// `format` applies a numeric formatter to a raw number (a pre-formatted string
+// passes through unchanged) — so one formatter can feed a Figure and an axis.
+const usd = (n: number) =>
+  n.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  });
+export const Formatted = () => (
+  <div className={frameClassName}>
+    <div className={rowClassName}>
+      <Figure value={1234567} format={usd} />
+      <Figure value={-8200} format={usd} tone="critical" />
+      <Figure value={null} format={usd} />
+    </div>
+  </div>
+);

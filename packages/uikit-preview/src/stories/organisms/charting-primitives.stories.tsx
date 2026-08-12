@@ -6,7 +6,10 @@ import {
   ChartDataTable,
   ChartLegend,
   DirectLabels,
+  DistributionSeries,
   Grid,
+  HistogramSeries,
+  histogramBins,
   LineSeries,
   ReferenceBand,
   ResponsiveChart,
@@ -593,6 +596,70 @@ export const ColoredLegend = () => (
           },
         ]}
       />
+    </div>
+  </ThemeProvider>
+);
+
+// Histogram (frequency bins) + distribution (sorted ordinal bars with a
+// highlighted worst-tail) — shapes a plain BarSeries can't express.
+const DISTRIBUTION_VALUES = Array.from(
+  { length: 200 },
+  (_, i) => 100 + 15 * Math.sin(i / 9) + (i % 7) * 1.5,
+);
+const HISTOGRAM_BINS = histogramBins(DISTRIBUTION_VALUES, { binCount: 16 });
+const HIST_X_DOMAIN: [number, number] = [
+  HISTOGRAM_BINS[0]?.x0 ?? 0,
+  HISTOGRAM_BINS[HISTOGRAM_BINS.length - 1]?.x1 ?? 1,
+];
+const HIST_Y_MAX = Math.max(...HISTOGRAM_BINS.map((b) => b.count), 1);
+const SORTED_ASC = [...DISTRIBUTION_VALUES].sort((a, b) => a - b);
+
+export const Distribution = () => (
+  <ThemeProvider>
+    <div className={pageClassName}>
+      <section className={panelClassName}>
+        <div className={css({ mb: '3' })}>
+          <h3 className={panelTitleClassName}>Histogram</h3>
+          <p className={panelSubtitleClassName}>
+            Frequency bins from raw values.
+          </p>
+        </div>
+        <XYChart
+          width={640}
+          height={220}
+          theme={chartTheme}
+          xScale={{ type: 'linear', domain: HIST_X_DOMAIN }}
+          yScale={{ type: 'linear', domain: [0, HIST_Y_MAX] }}
+        >
+          <Grid columns={false} numTicks={4} />
+          <Axis orientation="bottom" numTicks={6} />
+          <Axis orientation="left" numTicks={4} />
+          <HistogramSeries bins={HISTOGRAM_BINS} />
+        </XYChart>
+      </section>
+      <section className={panelClassName}>
+        <div className={css({ mb: '3' })}>
+          <h3 className={panelTitleClassName}>Distribution</h3>
+          <p className={panelSubtitleClassName}>
+            200 results sorted worst→best, worst 5% highlighted.
+          </p>
+        </div>
+        <XYChart
+          width={640}
+          height={220}
+          theme={chartTheme}
+          xScale={{ type: 'linear', domain: [0, SORTED_ASC.length - 1] }}
+          yScale={{
+            type: 'linear',
+            domain: [SORTED_ASC[0]!, SORTED_ASC[SORTED_ASC.length - 1]!],
+          }}
+        >
+          <Grid columns={false} numTicks={4} />
+          <Axis orientation="bottom" numTicks={6} />
+          <Axis orientation="left" numTicks={4} />
+          <DistributionSeries data={SORTED_ASC} highlightCount={10} />
+        </XYChart>
+      </section>
     </div>
   </ThemeProvider>
 );
