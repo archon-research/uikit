@@ -63,4 +63,5 @@ export const designSystemStaticCssRecipes = {
   flash: ['*'],
   statusPill: ['*'],
   statusPillRow: ['*'],
+  popover: ['*'],
 } satisfies Record<string, ['*']>;

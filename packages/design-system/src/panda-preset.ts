@@ -24,6 +24,7 @@ import { panelRecipe } from './recipes/panel.recipe.js';
 import { panelActionRecipe } from './recipes/panelAction.recipe.js';
 import { panelSectionRecipe } from './recipes/panelSection.recipe.js';
 import { playbackBarRecipe } from './recipes/playbackBar.recipe.js';
+import { popoverRecipe } from './recipes/popover.recipe.js';
 import { rangeSliderRecipe } from './recipes/rangeSlider.recipe.js';
 import { searchInputRecipe } from './recipes/searchInput.recipe.js';
 import { sectionHeadingRecipe } from './recipes/sectionHeading.recipe.js';
@@ -917,6 +918,7 @@ export const designSystemPreset = definePreset({
         proportionList: proportionListRecipe,
         infoTip: infoTipRecipe,
         statusPill: statusPillRecipe,
+        popover: popoverRecipe,
       },
     },
   },

@@ -533,4 +533,20 @@ export const designSystemComponentManifest = [
     contractScope: 'status-pill-row',
     recipeKey: 'statusPillRow',
   },
+  {
+    exportName: 'Popover',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'molecules',
+    contractScope: 'popover',
+    recipeKey: 'popover',
+  },
+  {
+    exportName: 'InfoPopover',
+    behaviorSource: 'ark-ui',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'molecules',
+    contractScope: null,
+    recipeKey: 'popover',
+  },
 ] as const satisfies readonly DesignSystemComponentManifestEntry[];

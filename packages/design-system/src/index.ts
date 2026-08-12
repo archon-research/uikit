@@ -186,6 +186,12 @@ export {
   type InfoTipProps,
   type InfoTipAlign,
 } from './components/InfoTip.js';
+export { Popover } from './components/Popover.js';
+export {
+  InfoPopover,
+  type InfoPopoverProps,
+  type InfoPopoverPlacement,
+} from './components/InfoPopover.js';
 export {
   FlashOnChange,
   useValueFlash,

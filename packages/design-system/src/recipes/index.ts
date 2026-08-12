@@ -36,3 +36,4 @@ export {
 export { tooltipRecipe, infoTipRecipe } from './tooltip.recipe.js';
 export { flashRecipe } from './flash.recipe.js';
 export { statusPillRecipe, statusPillRowRecipe } from './statusPill.recipe.js';
+export { popoverRecipe } from './popover.recipe.js';
