@@ -65,5 +65,4 @@ export const designSystemStaticCssRecipes = {
   statusPillRow: ['*'],
   popover: ['*'],
   keyValueTable: ['*'],
-  expandableDataTable: ['*'],
 } satisfies Record<string, ['*']>;

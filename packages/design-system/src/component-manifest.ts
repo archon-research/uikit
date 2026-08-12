@@ -557,12 +557,4 @@ export const designSystemComponentManifest = [
     contractScope: 'key-value-table',
     recipeKey: 'keyValueTable',
   },
-  {
-    exportName: 'ExpandableDataTable',
-    behaviorSource: 'tanstack-react-table',
-    styleOwner: 'design-system-preset',
-    storyBucket: 'organisms',
-    contractScope: 'expandable-data-table',
-    recipeKey: 'expandableDataTable',
-  },
 ] as const satisfies readonly DesignSystemComponentManifestEntry[];
