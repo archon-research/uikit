@@ -40,6 +40,12 @@ export type ChartLegendProps = {
    * across a synced chart group.
    */
   onHover?: (id: string | null) => void;
+  /**
+   * Render each item's label in its swatch color (a colored-label legend)
+   * instead of the default muted label color. Off by default. Works in both the
+   * static and interactive forms.
+   */
+  colorLabel?: boolean;
 };
 
 /** Resolves an item's interaction identity, falling back to its label. */
@@ -119,6 +125,7 @@ export function ChartLegend({
   interactive = false,
   onToggle,
   onHover,
+  colorLabel = false,
 }: ChartLegendProps) {
   if (items.length === 0) return null;
 
@@ -165,6 +172,7 @@ export function ChartLegend({
                 style={{
                   textDecoration: item.hidden ? 'line-through' : undefined,
                   fontWeight: item.emphasis ? 700 : undefined,
+                  color: colorLabel ? item.color : undefined,
                 }}
               >
                 {item.label}
@@ -190,7 +198,11 @@ export function ChartLegend({
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
         >
           <Swatch shape={shape} color={item.color} dash={item.dash} />
-          {item.label}
+          {colorLabel ? (
+            <span style={{ color: item.color }}>{item.label}</span>
+          ) : (
+            item.label
+          )}
         </span>
       ))}
     </div>
