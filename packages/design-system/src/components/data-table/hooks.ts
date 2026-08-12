@@ -14,6 +14,7 @@ import {
   type RowSelectionState,
   type SortingState,
   type Table,
+  type VisibilityState,
 } from '@tanstack/react-table';
 import * as React from 'react';
 
@@ -55,6 +56,8 @@ export function useDataTable<T>(
     );
   const [internalRowSelection, setInternalRowSelection] =
     React.useState<RowSelectionState>(config.defaultRowSelection ?? {});
+  const [internalColumnVisibility, setInternalColumnVisibility] =
+    React.useState<VisibilityState>(config.defaultColumnVisibility ?? {});
 
   const sorting = config.sorting ?? internalSorting;
   const columnFilters = config.columnFilters ?? internalColumnFilters;
@@ -63,6 +66,7 @@ export function useDataTable<T>(
   const columnOrder = config.columnOrder ?? internalColumnOrder;
   const columnPinning = config.columnPinning ?? internalColumnPinning;
   const rowSelection = config.rowSelection ?? internalRowSelection;
+  const columnVisibility = config.columnVisibility ?? internalColumnVisibility;
 
   const handleSortingChange: OnChangeFn<SortingState> =
     config.onSortingChange ?? setInternalSorting;
@@ -78,6 +82,8 @@ export function useDataTable<T>(
     config.onColumnPinningChange ?? setInternalColumnPinning;
   const handleRowSelectionChange: OnChangeFn<RowSelectionState> =
     config.onRowSelectionChange ?? setInternalRowSelection;
+  const handleColumnVisibilityChange: OnChangeFn<VisibilityState> =
+    config.onColumnVisibilityChange ?? setInternalColumnVisibility;
 
   return useReactTable({
     data,
@@ -90,6 +96,7 @@ export function useDataTable<T>(
       columnOrder,
       columnPinning,
       rowSelection,
+      columnVisibility,
     },
     onSortingChange: handleSortingChange,
     onColumnFiltersChange: handleColumnFiltersChange,
@@ -98,6 +105,7 @@ export function useDataTable<T>(
     onColumnOrderChange: handleColumnOrderChange,
     onColumnPinningChange: handleColumnPinningChange,
     onRowSelectionChange: handleRowSelectionChange,
+    onColumnVisibilityChange: handleColumnVisibilityChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
