@@ -38,3 +38,4 @@ export { flashRecipe } from './flash.recipe.js';
 export { statusPillRecipe, statusPillRowRecipe } from './statusPill.recipe.js';
 export { popoverRecipe } from './popover.recipe.js';
 export { keyValueTableRecipe } from './keyValueTable.recipe.js';
+export { expandableDataTableRecipe } from './expandableDataTable.recipe.js';
