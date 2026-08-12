@@ -32,6 +32,9 @@ export interface TimeRange {
   end: number;
 }
 
+/** Stable empty set so an unchanged `hiddenKeys` keeps one identity (no churn). */
+const EMPTY_HIDDEN_KEYS: ReadonlySet<string> = new Set();
+
 export interface DashboardInteractionState {
   /** Time range selected via a brush gesture; `null` means "no selection, show everything". */
   timeRange: TimeRange | null;
@@ -41,17 +44,37 @@ export interface DashboardInteractionState {
   filters: Record<string, unknown>;
   /** Series key emphasized across the group (e.g. from a legend hover). */
   highlightedKey: string | null;
+  /**
+   * Series keys toggled off across the group (e.g. click-to-hide in a legend).
+   * The first-class partner to `highlightedKey`; a stable empty set when none
+   * are hidden, so a consumer bound to it doesn't churn on unrelated updates.
+   */
+  hiddenKeys: ReadonlySet<string>;
 }
 
 /** One field of {@link DashboardInteractionState} — the unit `useInteractionValue` subscribes to. */
 export type InteractionKey = keyof DashboardInteractionState;
 
-export interface DashboardInteractionApi extends DashboardInteractionState {
+/**
+ * The stable set of writers for the shared interaction state. Carried in its
+ * own context ({@link useInteractionDispatch}) whose identity never changes, so
+ * a component that only *writes* (a legend, a filter control) can grab a setter
+ * without subscribing to the state value and re-rendering on every cursor tick.
+ */
+export interface InteractionDispatch {
   setTimeRange: (range: TimeRange | null) => void;
   setHoveredTimestamp: (timestamp: number | null) => void;
   setFilter: (key: string, value: unknown) => void;
   clearFilter: (key: string) => void;
   setHighlightedKey: (key: string | null) => void;
+  /** Replace the hidden-keys set (accepts any iterable of ids). */
+  setHiddenKeys: (keys: Iterable<string>) => void;
+  /** Toggle one key in/out of the hidden set. */
+  toggleKey: (id: string) => void;
+}
+
+export interface DashboardInteractionApi
+  extends DashboardInteractionState, InteractionDispatch {
   /**
    * Per-key change subscription backing {@link useInteractionValue}. Reach
    * for it directly only if you need a bespoke `useSyncExternalStore`
@@ -66,6 +89,11 @@ export interface DashboardInteractionApi extends DashboardInteractionState {
 
 const DashboardInteractionContext =
   createContext<DashboardInteractionApi | null>(null);
+
+/** Stable writers-only context — see {@link InteractionDispatch}. */
+const InteractionDispatchContext = createContext<InteractionDispatch | null>(
+  null,
+);
 
 /**
  * Stable per-key store surface, carried in its own context so subscribing to
@@ -102,6 +130,8 @@ export function DashboardInteractionProvider({
     null,
   );
   const [filters, setFiltersState] = useState<Record<string, unknown>>({});
+  const [hiddenKeys, setHiddenKeysState] =
+    useState<ReadonlySet<string>>(EMPTY_HIDDEN_KEYS);
   const [highlightedKey, setHighlightedKeyState] = useState<string | null>(
     null,
   );
@@ -120,6 +150,7 @@ export function DashboardInteractionProvider({
     hoveredTimestamp: null,
     filters: {},
     highlightedKey: null,
+    hiddenKeys: EMPTY_HIDDEN_KEYS,
   });
   const listenersRef = useRef<Map<InteractionKey, Set<() => void>> | null>(
     null,
@@ -180,6 +211,33 @@ export function DashboardInteractionProvider({
     [notify],
   );
 
+  const setHiddenKeys = useCallback(
+    (keys: Iterable<string>) => {
+      const next = new Set(keys);
+      const resolved: ReadonlySet<string> =
+        next.size === 0 ? EMPTY_HIDDEN_KEYS : next;
+      valuesRef.current.hiddenKeys = resolved;
+      setHiddenKeysState(resolved);
+      notify('hiddenKeys');
+    },
+    [notify],
+  );
+
+  const toggleKey = useCallback(
+    (id: string) => {
+      const previous = valuesRef.current.hiddenKeys;
+      const next = new Set(previous);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      const resolved: ReadonlySet<string> =
+        next.size === 0 ? EMPTY_HIDDEN_KEYS : next;
+      valuesRef.current.hiddenKeys = resolved;
+      setHiddenKeysState(resolved);
+      notify('hiddenKeys');
+    },
+    [notify],
+  );
+
   const setFilter = useCallback(
     (key: string, value: unknown) => {
       const previous = valuesRef.current.filters;
@@ -210,17 +268,39 @@ export function DashboardInteractionProvider({
     [subscribe, getSnapshot],
   );
 
+  // Stable-forever: every setter is a `useCallback` closing over refs only, so
+  // this object's identity never changes across renders. That's what lets a
+  // writer-only consumer read a setter without subscribing to state (no
+  // re-render on cursor ticks).
+  const dispatch = useMemo<InteractionDispatch>(
+    () => ({
+      setTimeRange,
+      setHoveredTimestamp,
+      setFilter,
+      clearFilter,
+      setHighlightedKey,
+      setHiddenKeys,
+      toggleKey,
+    }),
+    [
+      setTimeRange,
+      setHoveredTimestamp,
+      setFilter,
+      clearFilter,
+      setHighlightedKey,
+      setHiddenKeys,
+      toggleKey,
+    ],
+  );
+
   const value = useMemo<DashboardInteractionApi>(
     () => ({
       timeRange,
       hoveredTimestamp,
       filters,
       highlightedKey,
-      setTimeRange,
-      setHoveredTimestamp,
-      setFilter,
-      clearFilter,
-      setHighlightedKey,
+      hiddenKeys,
+      ...dispatch,
       subscribe,
     }),
     [
@@ -228,20 +308,19 @@ export function DashboardInteractionProvider({
       hoveredTimestamp,
       filters,
       highlightedKey,
-      setTimeRange,
-      setHoveredTimestamp,
-      setFilter,
-      clearFilter,
-      setHighlightedKey,
+      hiddenKeys,
+      dispatch,
       subscribe,
     ],
   );
 
   return (
     <InteractionStoreContext.Provider value={store}>
-      <DashboardInteractionContext.Provider value={value}>
-        {children}
-      </DashboardInteractionContext.Provider>
+      <InteractionDispatchContext.Provider value={dispatch}>
+        <DashboardInteractionContext.Provider value={value}>
+          {children}
+        </DashboardInteractionContext.Provider>
+      </InteractionDispatchContext.Provider>
     </InteractionStoreContext.Provider>
   );
 }
@@ -299,16 +378,61 @@ export function useInteractionValue<K extends InteractionKey>(
   return useSyncExternalStore(subscribeToKey, getSnapshot, getSnapshot);
 }
 
-/** Narrow selector hook for the shared time range (e.g. set by a brush). */
-export function useSelectedTimeRange() {
-  const { timeRange, setTimeRange } = useDashboardInteraction();
-  return [timeRange, setTimeRange] as const;
+/**
+ * The stable writers-only dispatch (see {@link InteractionDispatch}). Its
+ * identity never changes, so a component that only *writes* — a legend firing
+ * hover/click, a filter control — can grab setters here WITHOUT subscribing to
+ * the state value and re-rendering on every cursor tick. Use this (or the named
+ * `useSet*` hooks below) for the setter half; use {@link useInteractionValue}
+ * or the narrow selector hooks for the read half.
+ */
+export function useInteractionDispatch(): InteractionDispatch {
+  const dispatch = useContext(InteractionDispatchContext);
+  if (!dispatch) {
+    throw new Error(
+      'useInteractionDispatch must be used within a DashboardInteractionProvider (SyncedChartGroup provides one).',
+    );
+  }
+  return dispatch;
 }
 
-/** Narrow selector hook for the synced-cursor timestamp. */
+/** Setter-only hook for the emphasized key — does not subscribe (no re-render on ticks). */
+export function useSetHighlightedKey(): (key: string | null) => void {
+  return useInteractionDispatch().setHighlightedKey;
+}
+
+/** Setter-only hook that replaces the hidden-keys set — does not subscribe. */
+export function useSetHiddenKeys(): (keys: Iterable<string>) => void {
+  return useInteractionDispatch().setHiddenKeys;
+}
+
+/** Setter-only hook that toggles one key in/out of the hidden set — does not subscribe. */
+export function useToggleHiddenKey(): (id: string) => void {
+  return useInteractionDispatch().toggleKey;
+}
+
+/** Setter-only hook for the synced cursor — does not subscribe (a broadcaster wants no ticks). */
+export function useSetHoveredTimestamp(): (timestamp: number | null) => void {
+  return useInteractionDispatch().setHoveredTimestamp;
+}
+
+/**
+ * Narrow selector hook for the shared time range (e.g. set by a brush).
+ * Per-key subscribed: re-renders only when `timeRange` changes, not on cursor
+ * ticks. The setter is the stable dispatch setter.
+ */
+export function useSelectedTimeRange() {
+  const timeRange = useInteractionValue('timeRange');
+  return [timeRange, useInteractionDispatch().setTimeRange] as const;
+}
+
+/** Narrow selector hook for the synced-cursor timestamp (re-renders each tick, by nature). */
 export function useHoveredTimestamp() {
-  const { hoveredTimestamp, setHoveredTimestamp } = useDashboardInteraction();
-  return [hoveredTimestamp, setHoveredTimestamp] as const;
+  const hoveredTimestamp = useInteractionValue('hoveredTimestamp');
+  return [
+    hoveredTimestamp,
+    useInteractionDispatch().setHoveredTimestamp,
+  ] as const;
 }
 
 /**
@@ -348,7 +472,7 @@ export function useSyncedCursor(): {
   }
 
   const timestamp = useInteractionValue('hoveredTimestamp');
-  const { setHoveredTimestamp } = useDashboardInteraction();
+  const setHoveredTimestamp = useSetHoveredTimestamp();
 
   const subscribe = useCallback(
     (callback: (timestamp: number | null) => void) =>
@@ -361,15 +485,31 @@ export function useSyncedCursor(): {
   return { timestamp, set: setHoveredTimestamp, subscribe };
 }
 
-/** Narrow selector hook for the emphasized series key. */
+/**
+ * Narrow selector hook for the emphasized series key. Per-key subscribed, so it
+ * re-renders only when `highlightedKey` changes — NOT on every cursor tick
+ * (unlike reading the whole context via `useDashboardInteraction`).
+ */
 export function useHighlightedKey() {
-  const { highlightedKey, setHighlightedKey } = useDashboardInteraction();
-  return [highlightedKey, setHighlightedKey] as const;
+  const highlightedKey = useInteractionValue('highlightedKey');
+  return [highlightedKey, useInteractionDispatch().setHighlightedKey] as const;
+}
+
+/**
+ * Narrow selector hook for the hidden-keys set (click-to-hide across the group),
+ * returning `[hiddenKeys, toggle]` — the first-class partner to
+ * {@link useHighlightedKey}. Per-key subscribed. Use {@link useSetHiddenKeys}
+ * for a bulk replace.
+ */
+export function useHiddenKeys() {
+  const hiddenKeys = useInteractionValue('hiddenKeys');
+  return [hiddenKeys, useInteractionDispatch().toggleKey] as const;
 }
 
 /** Narrow selector hook for one named filter in the shared filter bag. */
 export function useDashboardFilter(key: string) {
-  const { filters, setFilter, clearFilter } = useDashboardInteraction();
+  const filters = useInteractionValue('filters');
+  const { setFilter, clearFilter } = useInteractionDispatch();
   const setValue = useCallback(
     (value: unknown) => setFilter(key, value),
     [setFilter, key],
