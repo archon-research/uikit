@@ -14,6 +14,7 @@ import { heatCellRecipe } from './recipes/heatCell.recipe.js';
 import { indicatorRecipe } from './recipes/indicator.recipe.js';
 import { inputRecipe } from './recipes/input.recipe.js';
 import { interactiveItemRecipe } from './recipes/interactiveItem.recipe.js';
+import { keyValueTableRecipe } from './recipes/keyValueTable.recipe.js';
 import {
   meterRecipe,
   proportionBarRecipe,
@@ -919,6 +920,7 @@ export const designSystemPreset = definePreset({
         infoTip: infoTipRecipe,
         statusPill: statusPillRecipe,
         popover: popoverRecipe,
+        keyValueTable: keyValueTableRecipe,
       },
     },
   },

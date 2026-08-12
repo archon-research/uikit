@@ -37,6 +37,13 @@ export type FigureProps = Omit<HTMLAttributes<HTMLSpanElement>, 'children'> & {
    * (`—`). Pass `''` to render nothing for an absent value.
    */
   emptyValue?: ReactNode;
+  /**
+   * Formats a numeric `value` for display (e.g. a currency/percent formatter).
+   * Applied only when `value` is a `number`; a pre-formatted string/node passes
+   * through unchanged. Lets the same formatter feed a `Figure` and, e.g.,
+   * charting's `deriveLeftMargin`/`formatBound`.
+   */
+  format?: (value: number) => string;
 };
 
 /**
@@ -50,10 +57,16 @@ export function Figure({
   size = 'md',
   wrap = false,
   emptyValue = '—',
+  format,
   className,
   ...rest
 }: FigureProps) {
   const isEmpty = value == null;
+  const content = isEmpty
+    ? emptyValue
+    : format && typeof value === 'number'
+      ? format(value)
+      : value;
   return (
     <span
       {...rest}
@@ -69,7 +82,7 @@ export function Figure({
       data-tone={tone}
       data-empty={isEmpty || undefined}
     >
-      {isEmpty ? emptyValue : value}
+      {content}
     </span>
   );
 }

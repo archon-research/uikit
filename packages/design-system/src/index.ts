@@ -32,6 +32,8 @@ export {
   useMediaQuery,
   usePrefersReducedMotion,
   useSettled,
+  useHashRoute,
+  type HashRoute,
 } from './hooks/index.js';
 export { SkeletonRows } from './components/SkeletonRows.js';
 export { SkeletonStack } from './components/SkeletonStack.js';
@@ -192,6 +194,12 @@ export {
   type InfoPopoverProps,
   type InfoPopoverPlacement,
 } from './components/InfoPopover.js';
+export {
+  KeyValueTable,
+  type KeyValueTableProps,
+  type KeyValueRow,
+  type KeyValueTableDensity,
+} from './components/KeyValueTable.js';
 export {
   FlashOnChange,
   useValueFlash,

@@ -549,4 +549,12 @@ export const designSystemComponentManifest = [
     contractScope: null,
     recipeKey: 'popover',
   },
+  {
+    exportName: 'KeyValueTable',
+    behaviorSource: 'design-system',
+    styleOwner: 'design-system-preset',
+    storyBucket: 'molecules',
+    contractScope: 'key-value-table',
+    recipeKey: 'keyValueTable',
+  },
 ] as const satisfies readonly DesignSystemComponentManifestEntry[];

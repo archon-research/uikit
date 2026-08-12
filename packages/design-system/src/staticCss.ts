@@ -64,4 +64,5 @@ export const designSystemStaticCssRecipes = {
   statusPill: ['*'],
   statusPillRow: ['*'],
   popover: ['*'],
+  keyValueTable: ['*'],
 } satisfies Record<string, ['*']>;
