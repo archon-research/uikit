@@ -425,6 +425,30 @@
       "namedExport": "Sizes",
       "meta": {}
     },
+    "atoms--statuspill--row": {
+      "name": "Row",
+      "levels": [
+        "Atoms",
+        "Statuspill"
+      ],
+      "locStart": 37,
+      "locEnd": 54,
+      "filePath": "src/stories/atoms/status-pill.stories.tsx",
+      "namedExport": "Row",
+      "meta": {}
+    },
+    "atoms--statuspill--tones": {
+      "name": "Tones",
+      "levels": [
+        "Atoms",
+        "Statuspill"
+      ],
+      "locStart": 25,
+      "locEnd": 34,
+      "filePath": "src/stories/atoms/status-pill.stories.tsx",
+      "namedExport": "Tones",
+      "meta": {}
+    },
     "atoms--switch--disabled": {
       "name": "Disabled",
       "levels": [
@@ -581,6 +605,18 @@
       "namedExport": "SectorHeatmap",
       "meta": {}
     },
+    "molecules--meter--scale-and-footer": {
+      "name": "Scale and footer",
+      "levels": [
+        "Molecules",
+        "Meter"
+      ],
+      "locStart": 66,
+      "locEnd": 83,
+      "filePath": "src/stories/molecules/meter.stories.tsx",
+      "namedExport": "ScaleAndFooter",
+      "meta": {}
+    },
     "molecules--meter--tones": {
       "name": "Tones",
       "levels": [
@@ -639,6 +675,18 @@
       "locEnd": 148,
       "filePath": "src/stories/molecules/panel.stories.tsx",
       "namedExport": "MetaSize",
+      "meta": {}
+    },
+    "molecules--panel--radius-and-header-wrap": {
+      "name": "Radius and header wrap",
+      "levels": [
+        "Molecules",
+        "Panel"
+      ],
+      "locStart": 173,
+      "locEnd": 194,
+      "filePath": "src/stories/molecules/panel.stories.tsx",
+      "namedExport": "RadiusAndHeaderWrap",
       "meta": {}
     },
     "molecules--panel--surfaces": {
@@ -711,6 +759,30 @@
       "locEnd": 62,
       "filePath": "src/stories/molecules/proportion-bar.stories.tsx",
       "namedExport": "CustomColors",
+      "meta": {}
+    },
+    "molecules--proportionlist--shares-of-total": {
+      "name": "Shares of total",
+      "levels": [
+        "Molecules",
+        "Proportionlist"
+      ],
+      "locStart": 50,
+      "locEnd": 80,
+      "filePath": "src/stories/molecules/proportion-list.stories.tsx",
+      "namedExport": "SharesOfTotal",
+      "meta": {}
+    },
+    "molecules--proportionlist--weights": {
+      "name": "Weights",
+      "levels": [
+        "Molecules",
+        "Proportionlist"
+      ],
+      "locStart": 27,
+      "locEnd": 47,
+      "filePath": "src/stories/molecules/proportion-list.stories.tsx",
+      "namedExport": "Weights",
       "meta": {}
     },
     "molecules--rangepicker--custom-selection": {
@@ -1055,10 +1127,22 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 367,
-      "locEnd": 376,
+      "locStart": 370,
+      "locEnd": 379,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "Default",
+      "meta": {}
+    },
+    "organisms--charting-primitives--reader-layer": {
+      "name": "Reader layer",
+      "levels": [
+        "Organisms",
+        "Charting primitives"
+      ],
+      "locStart": 429,
+      "locEnd": 555,
+      "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
+      "namedExport": "ReaderLayer",
       "meta": {}
     },
     "organisms--charting-primitives--responsive": {
@@ -1067,8 +1151,8 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 381,
-      "locEnd": 417,
+      "locStart": 384,
+      "locEnd": 420,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "Responsive",
       "meta": {}
