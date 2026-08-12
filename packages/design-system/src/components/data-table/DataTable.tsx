@@ -6,7 +6,16 @@ import {
   type Table,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Pin, PinOff } from 'lucide-react';
+import {
+  Check,
+  Columns3,
+  Copy,
+  Maximize2,
+  Minimize2,
+  Pin,
+  PinOff,
+  Rows3,
+} from 'lucide-react';
 import {
   useCallback,
   useMemo,
@@ -17,6 +26,8 @@ import {
   type RefCallback,
 } from 'react';
 
+import { Popover } from '../Popover.js';
+import { SearchInput } from '../SearchInput.js';
 import { SkeletonRows } from '../SkeletonRows.js';
 import { Select } from '../StyledSelect.js';
 import {
@@ -338,7 +349,101 @@ type DataTableProps<TData> = {
    * styling itself.
    */
   enableColumnPinning?: boolean;
+  /**
+   * Renders a toolbar strip above the table hosting the global search (when
+   * enabled), the column-visibility menu / density / full-screen toggles you
+   * opt into, a selection-count banner, and any `toolbarActions`. Off by
+   * default (additive) — without it the table renders exactly as before.
+   */
+  toolbar?: boolean;
+  /** Custom nodes at the end of the toolbar (e.g. an export/refresh button). */
+  toolbarActions?: ReactNode;
+  /** Placeholder for the toolbar's global-search input. */
+  searchPlaceholder?: string;
+  /** Show a column show/hide menu in the toolbar (needs `toolbar`). */
+  enableColumnVisibility?: boolean;
+  /** Show a comfortable/compact density toggle in the toolbar (needs `toolbar`). */
+  enableDensityToggle?: boolean;
+  /** Notified when the density toggle changes; density is otherwise internal, seeded from `density`. */
+  onDensityChange?: (density: DataTableDensity) => void;
+  /** Show a full-screen toggle in the toolbar (needs `toolbar`). */
+  enableFullScreen?: boolean;
+  /**
+   * Renders a trailing actions column: `rowActions(row)` is placed in each
+   * row's actions cell (inline buttons, or the consumer's own menu). Off by
+   * default.
+   */
+  rowActions?: (row: TData) => ReactNode;
+  /** Header content for the actions column (default: empty, aria-labelled). */
+  rowActionsHeader?: ReactNode;
 };
+
+/** Copy-to-clipboard affordance for a `meta.copyable` cell. */
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      className="dataTable__copyButton"
+      data-part="copy-button"
+      aria-label={copied ? 'Copied' : 'Copy'}
+      onClick={(event) => {
+        event.stopPropagation();
+        void navigator.clipboard?.writeText(value);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1200);
+      }}
+    >
+      {copied ? <Check size={12} /> : <Copy size={12} />}
+    </button>
+  );
+}
+
+/** Toolbar show/hide-columns menu (a popover of checkboxes over hideable columns). */
+function ColumnVisibilityMenu<TData>({ table }: { table: Table<TData> }) {
+  const columns = table
+    .getAllLeafColumns()
+    .filter((column) => column.getCanHide());
+  if (columns.length === 0) return null;
+  return (
+    <Popover.Root positioning={{ placement: 'bottom-end' }}>
+      <Popover.Trigger
+        type="button"
+        className="dataTable__iconButton"
+        aria-label="Show or hide columns"
+      >
+        <Columns3 size={16} />
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Positioner>
+          <Popover.Content>
+            {columns.map((column) => {
+              const meta = column.columnDef.meta;
+              const header = column.columnDef.header;
+              const label =
+                meta?.label ??
+                (typeof header === 'string' ? header : column.id);
+              return (
+                <label
+                  key={column.id}
+                  className="dataTable__menuItem"
+                  data-part="columns-menu-item"
+                >
+                  <input
+                    type="checkbox"
+                    checked={column.getIsVisible()}
+                    onChange={column.getToggleVisibilityHandler()}
+                  />
+                  {label}
+                </label>
+              );
+            })}
+          </Popover.Content>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
 
 export function DataTable<TData>({
   table,
@@ -350,7 +455,7 @@ export function DataTable<TData>({
   renderCell,
   className,
   minWidth,
-  density = 'comfortable',
+  density: densityProp = 'comfortable',
   maxHeight,
   virtualized = false,
   estimatedRowHeight,
@@ -359,7 +464,29 @@ export function DataTable<TData>({
   flashOnUpdate = false,
   enableColumnReordering = false,
   enableColumnPinning = false,
+  toolbar = false,
+  toolbarActions,
+  searchPlaceholder,
+  enableColumnVisibility = false,
+  enableDensityToggle = false,
+  onDensityChange,
+  enableFullScreen = false,
+  rowActions,
+  rowActionsHeader,
 }: DataTableProps<TData>) {
+  // Density is stateful (seeded from the prop) so the toolbar toggle can flip
+  // it; `onDensityChange` lets a consumer observe/persist it.
+  const [density, setDensity] = useState<DataTableDensity>(densityProp);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const toggleDensity = useCallback(() => {
+    setDensity((current) => {
+      const next = current === 'compact' ? 'comfortable' : 'compact';
+      onDensityChange?.(next);
+      return next;
+    });
+  }, [onDensityChange]);
+  const actionsEnabled = rowActions != null;
+
   const magnitudeStateByColumn = createMagnitudeStateMap(table);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const flashMapRef = useRef<Map<string, CellFlashEntry>>(new Map());
@@ -395,7 +522,9 @@ export function DataTable<TData>({
     resizingEnabled || enableColumnPinning || hasPinnedColumns;
   const rowSelectionEnabled = Boolean(table.options.enableRowSelection);
   const leafColumnCount =
-    table.getVisibleLeafColumns().length + (rowSelectionEnabled ? 1 : 0);
+    table.getVisibleLeafColumns().length +
+    (rowSelectionEnabled ? 1 : 0) +
+    (actionsEnabled ? 1 : 0);
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -589,6 +718,21 @@ export function DataTable<TData>({
             );
           }
 
+          if (cell.column.columnDef.meta?.copyable) {
+            const copyText = cell.column.columnDef.meta.copyValue
+              ? cell.column.columnDef.meta.copyValue(row.original)
+              : String(rawValue ?? '');
+            content = (
+              <span
+                className="dataTable__cellCopyWrap"
+                data-part="cell-copy-wrap"
+              >
+                {content}
+                <CopyButton value={copyText} />
+              </span>
+            );
+          }
+
           const flashState = flashOnUpdate
             ? getCellFlashState(
                 flashMapRef.current,
@@ -627,11 +771,28 @@ export function DataTable<TData>({
             </td>
           );
         })}
+        {actionsEnabled ? (
+          <td
+            className={cx(
+              'dataTable__actionsCell',
+              densityClass('bodyCell', density),
+            )}
+            data-part="actions-cell"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {rowActions?.(row.original)}
+          </td>
+        ) : null}
       </tr>
     );
   }
 
-  return (
+  const hasToolbar = toolbar;
+  const searchable = Boolean(table.options.enableGlobalFilter);
+  const globalFilter = (table.getState().globalFilter as string) ?? '';
+  const selectedCount = table.getSelectedRowModel().rows.length;
+
+  const tableRoot = (
     <div
       ref={scrollContainerRef}
       className={cx(
@@ -639,7 +800,13 @@ export function DataTable<TData>({
         isScrollable && 'dataTable__root--scrollable_true',
         className,
       )}
-      style={rootStyle}
+      // Square the top corners when a toolbar sits directly above, so the two
+      // read as one joined container.
+      style={
+        hasToolbar
+          ? { ...rootStyle, borderTopLeftRadius: 0, borderTopRightRadius: 0 }
+          : rootStyle
+      }
       data-scope="data-table"
       data-part="root"
       data-density={density}
@@ -855,6 +1022,25 @@ export function DataTable<TData>({
                   </th>
                 );
               })}
+              {actionsEnabled && headerGroupIndex === 0 ? (
+                <th
+                  className={cx(
+                    'dataTable__actionsHeaderCell',
+                    'dataTable__headerCell',
+                    densityClass('headerCell', density),
+                    resolvedStickyHeader &&
+                      'dataTable__headerCell--stickyHeader_true',
+                  )}
+                  data-part="header-cell"
+                  aria-label={
+                    typeof rowActionsHeader === 'string'
+                      ? rowActionsHeader
+                      : 'Row actions'
+                  }
+                >
+                  {rowActionsHeader}
+                </th>
+              ) : null}
             </tr>
           ))}
           {hasFilterRow ? (
@@ -919,6 +1105,82 @@ export function DataTable<TData>({
               : rows.map((row, index) => renderBodyRow(row, index))}
         </tbody>
       </table>
+    </div>
+  );
+
+  // Without a toolbar the table renders exactly as before (no frame wrapper).
+  if (!hasToolbar) return tableRoot;
+
+  return (
+    <div
+      className={cx(
+        'dataTable__frame',
+        isFullScreen && 'dataTable__frame--fullScreen_true',
+      )}
+      data-scope="data-table"
+      data-part="frame"
+    >
+      <div className="dataTable__toolbar" data-part="toolbar">
+        {searchable ? (
+          <div className="dataTable__toolbarSearch" data-part="toolbar-search">
+            <SearchInput
+              value={globalFilter}
+              onValueChange={(next) => table.setGlobalFilter(next)}
+              placeholder={searchPlaceholder}
+            />
+          </div>
+        ) : null}
+        <div
+          className="dataTable__toolbarControls"
+          data-part="toolbar-controls"
+        >
+          {toolbarActions}
+          {enableColumnVisibility ? (
+            <ColumnVisibilityMenu table={table} />
+          ) : null}
+          {enableDensityToggle ? (
+            <button
+              type="button"
+              className="dataTable__iconButton"
+              data-active={density === 'compact'}
+              aria-pressed={density === 'compact'}
+              aria-label="Toggle row density"
+              onClick={toggleDensity}
+            >
+              <Rows3 size={16} />
+            </button>
+          ) : null}
+          {enableFullScreen ? (
+            <button
+              type="button"
+              className="dataTable__iconButton"
+              data-active={isFullScreen}
+              aria-pressed={isFullScreen}
+              aria-label={isFullScreen ? 'Exit full screen' : 'Full screen'}
+              onClick={() => setIsFullScreen((current) => !current)}
+            >
+              {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
+          ) : null}
+        </div>
+      </div>
+      {rowSelectionEnabled && selectedCount > 0 ? (
+        <div
+          className="dataTable__selectionBanner"
+          data-part="selection-banner"
+        >
+          <span>{selectedCount} selected</span>
+          <button
+            type="button"
+            className="dataTable__iconButton"
+            style={{ width: 'auto', paddingInline: '8px' }}
+            onClick={() => table.resetRowSelection()}
+          >
+            Clear
+          </button>
+        </div>
+      ) : null}
+      {tableRoot}
     </div>
   );
 }
