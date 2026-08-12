@@ -60,3 +60,24 @@ export const WithLimitMarker = () => (
     />
   </div>
 );
+
+// A scale row (min · marker · max) and a footer caption beneath the track make
+// the reference values explicit.
+export const ScaleAndFooter = () => (
+  <div className={frameClassName}>
+    <Meter
+      label="Position size"
+      value={62}
+      max={100}
+      denominator="100"
+      tone="success"
+      markers={[{ at: 80, label: 'Limit', tone: 'critical' }]}
+      showScale
+      formatBound={(n) => `${n}%`}
+      footer="Measured against the per-instrument cap · policy v3"
+    />
+    <p className={captionClassName}>
+      showScale renders the bounds and marker labels; footer adds a caption.
+    </p>
+  </div>
+);

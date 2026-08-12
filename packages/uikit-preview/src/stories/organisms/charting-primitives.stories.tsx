@@ -2,7 +2,10 @@ import {
   Axis,
   BarSeries,
   CandlestickSeries,
+  ChartCursorLayer,
+  ChartDataTable,
   ChartLegend,
+  DirectLabels,
   Grid,
   LineSeries,
   ReferenceBand,
@@ -411,6 +414,141 @@ export const Responsive = () => (
             </XYChart>
           )}
         </ResponsiveChart>
+      </section>
+    </div>
+  </ThemeProvider>
+);
+
+// The reader layer: an interactive legend (toggle/emphasis/note/badge), an
+// on-plot snap crosshair with per-series dots + a positioned tooltip, direct
+// end-labels with collision stacking, and an accessible data-table mirror.
+const A_BY_INDEX = new Map(SERIES.map((d) => [d.index, d.value]));
+const B_BY_INDEX = new Map(SERIES_B.map((d) => [d.index, d.value]));
+const STOPS = SERIES.map((d) => d.index);
+
+export const ReaderLayer = () => (
+  <ThemeProvider>
+    <div className={pageClassName}>
+      <section className={panelClassName}>
+        <div className={css({ mb: '3' })}>
+          <h3 className={panelTitleClassName}>Reader layer</h3>
+          <p className={panelSubtitleClassName}>
+            Interactive legend, snap crosshair, direct labels, and a data-table
+            mirror.
+          </p>
+        </div>
+        <ChartLegend
+          shape="line"
+          interactive
+          items={[
+            {
+              id: 'A',
+              label: 'Account',
+              color: seriesColor.primary,
+              emphasis: true,
+              badge: 'live',
+            },
+            {
+              id: 'B',
+              label: 'Benchmark',
+              color: seriesColor.secondary,
+              dash: true,
+              note: 'counterfactual',
+            },
+            {
+              id: 'C',
+              label: 'Hidden series',
+              color: seriesColor.tertiary,
+              hidden: true,
+            },
+          ]}
+        />
+        <XYChart
+          width={640}
+          height={280}
+          theme={chartTheme}
+          xScale={{ type: 'linear' }}
+          yScale={{ type: 'linear' }}
+        >
+          <Grid columns={false} numTicks={4} />
+          <Axis orientation="bottom" numTicks={6} />
+          <Axis orientation="left" numTicks={4} />
+          <LineSeries
+            dataKey="A"
+            data={SERIES}
+            xAccessor={xAccessor}
+            yAccessor={yAccessor}
+            stroke={seriesColor.primary}
+          />
+          <LineSeries
+            dataKey="B"
+            data={SERIES_B}
+            xAccessor={xAccessor}
+            yAccessor={yAccessor}
+            stroke={seriesColor.secondary}
+          />
+          <DirectLabels
+            labels={[
+              {
+                label: 'Account',
+                value: SERIES[SERIES.length - 1].value,
+                color: seriesColor.primary,
+              },
+              {
+                label: 'Benchmark',
+                value: SERIES_B[SERIES_B.length - 1].value,
+                color: seriesColor.secondary,
+              },
+            ]}
+          />
+          <ChartCursorLayer
+            stops={STOPS}
+            cursor={20}
+            series={[
+              {
+                id: 'A',
+                color: seriesColor.primary,
+                valueAt: (x) => A_BY_INDEX.get(x) ?? null,
+              },
+              {
+                id: 'B',
+                color: seriesColor.secondary,
+                valueAt: (x) => B_BY_INDEX.get(x) ?? null,
+              },
+            ]}
+          >
+            {({ x, points }) => (
+              <div
+                className={css({
+                  bg: 'overlay.tooltip',
+                  color: 'text.inverse',
+                  borderRadius: 'md',
+                  px: '2',
+                  py: '1',
+                  fontSize: 'xs',
+                  whiteSpace: 'nowrap',
+                })}
+              >
+                #{x}
+                {points.map((p) => (
+                  <span key={p.id} className={css({ ml: '2' })}>
+                    {p.id}: {p.value.toFixed(1)}
+                  </span>
+                ))}
+              </div>
+            )}
+          </ChartCursorLayer>
+        </XYChart>
+        <ChartDataTable
+          visuallyHidden={false}
+          caption="Account vs Benchmark by heartbeat"
+          columns={['#', 'Account', 'Benchmark']}
+          rows={SERIES.slice(0, 5).map((d) => [
+            d.index,
+            d.value.toFixed(1),
+            (B_BY_INDEX.get(d.index) ?? 0).toFixed(1),
+          ])}
+        />
       </section>
     </div>
   </ThemeProvider>
