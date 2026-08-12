@@ -16,6 +16,9 @@
     "packages/charting/dist/direct-labels.js": [
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
     ],
+    "packages/charting/dist/histogram.js": [
+      "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
+    ],
     "packages/charting/dist/interaction.js": [
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
     ],
@@ -126,7 +129,8 @@
       "packages/uikit-preview/src/stories/organisms/filter-primitives.stories.tsx"
     ],
     "packages/design-system/dist/components/Figure.js": [
-      "packages/uikit-preview/src/stories/atoms/figure.stories.tsx"
+      "packages/uikit-preview/src/stories/atoms/figure.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/identity-palette.stories.tsx"
     ],
     "packages/design-system/dist/components/FlashOnChange.js": [
       "packages/uikit-preview/src/stories/atoms/flash-on-change.stories.tsx"
@@ -145,6 +149,9 @@
     ],
     "packages/design-system/dist/components/InfoTip.js": [
       "packages/uikit-preview/src/stories/atoms/info-tip.stories.tsx"
+    ],
+    "packages/design-system/dist/components/KeyValueTable.js": [
+      "packages/uikit-preview/src/stories/molecules/key-value-table.stories.tsx"
     ],
     "packages/design-system/dist/components/LoadingIndicator.js": [
       "packages/uikit-preview/src/stories/atoms/loading-indicator.stories.tsx",
@@ -246,6 +253,15 @@
     "packages/design-system/dist/filter-state/types.js": [
       "packages/uikit-preview/src/stories/organisms/filter-primitives.stories.tsx"
     ],
+    "packages/design-system/dist/hooks/useIdentityChurnWarning.js": [
+      "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/data-table-virtualized.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/data-table.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/filter-primitives.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/playback-bar.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/allocation-dashboard.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/allocation-grid-states.stories.tsx"
+    ],
     "packages/design-system/dist/hooks/useMediaQuery.js": [
       "packages/uikit-preview/src/stories/atoms/flash-on-change.stories.tsx"
     ],
@@ -290,6 +306,9 @@
       "packages/uikit-preview/src/stories/templates/split-layout.stories.tsx",
       "packages/uikit-preview/src/stories/tokens/tokens.stories.tsx"
     ],
+    "packages/design-system/dist/theme/useIdentityPalette.js": [
+      "packages/uikit-preview/src/stories/molecules/identity-palette.stories.tsx"
+    ],
     "packages/design-system/dist/theme/useTheme.js": [
       "packages/uikit-preview/src/stories/molecules/theme-toggle.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx",
@@ -329,7 +348,9 @@
       "packages/uikit-preview/src/stories/atoms/text-input.stories.tsx",
       "packages/uikit-preview/src/stories/atoms/tree-row.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/heat-cell.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/identity-palette.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/info-popover.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/key-value-table.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/meter.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/panel.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/popover.stories.tsx",
@@ -415,8 +436,14 @@
     "packages/uikit-preview/src/stories/molecules/heat-cell.stories.tsx": [
       "packages/uikit-preview/src/stories/molecules/heat-cell.stories.tsx"
     ],
+    "packages/uikit-preview/src/stories/molecules/identity-palette.stories.tsx": [
+      "packages/uikit-preview/src/stories/molecules/identity-palette.stories.tsx"
+    ],
     "packages/uikit-preview/src/stories/molecules/info-popover.stories.tsx": [
       "packages/uikit-preview/src/stories/molecules/info-popover.stories.tsx"
+    ],
+    "packages/uikit-preview/src/stories/molecules/key-value-table.stories.tsx": [
+      "packages/uikit-preview/src/stories/molecules/key-value-table.stories.tsx"
     ],
     "packages/uikit-preview/src/stories/molecules/meter.stories.tsx": [
       "packages/uikit-preview/src/stories/molecules/meter.stories.tsx"
@@ -583,7 +610,9 @@
       "packages/uikit-preview/src/stories/atoms/text-input.stories.tsx",
       "packages/uikit-preview/src/stories/atoms/tree-row.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/heat-cell.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/identity-palette.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/info-popover.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/key-value-table.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/meter.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/panel.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/popover.stories.tsx",
@@ -640,7 +669,9 @@
       "packages/uikit-preview/src/stories/atoms/text-input.stories.tsx",
       "packages/uikit-preview/src/stories/atoms/tree-row.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/heat-cell.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/identity-palette.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/info-popover.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/key-value-table.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/meter.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/panel.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/popover.stories.tsx",
@@ -711,7 +742,9 @@
       "packages/uikit-preview/src/stories/atoms/text-input.stories.tsx",
       "packages/uikit-preview/src/stories/atoms/tree-row.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/heat-cell.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/identity-palette.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/info-popover.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/key-value-table.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/meter.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/panel.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/popover.stories.tsx",
@@ -786,7 +819,9 @@
       "packages/uikit-preview/src/stories/atoms/text-input.stories.tsx",
       "packages/uikit-preview/src/stories/atoms/tree-row.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/heat-cell.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/identity-palette.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/info-popover.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/key-value-table.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/meter.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/panel.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/popover.stories.tsx",

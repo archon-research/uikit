@@ -197,6 +197,18 @@
       "namedExport": "EmptyValue",
       "meta": {}
     },
+    "atoms--figure--formatted": {
+      "name": "Formatted",
+      "levels": [
+        "Atoms",
+        "Figure"
+      ],
+      "locStart": 87,
+      "locEnd": 95,
+      "filePath": "src/stories/atoms/figure.stories.tsx",
+      "namedExport": "Formatted",
+      "meta": {}
+    },
     "atoms--figure--sizes": {
       "name": "Sizes",
       "levels": [
@@ -605,6 +617,18 @@
       "namedExport": "SectorHeatmap",
       "meta": {}
     },
+    "molecules--identitypalette--swatches": {
+      "name": "Swatches",
+      "levels": [
+        "Molecules",
+        "Identitypalette"
+      ],
+      "locStart": 39,
+      "locEnd": 59,
+      "filePath": "src/stories/molecules/identity-palette.stories.tsx",
+      "namedExport": "Swatches",
+      "meta": {}
+    },
     "molecules--infopopover--trigger": {
       "name": "Trigger",
       "levels": [
@@ -627,6 +651,30 @@
       "locEnd": 43,
       "filePath": "src/stories/molecules/info-popover.stories.tsx",
       "namedExport": "WithDeeplink",
+      "meta": {}
+    },
+    "molecules--keyvaluetable--compact": {
+      "name": "Compact",
+      "levels": [
+        "Molecules",
+        "Keyvaluetable"
+      ],
+      "locStart": 41,
+      "locEnd": 52,
+      "filePath": "src/stories/molecules/key-value-table.stories.tsx",
+      "namedExport": "Compact",
+      "meta": {}
+    },
+    "molecules--keyvaluetable--summary": {
+      "name": "Summary",
+      "levels": [
+        "Molecules",
+        "Keyvaluetable"
+      ],
+      "locStart": 20,
+      "locEnd": 38,
+      "filePath": "src/stories/molecules/key-value-table.stories.tsx",
+      "namedExport": "Summary",
       "meta": {}
     },
     "molecules--meter--scale-and-footer": {
@@ -1163,8 +1211,8 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 559,
-      "locEnd": 598,
+      "locStart": 563,
+      "locEnd": 602,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "ColoredLegend",
       "meta": {}
@@ -1175,10 +1223,22 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 370,
-      "locEnd": 379,
+      "locStart": 374,
+      "locEnd": 383,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "Default",
+      "meta": {}
+    },
+    "organisms--charting-primitives--distribution": {
+      "name": "Distribution",
+      "levels": [
+        "Organisms",
+        "Charting primitives"
+      ],
+      "locStart": 618,
+      "locEnd": 666,
+      "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
+      "namedExport": "Distribution",
       "meta": {}
     },
     "organisms--charting-primitives--reader-layer": {
@@ -1187,8 +1247,8 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 429,
-      "locEnd": 555,
+      "locStart": 433,
+      "locEnd": 559,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "ReaderLayer",
       "meta": {}
@@ -1199,10 +1259,22 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 384,
-      "locEnd": 420,
+      "locStart": 388,
+      "locEnd": 424,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "Responsive",
+      "meta": {}
+    },
+    "organisms--charting-primitives--synced-crosshair": {
+      "name": "Synced crosshair",
+      "levels": [
+        "Organisms",
+        "Charting primitives"
+      ],
+      "locStart": 729,
+      "locEnd": 751,
+      "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
+      "namedExport": "SyncedCrosshair",
       "meta": {}
     },
     "organisms--confirm-tool-call-dialog--countdown-active": {
