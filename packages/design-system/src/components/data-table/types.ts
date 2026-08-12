@@ -5,6 +5,7 @@ import type {
   ColumnPinningState,
   ColumnResizeMode,
   ColumnSizingState,
+  ExpandedState,
   RowData,
   RowSelectionState,
   OnChangeFn,
@@ -163,6 +164,21 @@ export interface DataTableConfig<T = unknown> {
   columnVisibility?: VisibilityState;
   onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
   defaultColumnVisibility?: VisibilityState;
+  /**
+   * Controlled row-expansion state (TanStack's `expanded` feature). Uncontrolled
+   * by default (internal `useState`, seeded from `defaultExpanded`). Pair with
+   * `getRowCanExpand` here and `DataTable`'s `renderDetailPanel` prop for a
+   * master/detail table; `DataTable` renders the expander toggle + detail row.
+   */
+  expanded?: ExpandedState;
+  onExpandedChange?: OnChangeFn<ExpandedState>;
+  defaultExpanded?: ExpandedState;
+  /**
+   * Which rows may expand (TanStack `getRowCanExpand`). Return `true` to allow a
+   * row's detail panel. Only meaningful alongside `DataTable`'s
+   * `renderDetailPanel`.
+   */
+  getRowCanExpand?: (row: Row<T>) => boolean;
 }
 
 export interface UrlSyncedTableStateAdapter {

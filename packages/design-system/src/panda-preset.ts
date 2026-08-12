@@ -7,7 +7,6 @@ import { codeRecipe } from './recipes/code.recipe.js';
 import { dataTableRecipe } from './recipes/dataTable.recipe.js';
 import { drawerRecipe } from './recipes/drawer.recipe.js';
 import { emptyStateRecipe } from './recipes/emptyState.recipe.js';
-import { expandableDataTableRecipe } from './recipes/expandableDataTable.recipe.js';
 import { facetedMultiSelectRecipe } from './recipes/facetedMultiSelect.recipe.js';
 import { figureRecipe } from './recipes/figure.recipe.js';
 import { flashRecipe } from './recipes/flash.recipe.js';
@@ -922,7 +921,6 @@ export const designSystemPreset = definePreset({
         statusPill: statusPillRecipe,
         popover: popoverRecipe,
         keyValueTable: keyValueTableRecipe,
-        expandableDataTable: expandableDataTableRecipe,
       },
     },
   },
