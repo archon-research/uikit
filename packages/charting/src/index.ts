@@ -54,9 +54,25 @@ export type {
 export { CandlestickSeries } from './candlestick.js';
 export type { CandlestickSeriesProps } from './candlestick.js';
 
-// Provided legend.
+// Provided legend (static, or interactive toggle/hover).
 export { ChartLegend } from './legend.js';
 export type { ChartLegendItem, ChartLegendProps } from './legend.js';
+
+// Reader layer: accessible + interactive read affordances over a chart.
+// Accessible table mirror of chart series (screen-reader / "show data").
+export { ChartDataTable } from './chart-data-table.js';
+export type { ChartDataTableProps } from './chart-data-table.js';
+// End-of-line series labels with collision-avoidance stacking.
+export { DirectLabels, resolveLabelPositions } from './direct-labels.js';
+export type { DirectLabelsProps, DirectLabelItem } from './direct-labels.js';
+// Snap-to-datum crosshair + per-series readout + positioned tooltip.
+export { ChartCursorLayer, nearestStop } from './cursor-layer.js';
+export type {
+  ChartCursorLayerProps,
+  CursorSeries,
+  CursorPoint,
+  CursorTooltipContext,
+} from './cursor-layer.js';
 
 // Cross-chart interaction layer (synced cursor + shared time range + cross-filter).
 export {
