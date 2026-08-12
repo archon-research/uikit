@@ -1,5 +1,13 @@
-// Token-driven theme contract (see DESIGN.md).
-export { chartTheme, chartTokens, seriesColor } from './theme.js';
+// Token-driven theme contract (see DESIGN.md). `axis*Style` are exported so a
+// hand-composed chart can style an axis unit label / custom SVG text with the
+// same tokens the themed axes use.
+export {
+  axisLabelStyle,
+  axisTickLabelStyle,
+  chartTheme,
+  chartTokens,
+  seriesColor,
+} from './theme.js';
 
 // Curated visx surface, so consumers depend on this package, not @visx/* directly.
 export {
@@ -46,6 +54,26 @@ export {
   curveStepBefore,
   curveBasis,
 } from '@visx/curve';
+
+// Low-level visx composition primitives, re-exported so a chart that steps off
+// the single-plot `XYChart` happy path (faceted small-multiples, a custom
+// stacked area, a sorted distribution) can be composed without adding `@visx/*`
+// as a direct app dependency. Pair these with the token-themed axes below so a
+// hand-composed chart still renders on-theme. (These are already `charting`
+// dependencies; this just surfaces them.)
+export { Group } from '@visx/group';
+export { Area, AreaStack, Bar, Line, LinePath } from '@visx/shape';
+export { scaleBand, scaleLinear, scaleTime } from '@visx/scale';
+
+// Token-themed standalone axes (wrap `@visx/axis`, applying the same tokens as
+// `chartTheme`), for composed charts that render their own axes outside XYChart.
+export { AxisBottom, AxisLeft, AxisRight, AxisTop } from './axis.js';
+export type {
+  ThemedAxisBottomProps,
+  ThemedAxisLeftProps,
+  ThemedAxisRightProps,
+  ThemedAxisTopProps,
+} from './axis.js';
 
 // Time-range brush + zoom/pan.
 export { TimeRangeBrush } from './brush.js';

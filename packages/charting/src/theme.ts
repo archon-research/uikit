@@ -57,6 +57,23 @@ export const chartTokens = {
     'color-mix(in srgb, var(--colors-chart-series-tertiary, #7c3aed) 16%, transparent)',
 } as const;
 
+/**
+ * Axis styling, extracted so a hand-composed chart using the token-themed
+ * standalone `AxisBottom`/`AxisLeft` wrappers renders the SAME axis as an
+ * `<XYChart>` does — one source of truth feeds both the visx XYChart theme
+ * (below) and the wrappers (see `axis.tsx`). Kept as plain values (not a
+ * `buildChartTheme` result) because the standalone `@visx/axis` components take
+ * individual `stroke` / `tickLabelProps` / `labelProps` and don't read the
+ * XYChart theme context.
+ */
+export const AXIS_TICK_LENGTH = 6;
+/** Tick-value label style (small, muted). */
+export const axisTickLabelStyle = { fill: chartTokens.label, fontSize: 11 };
+/** Axis (unit) label style (larger, axis color). */
+export const axisLabelStyle = { fill: chartTokens.axis, fontSize: 12 };
+/** Axis + tick line stroke. */
+export const axisLineStyle = { stroke: chartTokens.axis };
+
 /** Token-driven theme for `<XYChart theme={chartTheme}>`. */
 export const chartTheme = buildChartTheme({
   backgroundColor: 'transparent',
@@ -65,11 +82,11 @@ export const chartTheme = buildChartTheme({
   // Light/dark is handled by the CSS variable itself, so the dark variant
   // intentionally points at the same token rather than a separate color.
   gridColorDark: chartTokens.grid,
-  tickLength: 6,
-  svgLabelSmall: { fill: chartTokens.label, fontSize: 11 },
-  svgLabelBig: { fill: chartTokens.axis, fontSize: 12 },
-  xAxisLineStyles: { stroke: chartTokens.axis },
-  yAxisLineStyles: { stroke: chartTokens.axis },
-  xTickLineStyles: { stroke: chartTokens.axis },
-  yTickLineStyles: { stroke: chartTokens.axis },
+  tickLength: AXIS_TICK_LENGTH,
+  svgLabelSmall: axisTickLabelStyle,
+  svgLabelBig: axisLabelStyle,
+  xAxisLineStyles: axisLineStyle,
+  yAxisLineStyles: axisLineStyle,
+  xTickLineStyles: axisLineStyle,
+  yTickLineStyles: axisLineStyle,
 });
