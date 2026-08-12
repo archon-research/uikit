@@ -57,8 +57,9 @@ export interface DashboardInteractionApi extends DashboardInteractionState {
    * for it directly only if you need a bespoke `useSyncExternalStore`
    * consumer; the intended entry point is `useInteractionValue`, not this
    * field. Optional so a hand-rolled `DashboardInteractionApi` (e.g. in a
-   * test) that only implements the plain read/write contract stays valid —
-   * `useInteractionValue` falls back to a no-op subscription when absent.
+   * test) that only implements the plain read/write contract stays valid;
+   * `useInteractionValue` reads the separate {@link InteractionStore} the
+   * provider installs (not this field), so omitting it here doesn't affect it.
    */
   subscribe?: (key: InteractionKey, onChange: () => void) => () => void;
 }
@@ -267,9 +268,13 @@ export function useDashboardInteraction(): DashboardInteractionApi {
  * Reach for this in a widget that only cares about one field — e.g. a
  * legend or filter chip bound to `highlightedKey` — so it does not re-render
  * on every hover tick over a synced chart. Built on `useSyncExternalStore`
- * against the provider's per-key store (see `DashboardInteractionProvider`);
- * falls back to a static read if used outside a provider that populates the
- * store (should not happen via `SyncedChartGroup`/`DashboardInteractionProvider`).
+ * against the provider's per-key store (see `DashboardInteractionProvider`).
+ * Requires a provider: it throws if used outside one (a `SyncedChartGroup`
+ * provides one). So interactivity is an explicit `DashboardInteractionProvider`
+ * dependency — a component that reads interaction state can't be dropped into a
+ * plain, provider-less tree and silently degrade; wire it under a provider (or
+ * gate the store read behind an `interactive` flag) rather than relying on a
+ * fallback that does not exist.
  */
 export function useInteractionValue<K extends InteractionKey>(
   key: K,
