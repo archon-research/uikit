@@ -74,18 +74,7 @@ export interface InteractionDispatch {
 }
 
 export interface DashboardInteractionApi
-  extends DashboardInteractionState, InteractionDispatch {
-  /**
-   * Per-key change subscription backing {@link useInteractionValue}. Reach
-   * for it directly only if you need a bespoke `useSyncExternalStore`
-   * consumer; the intended entry point is `useInteractionValue`, not this
-   * field. Optional so a hand-rolled `DashboardInteractionApi` (e.g. in a
-   * test) that only implements the plain read/write contract stays valid;
-   * `useInteractionValue` reads the separate {@link InteractionStore} the
-   * provider installs (not this field), so omitting it here doesn't affect it.
-   */
-  subscribe?: (key: InteractionKey, onChange: () => void) => () => void;
-}
+  extends DashboardInteractionState, InteractionDispatch {}
 
 const DashboardInteractionContext =
   createContext<DashboardInteractionApi | null>(null);
