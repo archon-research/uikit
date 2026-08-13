@@ -1,0 +1,6 @@
+# `useIdentityPalette.ts` briefly regressed to containing raw NUL bytes in a
+# template-literal memo key, which made git's binary-content heuristic treat
+# the whole file as binary (undiffable) forever after in history. Force it to
+# always diff as text so a future `git diff`/`git log -p` against any commit
+# that still has the NUL bytes stays readable.
+packages/design-system/src/theme/useIdentityPalette.ts diff

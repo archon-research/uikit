@@ -43,4 +43,22 @@ describe('identityPalette', () => {
       expect(value).toMatch(/^var\(--colors-identity-[1-8]\)$/);
     }
   });
+
+  it('clamps a `count` above IDENTITY_SLOT_COUNT — only that many tokens exist', () => {
+    const ids = Array.from(
+      { length: IDENTITY_SLOT_COUNT + 2 },
+      (_, i) => `id-${i}`,
+    );
+    // Without the clamp this would probe slots up to `count` (20) and could
+    // emit `var(--colors-identity-9)` and beyond, which resolves to nothing.
+    const map = identityPalette(ids, 20);
+    for (const value of Object.values(map)) {
+      expect(value).toMatch(/^var\(--colors-identity-[1-8]\)$/);
+    }
+  });
+
+  it('matches the unclamped result once `count` exceeds IDENTITY_SLOT_COUNT', () => {
+    const ids = ['a', 'b', 'c'];
+    expect(identityPalette(ids, 20)).toEqual(identityPalette(ids));
+  });
 });
