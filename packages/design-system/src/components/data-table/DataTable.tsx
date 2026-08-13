@@ -16,6 +16,7 @@ import {
   Pin,
   PinOff,
   Rows3,
+  X,
 } from 'lucide-react';
 import {
   useCallback,
@@ -27,6 +28,7 @@ import {
   type RefCallback,
 } from 'react';
 
+import { IS_DEV_WARNING_ENABLED } from '../../hooks/devWarning.js';
 import { Popover } from '../Popover.js';
 import { SearchInput } from '../SearchInput.js';
 import { SkeletonRows } from '../SkeletonRows.js';
@@ -37,6 +39,7 @@ import {
   normalizeMagnitudeValue,
 } from './magnitude.js';
 import type { DataTableColumnAlign, DataTableDensity } from './types.js';
+import { shouldWarnMissingGetRowId } from './utils.js';
 
 /**
  * The design-system package builds with `tsc` and ships no generated
@@ -254,7 +257,7 @@ function pinnedOffsetStyle<TData>(
   };
 }
 
-type DataTableProps<TData> = {
+export type DataTableProps<TData> = {
   table: Table<TData>;
   isLoading: boolean;
   onRowClick?: (row: TData) => void;
@@ -387,23 +390,56 @@ type DataTableProps<TData> = {
   renderDetailPanel?: (row: TData) => ReactNode;
 };
 
-/** Copy-to-clipboard affordance for a `meta.copyable` cell. */
+type CopyStatus = 'idle' | 'copied' | 'failed' | 'unsupported';
+
+const COPY_STATUS_LABEL: Record<CopyStatus, string> = {
+  idle: 'Copy',
+  copied: 'Copied',
+  failed: 'Copy failed',
+  unsupported: 'Copy unavailable',
+};
+
+/**
+ * Copy-to-clipboard affordance for a `meta.copyable` cell. The success glyph
+ * only shows once `navigator.clipboard.writeText` actually resolves — an
+ * insecure context (or a user denying the permission) surfaces distinctly as
+ * `'unsupported'`/`'failed'` rather than reporting success unconditionally.
+ */
 function CopyButton({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<CopyStatus>('idle');
+  const resetAfterDelay = () => {
+    window.setTimeout(() => setStatus('idle'), 1200);
+  };
   return (
     <button
       type="button"
       className="dataTable__copyButton"
       data-part="copy-button"
-      aria-label={copied ? 'Copied' : 'Copy'}
+      aria-label={COPY_STATUS_LABEL[status]}
       onClick={(event) => {
         event.stopPropagation();
-        void navigator.clipboard?.writeText(value);
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 1200);
+        if (!navigator.clipboard) {
+          setStatus('unsupported');
+          resetAfterDelay();
+          return;
+        }
+        navigator.clipboard.writeText(value).then(
+          () => {
+            setStatus('copied');
+            resetAfterDelay();
+          },
+          () => {
+            setStatus('failed');
+            resetAfterDelay();
+          },
+        );
       }}
     >
-      {copied ? <Check size={12} /> : <Copy size={12} />}
+      {status === 'copied' && <Check size={12} />}
+      {(status === 'failed' || status === 'unsupported') && (
+        <X size={12} color="var(--colors-text-critical, currentColor)" />
+      )}
+      {status === 'idle' && <Copy size={12} />}
     </button>
   );
 }
@@ -514,6 +550,28 @@ export function DataTable<TData>({
   const rows = table.getRowModel().rows;
   const showSkeleton = isLoading && rows.length === 0;
 
+  // `virtualized` without the table's `getRowId` configured means the
+  // virtualizer's item keys and row-measurement cache (see `getItemKey`
+  // below) key off array indices instead of row identity — silently broken
+  // once data is prepended or reordered. Warns once, dev-only.
+  const missingRowIdForVirtualizationWarned = useRef(false);
+  if (
+    IS_DEV_WARNING_ENABLED &&
+    shouldWarnMissingGetRowId(
+      virtualized,
+      table.options.getRowId != null,
+      missingRowIdForVirtualizationWarned.current,
+    )
+  ) {
+    missingRowIdForVirtualizationWarned.current = true;
+    console.warn(
+      "[uikit] `DataTable` is `virtualized` without the table's `getRowId` " +
+        "configured — the virtualizer's item keys and row-measurement cache " +
+        'will key off array indices, which breaks when data is prepended or ' +
+        'reordered. Pass `getRowId` to `useDataTable`.',
+    );
+  }
+
   // Column resizing/pinning read straight off the `table` instance's own
   // options/state rather than a parallel `DataTable` prop — the consumer
   // already declared these via `useDataTable`'s config, so `DataTable` just
@@ -543,9 +601,13 @@ export function DataTable<TData>({
     getScrollElement: () => (virtualized ? scrollContainerRef.current : null),
     estimateSize: () => resolvedEstimatedRowHeight,
     overscan,
-    // Key the virtual item (and thus the measure cache) off the row's stable id
-    // rather than the array index, so prepending/reordering rows — or expanding
-    // one — never re-attributes a measured height to a different row.
+    // Key the virtual item (and thus the measure cache) off the row's id
+    // rather than the array index, so prepending/reordering rows — or
+    // expanding one — never re-attributes a measured height to a different
+    // row. `row.id` is only actually stable when the caller supplied
+    // `DataTableConfig.getRowId`; without it, TanStack's own id is
+    // index-based, and this falls back to the same index either way (see the
+    // dev warning above).
     getItemKey: (index) => rows[index]?.id ?? index,
   });
 

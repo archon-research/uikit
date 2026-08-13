@@ -20,6 +20,7 @@ import {
 } from '@tanstack/react-table';
 import * as React from 'react';
 
+import { IS_DEV_WARNING_ENABLED } from '../../hooks/devWarning.js';
 import { useIdentityChurnWarning } from '../../hooks/useIdentityChurnWarning.js';
 import type {
   DataTableConfig,
@@ -29,6 +30,7 @@ import type {
 import {
   deserializeSorting,
   serializeSorting,
+  shouldWarnMissingGetRowId,
   validateSortingState,
 } from './utils.js';
 
@@ -38,9 +40,31 @@ export function useDataTable<T>(
   config: DataTableConfig<T> = {},
 ): Table<T> {
   // `columns` should be stable (memoized or module-scoped, e.g. via
-  // `defineColumns`) — a fresh array each render re-syncs the table. Warn in
-  // dev if it churns.
+  // `defineColumns`) — a fresh array each render re-syncs the table. Warns
+  // once, dev-only, if it churns.
   useIdentityChurnWarning(columns, 'useDataTable columns');
+
+  // `getRowCanExpand` without a stable `getRowId` means expansion state (and,
+  // downstream in `DataTable`, the virtualizer's item keys and measurement
+  // cache) key off array indices instead of row identity — silently broken
+  // once data is prepended or reordered. Warns once, dev-only.
+  const missingRowIdWarned = React.useRef(false);
+  if (
+    IS_DEV_WARNING_ENABLED &&
+    shouldWarnMissingGetRowId(
+      config.getRowCanExpand != null,
+      config.getRowId != null,
+      missingRowIdWarned.current,
+    )
+  ) {
+    missingRowIdWarned.current = true;
+    console.warn(
+      '[uikit] `useDataTable` was given `getRowCanExpand` without `getRowId` ' +
+        "— row expansion state (and DataTable's virtualized row measurement) " +
+        'will key off array indices, which breaks when data is prepended or ' +
+        'reordered. Pass a stable `getRowId`.',
+    );
+  }
 
   const [internalSorting, setInternalSorting] = React.useState<SortingState>(
     config.defaultSorting ?? [],

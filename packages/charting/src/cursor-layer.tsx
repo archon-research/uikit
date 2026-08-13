@@ -9,7 +9,11 @@ import {
 import { chartTokens } from './theme.js';
 
 export type CursorSeries = {
-  /** Stable identity; defaults to the array index. */
+  /**
+   * Stable identity; defaults to the array index. Pass an explicit, stable
+   * `id` when `series` can reorder — an index-based default re-attributes a
+   * readout dot to the wrong series across renders otherwise.
+   */
   id?: string;
   color: string;
   /** Series value at an x-domain stop, or `null` where the series has no point. */
@@ -76,9 +80,9 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 /**
- * The `stop` in `stops` closest to `value` (Euclidean nearest, ties resolve to
- * the lower stop). `stops` must be sorted ascending. Returns `NaN` for an
- * empty array. Exported for unit testing.
+ * The `stop` in `stops` closest to `value` (nearest by absolute difference,
+ * ties resolve to the lower stop). `stops` must be sorted ascending. Returns
+ * `NaN` for an empty array. Exported for unit testing.
  */
 export function nearestStop(stops: number[], value: number): number {
   const n = stops.length;

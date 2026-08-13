@@ -88,7 +88,7 @@ export function usePlayback<TPayload = unknown>({
   autoplay,
 }: UsePlaybackOptions<TPayload>): UsePlaybackResult<TPayload> {
   // `source` must be memoized by the caller — a fresh source each render
-  // re-subscribes playback every render. Warn (dev only) if it churns.
+  // re-subscribes playback every render. Warns once, dev-only, if it churns.
   useIdentityChurnWarning(source, 'usePlayback source');
 
   const mode: PlaybackMode = source.kind;

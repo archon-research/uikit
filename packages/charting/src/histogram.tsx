@@ -46,8 +46,23 @@ export function histogramBins(
 
   const { binCount = DEFAULT_BIN_COUNT, binWidth, domain } = options;
 
-  const min = domain ? Math.min(domain[0], domain[1]) : Math.min(...finite);
-  const max = domain ? Math.max(domain[0], domain[1]) : Math.max(...finite);
+  // A single pass tracking running min/max, not `Math.min(...finite)`/
+  // `Math.max(...finite)` — spreading a large array as call arguments throws
+  // a `RangeError` past the engine's argument-count limit (tens of
+  // thousands), which real datasets can exceed.
+  let min: number;
+  let max: number;
+  if (domain) {
+    min = Math.min(domain[0], domain[1]);
+    max = Math.max(domain[0], domain[1]);
+  } else {
+    min = Infinity;
+    max = -Infinity;
+    for (const value of finite) {
+      if (value < min) min = value;
+      if (value > max) max = value;
+    }
+  }
 
   let count: number;
   let width: number;
@@ -89,18 +104,29 @@ type XYChartDataContext = {
   margin?: { top: number; left: number; right: number; bottom: number };
 };
 
-export interface HistogramSeriesProps {
-  /** Raw values to bin (ignored when `bins` is supplied). */
-  values?: number[];
-  /** Precomputed bins; when given, `values`/binning options are unused. */
-  bins?: HistogramBin[];
-  /** Passed to {@link histogramBins} when binning `values`. */
-  binCount?: number;
-  binWidth?: number;
-  domain?: [number, number];
+/** Visual props shared by both `HistogramSeriesProps` variants. */
+export interface HistogramSeriesVisualProps {
   /** Bar fill. Defaults to the primary series token. */
   color?: string;
 }
+
+/**
+ * A discriminated union rather than two independently-optional fields: exactly
+ * one of `bins` or `values` must be supplied, so omitting both is a type
+ * error instead of silently rendering nothing.
+ */
+export type HistogramSeriesProps = HistogramSeriesVisualProps &
+  (
+    | { bins: HistogramBin[] }
+    | {
+        /** Raw values to bin, via {@link histogramBins}. */
+        values: number[];
+        /** Passed to {@link histogramBins} when binning `values`. */
+        binCount?: number;
+        binWidth?: number;
+        domain?: [number, number];
+      }
+  );
 
 /**
  * Frequency-bar mark for a histogram, rendered as a child of `<XYChart>`.
@@ -114,14 +140,14 @@ export interface HistogramSeriesProps {
  * extent and the y-domain to `[0, maxCount]` so the bars fill the plot — this
  * mark only positions rects within whatever scales the chart provides.
  */
-export function HistogramSeries({
-  values,
-  bins,
-  binCount,
-  binWidth,
-  domain,
-  color = seriesColor.primary,
-}: HistogramSeriesProps) {
+export function HistogramSeries(props: HistogramSeriesProps) {
+  const { color = seriesColor.primary } = props;
+  const bins = 'bins' in props ? props.bins : undefined;
+  const values = 'bins' in props ? undefined : props.values;
+  const binCount = 'bins' in props ? undefined : props.binCount;
+  const binWidth = 'bins' in props ? undefined : props.binWidth;
+  const domain = 'bins' in props ? undefined : props.domain;
+
   const {
     xScale,
     yScale,

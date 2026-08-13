@@ -147,10 +147,14 @@ export interface DataTableConfig<T = unknown> {
    */
   enableMultiRowSelection?: boolean;
   /**
-   * Stable per-row id, so selection (and pinning) state survives a sort or
-   * filter instead of tracking whatever row now sits at a given index.
-   * Defaults to TanStack's own index-based id when omitted. Mirrors
-   * TanStack's `getRowId` table option.
+   * Stable per-row id. Selection and pinning state key off it so they survive
+   * a sort or filter instead of tracking whatever row now sits at a given
+   * index. It also backs row expansion (`expanded`/`getRowCanExpand`) and,
+   * in `DataTable`, the virtualizer's item keys and row-measurement cache —
+   * omitting it makes ALL of those index-keyed, which breaks silently when
+   * data is prepended or reordered (`DataTable` emits a dev-only warning in
+   * that case when `virtualized` is set). Defaults to TanStack's own
+   * index-based id when omitted. Mirrors TanStack's `getRowId` table option.
    */
   getRowId?: (row: T, index: number) => string;
   /**
