@@ -80,8 +80,180 @@ export const dataTableRecipe = defineSlotRecipe({
     'resizeHandle',
     'pinToggle',
     'selectCell',
+    'frame',
+    'toolbar',
+    'toolbarSearch',
+    'toolbarControls',
+    'iconButton',
+    'menuItem',
+    'selectionBanner',
+    'cellCopyWrap',
+    'copyButton',
+    'actionsCell',
+    'actionsHeaderCell',
+    'rowGroup',
+    'expanderCell',
+    'expander',
+    'detailRow',
+    'detailCell',
   ],
   base: {
+    rowGroup: {},
+    expanderCell: {
+      width: '1%',
+      px: '2',
+      verticalAlign: 'middle',
+    },
+    expander: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '5',
+      height: '5',
+      borderRadius: 'sm',
+      border: 'none',
+      bg: 'transparent',
+      color: 'text.muted',
+      cursor: 'pointer',
+      lineHeight: '1',
+      transition: 'transform 120ms ease, color 120ms ease',
+      _hover: { color: 'text.strong', bg: 'interactive.hover' },
+      _focusVisible: {
+        outline: '2px solid',
+        outlineColor: 'text.interactive',
+        outlineOffset: '1px',
+      },
+      '&[data-expanded="true"]': { transform: 'rotate(90deg)' },
+    },
+    detailRow: {},
+    detailCell: {
+      px: '3',
+      py: '3',
+      bg: 'surface.subtle',
+      borderBottomWidth: '1px',
+      borderBottomStyle: 'solid',
+      borderBottomColor: 'border.subtle',
+    },
+    frame: {
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '0',
+      // When full-screen, the component sets `--frame_fullScreen_true`.
+    },
+    toolbar: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '2',
+      flexWrap: 'wrap',
+      px: '3',
+      py: '2',
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderColor: 'border.subtle',
+      borderBottomWidth: '0',
+      borderTopRadius: 'md',
+      bg: 'surface.default',
+    },
+    toolbarSearch: {
+      minWidth: '0',
+      flex: '1 1 12rem',
+      maxWidth: '20rem',
+    },
+    toolbarControls: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '1',
+      marginInlineStart: 'auto',
+    },
+    iconButton: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '8',
+      height: '8',
+      borderRadius: 'sm',
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderColor: 'transparent',
+      bg: 'transparent',
+      color: 'text.muted',
+      cursor: 'pointer',
+      _hover: { bg: 'interactive.hover', color: 'text.default' },
+      _focusVisible: {
+        outline: '2px solid',
+        outlineColor: 'text.interactive',
+        outlineOffset: '1px',
+      },
+      '&[data-active="true"]': {
+        bg: 'interactive.selected',
+        color: 'text.strong',
+      },
+    },
+    menuItem: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '2',
+      px: '2',
+      py: '1.5',
+      borderRadius: 'sm',
+      fontSize: 'sm',
+      color: 'text.default',
+      cursor: 'pointer',
+      _hover: { bg: 'interactive.hover' },
+    },
+    selectionBanner: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '2',
+      px: '3',
+      py: '1.5',
+      fontSize: 'sm',
+      color: 'text.strong',
+      bg: 'interactive.selected',
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderColor: 'border.subtle',
+      borderBottomWidth: '0',
+    },
+    cellCopyWrap: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '1',
+      minWidth: '0',
+    },
+    copyButton: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: '0',
+      width: '4',
+      height: '4',
+      borderRadius: 'sm',
+      border: 'none',
+      bg: 'transparent',
+      color: 'text.muted',
+      cursor: 'pointer',
+      opacity: '0',
+      transition: 'opacity 100ms ease, color 100ms ease',
+      _hover: { color: 'text.strong' },
+      _focusVisible: {
+        opacity: '1',
+        outline: '2px solid',
+        outlineColor: 'text.interactive',
+        outlineOffset: '1px',
+      },
+      // Revealed on row hover or when focused (see bodyRow hover selector).
+      '[data-part="body-row"]:hover &': { opacity: '1' },
+    },
+    actionsHeaderCell: {
+      width: '1%',
+      whiteSpace: 'nowrap',
+    },
+    actionsCell: {
+      width: '1%',
+      whiteSpace: 'nowrap',
+      textAlign: 'end',
+    },
     root: {
       // Wide tables scroll horizontally here — which also clips any overlay
       // anchored to a header/body cell (a tooltip, a filter popover). Such
@@ -334,14 +506,31 @@ export const dataTableRecipe = defineSlotRecipe({
     // exclusive. Harmless on columns without a magnitude cell.
     align: {
       left: {},
+      // `textAlign` right-aligns the body cells, but the header label lives in
+      // the `headerInner` flex row (and, when sortable, inside the `flex:1`
+      // `headerButton`), where `text-align` never bites — so the header would
+      // stay pinned left while its values right-align. Justify those flex rows
+      // from the aligned `headerCell` (the only header slot that carries the
+      // align variant) so header content tracks the body values with no
+      // consumer override.
       center: {
-        headerCell: { textAlign: 'center' },
+        headerCell: {
+          textAlign: 'center',
+          '& .dataTable__headerInner, & .dataTable__headerButton': {
+            justifyContent: 'center',
+          },
+        },
         bodyCell: { textAlign: 'center' },
         magnitudeCell: { justifyItems: 'center' },
         magnitudeValue: { textAlign: 'center' },
       },
       right: {
-        headerCell: { textAlign: 'right' },
+        headerCell: {
+          textAlign: 'right',
+          '& .dataTable__headerInner, & .dataTable__headerButton': {
+            justifyContent: 'flex-end',
+          },
+        },
         bodyCell: { textAlign: 'right' },
         magnitudeCell: { justifyItems: 'end' },
         magnitudeValue: { textAlign: 'right' },
@@ -505,6 +694,21 @@ export const dataTableRecipe = defineSlotRecipe({
         },
       },
     },
+    // Full-screen frame: fixes the whole table (toolbar + scroll body) to the
+    // viewport above app chrome. The component toggles this from a toolbar
+    // button; the scroll body flexes to fill the remaining height.
+    fullScreen: {
+      false: {},
+      true: {
+        frame: {
+          position: 'fixed',
+          inset: '0',
+          zIndex: 'modal',
+          bg: 'surface.canvas',
+          p: '4',
+        },
+      },
+    },
   },
   defaultVariants: {
     density: 'comfortable',
@@ -519,5 +723,6 @@ export const dataTableRecipe = defineSlotRecipe({
     flashTwoPhase: 'none',
     fixedLayout: false,
     pinned: 'none',
+    fullScreen: false,
   },
 });

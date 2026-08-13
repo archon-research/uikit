@@ -1,6 +1,8 @@
 import {
   DataTable,
   SearchInput,
+  defineColumns,
+  numericColumnMeta,
   useDataTable,
 } from '@archon-research/design-system';
 import type { SortingState } from '@tanstack/react-table';
@@ -526,6 +528,105 @@ export const MagnitudeColumns = () => {
         table={linearTable}
         isLoading={false}
         getRowKey={(row: Row) => `linear:${row.chain}:${row.symbol}`}
+      />
+    </div>
+  );
+};
+
+// The toolbar (opt-in): global search + a column-visibility menu, density and
+// full-screen toggles, a selection-count banner, plus copyable cells and a
+// trailing row-actions column. One row is pre-selected so the banner shows.
+const toolbarColumns = defineColumns<Row>(
+  {
+    id: 'symbol',
+    accessorKey: 'symbol',
+    header: 'Symbol',
+    cell: (ctx) => ctx.row.original.symbol,
+    meta: {
+      mono: true,
+      copyable: true,
+      label: 'Symbol',
+      copyValue: (row) => row.symbol,
+    },
+  },
+  {
+    id: 'chain',
+    accessorKey: 'chain',
+    header: 'Chain',
+    cell: (ctx) => ctx.row.original.chain,
+    meta: { label: 'Chain' },
+  },
+  {
+    id: 'amountUsd',
+    accessorKey: 'amountUsd',
+    header: 'Amount (USD)',
+    cell: (ctx) => `$${ctx.row.original.amountUsd.toLocaleString('en-US')}`,
+    meta: { ...numericColumnMeta, label: 'Amount (USD)' },
+  },
+);
+
+export const Toolbar = () => {
+  const table = useDataTable<Row>(rows, toolbarColumns, {
+    enableSearch: true,
+    enableSorting: true,
+    enableRowSelection: true,
+    getRowId: (row) => row.symbol,
+    defaultRowSelection: { WETH: true },
+  });
+  return (
+    <div className={wrapperClassName}>
+      <DataTable
+        table={table}
+        isLoading={false}
+        toolbar
+        enableColumnVisibility
+        enableDensityToggle
+        enableFullScreen
+        searchPlaceholder="Search tokens…"
+        rowActions={(row) => (
+          <button
+            type="button"
+            aria-label={`Actions for ${row.symbol}`}
+            onClick={() => {}}
+          >
+            ⋯
+          </button>
+        )}
+      />
+    </div>
+  );
+};
+
+// Master/detail: `useDataTable({ getRowCanExpand })` + a `renderDetailPanel`
+// prop expand a row into a detail panel below it. A stable `getRowId` keeps a
+// row expanded across sorts/reorders; one row starts expanded here.
+export const ExpandableRows = () => {
+  const table = useDataTable<Row>(rows, toolbarColumns, {
+    enableSorting: true,
+    getRowId: (row) => row.symbol,
+    getRowCanExpand: () => true,
+    defaultExpanded: { WETH: true },
+  });
+  return (
+    <div className={wrapperClassName}>
+      <DataTable
+        table={table}
+        isLoading={false}
+        renderDetailPanel={(row) => (
+          <div
+            className={css({
+              display: 'grid',
+              gap: '1',
+              fontSize: 'sm',
+              color: 'text.muted',
+            })}
+          >
+            <div>
+              <strong>{row.symbol}</strong> on {row.chain}
+            </div>
+            <div>Amount: ${row.amountUsd.toLocaleString('en-US')}</div>
+          </div>
+        )}
       />
     </div>
   );

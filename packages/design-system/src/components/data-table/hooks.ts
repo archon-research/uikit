@@ -1,5 +1,6 @@
 import {
   getCoreRowModel,
+  getExpandedRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
@@ -10,10 +11,12 @@ import {
   type ColumnOrderState,
   type ColumnPinningState,
   type ColumnSizingState,
+  type ExpandedState,
   type OnChangeFn,
   type RowSelectionState,
   type SortingState,
   type Table,
+  type VisibilityState,
 } from '@tanstack/react-table';
 import * as React from 'react';
 
@@ -55,6 +58,11 @@ export function useDataTable<T>(
     );
   const [internalRowSelection, setInternalRowSelection] =
     React.useState<RowSelectionState>(config.defaultRowSelection ?? {});
+  const [internalColumnVisibility, setInternalColumnVisibility] =
+    React.useState<VisibilityState>(config.defaultColumnVisibility ?? {});
+  const [internalExpanded, setInternalExpanded] = React.useState<ExpandedState>(
+    config.defaultExpanded ?? {},
+  );
 
   const sorting = config.sorting ?? internalSorting;
   const columnFilters = config.columnFilters ?? internalColumnFilters;
@@ -63,6 +71,8 @@ export function useDataTable<T>(
   const columnOrder = config.columnOrder ?? internalColumnOrder;
   const columnPinning = config.columnPinning ?? internalColumnPinning;
   const rowSelection = config.rowSelection ?? internalRowSelection;
+  const columnVisibility = config.columnVisibility ?? internalColumnVisibility;
+  const expanded = config.expanded ?? internalExpanded;
 
   const handleSortingChange: OnChangeFn<SortingState> =
     config.onSortingChange ?? setInternalSorting;
@@ -78,6 +88,10 @@ export function useDataTable<T>(
     config.onColumnPinningChange ?? setInternalColumnPinning;
   const handleRowSelectionChange: OnChangeFn<RowSelectionState> =
     config.onRowSelectionChange ?? setInternalRowSelection;
+  const handleColumnVisibilityChange: OnChangeFn<VisibilityState> =
+    config.onColumnVisibilityChange ?? setInternalColumnVisibility;
+  const handleExpandedChange: OnChangeFn<ExpandedState> =
+    config.onExpandedChange ?? setInternalExpanded;
 
   return useReactTable({
     data,
@@ -90,6 +104,8 @@ export function useDataTable<T>(
       columnOrder,
       columnPinning,
       rowSelection,
+      columnVisibility,
+      expanded,
     },
     onSortingChange: handleSortingChange,
     onColumnFiltersChange: handleColumnFiltersChange,
@@ -98,8 +114,12 @@ export function useDataTable<T>(
     onColumnOrderChange: handleColumnOrderChange,
     onColumnPinningChange: handleColumnPinningChange,
     onRowSelectionChange: handleRowSelectionChange,
+    onColumnVisibilityChange: handleColumnVisibilityChange,
+    onExpandedChange: handleExpandedChange,
+    getRowCanExpand: config.getRowCanExpand,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     // Faceted models back the DataTable's per-column `select` filter
     // affordance (`column.getFacetedUniqueValues()`) — cheap to register

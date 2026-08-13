@@ -220,6 +220,17 @@ for (const file of changed) {
 
   if (!graphPackages.has(pkgName)) continue; // package no story depends on
 
+  // Panda preset inputs (recipes + the preset itself) compile into the
+  // globally-generated styled-system CSS, which every story consumes by stable
+  // class name — not through the JS module graph. So a change here can restyle
+  // any story (e.g. a DataTable recipe tweak repaints the table embedded in the
+  // filter-primitives story) while mapping to zero modules in story-deps, which
+  // the per-module lookup below would silently skip. Attribute conservatively.
+  if (/^src\/(recipes\/|panda-preset\.)/.test(rest)) {
+    fullRun = true;
+    continue;
+  }
+
   // Consumed package: map a source file to its built module and look it up.
   const srcMatch = rest.match(/^src\/(.+)$/);
   if (srcMatch && CODE_EXT.test(rest)) {

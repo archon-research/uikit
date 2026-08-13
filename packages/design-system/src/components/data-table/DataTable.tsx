@@ -6,7 +6,17 @@ import {
   type Table,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Pin, PinOff } from 'lucide-react';
+import {
+  Check,
+  ChevronRight,
+  Columns3,
+  Copy,
+  Maximize2,
+  Minimize2,
+  Pin,
+  PinOff,
+  Rows3,
+} from 'lucide-react';
 import {
   useCallback,
   useMemo,
@@ -17,6 +27,8 @@ import {
   type RefCallback,
 } from 'react';
 
+import { Popover } from '../Popover.js';
+import { SearchInput } from '../SearchInput.js';
 import { SkeletonRows } from '../SkeletonRows.js';
 import { Select } from '../StyledSelect.js';
 import {
@@ -338,7 +350,109 @@ type DataTableProps<TData> = {
    * styling itself.
    */
   enableColumnPinning?: boolean;
+  /**
+   * Renders a toolbar strip above the table hosting the global search (when
+   * enabled), the column-visibility menu / density / full-screen toggles you
+   * opt into, a selection-count banner, and any `toolbarActions`. Off by
+   * default (additive) — without it the table renders exactly as before.
+   */
+  toolbar?: boolean;
+  /** Custom nodes at the end of the toolbar (e.g. an export/refresh button). */
+  toolbarActions?: ReactNode;
+  /** Placeholder for the toolbar's global-search input. */
+  searchPlaceholder?: string;
+  /** Show a column show/hide menu in the toolbar (needs `toolbar`). */
+  enableColumnVisibility?: boolean;
+  /** Show a comfortable/compact density toggle in the toolbar (needs `toolbar`). */
+  enableDensityToggle?: boolean;
+  /** Notified when the density toggle changes; density is otherwise internal, seeded from `density`. */
+  onDensityChange?: (density: DataTableDensity) => void;
+  /** Show a full-screen toggle in the toolbar (needs `toolbar`). */
+  enableFullScreen?: boolean;
+  /**
+   * Renders a trailing actions column: `rowActions(row)` is placed in each
+   * row's actions cell (inline buttons, or the consumer's own menu). Off by
+   * default.
+   */
+  rowActions?: (row: TData) => ReactNode;
+  /** Header content for the actions column (default: empty, aria-labelled). */
+  rowActionsHeader?: ReactNode;
+  /**
+   * Renders an expandable detail panel beneath an expanded row (master/detail).
+   * Providing it turns on a leading expander column; each row becomes its own
+   * `<tbody>` so the virtualizer measures the row + its open panel as one unit.
+   * Pair with `useDataTable({ getRowCanExpand })` to gate which rows expand, and
+   * a stable `getRowId` so expansion survives reorders. Off by default.
+   */
+  renderDetailPanel?: (row: TData) => ReactNode;
 };
+
+/** Copy-to-clipboard affordance for a `meta.copyable` cell. */
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      className="dataTable__copyButton"
+      data-part="copy-button"
+      aria-label={copied ? 'Copied' : 'Copy'}
+      onClick={(event) => {
+        event.stopPropagation();
+        void navigator.clipboard?.writeText(value);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1200);
+      }}
+    >
+      {copied ? <Check size={12} /> : <Copy size={12} />}
+    </button>
+  );
+}
+
+/** Toolbar show/hide-columns menu (a popover of checkboxes over hideable columns). */
+function ColumnVisibilityMenu<TData>({ table }: { table: Table<TData> }) {
+  const columns = table
+    .getAllLeafColumns()
+    .filter((column) => column.getCanHide());
+  if (columns.length === 0) return null;
+  return (
+    <Popover.Root positioning={{ placement: 'bottom-end' }}>
+      <Popover.Trigger
+        type="button"
+        className="dataTable__iconButton"
+        aria-label="Show or hide columns"
+      >
+        <Columns3 size={16} />
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Positioner>
+          <Popover.Content>
+            {columns.map((column) => {
+              const meta = column.columnDef.meta;
+              const header = column.columnDef.header;
+              const label =
+                meta?.label ??
+                (typeof header === 'string' ? header : column.id);
+              return (
+                <label
+                  key={column.id}
+                  className="dataTable__menuItem"
+                  data-part="columns-menu-item"
+                >
+                  <input
+                    type="checkbox"
+                    checked={column.getIsVisible()}
+                    onChange={column.getToggleVisibilityHandler()}
+                  />
+                  {label}
+                </label>
+              );
+            })}
+          </Popover.Content>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
 
 export function DataTable<TData>({
   table,
@@ -350,7 +464,7 @@ export function DataTable<TData>({
   renderCell,
   className,
   minWidth,
-  density = 'comfortable',
+  density: densityProp = 'comfortable',
   maxHeight,
   virtualized = false,
   estimatedRowHeight,
@@ -359,7 +473,31 @@ export function DataTable<TData>({
   flashOnUpdate = false,
   enableColumnReordering = false,
   enableColumnPinning = false,
+  toolbar = false,
+  toolbarActions,
+  searchPlaceholder,
+  enableColumnVisibility = false,
+  enableDensityToggle = false,
+  onDensityChange,
+  enableFullScreen = false,
+  rowActions,
+  rowActionsHeader,
+  renderDetailPanel,
 }: DataTableProps<TData>) {
+  const expandable = renderDetailPanel != null;
+  // Density is stateful (seeded from the prop) so the toolbar toggle can flip
+  // it; `onDensityChange` lets a consumer observe/persist it.
+  const [density, setDensity] = useState<DataTableDensity>(densityProp);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const toggleDensity = useCallback(() => {
+    setDensity((current) => {
+      const next = current === 'compact' ? 'comfortable' : 'compact';
+      onDensityChange?.(next);
+      return next;
+    });
+  }, [onDensityChange]);
+  const actionsEnabled = rowActions != null;
+
   const magnitudeStateByColumn = createMagnitudeStateMap(table);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const flashMapRef = useRef<Map<string, CellFlashEntry>>(new Map());
@@ -395,13 +533,20 @@ export function DataTable<TData>({
     resizingEnabled || enableColumnPinning || hasPinnedColumns;
   const rowSelectionEnabled = Boolean(table.options.enableRowSelection);
   const leafColumnCount =
-    table.getVisibleLeafColumns().length + (rowSelectionEnabled ? 1 : 0);
+    table.getVisibleLeafColumns().length +
+    (expandable ? 1 : 0) +
+    (rowSelectionEnabled ? 1 : 0) +
+    (actionsEnabled ? 1 : 0);
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => (virtualized ? scrollContainerRef.current : null),
     estimateSize: () => resolvedEstimatedRowHeight,
     overscan,
+    // Key the virtual item (and thus the measure cache) off the row's stable id
+    // rather than the array index, so prepending/reordering rows — or expanding
+    // one — never re-attributes a measured height to a different row.
+    getItemKey: (index) => rows[index]?.id ?? index,
   });
 
   const virtualItems = virtualized ? rowVirtualizer.getVirtualItems() : [];
@@ -460,178 +605,256 @@ export function DataTable<TData>({
   function renderBodyRow(
     row: Row<TData>,
     rowIndex: number,
-    measureRef?: RefCallback<HTMLTableRowElement>,
+    measureRef?: RefCallback<HTMLTableSectionElement>,
   ) {
     const rowKey = getRowKey ? getRowKey(row.original) : String(row.id);
     const isSelected =
       selectedRowKey !== undefined && rowKey === selectedRowKey;
     const isClickable = onRowClick !== undefined;
+    const isExpanded = expandable && row.getIsExpanded();
 
     return (
-      <tr
+      // Each logical row is its own <tbody> so the virtualizer measures the row
+      // and its (optional) open detail panel as a single unit; `data-index` +
+      // `measureRef` live here rather than on the <tr>.
+      <tbody
         key={rowKey}
         ref={measureRef}
         data-index={virtualized ? rowIndex : undefined}
-        aria-selected={isSelected || undefined}
-        tabIndex={isClickable ? 0 : undefined}
-        onClick={isClickable ? () => onRowClick(row.original) : undefined}
-        onKeyDown={
-          isClickable
-            ? (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  onRowClick(row.original);
-                }
-              }
-            : undefined
-        }
-        className={cx(
-          'dataTable__bodyRow',
-          isSelected && 'dataTable__bodyRow--selected_true',
-          isClickable && 'dataTable__bodyRow--clickable_true',
-        )}
-        data-part="body-row"
+        className="dataTable__rowGroup"
+        data-part="row-group"
       >
-        {rowSelectionEnabled ? (
-          <td
-            className={cx(
-              'dataTable__selectCell',
-              densityClass('selectCell', density),
-            )}
-            data-part="body-cell"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <input
-              type="checkbox"
-              aria-label={`Select row ${rowKey}`}
-              disabled={!row.getCanSelect()}
-              checked={row.getIsSelected()}
-              onChange={row.getToggleSelectedHandler()}
-            />
-          </td>
-        ) : null}
-        {row.getVisibleCells().map((cell) => {
-          const cellContent = flexRender(
-            cell.column.columnDef.cell,
-            cell.getContext(),
-          );
-          const align = cell.column.columnDef.meta?.align;
-          const isMono = cell.column.columnDef.meta?.mono === true;
-          const magnitude = cell.column.columnDef.meta?.magnitude;
-          const magnitudeState = magnitude
-            ? magnitudeStateByColumn.get(cell.column.id)
-            : undefined;
-
-          const customValue = magnitude?.getValue?.(row.original);
-          const rawValue =
-            customValue !== null && customValue !== undefined
-              ? customValue
-              : cell.getValue();
-          const isNumericValue =
-            typeof rawValue === 'number' && Number.isFinite(rawValue);
-
-          let content = cellContent;
-
-          if (
-            magnitude &&
-            magnitude.enabled !== false &&
-            magnitudeState &&
-            isNumericValue
-          ) {
-            const normalized = normalizeMagnitudeValue(
-              rawValue,
-              magnitudeState.domain,
-              magnitudeState.scale,
-            );
-            const percent = normalized * 100;
-            const hasValueTextResolver =
-              typeof magnitude.getValueText === 'function';
-            const valueText = magnitude.getValueText?.(rawValue, {
-              min: magnitudeState.domain.min,
-              max: magnitudeState.domain.max,
-            });
-
-            content = (
-              <div
-                className="dataTable__magnitudeCell"
-                data-part="magnitude-cell"
-              >
-                <span
-                  className="dataTable__magnitudeValue"
-                  data-part="magnitude-value"
-                >
-                  {cellContent}
-                </span>
-                <Progress.Root
-                  value={percent}
-                  min={0}
-                  max={100}
-                  className="dataTable__magnitudeProgressRoot"
-                  data-part="magnitude-progress-root"
-                >
-                  <Progress.Track
-                    className="dataTable__magnitudeProgressTrack"
-                    data-part="magnitude-progress-track"
-                  >
-                    <Progress.Range className="dataTable__magnitudeProgressRange" />
-                  </Progress.Track>
-                  {valueText ? (
-                    <span className="dataTable__magnitudeValueText">
-                      {valueText}
-                    </span>
-                  ) : hasValueTextResolver ? null : (
-                    <Progress.ValueText className="dataTable__magnitudeValueText">
-                      {formatMagnitudeValueText(percent)}
-                    </Progress.ValueText>
-                  )}
-                </Progress.Root>
-              </div>
-            );
+        <tr
+          aria-selected={isSelected || undefined}
+          tabIndex={isClickable ? 0 : undefined}
+          onClick={isClickable ? () => onRowClick(row.original) : undefined}
+          onKeyDown={
+            isClickable
+              ? (event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onRowClick(row.original);
+                  }
+                }
+              : undefined
           }
-
-          const flashState = flashOnUpdate
-            ? getCellFlashState(
-                flashMapRef.current,
-                `${rowKey}:${cell.column.id}`,
-                rawValue,
-              )
-            : { seq: 0, direction: 'none' as CellFlashDirection };
-
-          const pinned = cell.column.getIsPinned();
-
-          return (
+          className={cx(
+            'dataTable__bodyRow',
+            isSelected && 'dataTable__bodyRow--selected_true',
+            isClickable && 'dataTable__bodyRow--clickable_true',
+          )}
+          data-part="body-row"
+        >
+          {expandable ? (
             <td
-              key={
-                flashOnUpdate && flashState.seq > 0
-                  ? `${cell.id}:${flashState.seq}`
-                  : cell.id
-              }
               className={cx(
-                'dataTable__bodyCell',
-                alignClass('bodyCell', align),
+                'dataTable__expanderCell',
                 densityClass('bodyCell', density),
-                isMono && 'dataTable__bodyCell--mono_true',
-                flashOnUpdate &&
-                  (flashOnUpdate === 'two-phase'
-                    ? flashTwoPhaseClass(flashState.direction)
-                    : flashClass(flashState.direction)),
-                pinnedClass('bodyCell', pinned),
+              )}
+              data-part="expander-cell"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {row.getCanExpand() ? (
+                <button
+                  type="button"
+                  className="dataTable__expander"
+                  data-part="expander"
+                  data-expanded={isExpanded}
+                  aria-expanded={isExpanded}
+                  aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
+                  onClick={row.getToggleExpandedHandler()}
+                >
+                  <ChevronRight size={14} />
+                </button>
+              ) : null}
+            </td>
+          ) : null}
+          {rowSelectionEnabled ? (
+            <td
+              className={cx(
+                'dataTable__selectCell',
+                densityClass('selectCell', density),
               )}
               data-part="body-cell"
-              style={{
-                ...(fixedLayout ? { width: cell.column.getSize() } : undefined),
-                ...pinnedOffsetStyle(cell.column),
-              }}
+              onClick={(event) => event.stopPropagation()}
             >
-              {renderCell ? renderCell(content) : content}
+              <input
+                type="checkbox"
+                aria-label={`Select row ${rowKey}`}
+                disabled={!row.getCanSelect()}
+                checked={row.getIsSelected()}
+                onChange={row.getToggleSelectedHandler()}
+              />
             </td>
-          );
-        })}
-      </tr>
+          ) : null}
+          {row.getVisibleCells().map((cell) => {
+            const cellContent = flexRender(
+              cell.column.columnDef.cell,
+              cell.getContext(),
+            );
+            const align = cell.column.columnDef.meta?.align;
+            const isMono = cell.column.columnDef.meta?.mono === true;
+            const magnitude = cell.column.columnDef.meta?.magnitude;
+            const magnitudeState = magnitude
+              ? magnitudeStateByColumn.get(cell.column.id)
+              : undefined;
+
+            const customValue = magnitude?.getValue?.(row.original);
+            const rawValue =
+              customValue !== null && customValue !== undefined
+                ? customValue
+                : cell.getValue();
+            const isNumericValue =
+              typeof rawValue === 'number' && Number.isFinite(rawValue);
+
+            let content = cellContent;
+
+            if (
+              magnitude &&
+              magnitude.enabled !== false &&
+              magnitudeState &&
+              isNumericValue
+            ) {
+              const normalized = normalizeMagnitudeValue(
+                rawValue,
+                magnitudeState.domain,
+                magnitudeState.scale,
+              );
+              const percent = normalized * 100;
+              const hasValueTextResolver =
+                typeof magnitude.getValueText === 'function';
+              const valueText = magnitude.getValueText?.(rawValue, {
+                min: magnitudeState.domain.min,
+                max: magnitudeState.domain.max,
+              });
+
+              content = (
+                <div
+                  className="dataTable__magnitudeCell"
+                  data-part="magnitude-cell"
+                >
+                  <span
+                    className="dataTable__magnitudeValue"
+                    data-part="magnitude-value"
+                  >
+                    {cellContent}
+                  </span>
+                  <Progress.Root
+                    value={percent}
+                    min={0}
+                    max={100}
+                    className="dataTable__magnitudeProgressRoot"
+                    data-part="magnitude-progress-root"
+                  >
+                    <Progress.Track
+                      className="dataTable__magnitudeProgressTrack"
+                      data-part="magnitude-progress-track"
+                    >
+                      <Progress.Range className="dataTable__magnitudeProgressRange" />
+                    </Progress.Track>
+                    {valueText ? (
+                      <span className="dataTable__magnitudeValueText">
+                        {valueText}
+                      </span>
+                    ) : hasValueTextResolver ? null : (
+                      <Progress.ValueText className="dataTable__magnitudeValueText">
+                        {formatMagnitudeValueText(percent)}
+                      </Progress.ValueText>
+                    )}
+                  </Progress.Root>
+                </div>
+              );
+            }
+
+            if (cell.column.columnDef.meta?.copyable) {
+              const copyText = cell.column.columnDef.meta.copyValue
+                ? cell.column.columnDef.meta.copyValue(row.original)
+                : String(rawValue ?? '');
+              content = (
+                <span
+                  className="dataTable__cellCopyWrap"
+                  data-part="cell-copy-wrap"
+                >
+                  {content}
+                  <CopyButton value={copyText} />
+                </span>
+              );
+            }
+
+            const flashState = flashOnUpdate
+              ? getCellFlashState(
+                  flashMapRef.current,
+                  `${rowKey}:${cell.column.id}`,
+                  rawValue,
+                )
+              : { seq: 0, direction: 'none' as CellFlashDirection };
+
+            const pinned = cell.column.getIsPinned();
+
+            return (
+              <td
+                key={
+                  flashOnUpdate && flashState.seq > 0
+                    ? `${cell.id}:${flashState.seq}`
+                    : cell.id
+                }
+                className={cx(
+                  'dataTable__bodyCell',
+                  alignClass('bodyCell', align),
+                  densityClass('bodyCell', density),
+                  isMono && 'dataTable__bodyCell--mono_true',
+                  flashOnUpdate &&
+                    (flashOnUpdate === 'two-phase'
+                      ? flashTwoPhaseClass(flashState.direction)
+                      : flashClass(flashState.direction)),
+                  pinnedClass('bodyCell', pinned),
+                )}
+                data-part="body-cell"
+                style={{
+                  ...(fixedLayout
+                    ? { width: cell.column.getSize() }
+                    : undefined),
+                  ...pinnedOffsetStyle(cell.column),
+                }}
+              >
+                {renderCell ? renderCell(content) : content}
+              </td>
+            );
+          })}
+          {actionsEnabled ? (
+            <td
+              className={cx(
+                'dataTable__actionsCell',
+                densityClass('bodyCell', density),
+              )}
+              data-part="actions-cell"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {rowActions?.(row.original)}
+            </td>
+          ) : null}
+        </tr>
+        {isExpanded && renderDetailPanel ? (
+          <tr className="dataTable__detailRow" data-part="detail-row">
+            <td
+              className="dataTable__detailCell"
+              data-part="detail-cell"
+              colSpan={leafColumnCount}
+            >
+              {renderDetailPanel(row.original)}
+            </td>
+          </tr>
+        ) : null}
+      </tbody>
     );
   }
 
-  return (
+  const hasToolbar = toolbar;
+  const searchable = Boolean(table.options.enableGlobalFilter);
+  const globalFilter = (table.getState().globalFilter as string) ?? '';
+  const selectedCount = table.getSelectedRowModel().rows.length;
+
+  const tableRoot = (
     <div
       ref={scrollContainerRef}
       className={cx(
@@ -639,7 +862,13 @@ export function DataTable<TData>({
         isScrollable && 'dataTable__root--scrollable_true',
         className,
       )}
-      style={rootStyle}
+      // Square the top corners when a toolbar sits directly above, so the two
+      // read as one joined container.
+      style={
+        hasToolbar
+          ? { ...rootStyle, borderTopLeftRadius: 0, borderTopRightRadius: 0 }
+          : rootStyle
+      }
       data-scope="data-table"
       data-part="root"
       data-density={density}
@@ -659,6 +888,19 @@ export function DataTable<TData>({
               className="dataTable__headerRow"
               data-part="header-row"
             >
+              {expandable && headerGroupIndex === 0 ? (
+                <th
+                  className={cx(
+                    'dataTable__expanderCell',
+                    'dataTable__headerCell',
+                    densityClass('headerCell', density),
+                    resolvedStickyHeader &&
+                      'dataTable__headerCell--stickyHeader_true',
+                  )}
+                  data-part="header-cell"
+                  aria-label="Expand column"
+                />
+              ) : null}
               {rowSelectionEnabled && headerGroupIndex === 0 ? (
                 <th
                   className={cx(
@@ -855,6 +1097,25 @@ export function DataTable<TData>({
                   </th>
                 );
               })}
+              {actionsEnabled && headerGroupIndex === 0 ? (
+                <th
+                  className={cx(
+                    'dataTable__actionsHeaderCell',
+                    'dataTable__headerCell',
+                    densityClass('headerCell', density),
+                    resolvedStickyHeader &&
+                      'dataTable__headerCell--stickyHeader_true',
+                  )}
+                  data-part="header-cell"
+                  aria-label={
+                    typeof rowActionsHeader === 'string'
+                      ? rowActionsHeader
+                      : 'Row actions'
+                  }
+                >
+                  {rowActionsHeader}
+                </th>
+              ) : null}
             </tr>
           ))}
           {hasFilterRow ? (
@@ -881,44 +1142,121 @@ export function DataTable<TData>({
             </tr>
           ) : null}
         </thead>
-        <tbody>
-          {showSkeleton
-            ? SkeletonRows(skeletonConfig)
-            : virtualized
-              ? [
-                  paddingTop > 0 ? (
-                    <tr key="__virtual-padding-top" aria-hidden="true">
-                      <td
-                        aria-hidden="true"
-                        colSpan={leafColumnCount}
-                        style={{ height: paddingTop, padding: 0, border: 0 }}
-                      />
-                    </tr>
-                  ) : null,
-                  ...virtualItems.map((virtualItem) =>
-                    renderBodyRow(
-                      rows[virtualItem.index],
-                      virtualItem.index,
-                      rowVirtualizer.measureElement,
-                    ),
-                  ),
-                  paddingBottom > 0 ? (
-                    <tr key="__virtual-padding-bottom" aria-hidden="true">
-                      <td
-                        aria-hidden="true"
-                        colSpan={leafColumnCount}
-                        style={{
-                          height: paddingBottom,
-                          padding: 0,
-                          border: 0,
-                        }}
-                      />
-                    </tr>
-                  ) : null,
-                ]
-              : rows.map((row, index) => renderBodyRow(row, index))}
-        </tbody>
+        {/* Each logical row is its own <tbody> (see renderBodyRow), so skeleton
+            and virtual-scroll spacers are their own <tbody>s too — no single
+            wrapping <tbody> to nest them in. */}
+        {showSkeleton ? (
+          <tbody>{SkeletonRows(skeletonConfig)}</tbody>
+        ) : virtualized ? (
+          <>
+            {paddingTop > 0 ? (
+              <tbody aria-hidden="true">
+                <tr>
+                  <td
+                    colSpan={leafColumnCount}
+                    style={{ height: paddingTop, padding: 0, border: 0 }}
+                  />
+                </tr>
+              </tbody>
+            ) : null}
+            {virtualItems.map((virtualItem) =>
+              renderBodyRow(
+                rows[virtualItem.index],
+                virtualItem.index,
+                rowVirtualizer.measureElement,
+              ),
+            )}
+            {paddingBottom > 0 ? (
+              <tbody aria-hidden="true">
+                <tr>
+                  <td
+                    colSpan={leafColumnCount}
+                    style={{ height: paddingBottom, padding: 0, border: 0 }}
+                  />
+                </tr>
+              </tbody>
+            ) : null}
+          </>
+        ) : (
+          rows.map((row, index) => renderBodyRow(row, index))
+        )}
       </table>
+    </div>
+  );
+
+  // Without a toolbar the table renders exactly as before (no frame wrapper).
+  if (!hasToolbar) return tableRoot;
+
+  return (
+    <div
+      className={cx(
+        'dataTable__frame',
+        isFullScreen && 'dataTable__frame--fullScreen_true',
+      )}
+      data-scope="data-table"
+      data-part="frame"
+    >
+      <div className="dataTable__toolbar" data-part="toolbar">
+        {searchable ? (
+          <div className="dataTable__toolbarSearch" data-part="toolbar-search">
+            <SearchInput
+              value={globalFilter}
+              onValueChange={(next) => table.setGlobalFilter(next)}
+              placeholder={searchPlaceholder}
+            />
+          </div>
+        ) : null}
+        <div
+          className="dataTable__toolbarControls"
+          data-part="toolbar-controls"
+        >
+          {toolbarActions}
+          {enableColumnVisibility ? (
+            <ColumnVisibilityMenu table={table} />
+          ) : null}
+          {enableDensityToggle ? (
+            <button
+              type="button"
+              className="dataTable__iconButton"
+              data-active={density === 'compact'}
+              aria-pressed={density === 'compact'}
+              aria-label="Toggle row density"
+              onClick={toggleDensity}
+            >
+              <Rows3 size={16} />
+            </button>
+          ) : null}
+          {enableFullScreen ? (
+            <button
+              type="button"
+              className="dataTable__iconButton"
+              data-active={isFullScreen}
+              aria-pressed={isFullScreen}
+              aria-label={isFullScreen ? 'Exit full screen' : 'Full screen'}
+              onClick={() => setIsFullScreen((current) => !current)}
+            >
+              {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
+          ) : null}
+        </div>
+      </div>
+      {rowSelectionEnabled && selectedCount > 0 ? (
+        <div
+          className="dataTable__selectionBanner"
+          data-part="selection-banner"
+        >
+          <span>{selectedCount} selected</span>
+          <button
+            type="button"
+            className="dataTable__iconButton"
+            style={{ width: 'auto', paddingInline: '8px' }}
+            onClick={() => table.resetRowSelection()}
+          >
+            Clear
+          </button>
+        </div>
+      ) : null}
+      {tableRoot}
     </div>
   );
 }

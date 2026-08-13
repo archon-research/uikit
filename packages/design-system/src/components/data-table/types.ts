@@ -5,11 +5,13 @@ import type {
   ColumnPinningState,
   ColumnResizeMode,
   ColumnSizingState,
+  ExpandedState,
   RowData,
   RowSelectionState,
   OnChangeFn,
   Row,
   SortingState,
+  VisibilityState,
 } from '@tanstack/react-table';
 
 export type DataTableMagnitudeScale = 'log' | 'linear';
@@ -151,6 +153,32 @@ export interface DataTableConfig<T = unknown> {
    * TanStack's `getRowId` table option.
    */
   getRowId?: (row: T, index: number) => string;
+  /**
+   * Controlled column-visibility state (TanStack's `columnVisibility` feature).
+   * Uncontrolled by default (internal `useState`, seeded from
+   * `defaultColumnVisibility`) — same controlled/uncontrolled pattern as
+   * `sorting`. Pair with `DataTable`'s `enableColumnVisibility` prop for the
+   * toolbar show/hide menu; a column opts out of hiding with
+   * `enableHiding: false` on its `ColumnDef`.
+   */
+  columnVisibility?: VisibilityState;
+  onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
+  defaultColumnVisibility?: VisibilityState;
+  /**
+   * Controlled row-expansion state (TanStack's `expanded` feature). Uncontrolled
+   * by default (internal `useState`, seeded from `defaultExpanded`). Pair with
+   * `getRowCanExpand` here and `DataTable`'s `renderDetailPanel` prop for a
+   * master/detail table; `DataTable` renders the expander toggle + detail row.
+   */
+  expanded?: ExpandedState;
+  onExpandedChange?: OnChangeFn<ExpandedState>;
+  defaultExpanded?: ExpandedState;
+  /**
+   * Which rows may expand (TanStack `getRowCanExpand`). Return `true` to allow a
+   * row's detail panel. Only meaningful alongside `DataTable`'s
+   * `renderDetailPanel`.
+   */
+  getRowCanExpand?: (row: Row<T>) => boolean;
 }
 
 export interface UrlSyncedTableStateAdapter {
@@ -206,5 +234,18 @@ declare module '@tanstack/react-table' {
      * `DataTableFilterVariant`. Omitted (default) renders no affordance.
      */
     filterVariant?: DataTableFilterVariant;
+    /**
+     * Renders a copy-to-clipboard affordance on this column's body cells. The
+     * copied text is `copyValue(row)` when provided, else the cell's string
+     * value. Pairs well with `mono` for hashes/addresses/ids.
+     */
+    copyable?: boolean;
+    /** Text to copy when `copyable` is set. Defaults to the cell's value as a string. */
+    copyValue?: (row: TData) => string;
+    /**
+     * Display label for this column in the column-visibility menu. Falls back to
+     * a string `header`, then the column id.
+     */
+    label?: string;
   }
 }
