@@ -601,9 +601,13 @@ export function DataTable<TData>({
     getScrollElement: () => (virtualized ? scrollContainerRef.current : null),
     estimateSize: () => resolvedEstimatedRowHeight,
     overscan,
-    // Key the virtual item (and thus the measure cache) off the row's stable id
-    // rather than the array index, so prepending/reordering rows — or expanding
-    // one — never re-attributes a measured height to a different row.
+    // Key the virtual item (and thus the measure cache) off the row's id
+    // rather than the array index, so prepending/reordering rows — or
+    // expanding one — never re-attributes a measured height to a different
+    // row. `row.id` is only actually stable when the caller supplied
+    // `DataTableConfig.getRowId`; without it, TanStack's own id is
+    // index-based, and this falls back to the same index either way (see the
+    // dev warning above).
     getItemKey: (index) => rows[index]?.id ?? index,
   });
 
