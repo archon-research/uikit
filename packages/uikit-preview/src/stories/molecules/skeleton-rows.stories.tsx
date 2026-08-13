@@ -56,3 +56,17 @@ export const Compact = () => (
     </div>
   </div>
 );
+
+export const Static = () => (
+  <div className={stackClassName}>
+    <div>
+      <div className={frameClassName}>
+        <table className={tableClassName}>
+          <tbody>
+            <SkeletonRows animate={false} />
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+);

@@ -267,6 +267,7 @@ export type DataTableProps<TData> = {
     rows?: number;
     columns?: number;
     firstColumnTall?: boolean;
+    animate?: boolean;
   };
   renderCell?: (cell: ReactNode) => ReactNode;
   className?: string;
@@ -1208,7 +1209,9 @@ export function DataTable<TData>({
             and virtual-scroll spacers are their own <tbody>s too — no single
             wrapping <tbody> to nest them in. */}
         {showSkeleton ? (
-          <tbody>{SkeletonRows(skeletonConfig)}</tbody>
+          <tbody>
+            <SkeletonRows {...skeletonConfig} />
+          </tbody>
         ) : virtualized ? (
           <>
             {paddingTop > 0 ? (
