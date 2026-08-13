@@ -25,10 +25,17 @@ const rowStyle: CSSProperties = {
 };
 
 const cellStyle: CSSProperties = {
-  padding: '14px 16px',
+  padding: '14px 0',
 };
 
 const blockBaseStyle: CSSProperties = {
+  // The 16px horizontal inset is a width clamp on the block, not padding on
+  // the cell: fixed cell padding swallows narrow columns whole (DataTable's
+  // ~32px expander column left a 0px content box — an invisible skeleton).
+  // Columns ≥ 80px get the exact 16px-per-side inset as before; narrower
+  // ones keep a visible centered block with a proportional inset instead.
+  width: 'max(60%, 100% - 32px)',
+  marginInline: 'auto',
   borderRadius: 6,
   background: 'var(--colors-surface-subtle, #f8f9fb)',
   opacity: SKELETON_PULSE_PEAK_OPACITY,
