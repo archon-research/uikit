@@ -8,10 +8,17 @@ import { dataTableRecipe } from './recipes/dataTable.recipe.js';
 import { drawerRecipe } from './recipes/drawer.recipe.js';
 import { emptyStateRecipe } from './recipes/emptyState.recipe.js';
 import { facetedMultiSelectRecipe } from './recipes/facetedMultiSelect.recipe.js';
+import { figureRecipe } from './recipes/figure.recipe.js';
+import { flashRecipe } from './recipes/flash.recipe.js';
 import { heatCellRecipe } from './recipes/heatCell.recipe.js';
 import { indicatorRecipe } from './recipes/indicator.recipe.js';
 import { inputRecipe } from './recipes/input.recipe.js';
 import { interactiveItemRecipe } from './recipes/interactiveItem.recipe.js';
+import {
+  meterRecipe,
+  proportionBarRecipe,
+  proportionListRecipe,
+} from './recipes/meter.recipe.js';
 import { pageShellRecipe } from './recipes/pageShell.recipe.js';
 import { panelRecipe } from './recipes/panel.recipe.js';
 import { panelActionRecipe } from './recipes/panelAction.recipe.js';
@@ -26,9 +33,14 @@ import { sidebarGridRecipe } from './recipes/sidebarGrid.recipe.js';
 import { sidebarLayoutRecipe } from './recipes/sidebarLayout.recipe.js';
 import { splitLayoutRecipe } from './recipes/splitLayout.recipe.js';
 import { statRowRecipe, statTileRecipe } from './recipes/statTile.recipe.js';
+import {
+  statusPillRecipe,
+  statusPillRowRecipe,
+} from './recipes/statusPill.recipe.js';
 import { surfaceMessageRecipe } from './recipes/surfaceMessage.recipe.js';
 import { switchRecipe } from './recipes/switch.recipe.js';
 import { themeToggleRecipe } from './recipes/themeToggle.recipe.js';
+import { infoTipRecipe, tooltipRecipe } from './recipes/tooltip.recipe.js';
 
 /**
  * BREAKING VALUE-CHANGES (batch into the next major):
@@ -763,6 +775,47 @@ export const designSystemPreset = definePreset({
               },
             },
           },
+          // Identity palette: a stable color PER ENTITY, distinct from the
+          // role ramp (`chart.series.*`). An entity's color is the same in a
+          // bar, a line, and a legend whatever role it plays. `useIdentityPalette`
+          // hashes an id to one of these slots; consumers reference
+          // `var(--colors-identity-N)` so SVG and CSS both theme (and dark-mode)
+          // correctly. Eight visually distinct hues, dark-aware.
+          identity: {
+            '1': {
+              value: { base: '{colors.blue.600}', _dark: '{colors.blue.400}' },
+            },
+            '2': {
+              value: { base: '{colors.teal.600}', _dark: '{colors.teal.400}' },
+            },
+            '3': {
+              value: {
+                base: '{colors.violet.600}',
+                _dark: '{colors.violet.400}',
+              },
+            },
+            '4': {
+              value: {
+                base: '{colors.amber.600}',
+                _dark: '{colors.amber.400}',
+              },
+            },
+            '5': {
+              value: { base: '{colors.pink.600}', _dark: '{colors.pink.400}' },
+            },
+            '6': {
+              value: { base: '{colors.cyan.600}', _dark: '{colors.cyan.400}' },
+            },
+            '7': {
+              value: { base: '{colors.lime.600}', _dark: '{colors.lime.400}' },
+            },
+            '8': {
+              value: {
+                base: '{colors.orange.600}',
+                _dark: '{colors.orange.400}',
+              },
+            },
+          },
           // ── colorPalette ROLE tokens (role-based, on the 50-950 scale) ──
           ...colorPaletteRoles,
         },
@@ -802,6 +855,18 @@ export const designSystemPreset = definePreset({
             lineHeight: 'relaxed',
           },
         },
+        // Numeric/figure type: mono family with tabular figures and slightly
+        // tightened tracking so columns of numbers align and a headline figure
+        // and the row beneath it read as the same kind of value. Consumers reach
+        // for this (or the `Figure` atom / `figure` recipe) instead of
+        // re-declaring `fontVariantNumeric: 'tabular-nums'` at each call site.
+        figure: {
+          value: {
+            fontFamily: 'mono',
+            fontVariantNumeric: 'tabular-nums',
+            letterSpacing: '-0.02em',
+          },
+        },
         codeBlock: {
           value: {
             fontFamily: 'mono',
@@ -820,6 +885,10 @@ export const designSystemPreset = definePreset({
         code: codeRecipe,
         pageShell: pageShellRecipe,
         badge: badgeRecipe,
+        figure: figureRecipe,
+        tooltip: tooltipRecipe,
+        flash: flashRecipe,
+        statusPillRow: statusPillRowRecipe,
       },
       slotRecipes: {
         surfaceMessage: surfaceMessageRecipe,
@@ -843,6 +912,11 @@ export const designSystemPreset = definePreset({
         rangeSlider: rangeSliderRecipe,
         playbackBar: playbackBarRecipe,
         heatCell: heatCellRecipe,
+        meter: meterRecipe,
+        proportionBar: proportionBarRecipe,
+        proportionList: proportionListRecipe,
+        infoTip: infoTipRecipe,
+        statusPill: statusPillRecipe,
       },
     },
   },

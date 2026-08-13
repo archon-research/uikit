@@ -146,3 +146,49 @@ export const MetaSize = () => (
     </p>
   </div>
 );
+
+// A leading-edge accent stripe carries state as a few pixels of color (mirrors
+// StatTile's accent). `accentColor` supplies a runtime hue, e.g. an instrument.
+export const Accent = () => (
+  <div className={frameClassName}>
+    <Panel accent="success" title="Within limits" meta="all checks green">
+      <p className={bodyClassName}>accent="success"</p>
+    </Panel>
+    <Panel accent="warning" title="Approaching limit" meta="82% of cap">
+      <p className={bodyClassName}>accent="warning"</p>
+    </Panel>
+    <Panel accent="critical" title="Breached" meta="over cap">
+      <p className={bodyClassName}>accent="critical"</p>
+    </Panel>
+    <Panel accentColor="var(--colors-chart-series-tertiary)" title="ETH-USD">
+      <p className={bodyClassName}>
+        accentColor="…" — a runtime hue (e.g. an instrument identity color).
+      </p>
+    </Panel>
+  </div>
+);
+
+// `radius` reads a token (default md); `headerWrap` lets a long header wrap
+// instead of forcing the panel wider.
+export const RadiusAndHeaderWrap = () => (
+  <div className={frameClassName}>
+    <Panel radius="none" title="radius=none">
+      <p className={bodyClassName}>Squared frame.</p>
+    </Panel>
+    <Panel radius="lg" title="radius=lg">
+      <p className={bodyClassName}>Softer corners.</p>
+    </Panel>
+    <div className={css({ maxWidth: '320px' })}>
+      <Panel
+        headerWrap
+        title="A deliberately long section heading that must wrap"
+        meta="updated 2m ago · 4 pending"
+      >
+        <p className={bodyClassName}>
+          headerWrap + min-width:0 on the meta slot keep the header inside
+          320px.
+        </p>
+      </Panel>
+    </div>
+  </div>
+);

@@ -47,6 +47,9 @@ export const panelRecipe = defineSlotRecipe({
       fontSize: 'sm',
       lineHeight: 'relaxed',
       color: 'text.muted',
+      // A header must never force its container wider than the viewport; letting
+      // the meta slot shrink lets the header wrap instead of overflowing.
+      minWidth: '0',
     },
     actions: {
       display: 'flex',
@@ -89,6 +92,41 @@ export const panelRecipe = defineSlotRecipe({
       md: {},
       sm: { meta: { textStyle: 'metaText' } },
     },
+    // Leading-edge state stripe, mirroring `StatTile`'s `accent`. A thicker
+    // colored left border that carries state as a few pixels of color. A runtime
+    // hue is applied by the component as an inline `borderLeftColor` (which wins
+    // over these token colors), so an instrument's own color can drive the
+    // stripe without a build-time class. An accent never carries state alone —
+    // the panel's title or body must still state it.
+    accent: {
+      none: {},
+      neutral: {
+        root: { borderLeftWidth: '3px', borderLeftColor: 'border.strong' },
+      },
+      success: {
+        root: { borderLeftWidth: '3px', borderLeftColor: 'text.success' },
+      },
+      warning: {
+        root: { borderLeftWidth: '3px', borderLeftColor: 'text.warning' },
+      },
+      critical: {
+        root: { borderLeftWidth: '3px', borderLeftColor: 'text.critical' },
+      },
+    },
+    // Corner radius from a token. Defaults to `md` (the previous fixed value);
+    // `none` squares the frame, `sm`/`lg` step it.
+    radius: {
+      none: { root: { borderRadius: 'none' } },
+      sm: { root: { borderRadius: 'sm' } },
+      md: { root: { borderRadius: 'md' } },
+      lg: { root: { borderRadius: 'lg' } },
+    },
+    // Let the header wrap when the title and trailing block can't share a line,
+    // instead of overflowing. Pairs with the `min-width: 0` on the meta slot.
+    headerWrap: {
+      false: {},
+      true: { header: { flexWrap: 'wrap' } },
+    },
   },
   defaultVariants: {
     surface: 'raised',
@@ -96,5 +134,8 @@ export const panelRecipe = defineSlotRecipe({
     titleTransform: 'none',
     titleSize: 'md',
     metaSize: 'md',
+    accent: 'none',
+    radius: 'md',
+    headerWrap: false,
   },
 });
