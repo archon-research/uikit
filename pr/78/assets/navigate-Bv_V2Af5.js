@@ -1,1 +1,0 @@
-import{p as c}from"./runtime-TQh012X7.js";import{q as t}from"./use-locale-context-BAZGn0aB.js";import{c as n}from"./query-183tmxnL.js";function p(e){const i=()=>{const o=c(e);e.dispatchEvent(new o.MouseEvent("click"))};t()?n(e,"keyup",i):queueMicrotask(i)}export{p as c};
