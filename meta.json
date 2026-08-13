@@ -197,6 +197,18 @@
       "namedExport": "EmptyValue",
       "meta": {}
     },
+    "atoms--figure--formatted": {
+      "name": "Formatted",
+      "levels": [
+        "Atoms",
+        "Figure"
+      ],
+      "locStart": 87,
+      "locEnd": 95,
+      "filePath": "src/stories/atoms/figure.stories.tsx",
+      "namedExport": "Formatted",
+      "meta": {}
+    },
     "atoms--figure--sizes": {
       "name": "Sizes",
       "levels": [
@@ -207,6 +219,18 @@
       "locEnd": 53,
       "filePath": "src/stories/atoms/figure.stories.tsx",
       "namedExport": "Sizes",
+      "meta": {}
+    },
+    "atoms--figure--text-style-token": {
+      "name": "Text style token",
+      "levels": [
+        "Atoms",
+        "Figure"
+      ],
+      "locStart": 105,
+      "locEnd": 146,
+      "filePath": "src/stories/atoms/figure.stories.tsx",
+      "namedExport": "TextStyleToken",
       "meta": {}
     },
     "atoms--figure--tones": {
@@ -605,6 +629,66 @@
       "namedExport": "SectorHeatmap",
       "meta": {}
     },
+    "molecules--identitypalette--swatches": {
+      "name": "Swatches",
+      "levels": [
+        "Molecules",
+        "Identitypalette"
+      ],
+      "locStart": 39,
+      "locEnd": 59,
+      "filePath": "src/stories/molecules/identity-palette.stories.tsx",
+      "namedExport": "Swatches",
+      "meta": {}
+    },
+    "molecules--infopopover--trigger": {
+      "name": "Trigger",
+      "levels": [
+        "Molecules",
+        "Infopopover"
+      ],
+      "locStart": 46,
+      "locEnd": 55,
+      "filePath": "src/stories/molecules/info-popover.stories.tsx",
+      "namedExport": "Trigger",
+      "meta": {}
+    },
+    "molecules--infopopover--with-deeplink": {
+      "name": "With deeplink",
+      "levels": [
+        "Molecules",
+        "Infopopover"
+      ],
+      "locStart": 28,
+      "locEnd": 43,
+      "filePath": "src/stories/molecules/info-popover.stories.tsx",
+      "namedExport": "WithDeeplink",
+      "meta": {}
+    },
+    "molecules--keyvaluetable--compact": {
+      "name": "Compact",
+      "levels": [
+        "Molecules",
+        "Keyvaluetable"
+      ],
+      "locStart": 41,
+      "locEnd": 52,
+      "filePath": "src/stories/molecules/key-value-table.stories.tsx",
+      "namedExport": "Compact",
+      "meta": {}
+    },
+    "molecules--keyvaluetable--summary": {
+      "name": "Summary",
+      "levels": [
+        "Molecules",
+        "Keyvaluetable"
+      ],
+      "locStart": 20,
+      "locEnd": 38,
+      "filePath": "src/stories/molecules/key-value-table.stories.tsx",
+      "namedExport": "Summary",
+      "meta": {}
+    },
     "molecules--meter--scale-and-footer": {
       "name": "Scale and footer",
       "levels": [
@@ -735,6 +819,18 @@
       "locEnd": 109,
       "filePath": "src/stories/molecules/panel.stories.tsx",
       "namedExport": "WithMetaAndActions",
+      "meta": {}
+    },
+    "molecules--popover--default": {
+      "name": "Default",
+      "levels": [
+        "Molecules",
+        "Popover"
+      ],
+      "locStart": 23,
+      "locEnd": 44,
+      "filePath": "src/stories/molecules/popover.stories.tsx",
+      "namedExport": "Default",
       "meta": {}
     },
     "molecules--proportionbar--allocation": {
@@ -1121,16 +1217,40 @@
       "namedExport": "Success",
       "meta": {}
     },
+    "organisms--charting-primitives--colored-legend": {
+      "name": "Colored legend",
+      "levels": [
+        "Organisms",
+        "Charting primitives"
+      ],
+      "locStart": 563,
+      "locEnd": 602,
+      "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
+      "namedExport": "ColoredLegend",
+      "meta": {}
+    },
     "organisms--charting-primitives--default": {
       "name": "Default",
       "levels": [
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 370,
-      "locEnd": 379,
+      "locStart": 374,
+      "locEnd": 383,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "Default",
+      "meta": {}
+    },
+    "organisms--charting-primitives--distribution": {
+      "name": "Distribution",
+      "levels": [
+        "Organisms",
+        "Charting primitives"
+      ],
+      "locStart": 618,
+      "locEnd": 666,
+      "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
+      "namedExport": "Distribution",
       "meta": {}
     },
     "organisms--charting-primitives--reader-layer": {
@@ -1139,8 +1259,8 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 429,
-      "locEnd": 555,
+      "locStart": 433,
+      "locEnd": 559,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "ReaderLayer",
       "meta": {}
@@ -1151,10 +1271,22 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 384,
-      "locEnd": 420,
+      "locStart": 388,
+      "locEnd": 424,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "Responsive",
+      "meta": {}
+    },
+    "organisms--charting-primitives--synced-crosshair": {
+      "name": "Synced crosshair",
+      "levels": [
+        "Organisms",
+        "Charting primitives"
+      ],
+      "locStart": 729,
+      "locEnd": 751,
+      "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
+      "namedExport": "SyncedCrosshair",
       "meta": {}
     },
     "organisms--confirm-tool-call-dialog--countdown-active": {
@@ -1259,8 +1391,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 429,
-      "locEnd": 452,
+      "locStart": 431,
+      "locEnd": 454,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "ColumnResizeReorderPin",
       "meta": {}
@@ -1271,8 +1403,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 305,
-      "locEnd": 344,
+      "locStart": 307,
+      "locEnd": 346,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "CompactDensity",
       "meta": {}
@@ -1283,8 +1415,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 158,
-      "locEnd": 210,
+      "locStart": 160,
+      "locEnd": 212,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "ControlledState",
       "meta": {}
@@ -1295,10 +1427,22 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 100,
-      "locEnd": 115,
+      "locStart": 102,
+      "locEnd": 117,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "Default",
+      "meta": {}
+    },
+    "organisms--data-table--expandable-rows": {
+      "name": "Expandable rows",
+      "levels": [
+        "Organisms",
+        "Data table"
+      ],
+      "locStart": 603,
+      "locEnd": 633,
+      "filePath": "src/stories/organisms/data-table.stories.tsx",
+      "namedExport": "ExpandableRows",
       "meta": {}
     },
     "organisms--data-table--header-casing-policy": {
@@ -1307,8 +1451,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 231,
-      "locEnd": 246,
+      "locStart": 233,
+      "locEnd": 248,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "HeaderCasingPolicy",
       "meta": {}
@@ -1319,8 +1463,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 117,
-      "locEnd": 132,
+      "locStart": 119,
+      "locEnd": 134,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "Loading",
       "meta": {}
@@ -1331,8 +1475,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 488,
-      "locEnd": 532,
+      "locStart": 490,
+      "locEnd": 534,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "MagnitudeColumns",
       "meta": {}
@@ -1343,8 +1487,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 454,
-      "locEnd": 486,
+      "locStart": 456,
+      "locEnd": 488,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "MultiRowSelection",
       "meta": {}
@@ -1355,8 +1499,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 276,
-      "locEnd": 303,
+      "locStart": 278,
+      "locEnd": 305,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "NumericMonoColumn",
       "meta": {}
@@ -1367,8 +1511,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 248,
-      "locEnd": 274,
+      "locStart": 250,
+      "locEnd": 276,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "RightAlignedNumericColumn",
       "meta": {}
@@ -1379,10 +1523,22 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 134,
-      "locEnd": 156,
+      "locStart": 136,
+      "locEnd": 158,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "RowSelection",
+      "meta": {}
+    },
+    "organisms--data-table--toolbar": {
+      "name": "Toolbar",
+      "levels": [
+        "Organisms",
+        "Data table"
+      ],
+      "locStart": 568,
+      "locEnd": 598,
+      "filePath": "src/stories/organisms/data-table.stories.tsx",
+      "namedExport": "Toolbar",
       "meta": {}
     },
     "organisms--drawer--default": {
