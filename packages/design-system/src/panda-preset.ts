@@ -14,6 +14,7 @@ import { heatCellRecipe } from './recipes/heatCell.recipe.js';
 import { indicatorRecipe } from './recipes/indicator.recipe.js';
 import { inputRecipe } from './recipes/input.recipe.js';
 import { interactiveItemRecipe } from './recipes/interactiveItem.recipe.js';
+import { keyValueTableRecipe } from './recipes/keyValueTable.recipe.js';
 import {
   meterRecipe,
   proportionBarRecipe,
@@ -24,6 +25,7 @@ import { panelRecipe } from './recipes/panel.recipe.js';
 import { panelActionRecipe } from './recipes/panelAction.recipe.js';
 import { panelSectionRecipe } from './recipes/panelSection.recipe.js';
 import { playbackBarRecipe } from './recipes/playbackBar.recipe.js';
+import { popoverRecipe } from './recipes/popover.recipe.js';
 import { rangeSliderRecipe } from './recipes/rangeSlider.recipe.js';
 import { searchInputRecipe } from './recipes/searchInput.recipe.js';
 import { sectionHeadingRecipe } from './recipes/sectionHeading.recipe.js';
@@ -917,6 +919,8 @@ export const designSystemPreset = definePreset({
         proportionList: proportionListRecipe,
         infoTip: infoTipRecipe,
         statusPill: statusPillRecipe,
+        popover: popoverRecipe,
+        keyValueTable: keyValueTableRecipe,
       },
     },
   },

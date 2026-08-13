@@ -6,7 +6,10 @@ import {
   ChartDataTable,
   ChartLegend,
   DirectLabels,
+  DistributionSeries,
   Grid,
+  HistogramSeries,
+  histogramBins,
   LineSeries,
   ReferenceBand,
   ResponsiveChart,
@@ -17,10 +20,11 @@ import {
   chartTheme,
   seriesColor,
   useHoveredTimestamp,
+  useSyncedCursor,
   useSyncedCursorHandlers,
 } from '@archon-research/charting';
 import { ThemeProvider } from '@archon-research/design-system';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { css } from '../../../styled-system/css';
 
@@ -550,6 +554,198 @@ export const ReaderLayer = () => (
           ])}
         />
       </section>
+    </div>
+  </ThemeProvider>
+);
+
+// `colorLabel` renders each legend label in its swatch color (a colored-label
+// legend), and works with the interactive toggle form.
+export const ColoredLegend = () => (
+  <ThemeProvider>
+    <div className={css({ p: '6', display: 'grid', gap: '4' })}>
+      <ChartLegend
+        shape="line"
+        colorLabel
+        items={[
+          { label: 'Account', color: seriesColor.primary },
+          { label: 'Benchmark', color: seriesColor.secondary, dash: true },
+          { label: 'Peer median', color: seriesColor.tertiary },
+        ]}
+      />
+      <ChartLegend
+        shape="line"
+        colorLabel
+        interactive
+        items={[
+          {
+            id: 'a',
+            label: 'Account',
+            color: seriesColor.primary,
+            emphasis: true,
+          },
+          {
+            id: 'b',
+            label: 'Benchmark',
+            color: seriesColor.secondary,
+            dash: true,
+          },
+          {
+            id: 'c',
+            label: 'Hidden',
+            color: seriesColor.tertiary,
+            hidden: true,
+          },
+        ]}
+      />
+    </div>
+  </ThemeProvider>
+);
+
+// Histogram (frequency bins) + distribution (sorted ordinal bars with a
+// highlighted worst-tail) — shapes a plain BarSeries can't express.
+const DISTRIBUTION_VALUES = Array.from(
+  { length: 200 },
+  (_, i) => 100 + 15 * Math.sin(i / 9) + (i % 7) * 1.5,
+);
+const HISTOGRAM_BINS = histogramBins(DISTRIBUTION_VALUES, { binCount: 16 });
+const HIST_X_DOMAIN: [number, number] = [
+  HISTOGRAM_BINS[0]?.x0 ?? 0,
+  HISTOGRAM_BINS[HISTOGRAM_BINS.length - 1]?.x1 ?? 1,
+];
+const HIST_Y_MAX = Math.max(...HISTOGRAM_BINS.map((b) => b.count), 1);
+const SORTED_ASC = [...DISTRIBUTION_VALUES].sort((a, b) => a - b);
+
+export const Distribution = () => (
+  <ThemeProvider>
+    <div className={pageClassName}>
+      <section className={panelClassName}>
+        <div className={css({ mb: '3' })}>
+          <h3 className={panelTitleClassName}>Histogram</h3>
+          <p className={panelSubtitleClassName}>
+            Frequency bins from raw values.
+          </p>
+        </div>
+        <XYChart
+          width={640}
+          height={220}
+          theme={chartTheme}
+          xScale={{ type: 'linear', domain: HIST_X_DOMAIN }}
+          yScale={{ type: 'linear', domain: [0, HIST_Y_MAX] }}
+        >
+          <Grid columns={false} numTicks={4} />
+          <Axis orientation="bottom" numTicks={6} />
+          <Axis orientation="left" numTicks={4} />
+          <HistogramSeries bins={HISTOGRAM_BINS} />
+        </XYChart>
+      </section>
+      <section className={panelClassName}>
+        <div className={css({ mb: '3' })}>
+          <h3 className={panelTitleClassName}>Distribution</h3>
+          <p className={panelSubtitleClassName}>
+            200 results sorted worst→best, worst 5% highlighted.
+          </p>
+        </div>
+        <XYChart
+          width={640}
+          height={220}
+          theme={chartTheme}
+          xScale={{ type: 'linear', domain: [0, SORTED_ASC.length - 1] }}
+          yScale={{
+            type: 'linear',
+            domain: [SORTED_ASC[0]!, SORTED_ASC[SORTED_ASC.length - 1]!],
+          }}
+        >
+          <Grid columns={false} numTicks={4} />
+          <Axis orientation="bottom" numTicks={6} />
+          <Axis orientation="left" numTicks={4} />
+          <DistributionSeries data={SORTED_ASC} highlightCount={10} />
+        </XYChart>
+      </section>
+    </div>
+  </ThemeProvider>
+);
+
+// B3 pattern: an in-SVG ChartCursorLayer driven by the shared cursor across a
+// SyncedChartGroup. Each panel reads useHoveredTimestamp and passes it as the
+// controlled `cursor`, so hovering one panel moves the crosshair in both — no
+// bespoke PlotCrosshair, no visx event-bus reach-in. A fixed cursor is seeded
+// on mount here so the snapshot is deterministic.
+function SyncedCrosshairPanel({
+  title,
+  data,
+  color,
+  byIndex,
+}: {
+  title: string;
+  data: Point[];
+  color: string;
+  byIndex: Map<number, number>;
+}) {
+  const [hovered] = useHoveredTimestamp();
+  const handlers = useSyncedCursorHandlers<Point>((d) => d.index);
+  return (
+    <section className={panelClassName}>
+      <p className={panelTitleClassName}>{title}</p>
+      <XYChart
+        width={640}
+        height={180}
+        theme={chartTheme}
+        xScale={{ type: 'linear', domain: [0, 39] }}
+        yScale={{ type: 'linear', nice: true }}
+        onPointerMove={handlers.onPointerMove}
+        onPointerOut={handlers.onPointerOut}
+      >
+        <Grid columns={false} numTicks={4} />
+        <Axis orientation="bottom" numTicks={6} />
+        <Axis orientation="left" numTicks={4} />
+        <LineSeries
+          dataKey={title}
+          data={data}
+          xAccessor={xAccessor}
+          yAccessor={yAccessor}
+          stroke={color}
+        />
+        <ChartCursorLayer
+          stops={STOPS}
+          cursor={hovered}
+          keyboard={false}
+          series={[
+            { id: title, color, valueAt: (x) => byIndex.get(x) ?? null },
+          ]}
+        />
+      </XYChart>
+    </section>
+  );
+}
+
+function SeedCursor({ at }: { at: number }) {
+  const { set } = useSyncedCursor();
+  useEffect(() => {
+    set(at);
+  }, [set, at]);
+  return null;
+}
+
+export const SyncedCrosshair = () => (
+  <ThemeProvider>
+    <div className={pageClassName}>
+      <SyncedChartGroup>
+        <SeedCursor at={20} />
+        <div className={css({ display: 'grid', gap: '4' })}>
+          <SyncedCrosshairPanel
+            title="Account"
+            data={SERIES}
+            color={seriesColor.primary}
+            byIndex={A_BY_INDEX}
+          />
+          <SyncedCrosshairPanel
+            title="Benchmark"
+            data={SERIES_B}
+            color={seriesColor.secondary}
+            byIndex={B_BY_INDEX}
+          />
+        </div>
+      </SyncedChartGroup>
     </div>
   </ThemeProvider>
 );

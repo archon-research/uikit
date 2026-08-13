@@ -1,11 +1,22 @@
-// Token-driven theme contract (see DESIGN.md).
-export { chartTheme, chartTokens, seriesColor } from './theme.js';
+// Token-driven theme contract (see DESIGN.md). `axis*Style` are exported so a
+// hand-composed chart can style an axis unit label / custom SVG text with the
+// same tokens the themed axes use.
+export {
+  axisLabelStyle,
+  axisTickLabelStyle,
+  chartTheme,
+  chartTokens,
+  seriesColor,
+} from './theme.js';
 
 // Curated visx surface, so consumers depend on this package, not @visx/* directly.
 export {
   XYChart,
   Axis,
   Grid,
+  // visx `Tooltip`'s `showVerticalCrosshair` renders the crosshair in a
+  // body-level portal, so it can detach from the plot on scroll; prefer
+  // `ChartCursorLayer` for an in-SVG crosshair that stays aligned with the plot.
   Tooltip,
   LineSeries,
   AreaSeries,
@@ -31,6 +42,38 @@ export {
   DataContext,
   EventEmitterProvider,
 } from '@visx/xychart';
+
+// Curve factories (re-exported from @visx/curve so consumers don't import
+// @visx/* directly), for the `curve` prop on Line/Area series.
+export {
+  curveLinear,
+  curveMonotoneX,
+  curveNatural,
+  curveStep,
+  curveStepAfter,
+  curveStepBefore,
+  curveBasis,
+} from '@visx/curve';
+
+// Low-level visx composition primitives, re-exported so a chart that steps off
+// the single-plot `XYChart` happy path (faceted small-multiples, a custom
+// stacked area, a sorted distribution) can be composed without adding `@visx/*`
+// as a direct app dependency. Pair these with the token-themed axes below so a
+// hand-composed chart still renders on-theme. (These are already `charting`
+// dependencies; this just surfaces them.)
+export { Group } from '@visx/group';
+export { Area, AreaStack, Bar, Line, LinePath } from '@visx/shape';
+export { scaleBand, scaleLinear, scaleTime } from '@visx/scale';
+
+// Token-themed standalone axes (wrap `@visx/axis`, applying the same tokens as
+// `chartTheme`), for composed charts that render their own axes outside XYChart.
+export { AxisBottom, AxisLeft, AxisRight, AxisTop } from './axis.js';
+export type {
+  ThemedAxisBottomProps,
+  ThemedAxisLeftProps,
+  ThemedAxisRightProps,
+  ThemedAxisTopProps,
+} from './axis.js';
 
 // Time-range brush + zoom/pan.
 export { TimeRangeBrush } from './brush.js';
@@ -81,16 +124,25 @@ export {
   DragSelectionOverlay,
   useDashboardFilter,
   useDashboardInteraction,
+  useHiddenKeys,
   useHighlightedKey,
   useHoveredTimestamp,
+  useInteractionDispatch,
+  useInteractionSetters,
   useInteractionValue,
   useSelectedTimeRange,
+  useSetHiddenKeys,
+  useSetHighlightedKey,
+  useSetHoveredTimestamp,
+  useSyncedCursor,
   useSyncedCursorHandlers,
+  useToggleHiddenKey,
   useTimeRangeBrushGesture,
 } from './interaction.js';
 export type {
   DashboardInteractionApi,
   DashboardInteractionState,
+  InteractionDispatch,
   InteractionKey,
   PixelRange,
   TimeRange,
@@ -110,6 +162,22 @@ export type {
   UseChartDimensionsOptions,
   DeriveLeftMarginOptions,
 } from './responsive.js';
+
+// Histogram + distribution marks (frequency bars, ordinal distribution with a
+// highlighted head) plus the pure binning/sorting helpers.
+export {
+  DEFAULT_BIN_COUNT,
+  DistributionSeries,
+  HistogramSeries,
+  histogramBins,
+  sortDistribution,
+} from './histogram.js';
+export type {
+  DistributionSeriesProps,
+  HistogramBin,
+  HistogramBinsOptions,
+  HistogramSeriesProps,
+} from './histogram.js';
 
 // Series downsampling / pixel conflation for large series.
 export {

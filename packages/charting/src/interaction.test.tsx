@@ -5,7 +5,11 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   DashboardInteractionProvider,
   useDashboardInteraction,
+  useHiddenKeys,
+  useInteractionSetters,
   useInteractionValue,
+  useSyncedCursorHandlers,
+  useToggleHiddenKey,
 } from './interaction.js';
 
 /**
@@ -151,5 +155,133 @@ describe('useInteractionValue', () => {
     expect(() => render(<Bare />)).toThrow(
       /useInteractionValue must be used within a DashboardInteractionProvider/,
     );
+  });
+});
+
+/** Reads + toggles the hidden-keys set; renders the sorted ids. */
+function HiddenKeysReader({ onRender }: { onRender: () => void }) {
+  const [hiddenKeys] = useHiddenKeys();
+  return (
+    <>
+      <span data-testid="hidden-keys">
+        {[...hiddenKeys].sort().join(',') || 'none'}
+      </span>
+      <RenderCounter onRender={onRender} />
+    </>
+  );
+}
+
+/** Toggles a key via the setter-only hook, which must NOT subscribe to state. */
+function ToggleHiddenButton({
+  id,
+  onRender,
+}: {
+  id: string;
+  onRender: () => void;
+}) {
+  const toggle = useToggleHiddenKey();
+  return (
+    <>
+      <button data-testid={`toggle-${id}`} onClick={() => toggle(id)}>
+        toggle {id}
+      </button>
+      <RenderCounter onRender={onRender} />
+    </>
+  );
+}
+
+describe('hiddenKeys + setter-only dispatch', () => {
+  it('toggles a key in and out of the hidden set', () => {
+    const { getByTestId } = render(
+      <DashboardInteractionProvider>
+        <ToggleHiddenButton id="series-a" onRender={() => {}} />
+        <HiddenKeysReader onRender={() => {}} />
+      </DashboardInteractionProvider>,
+    );
+
+    expect(getByTestId('hidden-keys').textContent).toBe('none');
+    fireEvent.click(getByTestId('toggle-series-a'));
+    expect(getByTestId('hidden-keys').textContent).toBe('series-a');
+    fireEvent.click(getByTestId('toggle-series-a'));
+    expect(getByTestId('hidden-keys').textContent).toBe('none');
+  });
+
+  it('does not re-render a setter-only (dispatch) consumer on hover ticks', () => {
+    let toggleRenders = 0;
+    let hiddenReaderRenders = 0;
+
+    const { getByTestId } = render(
+      <DashboardInteractionProvider>
+        <HoverBumpButton />
+        <ToggleHiddenButton id="x" onRender={() => toggleRenders++} />
+        <HiddenKeysReader onRender={() => hiddenReaderRenders++} />
+      </DashboardInteractionProvider>,
+    );
+
+    expect(toggleRenders).toBe(1);
+    expect(hiddenReaderRenders).toBe(1);
+
+    fireEvent.click(getByTestId('bump-hover'));
+    fireEvent.click(getByTestId('bump-hover'));
+
+    // The setter-only consumer reads the stable dispatch context, and the
+    // hidden-keys reader is per-key subscribed — neither cares about
+    // hoveredTimestamp, so neither re-renders on a hover tick.
+    expect(toggleRenders).toBe(1);
+    expect(hiddenReaderRenders).toBe(1);
+  });
+});
+
+/** Wires the documented synced-cursor handlers; must not subscribe to state. */
+function SyncedCursorWirer({ onRender }: { onRender: () => void }) {
+  const handlers = useSyncedCursorHandlers<{ t: number }>((d) => d.t);
+  return (
+    <>
+      <span data-testid="has-handlers">
+        {typeof handlers.onPointerMove === 'function' ? 'yes' : 'no'}
+      </span>
+      <RenderCounter onRender={onRender} />
+    </>
+  );
+}
+
+/** Grabs the whole stable setter bundle via the aggregate hook. */
+function SettersConsumer({ onRender }: { onRender: () => void }) {
+  const setters = useInteractionSetters();
+  return (
+    <>
+      <span data-testid="has-setters">
+        {typeof setters.setHoveredTimestamp === 'function' ? 'yes' : 'no'}
+      </span>
+      <RenderCounter onRender={onRender} />
+    </>
+  );
+}
+
+describe('stable setters (useSyncedCursorHandlers / useInteractionSetters)', () => {
+  it('does not re-render the documented cursor wiring on hover ticks', () => {
+    let wirerRenders = 0;
+    let settersRenders = 0;
+
+    const { getByTestId } = render(
+      <DashboardInteractionProvider>
+        <HoverBumpButton />
+        <SyncedCursorWirer onRender={() => wirerRenders++} />
+        <SettersConsumer onRender={() => settersRenders++} />
+      </DashboardInteractionProvider>,
+    );
+
+    expect(wirerRenders).toBe(1);
+    expect(settersRenders).toBe(1);
+
+    fireEvent.click(getByTestId('bump-hover'));
+    fireEvent.click(getByTestId('bump-hover'));
+    fireEvent.click(getByTestId('bump-hover'));
+
+    // Both read the cursor setter via the stable dispatch, never subscribing to
+    // the store, so publishing hoveredTimestamp must not re-render either — this
+    // is the exact re-render trap the synced-cursor wiring used to hit.
+    expect(wirerRenders).toBe(1);
+    expect(settersRenders).toBe(1);
   });
 });

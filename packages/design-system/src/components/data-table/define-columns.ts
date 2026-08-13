@@ -57,6 +57,38 @@ export function defineColumns<T>(
 }
 
 /**
+ * A {@link ColumnDef} that is guaranteed to carry a string `id`. Upstream,
+ * `ColumnDef.id` is `string | undefined`, so id-keyed logic (an allow-list, a
+ * width map, a pinned-column set) has to cast. Use this — and
+ * {@link defineIdentifiedColumns} — when every column supplies an `id`.
+ */
+export type IdentifiedColumnDef<T, V = unknown> = ColumnDef<T, V> & {
+  id: string;
+};
+
+/**
+ * Like {@link defineColumns}, but every entry must supply a string `id`, and the
+ * returned columns are typed {@link IdentifiedColumnDef} — so `col.id` narrows to
+ * `string` (not `string | undefined`) and id-keyed logic needs no cast. Falsy
+ * conditional entries are still filtered.
+ *
+ * ```ts
+ * const columns = defineIdentifiedColumns<Row>(
+ *   { id: 'name', accessorKey: 'name', header: 'Name' },
+ *   wide && { id: 'detail', accessorKey: 'detail', header: 'Detail' },
+ * );
+ * const widths = new Map(columns.map((c) => [c.id, 120])); // c.id is string
+ * ```
+ */
+export function defineIdentifiedColumns<T>(
+  ...columns: Array<IdentifiedColumnDef<T> | false | null | undefined>
+): IdentifiedColumnDef<T>[] {
+  return columns.filter((column): column is IdentifiedColumnDef<T> =>
+    Boolean(column),
+  );
+}
+
+/**
  * Column `meta` preset for a numeric column: right-aligned and rendered in the
  * mono font with tabular figures so values align down the column. Spread into a
  * column's `meta` (`meta: { ...numericColumnMeta }`) instead of re-typing the

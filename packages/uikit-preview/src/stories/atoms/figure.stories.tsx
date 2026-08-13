@@ -75,3 +75,72 @@ export const EmptyValue = () => (
     </div>
   </div>
 );
+
+// `format` applies a numeric formatter to a raw number (a pre-formatted string
+// passes through unchanged) — so one formatter can feed a Figure and an axis.
+const usd = (n: number) =>
+  n.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  });
+export const Formatted = () => (
+  <div className={frameClassName}>
+    <div className={rowClassName}>
+      <Figure value={1234567} format={usd} />
+      <Figure value={-8200} format={usd} tone="critical" />
+      <Figure value={null} format={usd} />
+    </div>
+  </div>
+);
+
+// `Figure` renders an element, so for the many numbers that live where you
+// can't drop one in — an SVG `<text>` label, inline in a sentence, a
+// third-party slot — reach for the same `figure` text style directly via
+// `css({ textStyle: 'figure' })`. It is exactly what `Figure` is built on
+// (mono family + tabular figures + tightened tracking), so a hand-placed
+// number stays consistent with every `Figure` on screen without re-declaring
+// `fontVariantNumeric: 'tabular-nums'` at each call site.
+const figureToken = css({ textStyle: 'figure' });
+export const TextStyleToken = () => (
+  <div className={frameClassName}>
+    <p className={captionClassName}>
+      {"css({ textStyle: 'figure' }) — the token behind Figure, for numbers "}
+      {'outside an element (SVG text, inline copy)'}
+    </p>
+    <p>
+      Portfolio value <span className={figureToken}>$1,234,567.89</span> across{' '}
+      <span className={figureToken}>128</span> positions.
+    </p>
+    <svg width={200} height={78}>
+      <title>value labels rendered as SVG text</title>
+      <text
+        x={0}
+        y={20}
+        className={figureToken}
+        fontSize={14}
+        fill="currentColor"
+      >
+        1,204.00
+      </text>
+      <text
+        x={0}
+        y={44}
+        className={figureToken}
+        fontSize={14}
+        fill="currentColor"
+      >
+        86.40
+      </text>
+      <text
+        x={0}
+        y={68}
+        className={figureToken}
+        fontSize={14}
+        fill="currentColor"
+      >
+        1,234,567.89
+      </text>
+    </svg>
+  </div>
+);

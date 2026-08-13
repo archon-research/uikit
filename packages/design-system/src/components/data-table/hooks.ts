@@ -17,6 +17,7 @@ import {
 } from '@tanstack/react-table';
 import * as React from 'react';
 
+import { useIdentityChurnWarning } from '../../hooks/useIdentityChurnWarning.js';
 import type {
   DataTableConfig,
   UrlSyncedTableStateAdapter,
@@ -33,6 +34,11 @@ export function useDataTable<T>(
   columns: ColumnDef<T>[],
   config: DataTableConfig<T> = {},
 ): Table<T> {
+  // `columns` should be stable (memoized or module-scoped, e.g. via
+  // `defineColumns`) — a fresh array each render re-syncs the table. Warn in
+  // dev if it churns.
+  useIdentityChurnWarning(columns, 'useDataTable columns');
+
   const [internalSorting, setInternalSorting] = React.useState<SortingState>(
     config.defaultSorting ?? [],
   );
