@@ -257,7 +257,7 @@ function pinnedOffsetStyle<TData>(
   };
 }
 
-type DataTableProps<TData> = {
+export type DataTableProps<TData> = {
   table: Table<TData>;
   isLoading: boolean;
   onRowClick?: (row: TData) => void;

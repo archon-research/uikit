@@ -1,4 +1,5 @@
 export { DataTable } from './DataTable.js';
+export type { DataTableProps } from './DataTable.js';
 export { useDataTable, useUrlSyncedTableStateAdapter } from './hooks.js';
 export {
   defineColumns,
