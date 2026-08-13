@@ -417,6 +417,21 @@ export function useSetHoveredTimestamp(): (timestamp: number | null) => void {
 }
 
 /**
+ * All stable interaction setters as one object — the discoverable, setter-first
+ * name for {@link useInteractionDispatch} (same value; kept so a consumer
+ * reaching for "the setters" finds them). Like the named `useSet*` hooks, it
+ * does NOT subscribe, so a component that only writes — a legend, a cursor
+ * broadcaster, a filter control — never re-renders on cursor ticks.
+ *
+ * Pair it with the READ path: {@link useInteractionValue} (or a narrow selector
+ * hook), which is what anything rendered per pointer-move frame should use to
+ * bind to exactly one field instead of the whole context.
+ */
+export function useInteractionSetters(): InteractionDispatch {
+  return useInteractionDispatch();
+}
+
+/**
  * Narrow selector hook for the shared time range (e.g. set by a brush).
  * Per-key subscribed: re-renders only when `timeRange` changes, not on cursor
  * ticks. The setter is the stable dispatch setter.
@@ -545,11 +560,15 @@ export function SyncedChartGroup({ children }: { children: ReactNode }) {
  * `hoveredTimestamp`, using the caller's own x-accessor to read a timestamp
  * off the nearest datum (no scale inversion needed). Spread the returned
  * handlers onto `<XYChart onPointerMove onPointerOut>`.
+ *
+ * Reads the cursor setter via the stable dispatch (not the subscribing
+ * context), so wiring a chart up with this — the documented path — does NOT
+ * re-render it on every cursor tick it publishes.
  */
 export function useSyncedCursorHandlers<Datum>(
   xAccessor: (datum: Datum) => number,
 ) {
-  const { setHoveredTimestamp } = useDashboardInteraction();
+  const setHoveredTimestamp = useSetHoveredTimestamp();
 
   // `params` is typed loosely (rather than `{ datum?: Datum }`) so this stays
   // assignable to `XYChart`'s `onPointerMove` prop, whose `Datum` generic

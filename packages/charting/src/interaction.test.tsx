@@ -6,7 +6,9 @@ import {
   DashboardInteractionProvider,
   useDashboardInteraction,
   useHiddenKeys,
+  useInteractionSetters,
   useInteractionValue,
+  useSyncedCursorHandlers,
   useToggleHiddenKey,
 } from './interaction.js';
 
@@ -227,5 +229,59 @@ describe('hiddenKeys + setter-only dispatch', () => {
     // hoveredTimestamp, so neither re-renders on a hover tick.
     expect(toggleRenders).toBe(1);
     expect(hiddenReaderRenders).toBe(1);
+  });
+});
+
+/** Wires the documented synced-cursor handlers; must not subscribe to state. */
+function SyncedCursorWirer({ onRender }: { onRender: () => void }) {
+  const handlers = useSyncedCursorHandlers<{ t: number }>((d) => d.t);
+  return (
+    <>
+      <span data-testid="has-handlers">
+        {typeof handlers.onPointerMove === 'function' ? 'yes' : 'no'}
+      </span>
+      <RenderCounter onRender={onRender} />
+    </>
+  );
+}
+
+/** Grabs the whole stable setter bundle via the aggregate hook. */
+function SettersConsumer({ onRender }: { onRender: () => void }) {
+  const setters = useInteractionSetters();
+  return (
+    <>
+      <span data-testid="has-setters">
+        {typeof setters.setHoveredTimestamp === 'function' ? 'yes' : 'no'}
+      </span>
+      <RenderCounter onRender={onRender} />
+    </>
+  );
+}
+
+describe('stable setters (useSyncedCursorHandlers / useInteractionSetters)', () => {
+  it('does not re-render the documented cursor wiring on hover ticks', () => {
+    let wirerRenders = 0;
+    let settersRenders = 0;
+
+    const { getByTestId } = render(
+      <DashboardInteractionProvider>
+        <HoverBumpButton />
+        <SyncedCursorWirer onRender={() => wirerRenders++} />
+        <SettersConsumer onRender={() => settersRenders++} />
+      </DashboardInteractionProvider>,
+    );
+
+    expect(wirerRenders).toBe(1);
+    expect(settersRenders).toBe(1);
+
+    fireEvent.click(getByTestId('bump-hover'));
+    fireEvent.click(getByTestId('bump-hover'));
+    fireEvent.click(getByTestId('bump-hover'));
+
+    // Both read the cursor setter via the stable dispatch, never subscribing to
+    // the store, so publishing hoveredTimestamp must not re-render either — this
+    // is the exact re-render trap the synced-cursor wiring used to hit.
+    expect(wirerRenders).toBe(1);
+    expect(settersRenders).toBe(1);
   });
 });

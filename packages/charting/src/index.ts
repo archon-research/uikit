@@ -128,6 +128,7 @@ export {
   useHighlightedKey,
   useHoveredTimestamp,
   useInteractionDispatch,
+  useInteractionSetters,
   useInteractionValue,
   useSelectedTimeRange,
   useSetHiddenKeys,
