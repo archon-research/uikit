@@ -16,6 +16,7 @@ import {
   Pin,
   PinOff,
   Rows3,
+  X,
 } from 'lucide-react';
 import {
   useCallback,
@@ -387,23 +388,56 @@ type DataTableProps<TData> = {
   renderDetailPanel?: (row: TData) => ReactNode;
 };
 
-/** Copy-to-clipboard affordance for a `meta.copyable` cell. */
+type CopyStatus = 'idle' | 'copied' | 'failed' | 'unsupported';
+
+const COPY_STATUS_LABEL: Record<CopyStatus, string> = {
+  idle: 'Copy',
+  copied: 'Copied',
+  failed: 'Copy failed',
+  unsupported: 'Copy unavailable',
+};
+
+/**
+ * Copy-to-clipboard affordance for a `meta.copyable` cell. The success glyph
+ * only shows once `navigator.clipboard.writeText` actually resolves — an
+ * insecure context (or a user denying the permission) surfaces distinctly as
+ * `'unsupported'`/`'failed'` rather than reporting success unconditionally.
+ */
 function CopyButton({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<CopyStatus>('idle');
+  const resetAfterDelay = () => {
+    window.setTimeout(() => setStatus('idle'), 1200);
+  };
   return (
     <button
       type="button"
       className="dataTable__copyButton"
       data-part="copy-button"
-      aria-label={copied ? 'Copied' : 'Copy'}
+      aria-label={COPY_STATUS_LABEL[status]}
       onClick={(event) => {
         event.stopPropagation();
-        void navigator.clipboard?.writeText(value);
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 1200);
+        if (!navigator.clipboard) {
+          setStatus('unsupported');
+          resetAfterDelay();
+          return;
+        }
+        navigator.clipboard.writeText(value).then(
+          () => {
+            setStatus('copied');
+            resetAfterDelay();
+          },
+          () => {
+            setStatus('failed');
+            resetAfterDelay();
+          },
+        );
       }}
     >
-      {copied ? <Check size={12} /> : <Copy size={12} />}
+      {status === 'copied' && <Check size={12} />}
+      {(status === 'failed' || status === 'unsupported') && (
+        <X size={12} color="var(--colors-text-critical, currentColor)" />
+      )}
+      {status === 'idle' && <Copy size={12} />}
     </button>
   );
 }
