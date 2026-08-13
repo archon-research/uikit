@@ -1,5 +1,20 @@
 import type { SortingState } from '@tanstack/react-table';
 
+/**
+ * Pure decision core behind the "missing `getRowId`" dev warnings in
+ * `useDataTable` (row expansion) and `DataTable` (virtualization) — exported
+ * for testing without rendering a hook/component. `condition` is whatever
+ * feature makes a stable id load-bearing (`getRowCanExpand` configured,
+ * `virtualized` set); the warning fires once per hook/component instance.
+ */
+export function shouldWarnMissingGetRowId(
+  condition: boolean,
+  hasGetRowId: boolean,
+  alreadyWarned: boolean,
+): boolean {
+  return condition && !hasGetRowId && !alreadyWarned;
+}
+
 export function normalizeSearchString(
   value: string | null | undefined,
 ): string {

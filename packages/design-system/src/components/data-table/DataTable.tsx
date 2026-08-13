@@ -28,6 +28,7 @@ import {
   type RefCallback,
 } from 'react';
 
+import { IS_DEV_WARNING_ENABLED } from '../../hooks/devWarning.js';
 import { Popover } from '../Popover.js';
 import { SearchInput } from '../SearchInput.js';
 import { SkeletonRows } from '../SkeletonRows.js';
@@ -38,6 +39,7 @@ import {
   normalizeMagnitudeValue,
 } from './magnitude.js';
 import type { DataTableColumnAlign, DataTableDensity } from './types.js';
+import { shouldWarnMissingGetRowId } from './utils.js';
 
 /**
  * The design-system package builds with `tsc` and ships no generated
@@ -547,6 +549,28 @@ export function DataTable<TData>({
 
   const rows = table.getRowModel().rows;
   const showSkeleton = isLoading && rows.length === 0;
+
+  // `virtualized` without the table's `getRowId` configured means the
+  // virtualizer's item keys and row-measurement cache (see `getItemKey`
+  // below) key off array indices instead of row identity — silently broken
+  // once data is prepended or reordered. Warns once, dev-only.
+  const missingRowIdForVirtualizationWarned = useRef(false);
+  if (
+    IS_DEV_WARNING_ENABLED &&
+    shouldWarnMissingGetRowId(
+      virtualized,
+      table.options.getRowId != null,
+      missingRowIdForVirtualizationWarned.current,
+    )
+  ) {
+    missingRowIdForVirtualizationWarned.current = true;
+    console.warn(
+      "[uikit] `DataTable` is `virtualized` without the table's `getRowId` " +
+        "configured — the virtualizer's item keys and row-measurement cache " +
+        'will key off array indices, which breaks when data is prepended or ' +
+        'reordered. Pass `getRowId` to `useDataTable`.',
+    );
+  }
 
   // Column resizing/pinning read straight off the `table` instance's own
   // options/state rather than a parallel `DataTable` prop — the consumer
