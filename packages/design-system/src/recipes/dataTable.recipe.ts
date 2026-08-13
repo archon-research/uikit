@@ -506,14 +506,31 @@ export const dataTableRecipe = defineSlotRecipe({
     // exclusive. Harmless on columns without a magnitude cell.
     align: {
       left: {},
+      // `textAlign` right-aligns the body cells, but the header label lives in
+      // the `headerInner` flex row (and, when sortable, inside the `flex:1`
+      // `headerButton`), where `text-align` never bites — so the header would
+      // stay pinned left while its values right-align. Justify those flex rows
+      // from the aligned `headerCell` (the only header slot that carries the
+      // align variant) so header content tracks the body values with no
+      // consumer override.
       center: {
-        headerCell: { textAlign: 'center' },
+        headerCell: {
+          textAlign: 'center',
+          '& .dataTable__headerInner, & .dataTable__headerButton': {
+            justifyContent: 'center',
+          },
+        },
         bodyCell: { textAlign: 'center' },
         magnitudeCell: { justifyItems: 'center' },
         magnitudeValue: { textAlign: 'center' },
       },
       right: {
-        headerCell: { textAlign: 'right' },
+        headerCell: {
+          textAlign: 'right',
+          '& .dataTable__headerInner, & .dataTable__headerButton': {
+            justifyContent: 'flex-end',
+          },
+        },
         bodyCell: { textAlign: 'right' },
         magnitudeCell: { justifyItems: 'end' },
         magnitudeValue: { textAlign: 'right' },
