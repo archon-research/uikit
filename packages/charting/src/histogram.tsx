@@ -46,8 +46,23 @@ export function histogramBins(
 
   const { binCount = DEFAULT_BIN_COUNT, binWidth, domain } = options;
 
-  const min = domain ? Math.min(domain[0], domain[1]) : Math.min(...finite);
-  const max = domain ? Math.max(domain[0], domain[1]) : Math.max(...finite);
+  // A single pass tracking running min/max, not `Math.min(...finite)`/
+  // `Math.max(...finite)` — spreading a large array as call arguments throws
+  // a `RangeError` past the engine's argument-count limit (tens of
+  // thousands), which real datasets can exceed.
+  let min: number;
+  let max: number;
+  if (domain) {
+    min = Math.min(domain[0], domain[1]);
+    max = Math.max(domain[0], domain[1]);
+  } else {
+    min = Infinity;
+    max = -Infinity;
+    for (const value of finite) {
+      if (value < min) min = value;
+      if (value > max) max = value;
+    }
+  }
 
   let count: number;
   let width: number;

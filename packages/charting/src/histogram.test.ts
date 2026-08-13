@@ -77,6 +77,21 @@ describe('histogramBins', () => {
     expect(bins).toHaveLength(1);
     expect(bins[0]!.count).toBe(4);
   });
+
+  it('bins ~200k values without a stack overflow (no Math.min/max spread)', () => {
+    // `Math.min(...values)`/`Math.max(...values)` throws a RangeError past
+    // the engine's call-argument limit (tens of thousands); a real dataset
+    // this size is exactly the regression case for that bug.
+    const values = Array.from({ length: 200_000 }, (_, i) => i);
+    let bins: ReturnType<typeof histogramBins> | undefined;
+    expect(() => {
+      bins = histogramBins(values, { binCount: 10 });
+    }).not.toThrow();
+    expect(bins).toHaveLength(10);
+    expect(sumCounts(bins!)).toBe(200_000);
+    expect(bins![0]!.x0).toBe(0);
+    expect(bins![bins!.length - 1]!.x1).toBe(199_999);
+  });
 });
 
 describe('sortDistribution', () => {
