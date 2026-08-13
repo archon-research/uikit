@@ -173,6 +173,78 @@
       "namedExport": "InlineInProse",
       "meta": {}
     },
+    "atoms--figure--column": {
+      "name": "Column",
+      "levels": [
+        "Atoms",
+        "Figure"
+      ],
+      "locStart": 56,
+      "locEnd": 65,
+      "filePath": "src/stories/atoms/figure.stories.tsx",
+      "namedExport": "Column",
+      "meta": {}
+    },
+    "atoms--figure--empty-value": {
+      "name": "Empty value",
+      "levels": [
+        "Atoms",
+        "Figure"
+      ],
+      "locStart": 69,
+      "locEnd": 77,
+      "filePath": "src/stories/atoms/figure.stories.tsx",
+      "namedExport": "EmptyValue",
+      "meta": {}
+    },
+    "atoms--figure--sizes": {
+      "name": "Sizes",
+      "levels": [
+        "Atoms",
+        "Figure"
+      ],
+      "locStart": 45,
+      "locEnd": 53,
+      "filePath": "src/stories/atoms/figure.stories.tsx",
+      "namedExport": "Sizes",
+      "meta": {}
+    },
+    "atoms--figure--tones": {
+      "name": "Tones",
+      "levels": [
+        "Atoms",
+        "Figure"
+      ],
+      "locStart": 31,
+      "locEnd": 43,
+      "filePath": "src/stories/atoms/figure.stories.tsx",
+      "namedExport": "Tones",
+      "meta": {}
+    },
+    "atoms--flashonchange--interactive": {
+      "name": "Interactive",
+      "levels": [
+        "Atoms",
+        "Flashonchange"
+      ],
+      "locStart": 52,
+      "locEnd": 72,
+      "filePath": "src/stories/atoms/flash-on-change.stories.tsx",
+      "namedExport": "Interactive",
+      "meta": {}
+    },
+    "atoms--flashonchange--resting": {
+      "name": "Resting",
+      "levels": [
+        "Atoms",
+        "Flashonchange"
+      ],
+      "locStart": 39,
+      "locEnd": 48,
+      "filePath": "src/stories/atoms/flash-on-change.stories.tsx",
+      "namedExport": "Resting",
+      "meta": {}
+    },
     "atoms--indicator--color-palette-override": {
       "name": "Color palette override",
       "levels": [
@@ -231,6 +303,30 @@
       "locEnd": 47,
       "filePath": "src/stories/atoms/indicator.stories.tsx",
       "namedExport": "Statuses",
+      "meta": {}
+    },
+    "atoms--infotip--alignments": {
+      "name": "Alignments",
+      "levels": [
+        "Atoms",
+        "Infotip"
+      ],
+      "locStart": 52,
+      "locEnd": 67,
+      "filePath": "src/stories/atoms/info-tip.stories.tsx",
+      "namedExport": "Alignments",
+      "meta": {}
+    },
+    "atoms--infotip--in-label": {
+      "name": "In label",
+      "levels": [
+        "Atoms",
+        "Infotip"
+      ],
+      "locStart": 32,
+      "locEnd": 50,
+      "filePath": "src/stories/atoms/info-tip.stories.tsx",
+      "namedExport": "InLabel",
       "meta": {}
     },
     "atoms--loading-indicator--default": {
@@ -327,6 +423,30 @@
       "locEnd": 91,
       "filePath": "src/stories/atoms/sparkline.stories.tsx",
       "namedExport": "Sizes",
+      "meta": {}
+    },
+    "atoms--statuspill--row": {
+      "name": "Row",
+      "levels": [
+        "Atoms",
+        "Statuspill"
+      ],
+      "locStart": 37,
+      "locEnd": 54,
+      "filePath": "src/stories/atoms/status-pill.stories.tsx",
+      "namedExport": "Row",
+      "meta": {}
+    },
+    "atoms--statuspill--tones": {
+      "name": "Tones",
+      "levels": [
+        "Atoms",
+        "Statuspill"
+      ],
+      "locStart": 25,
+      "locEnd": 34,
+      "filePath": "src/stories/atoms/status-pill.stories.tsx",
+      "namedExport": "Tones",
       "meta": {}
     },
     "atoms--switch--disabled": {
@@ -485,6 +605,54 @@
       "namedExport": "SectorHeatmap",
       "meta": {}
     },
+    "molecules--meter--scale-and-footer": {
+      "name": "Scale and footer",
+      "levels": [
+        "Molecules",
+        "Meter"
+      ],
+      "locStart": 66,
+      "locEnd": 83,
+      "filePath": "src/stories/molecules/meter.stories.tsx",
+      "namedExport": "ScaleAndFooter",
+      "meta": {}
+    },
+    "molecules--meter--tones": {
+      "name": "Tones",
+      "levels": [
+        "Molecules",
+        "Meter"
+      ],
+      "locStart": 26,
+      "locEnd": 44,
+      "filePath": "src/stories/molecules/meter.stories.tsx",
+      "namedExport": "Tones",
+      "meta": {}
+    },
+    "molecules--meter--with-limit-marker": {
+      "name": "With limit marker",
+      "levels": [
+        "Molecules",
+        "Meter"
+      ],
+      "locStart": 48,
+      "locEnd": 62,
+      "filePath": "src/stories/molecules/meter.stories.tsx",
+      "namedExport": "WithLimitMarker",
+      "meta": {}
+    },
+    "molecules--panel--accent": {
+      "name": "Accent",
+      "levels": [
+        "Molecules",
+        "Panel"
+      ],
+      "locStart": 152,
+      "locEnd": 169,
+      "filePath": "src/stories/molecules/panel.stories.tsx",
+      "namedExport": "Accent",
+      "meta": {}
+    },
     "molecules--panel--density": {
       "name": "Density",
       "levels": [
@@ -507,6 +675,18 @@
       "locEnd": 148,
       "filePath": "src/stories/molecules/panel.stories.tsx",
       "namedExport": "MetaSize",
+      "meta": {}
+    },
+    "molecules--panel--radius-and-header-wrap": {
+      "name": "Radius and header wrap",
+      "levels": [
+        "Molecules",
+        "Panel"
+      ],
+      "locStart": 173,
+      "locEnd": 194,
+      "filePath": "src/stories/molecules/panel.stories.tsx",
+      "namedExport": "RadiusAndHeaderWrap",
       "meta": {}
     },
     "molecules--panel--surfaces": {
@@ -555,6 +735,54 @@
       "locEnd": 109,
       "filePath": "src/stories/molecules/panel.stories.tsx",
       "namedExport": "WithMetaAndActions",
+      "meta": {}
+    },
+    "molecules--proportionbar--allocation": {
+      "name": "Allocation",
+      "levels": [
+        "Molecules",
+        "Proportionbar"
+      ],
+      "locStart": 26,
+      "locEnd": 39,
+      "filePath": "src/stories/molecules/proportion-bar.stories.tsx",
+      "namedExport": "Allocation",
+      "meta": {}
+    },
+    "molecules--proportionbar--custom-colors": {
+      "name": "Custom colors",
+      "levels": [
+        "Molecules",
+        "Proportionbar"
+      ],
+      "locStart": 42,
+      "locEnd": 62,
+      "filePath": "src/stories/molecules/proportion-bar.stories.tsx",
+      "namedExport": "CustomColors",
+      "meta": {}
+    },
+    "molecules--proportionlist--shares-of-total": {
+      "name": "Shares of total",
+      "levels": [
+        "Molecules",
+        "Proportionlist"
+      ],
+      "locStart": 50,
+      "locEnd": 80,
+      "filePath": "src/stories/molecules/proportion-list.stories.tsx",
+      "namedExport": "SharesOfTotal",
+      "meta": {}
+    },
+    "molecules--proportionlist--weights": {
+      "name": "Weights",
+      "levels": [
+        "Molecules",
+        "Proportionlist"
+      ],
+      "locStart": 27,
+      "locEnd": 47,
+      "filePath": "src/stories/molecules/proportion-list.stories.tsx",
+      "namedExport": "Weights",
       "meta": {}
     },
     "molecules--rangepicker--custom-selection": {
@@ -899,10 +1127,34 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 366,
-      "locEnd": 375,
+      "locStart": 370,
+      "locEnd": 379,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "Default",
+      "meta": {}
+    },
+    "organisms--charting-primitives--reader-layer": {
+      "name": "Reader layer",
+      "levels": [
+        "Organisms",
+        "Charting primitives"
+      ],
+      "locStart": 429,
+      "locEnd": 555,
+      "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
+      "namedExport": "ReaderLayer",
+      "meta": {}
+    },
+    "organisms--charting-primitives--responsive": {
+      "name": "Responsive",
+      "levels": [
+        "Organisms",
+        "Charting primitives"
+      ],
+      "locStart": 384,
+      "locEnd": 420,
+      "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
+      "namedExport": "Responsive",
       "meta": {}
     },
     "organisms--confirm-tool-call-dialog--countdown-active": {
