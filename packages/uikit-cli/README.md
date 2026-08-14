@@ -60,6 +60,48 @@ If your consumer workspace prefers to run tooling directly, it can install and i
 `@archon-research/oxfmt-config` remain reusable config packages, while `uikit-cli` remains an
 optional workflow wrapper.
 
+### Check a generated stylesheet for silently-dropped CSS
+
+```bash
+./node_modules/.bin/uikit-cli doctor                      # finds styled-system/styles.css
+./node_modules/.bin/uikit-cli doctor path/to/styles.css   # explicit path
+./node_modules/.bin/uikit-cli doctor --codegen            # runs `panda cssgen` itself
+```
+
+Use `--codegen` when you use the Panda PostCSS plugin and never write a frozen
+`styled-system/styles.css`. `doctor` exits non-zero on any finding, so it gates CI.
+
+The design system's authoring model has failure modes that produce *no error anywhere* — the
+build passes, the console is clean, and the style simply does not apply. `doctor` scans the
+generated stylesheet for them:
+
+| Check | What silently breaks |
+| --- | --- |
+| `missing-static-css` | No design-system recipe classes were emitted at all, so runtime-selected variants (status tones, dense tables, drawer sizes) render unstyled. Fix by spreading `designSystemStaticCssRecipes` into your Panda config's `staticCss.recipes`. |
+| `unresolved-token` | A declaration whose value is a bare `token.path` (e.g. `color: text.subtle`) rather than a `var(--…)`. Invalid CSS the browser drops. |
+| `roleless-color-palette` | A `colorPalette` value that defines no role for the property styled with it — `var(--colors-color-palette-solid-bg)` is well-formed but undefined in that scope, so the browser drops the declaration. Only `neutral`, `gray`, `green`, `red`, `amber` and `blue` carry full role sub-tokens; other hues map the 50–950 scale only. |
+
+#### Roleless `colorPalette`: detection boundary
+
+Resolving which palette applies to a declaration is the CSS cascade, and `doctor` does not
+simulate it. It resolves exactly one scope — a **recipe**, keyed by the class-name stem Panda
+derives from `className` — and flags a role reference only when a palette assigned somewhere in
+that same recipe's classes fails to define the role. Slots share the scope, since the root slot's
+palette properties cascade into the others.
+
+These cases are *not* flagged, on purpose, because scope is ambiguous and a false pass is far
+cheaper than a false failure:
+
+- atomic utilities (`.color-palette_violet` plus a separate `.bg_colorPalette\.solid\.bg`) — the
+  stylesheet cannot prove the two classes land on the same element, nor that an ancestor already
+  supplied the role;
+- a palette set on an outer recipe with the role consumed by an inner one;
+- `var(--colors-color-palette-…, fallback)` — a fallback means the declaration survives.
+
+The palette→roles map is read out of the stylesheet itself (each `colorPalette` assignment
+ruleset *is* the preset's role tokens in generated form), so palettes added to the preset — or
+defined in a consumer's own preset extension — are covered with no list to keep in sync.
+
 ### Link uikit packages into a consumer repository
 
 From your consumer repository:
