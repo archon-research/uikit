@@ -50,20 +50,278 @@ function hasAnyRecipeClass(css: string): boolean {
 const UNRESOLVED_TOKEN_DECL =
   /(color|background|background-color|border-color|fill|stroke|outline-color)\s*:\s*([a-z][\w-]*(?:\.[a-z0-9][\w-]*)+)\s*[;}]/gi;
 
+/**
+ * ── Roleless `colorPalette` detection ──
+ *
+ * Panda compiles `colorPalette: 'violet'` into a ruleset that *remaps* the
+ * generic palette custom properties onto that hue's tokens:
+ *
+ *   .alert--colorPalette_violet {
+ *     --colors-color-palette-50: var(--colors-violet-50);   … 100…950
+ *   }
+ *
+ * It emits one line per token that actually exists under the hue. So a hue with
+ * only the 50–950 scale (any Panda default hue the preset never gave role
+ * sub-tokens) maps the scale and nothing else, while a role-complete palette
+ * (`neutral`/`gray`/`green`/`red`/`amber`/`blue` in this design system) also maps
+ * `--colors-color-palette-solid-bg`, `-subtle-fg`, `-outline-border`, and the rest.
+ *
+ * Meanwhile a recipe that styles with a role emits the *reference* side:
+ *
+ *   .alert--emphasis_solid { background: var(--colors-color-palette-solid-bg); }
+ *
+ * Pair a roleless palette with a role reference and the custom property is
+ * undefined in that scope: well-formed CSS, valid `var()` syntax, and the browser
+ * silently drops the declaration. Nothing else in doctor catches it — the token
+ * path resolved, and `staticCss` is wired.
+ *
+ * The stylesheet is therefore its own palette→roles map: the assignment rulesets
+ * ARE the preset's role tokens in generated form, which is why this check reads
+ * them out of the CSS rather than importing a table from the design system. A
+ * palette added to the preset, or one a consumer defines in their own preset
+ * extension, is covered the moment it appears in the CSS — with no list here to
+ * keep in sync, and no dependency from this CLI on the design-system package.
+ *
+ * DETECTION BOUNDARY. Resolving which palette is in scope for a declaration is
+ * the CSS cascade, and doctor does not simulate it. It resolves exactly one
+ * scope — a **recipe**, keyed by the class-name stem Panda derives from
+ * `className` — and reports a role reference only when a palette assigned
+ * anywhere in that same recipe's classes fails to define the role. Slots count
+ * as the same scope (`.chip__root--colorPalette_x` sets the properties; the
+ * `.chip__dismiss` slot inherits them), and a reference is attributed to the
+ * *rightmost* compound selector, the element the rule actually styles. Out of
+ * scope, deliberately, and reported as clean:
+ *
+ * - Atomic utilities (`.color-palette_violet` + `.bg_colorPalette\.solid\.bg`).
+ *   Two unrelated classes; whether they land on the same element, and whether an
+ *   ancestor already supplied the role, is not knowable from the stylesheet.
+ * - Cross-recipe cascade: a palette set on an outer recipe, a role consumed by an
+ *   inner one.
+ * - `var(--colors-color-palette-…, fallback)`. A fallback means the declaration
+ *   survives, so it is not a silent drop — the regex below requires a bare
+ *   reference and skips these by construction.
+ *
+ * Those are false negatives by design. The check must never fail a healthy
+ * stylesheet, so every case where scope is ambiguous resolves to "no issue".
+ */
+
+/**
+ * Leaf rulesets — `selector { declarations }` with no nested braces. Declarations
+ * only ever live in leaves, so this is enough to read a stylesheet without a real
+ * CSS parser, and it sees through `@layer`/`@media` wrappers for free.
+ */
+const LEAF_RULESET = /([^{}]+)\{([^{}]*)\}/g;
+
+/**
+ * A design-system recipe class: `.stem--variant_value`, `.stem__slot`, or
+ * `.stem__slot--variant_value`. Requires the `__`/`--` shape so Panda's atomic
+ * utilities (`.bg_surface`, `.c_text\.muted`) can never be mistaken for a recipe
+ * scope named after their property.
+ */
+const RECIPE_CLASS =
+  /\.([A-Za-z][A-Za-z0-9]*)(?:__[A-Za-z0-9-]+(?:--[A-Za-z0-9_-]+)?|--[A-Za-z0-9_-]+)/g;
+
+/** A class with no variant/slot suffix — a recipe's base rule, e.g. `.button`. */
+const BARE_CLASS = /\.([A-Za-z][A-Za-z0-9]*)(?![\w-])/g;
+
+/** `--colors-color-palette-<role>: var(--colors-<palette>-<role>)`. */
+const PALETTE_ROLE_ASSIGNMENT =
+  /--colors-color-palette-([a-z0-9-]+)\s*:\s*var\(\s*--colors-([a-z0-9-]+)\s*\)/gi;
+
+/** A bare `var(--colors-color-palette-<role>)` — no fallback (see boundary above). */
+const PALETTE_ROLE_REFERENCE =
+  /var\(\s*--colors-color-palette-([a-z0-9-]+)\s*\)/gi;
+
 export type DoctorIssue =
   | { kind: 'missing-static-css' }
-  | { kind: 'unresolved-token'; line: number; declaration: string };
+  | { kind: 'unresolved-token'; line: number; declaration: string }
+  | {
+      kind: 'roleless-color-palette';
+      line: number;
+      /** Recipe class-name stem the reference and the palette share. */
+      scope: string;
+      /** Selector of the rule that references the role. */
+      selector: string;
+      /** Palette assigned in the same scope that lacks the role. */
+      palette: string;
+      /** Role sub-token suffix, e.g. `solid-bg`. */
+      role: string;
+    };
 
 export type DoctorReport = {
   ok: boolean;
   issues: DoctorIssue[];
 };
 
+type LeafRuleset = {
+  selector: string;
+  body: string;
+  /** Absolute offset of the first declaration character, for line reporting. */
+  bodyIndex: number;
+};
+
+/** What one recipe scope assigns and what it references. */
+type PaletteScope = {
+  /** Palette name -> role suffixes that palette maps in this scope. */
+  palettes: Map<string, Set<string>>;
+  /** Role suffix -> first site that references it. */
+  references: Map<string, { selector: string; index: number }>;
+};
+
+function splitLeafRulesets(css: string): LeafRuleset[] {
+  const leaves: LeafRuleset[] = [];
+  for (const match of css.matchAll(LEAF_RULESET)) {
+    // `match[1]` runs from just after the previous `}`, so it can carry leading
+    // blank lines. Anchor on the `{` instead — a body offset added to the match
+    // start would report a line too early by however many newlines precede the
+    // selector.
+    leaves.push({
+      selector: match[1].trim(),
+      body: match[2],
+      bodyIndex: (match.index ?? 0) + match[0].indexOf('{') + 1,
+    });
+  }
+  return leaves;
+}
+
+/** Every recipe stem the stylesheet mentions with a slot or variant suffix. */
+function collectRecipeStems(leaves: LeafRuleset[]): Set<string> {
+  const stems = new Set<string>();
+  for (const leaf of leaves) {
+    for (const match of leaf.selector.matchAll(RECIPE_CLASS)) {
+      stems.add(match[1]);
+    }
+  }
+  return stems;
+}
+
+/**
+ * The recipe stem of the element a selector actually styles: its rightmost
+ * compound. `.dark .toggleSwitch__thumb` scopes to `toggleSwitch`, not to
+ * whatever the ancestors are — attributing a reference to an ancestor's recipe
+ * would invent a scope the declaration never had.
+ */
+function subjectRecipeStem(
+  selector: string,
+  stems: Set<string>,
+): string | null {
+  const compounds = selector.split(/[\s>+~]+/).filter(Boolean);
+  for (let i = compounds.length - 1; i >= 0; i--) {
+    const recipeClasses = [...compounds[i].matchAll(RECIPE_CLASS)];
+    const last = recipeClasses.at(-1);
+    if (last) return last[1];
+    // A recipe's base rule (`.button { … }`) carries no suffix, so accept a bare
+    // class only when the stylesheet proves elsewhere that it is a recipe.
+    for (const match of [...compounds[i].matchAll(BARE_CLASS)].reverse()) {
+      if (stems.has(match[1])) return match[1];
+    }
+  }
+  return null;
+}
+
+/**
+ * The palette a ruleset assigns, plus the roles it maps. Panda writes the palette
+ * name into the *value* (`var(--colors-violet-solid-bg)`), which is read here
+ * rather than parsed out of the selector so an atomic `.color-palette_violet` and
+ * a recipe variant are handled by the same code.
+ */
+function readPaletteAssignment(
+  body: string,
+): { palette: string; roles: Set<string> } | null {
+  let palette: string | null = null;
+  const roles = new Set<string>();
+  for (const match of body.matchAll(PALETTE_ROLE_ASSIGNMENT)) {
+    const [, role, target] = match;
+    if (!target.endsWith(`-${role}`)) continue;
+    const name = target.slice(0, -(role.length + 1));
+    palette ??= name;
+    if (name === palette) roles.add(role);
+  }
+  return palette ? { palette, roles } : null;
+}
+
+function scopeFor(
+  scopes: Map<string, PaletteScope>,
+  stem: string,
+): PaletteScope {
+  let scope = scopes.get(stem);
+  if (!scope) {
+    scope = { palettes: new Map(), references: new Map() };
+    scopes.set(stem, scope);
+  }
+  return scope;
+}
+
+function collectPaletteScopes(
+  leaves: LeafRuleset[],
+): Map<string, PaletteScope> {
+  const stems = collectRecipeStems(leaves);
+  const scopes = new Map<string, PaletteScope>();
+
+  for (const leaf of leaves) {
+    const assignment = readPaletteAssignment(leaf.body);
+    const references = [...leaf.body.matchAll(PALETTE_ROLE_REFERENCE)];
+    if (!assignment && references.length === 0) continue;
+
+    for (const rawSelector of leaf.selector.split(',')) {
+      const selector = rawSelector.trim();
+      const stem = subjectRecipeStem(selector, stems);
+      if (!stem) continue; // unknown scope — see DETECTION BOUNDARY
+      const scope = scopeFor(scopes, stem);
+
+      if (assignment) {
+        const known = scope.palettes.get(assignment.palette) ?? new Set();
+        for (const role of assignment.roles) known.add(role);
+        scope.palettes.set(assignment.palette, known);
+      }
+      for (const match of references) {
+        const role = match[1];
+        if (scope.references.has(role)) continue;
+        scope.references.set(role, {
+          selector,
+          index: leaf.bodyIndex + (match.index ?? 0),
+        });
+      }
+    }
+  }
+
+  return scopes;
+}
+
+function lineOf(css: string, index: number): number {
+  return css.slice(0, index).split('\n').length;
+}
+
+/** Role references whose scope can assign a palette that does not define them. */
+function findRolelessPalettes(
+  css: string,
+  leaves: LeafRuleset[],
+): DoctorIssue[] {
+  const issues: DoctorIssue[] = [];
+  for (const [scopeName, scope] of collectPaletteScopes(leaves)) {
+    for (const [role, site] of scope.references) {
+      for (const [palette, roles] of scope.palettes) {
+        if (roles.has(role)) continue;
+        issues.push({
+          kind: 'roleless-color-palette',
+          line: lineOf(css, site.index),
+          scope: scopeName,
+          selector: site.selector,
+          palette,
+          role,
+        });
+      }
+    }
+  }
+  return issues;
+}
+
 /**
  * Scan a generated Panda stylesheet for the silently-dropped-CSS failure class:
- * recipe variants that were never emitted (missing `staticCss`), and semantic
- * tokens that resolved to a bare path (invalid declaration). Pure so it can be
- * unit-tested without a filesystem.
+ * recipe variants that were never emitted (missing `staticCss`), semantic tokens
+ * that resolved to a bare path (invalid declaration), and roleless `colorPalette`
+ * values (valid `var()`, undefined in scope). Pure so it can be unit-tested
+ * without a filesystem.
  */
 export function scanGeneratedCss(css: string): DoctorReport {
   const issues: DoctorIssue[] = [];
@@ -82,6 +340,8 @@ export function scanGeneratedCss(css: string): DoctorReport {
     seen.add(key);
     issues.push({ kind: 'unresolved-token', line, declaration });
   }
+
+  issues.push(...findRolelessPalettes(css, splitLeafRulesets(css)));
 
   return { ok: issues.length === 0, issues };
 }
@@ -203,12 +463,24 @@ export class DoctorCommand {
             '  then re-run `panda codegen`. (A narrowed subset is fine — this only\n' +
             '  flags the case where nothing is wired at all.)',
         );
-      } else {
+      } else if (issue.kind === 'unresolved-token') {
         this.logger.error(
           `${relative}:${issue.line} unresolved token — \`${issue.declaration};\` ` +
             'is an invalid declaration the browser drops. The token path does not ' +
             'resolve to a `var(--…)`; check the token exists in the preset (or you ' +
             'passed a token path where a finished value was expected).',
+        );
+      } else {
+        this.logger.error(
+          `${relative}:${issue.line} roleless colorPalette — \`${issue.selector}\` ` +
+            `reads \`var(--colors-color-palette-${issue.role})\`, but the ` +
+            `\`${issue.scope}\` scope can be set to \`colorPalette: ${issue.palette}\`, ` +
+            `which defines no \`${issue.role}\` role. The custom property is then ` +
+            'undefined on that element: valid CSS the browser silently drops, so the ' +
+            'declaration just does not apply. Either style with a role-complete ' +
+            `palette (one whose ruleset maps \`--colors-color-palette-${issue.role}\`), ` +
+            `give \`${issue.palette}\` that role in your preset's colorPalette tokens, ` +
+            'or reference a role the palette does define.',
         );
       }
     }
