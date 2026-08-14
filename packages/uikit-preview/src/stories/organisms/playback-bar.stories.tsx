@@ -1,11 +1,14 @@
 import {
   createLiveSource,
   createReplaySource,
+  Indicator,
+  Button,
   PlaybackBar,
   TRANSPORT_HOTKEYS,
   useTransportHotkeys,
   usePlayback,
   type LivePlaybackSource,
+  type PlaybackBarMark,
   type PlaybackEvent,
   type TransportHotkeyAction,
 } from '@archon-research/design-system';
@@ -186,6 +189,115 @@ export const LiveVsReplay = () => {
       </div>
 
       {mode === 'replay' ? <ReplayDemo /> : <LiveDemo />}
+    </div>
+  );
+};
+
+// An ordinal cursor domain: 12 market days keyed 0..11. The bar is
+// presentational and domain-agnostic, so index-space bounds + step={1} + a
+// readout drive it directly — no timestamps, no synthetic clock, no
+// usePlayback. Marks flag the days with settlement events; the secondary
+// track is a consumer-drawn fill-density strip.
+const MARKET_DAYS = 12;
+const SETTLEMENT_DAYS: PlaybackBarMark[] = [
+  { value: 2, label: 'Settlement · day 3' },
+  { value: 5, label: 'Settlement · day 6' },
+  { value: 9, label: 'Settlement · day 10' },
+];
+const FILLS_PER_DAY = [3, 0, 8, 2, 0, 12, 4, 1, 0, 9, 2, 5];
+const maxFills = Math.max(...FILLS_PER_DAY);
+
+export const OrdinalCursor = () => {
+  const [day, setDay] = useState(5);
+  const [playing, setPlaying] = useState(false);
+
+  return (
+    <div
+      className={css({ p: '6', display: 'grid', gap: '4', maxWidth: '3xl' })}
+    >
+      <PlaybackBar
+        mode="replay"
+        status={playing ? 'playing' : 'paused'}
+        clock={day}
+        bounds={{ start: 0, end: MARKET_DAYS - 1 }}
+        step={1}
+        marks={SETTLEMENT_DAYS}
+        readout={`Day ${day + 1} / ${MARKET_DAYS}`}
+        secondaryTrack={
+          <div className={css({ display: 'flex', gap: '2px' })}>
+            {FILLS_PER_DAY.map((fills, index) => (
+              <div
+                key={index}
+                title={`${fills} fills`}
+                className={css({
+                  flex: '1',
+                  height: '1',
+                  borderRadius: 'full',
+                  bg: 'blue.500',
+                })}
+                style={{
+                  opacity: fills === 0 ? 0.15 : 0.3 + (fills / maxFills) * 0.7,
+                }}
+              />
+            ))}
+          </div>
+        }
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onSeek={(value) => setDay(Math.round(value))}
+        onStepForward={() => setDay((d) => Math.min(d + 1, MARKET_DAYS - 1))}
+        onStepBackward={() => setDay((d) => Math.max(d - 1, 0))}
+      />
+      <div className={css({ fontSize: 'sm', color: 'text.muted' })}>
+        Index-space bounds ({`{start: 0, end: ${MARKET_DAYS - 1}}`}),{' '}
+        <code>step=1</code>, an ordinal <code>readout</code>, settlement{' '}
+        <code>marks</code>, and a fill-density <code>secondaryTrack</code> — no
+        timestamps anywhere.
+      </div>
+    </div>
+  );
+};
+
+// The status Indicator relocated into a trailing toggle button (the shape the
+// HATT control bar needed): `indicator={null}` removes the leading status so
+// the transport buttons keep a fixed x-position across status changes, and
+// `trailing` carries a dot+label button that flips live↔replay. `readout`
+// swaps the HH:MM:SS clock for a full datetime.
+export const StatusInTrailing = () => {
+  const [mode, setMode] = useState<'live' | 'replay'>('live');
+  const isLive = mode === 'live';
+
+  return (
+    <div
+      className={css({ p: '6', display: 'grid', gap: '4', maxWidth: '3xl' })}
+    >
+      <PlaybackBar
+        mode={mode}
+        status={isLive ? 'connected' : 'paused'}
+        clock={0}
+        bounds={isLive ? null : { start: 0, end: 100 }}
+        indicator={null}
+        readout={<span>2026-08-13 14:00:00</span>}
+        trailing={
+          <Button
+            variant="panel"
+            onClick={() => setMode(isLive ? 'replay' : 'live')}
+            aria-label={isLive ? 'Switch to replay' : 'Go live'}
+          >
+            <Indicator status={isLive ? 'active' : 'idle'}>
+              {isLive ? 'Live' : 'Go live'}
+            </Indicator>
+          </Button>
+        }
+        onPlay={() => {}}
+        onPause={() => {}}
+        onSeek={isLive ? undefined : () => {}}
+      />
+      <div className={css({ fontSize: 'sm', color: 'text.muted' })}>
+        <code>indicator={'{null}'}</code> hides the leading status;{' '}
+        <code>trailing</code> hosts it inside a mode-toggle button instead, so
+        the transport cluster never reflows when the status label changes width.
+      </div>
     </div>
   );
 };

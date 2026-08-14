@@ -14,14 +14,18 @@ import { defineSlotRecipe } from '@pandacss/dev';
 export const playbackBarRecipe = defineSlotRecipe({
   className: 'playbackBar',
   description:
-    'Transport bar chrome for the live/replay playback engine: transport-button cluster, scrubber, speed group, and current-tick clock.',
+    'Transport bar chrome for the live/replay playback engine: transport-button cluster, scrubber (with optional marks and secondary track rows), speed group, readout clock, and trailing controls.',
   slots: [
     'root',
     'transport',
     'scrubberWrap',
     'scrubber',
+    'marks',
+    'mark',
+    'secondaryTrack',
     'speedGroup',
     'clock',
+    'trailing',
   ],
   base: {
     root: {
@@ -41,15 +45,41 @@ export const playbackBarRecipe = defineSlotRecipe({
       gap: '1',
       flexShrink: '0',
     },
+    // A column so optional rows (marks, secondaryTrack) stack under the
+    // range input; with the input alone it renders exactly as the old
+    // row-centered wrap did.
     scrubberWrap: {
       flex: '1',
       minWidth: '0',
       display: 'flex',
-      alignItems: 'center',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      gap: '1',
     },
     scrubber: {
       width: '100%',
       cursor: 'pointer',
+    },
+    // Positioning context for `mark` ticks; sized by its own height rather
+    // than overlaying the input so marks never collide with the thumb.
+    marks: {
+      position: 'relative',
+      width: '100%',
+      height: '1.5',
+      flexShrink: '0',
+    },
+    mark: {
+      position: 'absolute',
+      top: '0',
+      bottom: '0',
+      width: '2px',
+      transform: 'translateX(-50%)',
+      borderRadius: 'full',
+      bg: 'border.strong',
+    },
+    secondaryTrack: {
+      width: '100%',
+      flexShrink: '0',
     },
     speedGroup: {
       display: 'flex',
@@ -64,6 +94,12 @@ export const playbackBarRecipe = defineSlotRecipe({
       whiteSpace: 'nowrap',
       minWidth: '11ch',
       textAlign: 'right',
+      flexShrink: '0',
+    },
+    trailing: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '2',
       flexShrink: '0',
     },
   },

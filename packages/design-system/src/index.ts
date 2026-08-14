@@ -250,6 +250,7 @@ export {
   PlaybackBar,
   type PlaybackBarProps,
   type PlaybackBarDensity,
+  type PlaybackBarMark,
 } from './components/PlaybackBar.js';
 export {
   usePlayback,

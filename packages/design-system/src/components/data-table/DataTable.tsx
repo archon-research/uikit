@@ -263,10 +263,16 @@ export type DataTableProps<TData> = {
   onRowClick?: (row: TData) => void;
   getRowKey?: (row: TData) => string;
   selectedRowKey?: string | null;
+  /**
+   * Loading-skeleton shape. `columns` defaults to the table's real rendered
+   * column count (visible leaf columns plus any expander/selection/actions
+   * columns) so skeleton cells align with the header; `rows` defaults to 3.
+   */
   skeletonConfig?: {
     rows?: number;
     columns?: number;
     firstColumnTall?: boolean;
+    animate?: boolean;
   };
   renderCell?: (cell: ReactNode) => ReactNode;
   className?: string;
@@ -496,7 +502,7 @@ export function DataTable<TData>({
   onRowClick,
   getRowKey,
   selectedRowKey,
-  skeletonConfig = { rows: 3, columns: 3, firstColumnTall: true },
+  skeletonConfig,
   renderCell,
   className,
   minWidth,
@@ -1208,7 +1214,14 @@ export function DataTable<TData>({
             and virtual-scroll spacers are their own <tbody>s too — no single
             wrapping <tbody> to nest them in. */}
         {showSkeleton ? (
-          <tbody>{SkeletonRows(skeletonConfig)}</tbody>
+          <tbody>
+            <SkeletonRows
+              rows={skeletonConfig?.rows ?? 3}
+              columns={skeletonConfig?.columns ?? leafColumnCount}
+              firstColumnTall={skeletonConfig?.firstColumnTall ?? true}
+              animate={skeletonConfig?.animate}
+            />
+          </tbody>
         ) : virtualized ? (
           <>
             {paddingTop > 0 ? (

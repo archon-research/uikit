@@ -38,3 +38,11 @@ export const Dense = () => (
     </div>
   </div>
 );
+
+export const Static = () => (
+  <div className={stackClassName}>
+    <div className={cardClassName}>
+      <SkeletonStack animate={false} />
+    </div>
+  </div>
+);
