@@ -204,6 +204,16 @@
       "packages/uikit-preview/src/stories/templates/allocation-grid-states.stories.tsx",
       "packages/uikit-preview/src/stories/templates/filter-bar.stories.tsx"
     ],
+    "packages/design-system/dist/components/skeletonPulse.js": [
+      "packages/uikit-preview/src/stories/molecules/skeleton-rows.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/skeleton-stack.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/data-table-virtualized.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/data-table.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/filter-primitives.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/allocation-dashboard.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/allocation-grid-states.stories.tsx"
+    ],
     "packages/design-system/dist/components/SkeletonRows.js": [
       "packages/uikit-preview/src/stories/molecules/skeleton-rows.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
@@ -277,7 +287,15 @@
       "packages/uikit-preview/src/stories/templates/allocation-grid-states.stories.tsx"
     ],
     "packages/design-system/dist/hooks/useMediaQuery.js": [
-      "packages/uikit-preview/src/stories/atoms/flash-on-change.stories.tsx"
+      "packages/uikit-preview/src/stories/atoms/flash-on-change.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/skeleton-rows.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/skeleton-stack.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/data-table-virtualized.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/data-table.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/filter-primitives.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/allocation-dashboard.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/allocation-grid-states.stories.tsx"
     ],
     "packages/design-system/dist/layouts/PageShell.js": [
       "packages/uikit-preview/src/stories/templates/page-shell.stories.tsx"

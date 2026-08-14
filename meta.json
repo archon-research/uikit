@@ -1013,6 +1013,30 @@
       "namedExport": "Default",
       "meta": {}
     },
+    "molecules--skeleton-rows--narrow-leading-column": {
+      "name": "Narrow leading column",
+      "levels": [
+        "Molecules",
+        "Skeleton rows"
+      ],
+      "locStart": 71,
+      "locEnd": 86,
+      "filePath": "src/stories/molecules/skeleton-rows.stories.tsx",
+      "namedExport": "NarrowLeadingColumn",
+      "meta": {}
+    },
+    "molecules--skeleton-rows--static": {
+      "name": "Static",
+      "levels": [
+        "Molecules",
+        "Skeleton rows"
+      ],
+      "locStart": 88,
+      "locEnd": 100,
+      "filePath": "src/stories/molecules/skeleton-rows.stories.tsx",
+      "namedExport": "Static",
+      "meta": {}
+    },
     "molecules--skeleton-stack--default": {
       "name": "Default",
       "levels": [
@@ -1035,6 +1059,18 @@
       "locEnd": 40,
       "filePath": "src/stories/molecules/skeleton-stack.stories.tsx",
       "namedExport": "Dense",
+      "meta": {}
+    },
+    "molecules--skeleton-stack--static": {
+      "name": "Static",
+      "levels": [
+        "Molecules",
+        "Skeleton stack"
+      ],
+      "locStart": 42,
+      "locEnd": 48,
+      "filePath": "src/stories/molecules/skeleton-stack.stories.tsx",
+      "namedExport": "Static",
       "meta": {}
     },
     "molecules--stattile--density": {
@@ -1787,10 +1823,34 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 139,
-      "locEnd": 191,
+      "locStart": 142,
+      "locEnd": 194,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "LiveVsReplay",
+      "meta": {}
+    },
+    "organisms--playback-bar--ordinal-cursor": {
+      "name": "Ordinal cursor",
+      "levels": [
+        "Organisms",
+        "Playback bar"
+      ],
+      "locStart": 210,
+      "locEnd": 259,
+      "filePath": "src/stories/organisms/playback-bar.stories.tsx",
+      "namedExport": "OrdinalCursor",
+      "meta": {}
+    },
+    "organisms--playback-bar--status-in-trailing": {
+      "name": "Status in trailing",
+      "levels": [
+        "Organisms",
+        "Playback bar"
+      ],
+      "locStart": 266,
+      "locEnd": 303,
+      "filePath": "src/stories/organisms/playback-bar.stories.tsx",
+      "namedExport": "StatusInTrailing",
       "meta": {}
     },
     "organisms--playback-bar--with-transport-hotkeys": {
@@ -1799,8 +1859,8 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 206,
-      "locEnd": 249,
+      "locStart": 318,
+      "locEnd": 361,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "WithTransportHotkeys",
       "meta": {}
