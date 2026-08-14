@@ -1,6 +1,11 @@
 # @archon-research/http-client-react
 
-React Query integration for @archon-research/http-client-core, providing hooks for data fetching and caching.
+TanStack Query bindings for `@archon-research/http-client-core`.
+
+The generated OpenAPI `paths` type **is** the endpoint definition. Methods,
+paths, params, request bodies, response types, and error bodies are all read off
+it, so there is no second registry of endpoints to keep in step with the API.
+See [DESIGN.md](./DESIGN.md) for the contract and its deliberate limits.
 
 ## Installation
 
@@ -8,59 +13,209 @@ React Query integration for @archon-research/http-client-core, providing hooks f
 npm install @archon-research/http-client-react @archon-research/http-client-core @tanstack/react-query react react-dom
 ```
 
-## Features
-
-- React Query hooks for HTTP client
-- Automatic request/response validation
-- Caching and synchronization
-- Error handling and retry logic
-- TypeScript support
-
 ## Usage
 
-### Setup provider
+### 1. Generate types and create the api
 
-```typescript
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createClient } from '@archon-research/http-client-core';
+```bash
+npx uikit-openapi-generate --schema openapi.json --output src/api.types.ts
+```
 
-const queryClient = new QueryClient();
-const httpClient = createClient({ baseUrl: 'https://api.example.com' });
+```ts
+// src/api.ts
+import { createApiClient, createQueryApi } from '@archon-research/http-client-react';
+
+import type { paths } from './api.types';
+
+const client = createApiClient<paths>('/api');
+
+// Both the paths type and the tag vocabulary are inferred from the arguments.
+// Do not pass type arguments explicitly: naming one turns inference off for the
+// rest, and `TTag` silently widens to `string`.
+export const api = createQueryApi(client, {
+  tags: ['positions', 'position', 'alerts'],
+});
+```
+
+### 2. Provide a QueryClient
+
+```tsx
+import { createQueryClient, HttpProvider } from '@archon-research/http-client-react';
+
+const queryClient = createQueryClient();
 
 export function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <YourApp />
-    </QueryClientProvider>
+    <HttpProvider client={queryClient}>
+      <Dashboard />
+    </HttpProvider>
   );
 }
 ```
 
-### Use hooks in components
+### 3. Query in a component
 
-```typescript
-import { useQuery } from '@archon-research/http-client-react';
+```tsx
+import { isHttpRequestError } from '@archon-research/http-client-react';
+import { useQuery } from '@tanstack/react-query';
 
-function UserProfile({ userId }: { userId: string }) {
-  const { data, isLoading, error } = useQuery(
-    ['user', userId],
-    () => httpClient.GET('/users/{id}', { params: { path: { id: userId } } })
+import { api } from './api';
+
+function PositionPanel({ id }: { id: string }) {
+  const { data, isPending, error } = useQuery(
+    api.queryOptions(
+      'get',
+      '/positions/{id}',
+      { params: { path: { id }, query: { expand: 'collateral' } } },
+      { tags: ['position'], staleTime: 30_000 },
+    ),
   );
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
-  if (!data) return null;
+  if (isPending) return <LoadingIndicator />;
+  if (error) {
+    // `status` and the parsed error body are only on HTTP failures; a transport
+    // error or a validation middleware rejects with a plain Error.
+    return (
+      <ErrorState
+        message={isHttpRequestError(error) ? `HTTP ${error.status}` : error.message}
+      />
+    );
+  }
 
-  return <div>{data.name}</div>;
+  return <PositionSummary position={data} />;
 }
 ```
+
+`data` is typed from the operation's 2xx response, the `params` object is typed
+from its parameters, and the query key is derived — `['get', '/positions/{id}',
+{ path: { id }, query: { expand: 'collateral' } }]` — so two components asking
+for the same thing share one cache entry regardless of how they spell the init.
+
+### 4. Mutate, and invalidate by tag
+
+```tsx
+import { useMutation } from '@tanstack/react-query';
+
+import { api } from './api';
+
+function ClosePositionButton({ id }: { id: string }) {
+  const { mutate, isPending } = useMutation(
+    api.mutationOptions('post', '/positions/{id}/close', {
+      // A tag, or a callback that derives tags from the mutation's own result.
+      invalidates: ['position', (closed) => (closed.liquidated ? 'alerts' : [])],
+    }),
+  );
+
+  return (
+    <Button
+      disabled={isPending}
+      onClick={() => mutate({ params: { path: { id } } })}
+    >
+      Close
+    </Button>
+  );
+}
+```
+
+The mutation variables are the operation's init, so the body and params are
+typed. On success, every query registered under an invalidated tag is
+invalidated through the `QueryClient` react-query passes to the mutation — no
+`useQueryClient` call and no key factory at the call site.
+
+### 5. Middleware, including response validation
+
+```ts
+import {
+  createApiClient,
+  createQueryApi,
+  createZodResponseMiddleware,
+  type QueryApiMiddleware,
+} from '@archon-research/http-client-react';
+
+import openApiDocument from '../openapi.json';
+import type { paths } from './api.types';
+
+const logSlowRequests: QueryApiMiddleware = async (ctx, next) => {
+  const startedAt = performance.now();
+  try {
+    return await next();
+  } finally {
+    const elapsed = performance.now() - startedAt;
+    if (elapsed > 1_000) {
+      console.warn(`slow ${ctx.method} ${ctx.path}: ${Math.round(elapsed)}ms`);
+    }
+  }
+};
+
+export const api = createQueryApi(createApiClient<paths>('/api'), {
+  tags: ['positions', 'position', 'alerts'],
+  middleware: [
+    logSlowRequests,
+    createZodResponseMiddleware({
+      document: openApiDocument,
+      schemas: { 'get /positions/{id}': 'Position' },
+      // Report drift instead of breaking the screen. Omit to reject instead.
+      onInvalid: (error) => console.warn(error.message, error.issues),
+    }),
+  ],
+});
+```
+
+Middleware is onion-style over the *parsed result*: `[a, b]` means `a` runs
+before `b` on the way in and after it on the way out. A per-call
+`middleware: [...]` on `queryOptions`/`mutationOptions` is appended innermost,
+which is how you opt one query into response validation rather than all of them.
+For middleware that needs the raw `Request`/`Response`, use `openapi-fetch`'s own
+`client.use()`.
+
+### Targeting the cache directly
+
+```ts
+// Exactly one query.
+queryClient.getQueryData(api.queryKey('get', '/positions/{id}', { params: { path: { id } } }));
+
+// Every cached variant of an endpoint — the key's first two elements are the
+// operation, and react-query prefix-matches.
+await queryClient.invalidateQueries({ queryKey: ['get', '/positions'] });
+
+// Everything under a tag.
+await api.invalidateTags(queryClient, ['positions']);
+```
+
+`sanitizeQueryInit` and `buildQueryApiKey` are exported for anything that needs
+to derive a key outside an api instance.
+
+## API surface
+
+| Export | What it does |
+| --- | --- |
+| `createQueryApi(client, options?)` | Binds a TanStack Query surface to an `openapi-fetch` client |
+| `api.queryOptions(method, path, init?, options?)` | `queryOptions` for a GET/HEAD operation, with a derived key |
+| `api.mutationOptions(method, path, options?)` | `mutationOptions` for a POST/PUT/PATCH/DELETE operation |
+| `api.queryKey(method, path, init?)` | The derived, branded query key for an operation |
+| `api.tagFilter(tag)` | A react-query filter matching every query under a tag |
+| `api.invalidateTags(queryClient, tags)` | Invalidates every query under the given tags |
+| `api.taggedEndpoints(tag)` | The `${method} ${path}` tokens registered under a tag |
+| `createZodResponseMiddleware(options)` | Validates responses against the OpenAPI document |
+| `HttpRequestError` / `isHttpRequestError` | The typed failure carrying `status` and the parsed error body |
+| `sanitizeQueryInit` / `buildQueryApiKey` / `canonicalizeQueryKeyValue` | The key-derivation primitives |
+| `composeMiddleware` | The middleware combinator, for composing chains outside an api |
+| `HttpProvider` / `createQueryClient` | `QueryClientProvider` wrapper and client factory |
+| `createQueryOptions` | **Deprecated.** Hand-written key + fn shim; use `api.queryOptions` |
+
+## Not in v1
+
+Optimistic updates, cache updaters, cross-tab cache sync, infinite queries, and
+`POST`-backed reads are deliberately out of scope — see
+[DESIGN.md](./DESIGN.md#deliberately-out-of-v1). A mock layer keyed off the same
+`paths` type is planned as a separate package, so a fixture and a request will
+be described by one source.
 
 ## Peer dependencies
 
-- `react`: React components library
-- `react-dom`: React DOM rendering
-- `@tanstack/react-query`: Data fetching library
+- `react`, `react-dom`
 
 ## See also
 
-- [http-client-core](../http-client-core) for core client utilities
+- [http-client-core](../http-client-core) for the client factory and the
+  OpenAPI/zod helpers
