@@ -21,7 +21,8 @@
     "lint": "oxlint -c oxlint.config.ts src",
     "lint:fix": "oxlint -c oxlint.config.ts --fix src",
     "format": "oxfmt -c oxfmt.config.ts --write src",
-    "format:check": "oxfmt -c oxfmt.config.ts --check src"
+    "format:check": "oxfmt -c oxfmt.config.ts --check src",
+    "test": "vitest run"
   },
   "dependencies": {
     "@archon-research/http-client-core": "*",
@@ -32,9 +33,13 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@archon-research/oxfmt-config": "*",
+    "@archon-research/oxlint-config": "*",
+    "@archon-research/tsconfig": "*",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
     "oxfmt": "0.62.0",
-    "oxlint": "1.77.0"
+    "oxlint": "1.77.0",
+    "vitest": "^4.1.9"
   }
 }
