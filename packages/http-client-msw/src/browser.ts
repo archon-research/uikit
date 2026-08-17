@@ -22,6 +22,7 @@ import {
 export {
   buildWorkerStartOptions,
   createIdempotentStart,
+  type IdempotentStart,
   type MockWorkerOptions,
 } from './worker-options.js';
 
@@ -30,6 +31,7 @@ export type MockWorker = {
   worker: SetupWorker;
   /** Registers and activates the worker. Idempotent; safe to await anywhere. */
   start: () => Promise<void>;
+  /** Stops interception. A later `start()` re-registers the worker. */
   stop: () => void;
   /** Runs the setup's state resets, then drops runtime handler overrides. */
   reset: () => void;
@@ -65,13 +67,19 @@ export function setupMockWorker(
 ): MockWorker {
   const worker = setupWorker(...mocks.handlers);
   const startOptions = buildWorkerStartOptions(options);
+  const { start, invalidate } = createIdempotentStart(async () => {
+    await worker.start(startOptions);
+  });
 
   return {
     worker,
-    start: createIdempotentStart(async () => {
-      await worker.start(startOptions);
-    }),
-    stop: () => worker.stop(),
+    start,
+    stop: () => {
+      worker.stop();
+      // A stopped worker intercepts nothing, so the next `start()` has to
+      // re-register rather than resolve from the memo.
+      invalidate();
+    },
     reset: () => {
       mocks.resetState();
       worker.resetHandlers();

@@ -40,17 +40,17 @@ export type MockWorkerOptions = {
 export function buildWorkerStartOptions(
   options: MockWorkerOptions = {},
 ): StartOptions {
-  const {
-    baseUrl,
-    onUnhandledRequest = 'bypass',
-    quiet = true,
-    start,
-  } = options;
+  const { baseUrl, onUnhandledRequest, quiet, start } = options;
 
   return {
-    onUnhandledRequest,
-    quiet,
     ...start,
+    // Resolved after the spread rather than defaulted before it: an options
+    // object forwarded with explicit `undefined` values would otherwise put
+    // those keys back and hand msw its own defaults instead of ours. `start`
+    // still wins over the named options where it sets a value.
+    onUnhandledRequest:
+      start?.onUnhandledRequest ?? onUnhandledRequest ?? 'bypass',
+    quiet: start?.quiet ?? quiet ?? true,
     serviceWorker: {
       url: resolveWorkerScriptUrl(baseUrl),
       ...start?.serviceWorker,
@@ -58,26 +58,47 @@ export function buildWorkerStartOptions(
   };
 }
 
+export type IdempotentStart = {
+  /** Runs the wrapped function at most once, until `invalidate()`. */
+  start: () => Promise<void>;
+  /**
+   * Forgets a completed start so the next `start()` runs again. Whatever the
+   * start registered has to be torn down first — a memo pointing at a stopped
+   * worker resolves immediately and intercepts nothing.
+   */
+  invalidate: () => void;
+};
+
 /**
  * Wraps a start function so concurrent and repeated calls share one
  * registration. An app entry, a hot reload, and a Playwright fixture can all
  * call `start()`; registering the worker again mid-session would reset its
  * handler list and drop any runtime overrides a test had installed.
  *
- * A rejected start clears the memo, so a caller can retry after fixing whatever
- * failed (a missing `mockServiceWorker.js`, most often).
+ * A rejected start invalidates itself, so a caller can retry after fixing
+ * whatever failed (a missing `mockServiceWorker.js`, most often).
  */
 export function createIdempotentStart(
   start: () => Promise<void>,
-): () => Promise<void> {
+): IdempotentStart {
   let pending: Promise<void> | undefined;
 
-  return () => {
-    pending ??= start().catch((error: unknown) => {
-      pending = undefined;
-      throw error;
-    });
+  const invalidate = (): void => {
+    pending = undefined;
+  };
 
-    return pending;
+  return {
+    start: () => {
+      // Called through an async wrapper so a synchronous throw from `start`
+      // rejects the returned promise instead of escaping as an exception the
+      // caller has no way to `.catch`.
+      pending ??= (async () => await start())().catch((error: unknown) => {
+        invalidate();
+        throw error;
+      });
+
+      return pending;
+    },
+    invalidate,
   };
 }
