@@ -12,7 +12,8 @@
 /** How an origin-relative API base is matched. See {@link resolveHandlerBase}. */
 export type MockOriginMatching = 'any' | 'exact';
 
-const ABSOLUTE_URL = /^[a-z][a-z\d+.-]*:\/\//i;
+/** A scheme plus authority, or a protocol-relative `//host` — both pin the host. */
+const ABSOLUTE_URL = /^([a-z][a-z\d+.-]*:)?\/\//i;
 
 export function isAbsoluteUrl(url: string): boolean {
   return ABSOLUTE_URL.test(url);
