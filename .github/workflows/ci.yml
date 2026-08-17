@@ -25,6 +25,7 @@ jobs:
       agent_marketplace: ${{ steps.changed-files.outputs.agent_marketplace_any_changed }}
       snapshot_files: ${{ steps.changed-files.outputs.visual_snapshot_files_all_changed_files }}
       demo_relay: ${{ steps.changed-files.outputs.demo_relay_any_changed }}
+      vitest: ${{ steps.changed-files.outputs.vitest_any_changed }}
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -99,7 +100,9 @@ jobs:
     needs: detect-changes
     if: |
       !cancelled() &&
-      (github.event_name == 'merge_group' || needs.detect-changes.outputs.demo_relay == 'true')
+      (github.event_name == 'merge_group' ||
+       needs.detect-changes.outputs.demo_relay == 'true' ||
+       needs.detect-changes.outputs.vitest == 'true')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
