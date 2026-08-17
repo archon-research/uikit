@@ -34,6 +34,11 @@ describe('isAbsoluteUrl', () => {
     expect(isAbsoluteUrl('/api')).toBe(false);
     expect(isAbsoluteUrl('')).toBe(false);
   });
+
+  it('counts a protocol-relative base as absolute, since it pins the host', () => {
+    expect(isAbsoluteUrl('//api.test/v1')).toBe(true);
+    expect(resolveHandlerBase('//api.test/v1', 'any')).toBe('//api.test/v1');
+  });
 });
 
 describe('resolveHandlerBase', () => {
