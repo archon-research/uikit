@@ -46,7 +46,9 @@ function defaultIdOf<T>(item: T): string {
  *
  * The seed is a **function**, called on construction and again on every reset, so
  * a handler that mutates an item in place cannot corrupt the next test's
- * starting point.
+ * starting point. That holds only if the function *constructs* its items — a
+ * seed that returns a shared module-level array hands out the same objects every
+ * time, and a mutation to one of those does survive a reset.
  *
  * ```ts
  * const things = createMockStore(seedThings);

@@ -172,7 +172,8 @@ specific way mocks fail:
   no queries, no indexes, no relations. A mock needing those is standing in for
   logic the real service owns, and the test belongs against the real service. The
   seed is a *function*, re-run on every reset, so a handler mutating an item in
-  place cannot corrupt the next test's starting point. Unknown ids return
+  place cannot corrupt the next test's starting point — provided the function
+  constructs its items rather than returning a shared array. Unknown ids return
   `undefined`/`false` for a handler to turn into its own 404; a duplicate insert
   throws, because that is a fixture bug rather than an API state.
 - **`createSeededRng(seed)`** — `Math.random` in a mock makes a failing test
