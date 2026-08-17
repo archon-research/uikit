@@ -13,6 +13,7 @@
     "packages/dashboard-kit",
     "packages/http-client-core",
     "packages/http-client-react",
+    "packages/http-client-msw",
     "packages/mcp-relay",
     "packages/webmcp",
     "packages/mcp-connect",
