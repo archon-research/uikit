@@ -33,6 +33,18 @@ export {
   resolveWorkerScriptUrl,
 } from './base-url.js';
 export {
+  isTestEnvironment,
+  mockDelay,
+  type MockDelayInput,
+  resolveMockDelay,
+} from './mock-delay.js';
+export {
+  createMockStore,
+  type MockStore,
+  type MockStoreOptions,
+} from './mock-store.js';
+export { createSeededRng, type SeededRng } from './seeded-rng.js';
+export {
   type MockResetCallback,
   type MockSetup,
   type MockSetupHandler,
