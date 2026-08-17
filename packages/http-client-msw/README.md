@@ -157,9 +157,15 @@ entry exposed:
 
 ```ts
 // tests/positions.spec.ts
+declare global {
+  interface Window {
+    resetMocks?: () => void;
+  }
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
-  await page.evaluate(() => window.resetMocks());
+  await page.evaluate(() => window.resetMocks?.());
 });
 ```
 
