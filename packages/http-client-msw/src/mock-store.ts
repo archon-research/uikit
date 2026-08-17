@@ -13,6 +13,12 @@ export type MockStoreOptions<T> = {
   id?: (item: T) => string;
 };
 
+/**
+ * Aliasing, since it is observable: `get` and `insert` hand back the **stored**
+ * object, so mutating one writes through to the store. `update` replaces it with
+ * a merged copy instead, which leaves any reference taken before the update
+ * stale. Read again after an update rather than holding a reference across one.
+ */
 export type MockStore<T> = {
   /** Every item, in insertion order. A fresh array, so callers cannot reorder the store. */
   list: () => T[];
@@ -21,10 +27,11 @@ export type MockStore<T> = {
   readonly size: number;
   /** Adds an item. Throws on a duplicate id, which is a fixture bug rather than an API condition. */
   insert: (item: T) => T;
-  /** Merges `patch` into an existing item. `undefined` when the id is unknown — a handler turns that into its own 404. */
+  /** Merges `patch` into an existing item, keeping its position. `undefined` when the id is unknown — a handler turns that into its own 404. */
   update: (id: string, patch: Partial<T>) => T | undefined;
   /** `false` when the id is unknown. */
   remove: (id: string) => boolean;
+  /** Swaps in a whole collection. Throws if two items share an id, like `insert`. */
   replaceAll: (items: readonly T[]) => void;
   /** Re-seeds from the seed function. Pass this to `setupMocks({ onReset })`. */
   reset: () => void;
@@ -75,9 +82,26 @@ export function createMockStore<T>(
   const idOf = options.id ?? defaultIdOf;
   const items = new Map<string, T>();
 
+  /**
+   * Built into a staging map first, so the duplicate-id check that `insert`
+   * enforces also covers construction and every reset — and so a rejected
+   * collection leaves the store as it was rather than half-cleared.
+   */
   const replaceAll = (next: readonly T[]): void => {
+    const replacement = new Map<string, T>();
+
+    for (const item of next) {
+      const id = idOf(item);
+      if (replacement.has(id)) {
+        throw new Error(
+          `http-client-msw: createMockStore was given two items with id "${id}"`,
+        );
+      }
+      replacement.set(id, item);
+    }
+
     items.clear();
-    for (const item of next) items.set(idOf(item), item);
+    for (const [id, item] of replacement) items.set(id, item);
   };
 
   replaceAll(seed());

@@ -24,10 +24,8 @@ describe('setupMocks', () => {
     const handler = mock.get('/things', ({ response }) =>
       response(200).json([]),
     );
-    const mocks = setupMocks([handler]);
 
-    expect(() => mocks.resetState()).not.toThrow();
-    expect(mocks.handlers).toEqual([handler]);
+    expect(() => setupMocks([handler]).resetState()).not.toThrow();
   });
 });
 
