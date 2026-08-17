@@ -41,12 +41,14 @@ mkdirSync(path.dirname(absoluteOutput), { recursive: true });
 // openapi-typescript builds its output with the classic TypeScript compiler API, which
 // TypeScript 7.0 does not ship (openapi-ts/openapi-typescript#2841). Running from an empty
 // directory makes npx resolve it in an isolated tree alongside a TypeScript that still has that
-// API, instead of picking up the host project's compiler.
+// API, instead of picking up the host project's compiler. Exact pins: the
+// isolated tree resolves outside any project .npmrc, so range specifiers
+// would float past consumer supply-chain guards (min-release-age).
 const isolatedCwd = mkdtempSync(path.join(os.tmpdir(), 'openapi-typescript-'));
 
 try {
   execSync(
-    `npx --yes --package=openapi-typescript@7 --package=typescript@5 openapi-typescript "${absoluteSchema}" --output "${absoluteOutput}"`,
+    `npx --yes --package=openapi-typescript@7.13.0 --package=typescript@5.9.3 openapi-typescript "${absoluteSchema}" --output "${absoluteOutput}"`,
     { cwd: isolatedCwd, stdio: 'inherit' },
   );
 } finally {
