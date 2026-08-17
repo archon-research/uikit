@@ -8,6 +8,9 @@
  *
  * - `@archon-research/http-client-msw/browser` — `setupMockWorker`
  * - `@archon-research/http-client-msw/node` — `setupMockServer`
+ *
+ * Nothing here references `msw/browser` or `msw/node`, so this entry stays
+ * resolvable from either environment.
  */
 
 export {
@@ -29,3 +32,10 @@ export {
   resolveHandlerBase,
   resolveWorkerScriptUrl,
 } from './base-url.js';
+export {
+  type MockResetCallback,
+  type MockSetup,
+  type MockSetupHandler,
+  type MockSetupOptions,
+  setupMocks,
+} from './setup.js';
