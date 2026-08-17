@@ -27,8 +27,13 @@ export type MockApiOptions = {
   /**
    * Prepended to every handler path, for an API mounted under a prefix. Given
    * `'/api'`, a handler declared on `/things/{id}` matches `/api/things/:id`.
-   * Pass the same value the app passes to `createApiClient`. A trailing slash is
-   * tolerated.
+   * Pass the same value the app passes to `createApiClient`.
+   *
+   * Either an origin-relative path with a leading slash (`'/api'`) or an absolute
+   * URL (`'https://api.test/v1'`); a trailing slash is tolerated. It is
+   * concatenated with the OpenAPI path, so anything else — a query string, a
+   * fragment, a missing leading slash — yields a pattern that matches nothing,
+   * which surfaces as an unhandled request rather than an error.
    */
   baseUrl?: string;
   /**

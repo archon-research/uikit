@@ -96,8 +96,11 @@ export const mocks = setupMocks(
         : response(404).json({ message: 'already closed' }),
     ),
   ],
-  // Everything a handler writes to is restored by `reset()`.
-  { onReset: [positions.reset, rng.reset] },
+  // Everything a handler writes to is restored by `reset()`. Order matters:
+  // callbacks run as declared, and the store's seed function draws from the rng,
+  // so the rng has to be rewound first or each reset re-seeds from a different
+  // point in the sequence.
+  { onReset: [rng.reset, positions.reset] },
 );
 ```
 
@@ -149,7 +152,8 @@ imports are dynamic and behind the check. A runtime `process.env` read or a
 static `import` of the mocks module would bundle them either way.
 
 `start()` is idempotent, so a hot reload or a test fixture may call it again
-without re-registering the worker.
+without re-registering the worker. `stop()` releases that, so a later `start()`
+registers again rather than resolving into a stopped worker.
 
 For a Playwright suite, serve the app with the same flag on — the browser worker
 answers from the same handlers — and reset between tests through the hook the
@@ -220,7 +224,7 @@ unmatched under `setupServer`, where every request URL is absolute. Pass
 | `createSeededRng(seed)` | Deterministic PRNG for reproducible generated fixtures |
 | `mockDelay(ms \| { test, dev })` | Env-aware latency; no delay under test by default |
 | `resolveMockDelay` / `isTestEnvironment` | The delay decision, for a consumer's own helpers |
-| `resolveWorkerScriptUrl` / `normalizeApiBaseUrl` / `resolveHandlerBase` | The URL primitives |
+| `resolveWorkerScriptUrl` / `normalizeApiBaseUrl` / `resolveHandlerBase` / `isAbsoluteUrl` | The URL primitives |
 | `buildWorkerStartOptions` / `createIdempotentStart` | **`/browser`.** The start decisions, unit-testable |
 
 Handler and resolver types are re-exported as `MockHandler`,

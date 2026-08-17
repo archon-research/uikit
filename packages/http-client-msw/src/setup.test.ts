@@ -1,7 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { createMockApi } from './mock-api.js';
+import { createMockStore } from './mock-store.js';
 import { setupMockServer } from './node.js';
+import { createSeededRng } from './seeded-rng.js';
 import { setupMocks } from './setup.js';
 import { type Thing, type TestPaths, seedThings } from './test-fixtures.js';
 
@@ -26,6 +28,39 @@ describe('setupMocks', () => {
     );
 
     expect(() => setupMocks([handler]).resetState()).not.toThrow();
+  });
+
+  it('re-seeds identically when an rng feeding a store is rewound first', () => {
+    const rng = createSeededRng(1337);
+    const sized = createMockStore(() =>
+      seedThings().map((thing) => ({ ...thing, size: rng.int(1, 100) })),
+    );
+    const sizes = (): number[] => sized.list().map((thing) => thing.size);
+
+    const ordered = setupMocks([], { onReset: [rng.reset, sized.reset] });
+    const initial = sizes();
+
+    ordered.resetState();
+    expect(sizes()).toEqual(initial);
+    ordered.resetState();
+    expect(sizes()).toEqual(initial);
+  });
+
+  it('drifts when the store is rewound before the rng it draws from', () => {
+    // The failure mode the option's docs warn about, pinned so the ordering
+    // advice cannot quietly stop being true.
+    const rng = createSeededRng(1337);
+    const sized = createMockStore(() =>
+      seedThings().map((thing) => ({ ...thing, size: rng.int(1, 100) })),
+    );
+    const sizes = (): number[] => sized.list().map((thing) => thing.size);
+
+    const misordered = setupMocks([], { onReset: [sized.reset, rng.reset] });
+    const initial = sizes();
+
+    misordered.resetState();
+
+    expect(sizes()).not.toEqual(initial);
   });
 });
 

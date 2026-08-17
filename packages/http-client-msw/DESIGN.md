@@ -137,21 +137,33 @@ declared once with their resets, so a suite's `afterEach` is a single line and
 cannot forget one of the two.
 
 The reset callbacks are plain functions rather than objects with a `reset` method,
-so anything can join the convention: `onReset: [store.reset, rng.reset, () => {
+so anything can join the convention: `onReset: [rng.reset, store.reset, () => {
 scenario = 'default'; }]`.
+
+They run **in declaration order**, and that order is load-bearing whenever one
+reset feeds another. A store whose seed function draws from a seeded rng must be
+listed *after* the rng: reset the store first and it re-seeds from wherever the
+sequence happens to be, so the fixtures change on every reset — which defeats the
+determinism the rng exists for. Two specs in `src/setup.test.ts` pin both the
+correct order and the drift, so the advice cannot quietly stop being true.
 
 ### Worker start
 
-`start()` is idempotent — repeated and concurrent calls share one registration,
-and a rejected start clears the memo so a retry is possible. Registering the
-worker again mid-session resets its handler list, which would silently drop
-runtime overrides a Playwright fixture had installed. An app entry, a hot reload,
-and a test fixture may all reasonably call `start()`.
+`start()` is idempotent — repeated and concurrent calls share one registration.
+Registering the worker again mid-session resets its handler list, which would
+silently drop runtime overrides a Playwright fixture had installed. An app entry,
+a hot reload, and a test fixture may all reasonably call `start()`.
 
-The worker script URL is `${baseUrl ?? '/'}mockServiceWorker.js`, where `baseUrl`
-is the app's **public base path** (`import.meta.env.BASE_URL` under Vite) — not
-the API base. A service worker's scope is limited to the directory it is served
-from, so a subpath deployment must load the script from under that subpath.
+The memo is invalidated in the two cases where it would otherwise lie: a rejected
+start, so a caller can retry after fixing whatever failed; and `stop()`, because a
+memo pointing at a stopped worker resolves immediately and intercepts nothing —
+the failure mode there is requests reaching the real network with no error at all.
+
+The worker script URL is the app's **public base path**
+(`import.meta.env.BASE_URL` under Vite) with the script filename appended, a
+missing trailing slash inserted, and an empty base treated as `/` — not the API
+base. A service worker's scope is limited to the directory it is served from, so a
+subpath deployment must load the script from under that subpath.
 
 Defaults differ per environment, in both cases away from msw's own:
 
