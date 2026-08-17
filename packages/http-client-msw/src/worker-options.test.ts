@@ -44,6 +44,18 @@ describe('buildWorkerStartOptions', () => {
     });
   });
 
+  it('keeps the defaults when a forwarded start passes undefined', () => {
+    expect(
+      buildWorkerStartOptions({
+        start: { onUnhandledRequest: undefined, quiet: undefined },
+      }),
+    ).toEqual({
+      onUnhandledRequest: 'bypass',
+      quiet: true,
+      serviceWorker: { url: '/mockServiceWorker.js' },
+    });
+  });
+
   it('keeps the resolved script url when start sets other worker options', () => {
     expect(
       buildWorkerStartOptions({
@@ -56,31 +68,50 @@ describe('buildWorkerStartOptions', () => {
 
 describe('createIdempotentStart', () => {
   it('registers once across repeated calls', async () => {
-    const start = vi.fn(() => Promise.resolve());
-    const startOnce = createIdempotentStart(start);
+    const run = vi.fn(() => Promise.resolve());
+    const { start } = createIdempotentStart(run);
 
-    await Promise.all([startOnce(), startOnce()]);
-    await startOnce();
+    await Promise.all([start(), start()]);
+    await start();
 
-    expect(start).toHaveBeenCalledTimes(1);
+    expect(run).toHaveBeenCalledTimes(1);
   });
 
   it('returns the same promise to concurrent callers', () => {
-    const startOnce = createIdempotentStart(() => Promise.resolve());
+    const { start } = createIdempotentStart(() => Promise.resolve());
 
-    expect(startOnce()).toBe(startOnce());
+    expect(start()).toBe(start());
   });
 
   it('allows a retry after a failed start', async () => {
-    const start = vi
+    const run = vi
       .fn<() => Promise<void>>()
       .mockRejectedValueOnce(new Error('no worker script'))
       .mockResolvedValueOnce(undefined);
-    const startOnce = createIdempotentStart(start);
+    const { start } = createIdempotentStart(run);
 
-    await expect(startOnce()).rejects.toThrow('no worker script');
-    await expect(startOnce()).resolves.toBeUndefined();
+    await expect(start()).rejects.toThrow('no worker script');
+    await expect(start()).resolves.toBeUndefined();
 
-    expect(start).toHaveBeenCalledTimes(2);
+    expect(run).toHaveBeenCalledTimes(2);
+  });
+
+  it('runs again after invalidate(), which is how stop() re-registers', async () => {
+    const run = vi.fn(() => Promise.resolve());
+    const { start, invalidate } = createIdempotentStart(run);
+
+    await start();
+    invalidate();
+    await start();
+
+    expect(run).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects rather than throwing when the start function throws synchronously', async () => {
+    const { start } = createIdempotentStart(() => {
+      throw new Error('registration is unavailable');
+    });
+
+    await expect(start()).rejects.toThrow('registration is unavailable');
   });
 });
