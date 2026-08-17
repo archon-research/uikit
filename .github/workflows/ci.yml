@@ -117,6 +117,11 @@ jobs:
       - name: Build the relay core
         run: npm run build --workspace packages/mcp-relay
 
+      # http-client-react's specs import @archon-research/http-client-core, whose
+      # exports resolve to dist/, so the dependency must be built before vitest runs.
+      - name: Build http-client-core
+        run: npm run build --workspace packages/http-client-core
+
       - name: Run all vitest specs (relay core unit + Worker/DO integration)
         run: npm test
 
