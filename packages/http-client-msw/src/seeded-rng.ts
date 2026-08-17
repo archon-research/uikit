@@ -8,7 +8,10 @@
 export type SeededRng = {
   /** The next value in `[0, 1)`. */
   next: () => number;
-  /** An integer in `[min, max]`, both inclusive. */
+  /**
+   * An integer in `[min, max]`, both inclusive. Bounds are trusted: `max` below
+   * `min` returns a value outside either, unchecked.
+   */
   int: (min: number, max: number) => number;
   /** One element. Throws on an empty list. */
   pick: <T>(items: readonly T[]) => T;

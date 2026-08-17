@@ -15,10 +15,14 @@ export type MockResetCallback = () => void;
 
 export type MockSetupOptions = {
   /**
-   * Callbacks that restore mock state, run by `reset()` on whichever entry
-   * serves these handlers. This is how a stateful mock stops leaking writes from
-   * one test into the next: the handlers close over a store, and the store's
-   * `reset` is declared here once rather than at every call site.
+   * Callbacks that restore mock state, run **in declaration order** by `reset()`
+   * on whichever entry serves these handlers. This is how a stateful mock stops
+   * leaking writes from one test into the next: the handlers close over a store,
+   * and the store's `reset` is declared here once rather than at every call site.
+   *
+   * Order matters when one reset feeds another. A store whose seed function draws
+   * from a seeded rng must be listed *after* that rng, or each reset re-seeds
+   * from wherever the previous one left the sequence.
    */
   onReset?: readonly MockResetCallback[];
 };
@@ -40,12 +44,13 @@ export type MockSetup = {
  * Bundles handlers with their state resets.
  *
  * ```ts
- * const things = createMockStore(seedThings);
  * const rng = createSeededRng(42);
+ * const things = createMockStore(() => seedThings(rng));
  *
  * export const mocks = setupMocks(
  *   [mock.get('/things', ({ response }) => response(200).json(things.list()))],
- *   { onReset: [things.reset, rng.reset] },
+ *   // The rng first: the store's seed draws from it.
+ *   { onReset: [rng.reset, things.reset] },
  * );
  * ```
  */
