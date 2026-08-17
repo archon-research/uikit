@@ -52,19 +52,18 @@ describe('createMockStore', () => {
     expect(store.get('t1')?.size).toBe(42);
   });
 
-  it('hands out a copy of the list', () => {
+  it('hands out a fresh array each time, so a caller cannot reorder the store', () => {
     const store = createMockStore(seedThings);
     const list = store.list();
     list.pop();
 
-    expect(store.size).toBe(2);
+    expect(store.list()).toHaveLength(2);
+    expect(store.list()).not.toBe(store.list());
   });
 
-  it('re-seeds on reset, even after in-place mutation', () => {
+  it('re-seeds on reset', () => {
     const store = createMockStore(seedThings);
 
-    const mutated = store.get('t1');
-    if (mutated) mutated.name = 'Overwritten';
     store.remove('t2');
     store.insert({ id: 't3', name: 'Third', size: 3 });
 
@@ -73,11 +72,68 @@ describe('createMockStore', () => {
     expect(store.list()).toEqual(seedThings());
   });
 
+  it('undoes an in-place mutation when the seed constructs its items', () => {
+    const store = createMockStore(seedThings);
+
+    const stored = store.get('t1');
+    if (stored) stored.name = 'Overwritten';
+    expect(store.get('t1')?.name).toBe('Overwritten');
+
+    store.reset();
+
+    expect(store.get('t1')?.name).toBe('First');
+  });
+
+  it('cannot undo one when the seed returns a shared array', () => {
+    // The documented limit of the reset guarantee: the store holds the seed's
+    // own objects, so a seed that hands back the same ones every call has
+    // nothing to restore from.
+    const shared = [{ id: 't1', name: 'First', size: 1 }];
+    const store = createMockStore(() => shared);
+
+    const stored = store.get('t1');
+    if (stored) stored.name = 'Overwritten';
+    store.reset();
+
+    expect(store.get('t1')?.name).toBe('Overwritten');
+  });
+
   it('replaces the whole collection', () => {
     const store = createMockStore(seedThings);
     store.replaceAll([{ id: 'only', name: 'Only', size: 1 }]);
 
     expect(store.list()).toEqual([{ id: 'only', name: 'Only', size: 1 }]);
+  });
+
+  it('rejects a duplicate id on replaceAll and on the seed, like insert', () => {
+    const store = createMockStore(seedThings);
+
+    expect(() =>
+      store.replaceAll([
+        { id: 'x', name: 'One', size: 1 },
+        { id: 'x', name: 'Two', size: 2 },
+      ]),
+    ).toThrow(/two items with id "x"/);
+    // The rejected collection is not partially applied.
+    expect(store.list()).toEqual(seedThings());
+
+    expect(() =>
+      createMockStore(() => [
+        { id: 'y', name: 'One', size: 1 },
+        { id: 'y', name: 'Two', size: 2 },
+      ]),
+    ).toThrow(/two items with id "y"/);
+  });
+
+  it('keeps an item in place when updated, and stales an earlier reference', () => {
+    const store = createMockStore(seedThings);
+    const before = store.get('t1');
+
+    store.update('t1', { size: 99 });
+
+    expect(store.list().map((thing) => thing.id)).toEqual(['t1', 't2']);
+    expect(before?.size).toBe(1);
+    expect(store.get('t1')?.size).toBe(99);
   });
 
   it('takes an explicit id selector for items with no `id`', () => {
