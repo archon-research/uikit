@@ -20,8 +20,11 @@ export type MockDelayInput =
  * `import.meta.env` exists in every environment this package runs in.
  */
 export function isTestEnvironment(): boolean {
+  // `process.env` is optional-chained as well as guarded: a browser shim that
+  // defines `process` without an `env` would otherwise throw from inside a
+  // request handler. The dot form is deliberate — it is what bundlers rewrite.
   const nodeEnv =
-    typeof process === 'undefined' ? undefined : process.env['NODE_ENV'];
+    typeof process === 'undefined' ? undefined : process.env?.NODE_ENV;
   const viteMode = (import.meta as ImportMeta & { env?: { MODE?: string } }).env
     ?.MODE;
 
