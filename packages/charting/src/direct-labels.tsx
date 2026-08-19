@@ -1,14 +1,19 @@
 import { DataContext } from '@visx/xychart';
 import { useContext } from 'react';
 
+import { resolveChartColor, type ChartColor } from './chart-color.js';
+
 export type DirectLabelItem = {
   /** Stable identity; defaults to `label`. */
   id?: string;
   label: string;
   /** Y-data value the label points at (its ideal position). */
   value: number;
-  /** Text color, usually the matching series color. */
-  color: string;
+  /**
+   * Text color, usually matching the series it labels. Prefer a token name
+   * (`'chart.series.primary'`); a raw CSS color string also works.
+   */
+  color: ChartColor;
 };
 
 export type DirectLabelsProps = {
@@ -126,7 +131,7 @@ export function DirectLabels({ labels, gap = 14, x = 4 }: DirectLabelsProps) {
           y={resolved[index]}
           dominantBaseline="middle"
           fontSize={11}
-          fill={entry.label.color}
+          fill={resolveChartColor(entry.label.color)}
         >
           {entry.label.label}
         </text>
