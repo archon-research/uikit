@@ -426,6 +426,15 @@ export const Responsive = () => (
 // The reader layer: an interactive legend (toggle/emphasis/note/badge), an
 // on-plot snap crosshair with per-series dots + a positioned tooltip, direct
 // end-labels with collision stacking, and an accessible data-table mirror.
+//
+// This story names its colors by TOKEN (`'chart.series.primary'`) rather than
+// through the `seriesColor.*` aliases, which is the preferred form: the token
+// name is checked against the design system's token contract, so a typo is a
+// compile error instead of an unresolved `var()`. Both forms resolve to the same
+// `var(...)` string, so this story's snapshot is byte-identical to the one taken
+// when it used the aliases — that equality is the proof they resolve identically.
+// `LineSeries`' `stroke` is visx's own prop, not one of this package's, so it
+// still takes the raw string from `seriesColor`.
 const A_BY_INDEX = new Map(SERIES.map((d) => [d.index, d.value]));
 const B_BY_INDEX = new Map(SERIES_B.map((d) => [d.index, d.value]));
 const STOPS = SERIES.map((d) => d.index);
@@ -448,21 +457,21 @@ export const ReaderLayer = () => (
             {
               id: 'A',
               label: 'Account',
-              color: seriesColor.primary,
+              color: 'chart.series.primary',
               emphasis: true,
               badge: 'live',
             },
             {
               id: 'B',
               label: 'Benchmark',
-              color: seriesColor.secondary,
+              color: 'chart.series.secondary',
               dash: true,
               note: 'counterfactual',
             },
             {
               id: 'C',
               label: 'Hidden series',
-              color: seriesColor.tertiary,
+              color: 'chart.series.tertiary',
               hidden: true,
             },
           ]}
@@ -496,12 +505,12 @@ export const ReaderLayer = () => (
               {
                 label: 'Account',
                 value: SERIES[SERIES.length - 1].value,
-                color: seriesColor.primary,
+                color: 'chart.series.primary',
               },
               {
                 label: 'Benchmark',
                 value: SERIES_B[SERIES_B.length - 1].value,
-                color: seriesColor.secondary,
+                color: 'chart.series.secondary',
               },
             ]}
           />
@@ -511,12 +520,12 @@ export const ReaderLayer = () => (
             series={[
               {
                 id: 'A',
-                color: seriesColor.primary,
+                color: 'chart.series.primary',
                 valueAt: (x) => A_BY_INDEX.get(x) ?? null,
               },
               {
                 id: 'B',
-                color: seriesColor.secondary,
+                color: 'chart.series.secondary',
                 valueAt: (x) => B_BY_INDEX.get(x) ?? null,
               },
             ]}
@@ -567,9 +576,9 @@ export const ColoredLegend = () => (
         shape="line"
         colorLabel
         items={[
-          { label: 'Account', color: seriesColor.primary },
-          { label: 'Benchmark', color: seriesColor.secondary, dash: true },
-          { label: 'Peer median', color: seriesColor.tertiary },
+          { label: 'Account', color: 'chart.series.primary' },
+          { label: 'Benchmark', color: 'chart.series.secondary', dash: true },
+          { label: 'Peer median', color: 'chart.series.tertiary' },
         ]}
       />
       <ChartLegend
@@ -580,19 +589,19 @@ export const ColoredLegend = () => (
           {
             id: 'a',
             label: 'Account',
-            color: seriesColor.primary,
+            color: 'chart.series.primary',
             emphasis: true,
           },
           {
             id: 'b',
             label: 'Benchmark',
-            color: seriesColor.secondary,
+            color: 'chart.series.secondary',
             dash: true,
           },
           {
             id: 'c',
             label: 'Hidden',
-            color: seriesColor.tertiary,
+            color: 'chart.series.tertiary',
             hidden: true,
           },
         ]}
@@ -635,7 +644,8 @@ export const Distribution = () => (
           <Grid columns={false} numTicks={4} />
           <Axis orientation="bottom" numTicks={6} />
           <Axis orientation="left" numTicks={4} />
-          <HistogramSeries bins={HISTOGRAM_BINS} />
+          {/* Naming the token explicitly, which is also this prop's default. */}
+          <HistogramSeries bins={HISTOGRAM_BINS} color="chart.series.primary" />
         </XYChart>
       </section>
       <section className={panelClassName}>
@@ -658,7 +668,12 @@ export const Distribution = () => (
           <Grid columns={false} numTicks={4} />
           <Axis orientation="bottom" numTicks={6} />
           <Axis orientation="left" numTicks={4} />
-          <DistributionSeries data={SORTED_ASC} highlightCount={10} />
+          <DistributionSeries
+            data={SORTED_ASC}
+            highlightCount={10}
+            color="chart.series.primary"
+            highlightColor="chart.series.critical"
+          />
         </XYChart>
       </section>
     </div>
