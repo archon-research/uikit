@@ -437,9 +437,16 @@ export const designSystemPandaConfig = {
               value: { base: '{colors.neutral.900}', _dark: '{colors.neutral.100}' },
             },
           },
+          // Status tints for a block of content; `canvas` is the page fill they
+          // sit on. `neutral` is the status-free member — one step tighter than
+          // the chromatic tints because neutral.50/950 is already `bg.canvas`
+          // (see the note in src/panda-preset.ts).
           bg: {
             canvas: {
               value: { base: '{colors.neutral.50}', _dark: '{colors.neutral.950}' },
+            },
+            neutral: {
+              value: { base: '{colors.neutral.100}', _dark: '{colors.neutral.800}' },
             },
             success: {
               value: { base: '{colors.green.50}', _dark: '{colors.green.950}' },
