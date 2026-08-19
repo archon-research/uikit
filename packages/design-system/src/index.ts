@@ -38,6 +38,12 @@ export {
   IDENTITY_SLOT_COUNT,
 } from './theme/useIdentityPalette.js';
 export {
+  chartColorCssVarName,
+  chartColorSemanticTokens,
+  chartColorTokenPaths,
+  type ChartColorTokenPath,
+} from './tokens/index.js';
+export {
   useMediaQuery,
   usePrefersReducedMotion,
   useSettled,
