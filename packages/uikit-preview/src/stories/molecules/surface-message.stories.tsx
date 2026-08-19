@@ -1,5 +1,6 @@
 import {
   Button,
+  SurfaceMessage,
   SurfaceMessageActions,
   SurfaceMessageBody,
   SurfaceMessageRoot,
@@ -9,7 +10,6 @@ import {
 import type { ReactNode } from 'react';
 
 import { css } from '../../../styled-system/css';
-import { surfaceMessage } from '../../../styled-system/recipes';
 
 export default {
   title: 'Molecules/Surface Message',
@@ -23,6 +23,19 @@ const stackClassName = css({
   fontFamily: 'sans',
 });
 
+// Root-level override: a wider, squarer frame than the recipe's own.
+const wideFrameClassName = css({
+  borderRadius: '0',
+  borderLeftWidth: '3px',
+  p: '5',
+});
+
+// Slot-level override: the body reads as machine output.
+const monoBodyClassName = css({
+  fontFamily: 'mono',
+  color: 'text.default',
+});
+
 type StoryMessageProps = {
   title: string;
   body: string;
@@ -30,28 +43,20 @@ type StoryMessageProps = {
   actions?: ReactNode;
 };
 
+// The parts style themselves from the `surfaceMessage` recipe, so composing them
+// needs no recipe call and no style props at the call site.
 const renderMessage = ({
   title,
   body,
   tone = 'default',
   actions,
-}: StoryMessageProps) => {
-  const classes = surfaceMessage({ tone });
-
-  return (
-    <SurfaceMessageRoot tone={tone} className={classes.root}>
-      <SurfaceMessageTitle className={classes.title}>
-        {title}
-      </SurfaceMessageTitle>
-      <SurfaceMessageBody className={classes.body}>{body}</SurfaceMessageBody>
-      {actions ? (
-        <SurfaceMessageActions className={classes.actions}>
-          {actions}
-        </SurfaceMessageActions>
-      ) : null}
-    </SurfaceMessageRoot>
-  );
-};
+}: StoryMessageProps) => (
+  <SurfaceMessageRoot tone={tone}>
+    <SurfaceMessageTitle tone={tone}>{title}</SurfaceMessageTitle>
+    <SurfaceMessageBody>{body}</SurfaceMessageBody>
+    {actions ? <SurfaceMessageActions>{actions}</SurfaceMessageActions> : null}
+  </SurfaceMessageRoot>
+);
 
 export const Default = () => (
   <div className={stackClassName}>
@@ -69,6 +74,20 @@ export const Muted = () => (
       body: 'Events will appear here once collaborators start updating the project.',
       tone: 'muted',
     })}
+  </div>
+);
+
+// A consumer `className` (root) and per-slot `classNames` compose on top of the
+// recipe classes instead of losing to inline styles.
+export const ClassNameOverrides = () => (
+  <div className={stackClassName}>
+    <SurfaceMessage
+      title="Reconciliation lagging"
+      body="The last completed run finished 42 minutes ago; downstream figures may be stale."
+      tone="critical"
+      className={wideFrameClassName}
+      classNames={{ body: monoBodyClassName }}
+    />
   </div>
 );
 
