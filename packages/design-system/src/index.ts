@@ -35,7 +35,11 @@ export {
   useHashRoute,
   type HashRoute,
 } from './hooks/index.js';
-export { SkeletonRows } from './components/SkeletonRows.js';
+export {
+  SkeletonRows,
+  type SkeletonColumnHint,
+  type SkeletonColumnKind,
+} from './components/SkeletonRows.js';
 export { SkeletonStack } from './components/SkeletonStack.js';
 export {
   SurfaceMessage,
