@@ -382,6 +382,85 @@ export const Sizes = () => {
   );
 };
 
+// Two columns of the same ramp, the right one inside a `.dark` subtree (the
+// `_dark` condition is `.dark &`, so the dark token values apply without
+// flipping the whole page). Shadow names are written out as literals so Panda
+// statically extracts each step.
+const shadowRampClassName = css({
+  display: 'grid',
+  gap: '4',
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+});
+
+const shadowPanelClassName = css({
+  bg: 'surface.canvas',
+  borderColor: 'border.subtle',
+  borderRadius: 'lg',
+  borderStyle: 'solid',
+  borderWidth: '1px',
+  color: 'text.default',
+  display: 'grid',
+  gap: '5',
+  p: '6',
+});
+
+const shadowTileClassName = css({
+  bg: 'surface.default',
+  borderRadius: 'md',
+  fontSize: 'sm',
+  px: '3',
+  py: '3',
+});
+
+const shadowSteps = [
+  ['xs', css({ boxShadow: 'xs' })],
+  ['sm', css({ boxShadow: 'sm' })],
+  ['elevation', css({ boxShadow: 'elevation' })],
+  ['md', css({ boxShadow: 'md' })],
+  ['lg', css({ boxShadow: 'lg' })],
+  ['overlay', css({ boxShadow: 'overlay' })],
+  ['xl', css({ boxShadow: 'xl' })],
+  ['2xl', css({ boxShadow: '2xl' })],
+] as const;
+
+const renderShadowRamp = (theme: 'light' | 'dark') => (
+  <div
+    className={
+      theme === 'dark' ? `dark ${shadowPanelClassName}` : shadowPanelClassName
+    }
+    key={theme}
+  >
+    <span className={mutedClassName}>{theme}</span>
+    {shadowSteps.map(([name, shadowClassName]) => (
+      <div className={`${shadowTileClassName} ${shadowClassName}`} key={name}>
+        {name}
+      </div>
+    ))}
+  </div>
+);
+
+export const Shadows = () => (
+  <ThemeProvider>
+    <div className={shellClassName}>
+      <div>
+        <h2>Elevation shadows</h2>
+        <p className={mutedClassName}>
+          Every step of the ramp is dark-aware. A black drop shadow is invisible
+          on a near-black surface, so each dark value pairs a deeper, softer
+          drop with an inset top highlight that reads as a lit edge. Ordered by
+          how far the surface lifts off the page, which is why overlay sits
+          between lg and xl.
+        </p>
+      </div>
+
+      <div className={shadowRampClassName}>
+        {renderShadowRamp('light')}
+        {renderShadowRamp('dark')}
+      </div>
+    </div>
+  </ThemeProvider>
+);
+
 export const SemanticTokens = () => (
   <ThemeProvider>
     <div className={shellClassName}>

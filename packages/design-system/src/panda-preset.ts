@@ -318,7 +318,17 @@ const animationTokens = {
  * Dark-aware elevation shadows. A single black rgba shadow is invisible on a
  * near-black dark panel, so the `_dark` variants pair a stronger drop shadow with
  * an inset top highlight to read as a raised edge. `elevation` is the default
- * raised-panel token; `xs`/`sm` override Panda's theme-blind defaults.
+ * raised-panel token; `xs`/`sm`/`md`/`lg`/`xl`/`2xl` override Panda's
+ * theme-blind defaults so the whole size ramp is dark-aware, not just its ends.
+ *
+ * `md`–`2xl` keep Panda's default light values verbatim (they were the shipped
+ * light rendering, and nothing in this package consumes them, so there is no
+ * reason to move a light pixel). Their `_dark` forms follow the same shape as
+ * the ends of the ramp: collapse the two light layers into one deeper, softer
+ * drop layer (~1.3x the light offset and blur) and add the inset top highlight.
+ * Drop-shadow alpha continues the existing progression — xs 0.5, elevation 0.55,
+ * sm 0.6 — through md 0.62, lg 0.64, xl 0.66, 2xl 0.7, and the highlight opens
+ * from 0.06 to 0.08 as the surface lifts further off the page.
  */
 const shadows = {
   elevation: {
@@ -342,8 +352,37 @@ const shadows = {
         '0 2px 4px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)',
     },
   },
+  md: {
+    value: {
+      base: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+      _dark:
+        '0 6px 12px -2px rgba(0, 0, 0, 0.62), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)',
+    },
+  },
+  lg: {
+    value: {
+      base: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+      _dark:
+        '0 12px 20px -4px rgba(0, 0, 0, 0.64), inset 0 1px 0 0 rgba(255, 255, 255, 0.07)',
+    },
+  },
+  xl: {
+    value: {
+      base: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+      _dark:
+        '0 24px 34px -6px rgba(0, 0, 0, 0.66), inset 0 1px 0 0 rgba(255, 255, 255, 0.07)',
+    },
+  },
+  '2xl': {
+    value: {
+      base: '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+      _dark:
+        '0 32px 64px -16px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.08)',
+    },
+  },
   // Floating-overlay elevation (modals, popovers, date pickers) — a step above
-  // the resting `elevation` token.
+  // the resting `elevation` token. Sized between `lg` and `xl`, which is why its
+  // dark alpha (0.6) sits below theirs rather than continuing past them.
   overlay: {
     value: {
       base: '0 12px 32px -8px rgba(9, 9, 11, 0.25), 0 4px 12px -4px rgba(9, 9, 11, 0.12)',
