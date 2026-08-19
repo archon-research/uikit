@@ -18,8 +18,17 @@ export type StatTileAccent = 'neutral' | 'success' | 'warning' | 'critical';
 
 export type StatTileProps = HTMLAttributes<HTMLDivElement> & {
   label: ReactNode;
+  /**
+   * The headline figure. The `value` slot is a wrap-friendly inline row, so this
+   * can be a fragment — a number plus a unit, a delta `Badge`, or a trend icon —
+   * without the consumer supplying layout styles. Long values wrap instead of
+   * overflowing the tile.
+   */
   value: ReactNode;
-  /** Optional supporting caption (delta, unit, timeframe). */
+  /**
+   * Optional supporting caption (delta, unit, timeframe). Laid out like `value`
+   * (inline row, wraps) at one gap step tighter.
+   */
   sub?: ReactNode;
   /** Semantic coloring for the value + sub caption. */
   tone?: StatTileTone;
