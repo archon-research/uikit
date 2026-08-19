@@ -612,11 +612,26 @@ export const designSystemPreset = definePreset({
               },
             },
           },
+          // Status tints for a block of content (a message, a flashed row, a
+          // callout). `canvas` is the page fill the tints sit on.
           bg: {
             canvas: {
               value: {
                 base: '{colors.neutral.50}',
                 _dark: '{colors.neutral.950}',
+              },
+            },
+            // The status-free member of the family: "this block is called out,
+            // and it means nothing good or bad". Without it, a neutral callout
+            // had to borrow `bg.success`/`warning` (miscoloring the state) or
+            // reach past the family for a raw `neutral.100`. One step tighter
+            // than the chromatic tints' 50/950 on purpose — `neutral.50/950` is
+            // already `bg.canvas`, so a neutral tint at that step would be
+            // invisible against the page.
+            neutral: {
+              value: {
+                base: '{colors.neutral.100}',
+                _dark: '{colors.neutral.800}',
               },
             },
             success: {
