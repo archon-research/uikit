@@ -4,7 +4,7 @@ import { createRafBatcher } from './rafBatch.js';
 
 // `createRafBatcher` is the mechanism `usePlayback`'s live-source subscribe
 // path uses to turn "N events arrived this frame" into exactly one
-// `setLiveEvents` commit (see usePlayback.ts). It has no dependency on React
+// state commit (see usePlayback.ts). It has no dependency on React
 // or the DOM beyond `requestAnimationFrame`/`cancelAnimationFrame`, so it's
 // testable directly by controlling a fake rAF queue — this is the test that
 // "many events pushed within one frame yield one committed (flushed)
