@@ -2,13 +2,21 @@ import { LineSubject } from '@visx/annotation';
 import { DataContext } from '@visx/xychart';
 import { useContext } from 'react';
 
+import { resolveChartColor, type ChartColor } from './chart-color.js';
 import { chartTokens, seriesColor } from './theme.js';
 
 type ReferenceBandCommon = {
-  /** Reference stroke color. Defaults to a token role per mode. */
-  stroke?: string;
-  /** Fill color for the shaded region. Defaults to a token-derived tint. */
-  fill?: string;
+  /**
+   * Reference stroke color. Defaults to a token role per mode
+   * (`chart.series.critical` for a threshold, `chart.series.tertiary` for a
+   * band). Prefer a token name; a raw CSS color string also works.
+   */
+  stroke?: ChartColor;
+  /**
+   * Fill color for the shaded region. Defaults to a token-derived `color-mix`
+   * tint of the matching stroke role.
+   */
+  fill?: ChartColor;
   /** Optional label rendered near the reference. */
   label?: string;
 };
@@ -82,10 +90,12 @@ export function ReferenceBand<Datum = unknown>(
     const {
       value,
       breach = 'below',
-      stroke = seriesColor.critical,
-      fill = chartTokens.breachFill,
+      stroke: strokeColor = seriesColor.critical,
+      fill: fillColor = chartTokens.breachFill,
       label,
     } = props;
+    const stroke = resolveChartColor(strokeColor);
+    const fill = resolveChartColor(fillColor);
     const y = yScale(value);
     if (y === undefined || !Number.isFinite(y)) return null;
 
@@ -129,10 +139,12 @@ export function ReferenceBand<Datum = unknown>(
     lowerAccessor,
     upperAccessor,
     centerAccessor,
-    stroke = seriesColor.tertiary,
-    fill = chartTokens.bandFill,
+    stroke: strokeColor = seriesColor.tertiary,
+    fill: fillColor = chartTokens.bandFill,
     label,
   } = props;
+  const stroke = resolveChartColor(strokeColor);
+  const fill = resolveChartColor(fillColor);
   if (data.length === 0) return null;
 
   const bandwidth =

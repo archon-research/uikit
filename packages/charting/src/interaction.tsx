@@ -26,6 +26,8 @@ import {
   type ReactNode,
 } from 'react';
 
+import { resolveChartColor, type ChartColor } from './chart-color.js';
+
 /** A closed timestamp interval, in epoch milliseconds. */
 export interface TimeRange {
   start: number;
@@ -643,11 +645,15 @@ export function useTimeRangeBrushGesture() {
 export function DragSelectionOverlay({
   livePx,
   committedPx,
-  fill = 'var(--colors-chart-series-primary, #155eef)',
+  fill = 'chart.series.primary',
 }: {
   livePx: PixelRange | null;
   committedPx: PixelRange | null;
-  fill?: string;
+  /**
+   * Selection-band fill. Defaults to `chart.series.primary`. Prefer a token
+   * name; a raw CSS color string also works.
+   */
+  fill?: ChartColor;
 }) {
   const dataContext = useContext(DataContext);
   const { setTimeRange } = useDashboardInteraction();
@@ -680,7 +686,7 @@ export function DragSelectionOverlay({
       y={top}
       width={Math.abs(livePx.end - livePx.start)}
       height={Math.max(bottom - top, 0)}
-      fill={fill}
+      fill={resolveChartColor(fill)}
       fillOpacity={0.15}
       pointerEvents="none"
     />

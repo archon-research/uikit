@@ -1,6 +1,7 @@
 import { DataContext } from '@visx/xychart';
 import { useContext, useMemo } from 'react';
 
+import { resolveChartColor, type ChartColor } from './chart-color.js';
 import { seriesColor } from './theme.js';
 
 /** One histogram bucket: the half-open interval `[x0, x1)` and its frequency. */
@@ -106,8 +107,11 @@ type XYChartDataContext = {
 
 /** Visual props shared by both `HistogramSeriesProps` variants. */
 export interface HistogramSeriesVisualProps {
-  /** Bar fill. Defaults to the primary series token. */
-  color?: string;
+  /**
+   * Bar fill. Defaults to `chart.series.primary`. Prefer a token name; a raw
+   * CSS color string also works.
+   */
+  color?: ChartColor;
 }
 
 /**
@@ -141,7 +145,7 @@ export type HistogramSeriesProps = HistogramSeriesVisualProps &
  * mark only positions rects within whatever scales the chart provides.
  */
 export function HistogramSeries(props: HistogramSeriesProps) {
-  const { color = seriesColor.primary } = props;
+  const color = resolveChartColor(props.color ?? seriesColor.primary);
   const bins = 'bins' in props ? props.bins : undefined;
   const values = 'bins' in props ? undefined : props.values;
   const binCount = 'bins' in props ? undefined : props.binCount;
@@ -214,10 +218,16 @@ export interface DistributionSeriesProps {
   sort?: 'asc' | 'desc' | 'none';
   /** The first N bars (after sorting) drawn in `highlightColor`. */
   highlightCount?: number;
-  /** Fill for ordinary bars. Defaults to the primary series token. */
-  color?: string;
-  /** Fill for the first `highlightCount` bars. Defaults to the critical token. */
-  highlightColor?: string;
+  /**
+   * Fill for ordinary bars. Defaults to `chart.series.primary`. Prefer a token
+   * name; a raw CSS color string also works.
+   */
+  color?: ChartColor;
+  /**
+   * Fill for the first `highlightCount` bars. Defaults to
+   * `chart.series.critical`.
+   */
+  highlightColor?: ChartColor;
 }
 
 /**
@@ -237,9 +247,11 @@ export function DistributionSeries({
   data,
   sort = 'none',
   highlightCount = 0,
-  color = seriesColor.primary,
-  highlightColor = seriesColor.critical,
+  color: barColor = seriesColor.primary,
+  highlightColor: headColor = seriesColor.critical,
 }: DistributionSeriesProps) {
+  const color = resolveChartColor(barColor);
+  const highlightColor = resolveChartColor(headColor);
   const {
     xScale,
     yScale,
