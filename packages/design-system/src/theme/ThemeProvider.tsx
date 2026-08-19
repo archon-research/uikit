@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
+import {
+  THEME_LEGACY_STORAGE_KEY,
+  THEME_STORAGE_KEY,
+  isThemeMode,
+} from './theme-storage.js';
 import { ThemeContext, type ThemeMode } from './useTheme.js';
-
-const STORAGE_KEY = 'theme';
-const LEGACY_STORAGE_KEY = 'archon-theme';
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
@@ -14,20 +16,37 @@ function readInitialThemeMode(): ThemeMode {
     return 'auto';
   }
 
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  const legacyStored = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+  const legacyStored = window.localStorage.getItem(THEME_LEGACY_STORAGE_KEY);
   const value = stored ?? legacyStored;
 
-  if (value === 'light' || value === 'dark' || value === 'auto') {
-    return value;
-  }
-
-  return 'auto';
+  return isThemeMode(value) ? value : 'auto';
 }
 
-function readSystemPrefersDark(): boolean {
+/**
+ * In `'auto'` mode the pre-paint bootstrap (`THEME_BOOTSTRAP_SCRIPT`) has
+ * already stamped the resolved system preference onto `<html data-theme>`, so
+ * reading it back keeps the provider's first render in agreement with what the
+ * user is already looking at. That agreement is what stops a hydrated page from
+ * flashing: server-rendered markup has no `matchMedia` to consult, so without
+ * this the provider's first client commit would reset `<html>` to light.
+ *
+ * Only consulted for `'auto'` — under an explicit `'light'`/`'dark'` the stamped
+ * attribute reflects that choice, not the system preference, and seeding from it
+ * would corrupt the value the user sees after switching back to `'auto'`. Falls
+ * back to `matchMedia` whenever no bootstrap ran, so behavior is unchanged
+ * without one.
+ */
+function readSystemPrefersDark(mode: ThemeMode): boolean {
   if (!isBrowser()) {
     return false;
+  }
+
+  if (mode === 'auto') {
+    const appliedTheme = document.documentElement.dataset.theme;
+    if (appliedTheme === 'dark' || appliedTheme === 'light') {
+      return appliedTheme === 'dark';
+    }
   }
 
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -35,8 +54,8 @@ function readSystemPrefersDark(): boolean {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(readInitialThemeMode);
-  const [systemPrefersDark, setSystemPrefersDark] = useState(
-    readSystemPrefersDark,
+  const [systemPrefersDark, setSystemPrefersDark] = useState(() =>
+    readSystemPrefersDark(mode),
   );
   const isApplyingThemeRef = useRef(false);
 
@@ -70,8 +89,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
 
     isApplyingThemeRef.current = true;
-    window.localStorage.setItem(STORAGE_KEY, mode);
-    window.localStorage.setItem(LEGACY_STORAGE_KEY, mode);
+    window.localStorage.setItem(THEME_STORAGE_KEY, mode);
+    window.localStorage.setItem(THEME_LEGACY_STORAGE_KEY, mode);
 
     const effectiveTheme = isDark ? 'dark' : 'light';
     document.documentElement.classList.toggle('dark', isDark);
