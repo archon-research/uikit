@@ -7,6 +7,13 @@ export {
   toSearchText,
 } from './search-params.js';
 export {
+  createUrlSyncedTableAdapter,
+  type UrlSyncedTableAdapterOptions,
+  type UrlSyncedTableNavigate,
+  type UrlSyncedTableNavigateOptions,
+  type UrlSyncedTableStateAdapter,
+} from './table-adapter.js';
+export {
   type CanonicalSearchOptions,
   createSearchParamStripper,
   createValidatedSearchRedirect,
