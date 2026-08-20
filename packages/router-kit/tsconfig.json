@@ -1,0 +1,13 @@
+{
+  "extends": "@archon-research/tsconfig/node",
+  "compilerOptions": {
+    // The node preset, not the react one: nothing here renders. The router is a
+    // peer, so its types resolve regardless, but they reference `History`,
+    // `Location`, and `URL`, so the DOM lib has to be present even though this
+    // package never touches the document.
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
