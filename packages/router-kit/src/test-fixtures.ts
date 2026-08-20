@@ -3,6 +3,7 @@ import {
   createRoute,
   createRouter,
   parseSearchWith,
+  redirect,
   stringifySearchWith,
 } from '@tanstack/react-router';
 import { z } from 'zod';
@@ -20,6 +21,17 @@ import {
  */
 export const parseSearch = parseSearchWith((value: string) => value);
 export const stringifySearch = stringifySearchWith(JSON.stringify);
+
+/**
+ * The router's default grammar, restated here so the specs can check the same
+ * claims under both. It qss-decodes and then JSON-parses every value still a
+ * string, so it coerces strictly more than the identity parser above.
+ */
+export const jsonParseSearch = parseSearchWith(JSON.parse);
+export const jsonStringifySearch = stringifySearchWith(
+  JSON.stringify,
+  JSON.parse,
+);
 
 export const TABS = ['overview', 'detail'] as const;
 
@@ -116,6 +128,43 @@ export function createJsonSearchRouter() {
     routeTree: rootRoute.addChildren([
       createRoute({ getParentRoute: () => rootRoute, path: '/plain' }),
     ]),
+  });
+}
+
+/**
+ * A route tree whose `beforeLoad` hooks are `async` — the shape an auth guard or
+ * a context fetch normally takes. Their redirect arrives as a rejected promise
+ * rather than a synchronous throw, so a harness that does not await would report
+ * the rejected route as settled.
+ */
+export function createAsyncRedirectRouter() {
+  const rootRoute = createRootRoute({
+    validateSearch: sharedSearchSchema,
+  });
+
+  return createRouter({
+    routeTree: rootRoute.addChildren([
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: '/plain',
+        beforeLoad: async () => {
+          await Promise.resolve();
+          throw redirect({ href: '/items', replace: true });
+        },
+      }),
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: '/broken',
+        beforeLoad: async () => {
+          await Promise.resolve();
+          throw new Error('async beforeLoad blew up');
+        },
+      }),
+      createRoute({ getParentRoute: () => rootRoute, path: '/items' }),
+    ]),
+    trailingSlash: 'never',
+    parseSearch,
+    stringifySearch,
   });
 }
 

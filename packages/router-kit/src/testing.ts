@@ -1,3 +1,10 @@
+/**
+ * Testing entry: `@archon-research/router-kit/testing`.
+ *
+ * Kept behind its own subpath so an app bundle never pulls in the memory-history
+ * router this builds. Nothing here is meant to run in production.
+ */
+
 import {
   type AnyRouter,
   createMemoryHistory,
@@ -55,7 +62,8 @@ export type EntryUrlResolution = EntryRedirect | EntryLeaf;
  * `abortController`, `preload` — that only a mounted router can build. Entry-time
  * redirects read the location, the matches, the params, and the search, so those
  * four are what a headless pass provides. A `beforeLoad` reading anything else
- * throws here rather than being silently skipped.
+ * fails loudly here rather than being silently skipped, whether it is sync or
+ * async, because the call is awaited.
  */
 type HeadlessBeforeLoadArgs = {
   cause: 'enter';
@@ -70,13 +78,18 @@ type HeadlessBeforeLoadArgs = {
  * run each matched route's `beforeLoad` in order, and report either the redirect
  * it threw or the leaf that would render.
  *
+ * Async because `beforeLoad` may be — an auth guard or a context fetch usually
+ * is. Each call is awaited, so a redirect thrown from an `async beforeLoad`
+ * arrives as a rejection this can catch. A synchronous throw is caught by the
+ * same `await`, so both shapes go down one path.
+ *
  * `router.load()` is not usable for this — it commits matches through the
  * framework transitioner, so headless it leaves `state.matches` empty.
  */
-export function resolveEntryUrl(
+export async function resolveEntryUrl(
   routerOptions: EntryRouterOptions,
   url: string,
-): EntryUrlResolution {
+): Promise<EntryUrlResolution> {
   const router = createRouter({
     ...routerOptions,
     isServer: false,
@@ -99,7 +112,7 @@ export function resolveEntryUrl(
     }
 
     try {
-      (beforeLoad as (args: HeadlessBeforeLoadArgs) => unknown)({
+      await (beforeLoad as (args: HeadlessBeforeLoadArgs) => unknown)({
         cause: 'enter',
         location: router.latestLocation,
         matches,
@@ -178,23 +191,24 @@ const DEFAULT_MAX_HOPS = 4;
  *
  * it.each(['/', '/items?sort=bogus', '/legacy/path?item=42'])(
  *   'settles %s',
- *   (url) => {
- *     expect(settleEntryUrl(router.options, url).url).toMatchSnapshot();
+ *   async (url) => {
+ *     const settled = await settleEntryUrl(router.options, url);
+ *     expect(settled.url).toMatchSnapshot();
  *   },
  * );
  * ```
  */
-export function settleEntryUrl(
+export async function settleEntryUrl(
   routerOptions: EntryRouterOptions,
   url: string,
   options: SettleEntryUrlOptions = {},
-): SettledEntryUrl {
+): Promise<SettledEntryUrl> {
   const maxHops = options.maxHops ?? DEFAULT_MAX_HOPS;
   const hops = [url];
   let current = url;
 
   for (let hop = 0; hop <= maxHops; hop += 1) {
-    const result = resolveEntryUrl(routerOptions, current);
+    const result = await resolveEntryUrl(routerOptions, current);
 
     if (result.redirectTo === null) {
       return { url: current, hops, result };
@@ -211,6 +225,10 @@ export function settleEntryUrl(
   }
 
   throw new Error(
-    `"${url}" never stopped redirecting within ${maxHops} hops: ${hops.join(' -> ')}`,
+    `"${url}" never stopped redirecting within ${pluralizeHops(maxHops)}: ${hops.join(' -> ')}`,
   );
+}
+
+function pluralizeHops(count: number): string {
+  return count === 1 ? '1 hop' : `${count} hops`;
 }

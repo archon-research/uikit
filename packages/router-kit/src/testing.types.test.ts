@@ -4,6 +4,7 @@ import { createToyRouter } from './test-fixtures.js';
 import {
   type EntryUrlResolution,
   resolveEntryUrl,
+  type SettledEntryUrl,
   settleEntryUrl,
 } from './testing.js';
 
@@ -20,12 +21,15 @@ describe('settleEntryUrl — inference', () => {
   });
 });
 
-export function typeAssertions(): void {
+export async function typeAssertions(): Promise<void> {
   const { options } = createToyRouter();
 
   // Checking `redirectTo` narrows to the settled leaf, so the route identity is
   // no longer optional.
-  const resolution: EntryUrlResolution = resolveEntryUrl(options, '/plain');
+  const resolution: EntryUrlResolution = await resolveEntryUrl(
+    options,
+    '/plain',
+  );
   if (resolution.redirectTo === null) {
     expectTypeOf(resolution.routeId).toEqualTypeOf<string>();
     expectTypeOf(resolution.params).toEqualTypeOf<Record<string, string>>();
@@ -36,13 +40,16 @@ export function typeAssertions(): void {
   // Un-narrowed reads still work, which is what an assertion usually wants.
   expectTypeOf(resolution.replace).toEqualTypeOf<boolean | undefined>();
 
-  // A settled result is always the leaf arm, never a redirect.
-  expectTypeOf(
-    settleEntryUrl(options, '/plain').result.redirectTo,
-  ).toEqualTypeOf<null>();
-  expectTypeOf(settleEntryUrl(options, '/plain').hops).toEqualTypeOf<
-    readonly string[]
+  // Both entry points are async: a `beforeLoad` may be, and awaiting it is what
+  // makes an async redirect reachable at all.
+  expectTypeOf(settleEntryUrl(options, '/plain')).toEqualTypeOf<
+    Promise<SettledEntryUrl>
   >();
+
+  // A settled result is always the leaf arm, never a redirect.
+  const settled = await settleEntryUrl(options, '/plain');
+  expectTypeOf(settled.result.redirectTo).toEqualTypeOf<null>();
+  expectTypeOf(settled.hops).toEqualTypeOf<readonly string[]>();
 
   // @ts-expect-error - a route tree is not a router options object; the parse
   // and stringify config is exactly what must not be rebuilt here
