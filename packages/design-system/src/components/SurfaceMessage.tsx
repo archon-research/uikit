@@ -29,7 +29,8 @@ export type SurfaceMessageSlotClassNames = {
 };
 
 export type SurfaceMessageProps = HTMLAttributes<HTMLDivElement> & {
-  title: string;
+  /** Omitted: the message renders body-only (a plain note). */
+  title?: string;
   body: string;
   tone?: SurfaceMessageTone;
   /**
@@ -154,9 +155,11 @@ export function SurfaceMessage({
       tone={tone}
       className={cx(className, classNames?.root)}
     >
-      <SurfaceMessageTitle tone={tone} className={classNames?.title}>
-        {title}
-      </SurfaceMessageTitle>
+      {title === undefined ? null : (
+        <SurfaceMessageTitle tone={tone} className={classNames?.title}>
+          {title}
+        </SurfaceMessageTitle>
+      )}
       <SurfaceMessageBody className={classNames?.body}>
         {body}
       </SurfaceMessageBody>
