@@ -12,8 +12,11 @@ export {
 export type { ChartThemeConfig } from './theme.js';
 
 // Typed chart color tokens: the default way to name a color in this package.
-// Every color-accepting prop below takes `ChartColor`, so `'chart.series.primary'`
+// Props declared BY THIS PACKAGE take `ChartColor`, so `'chart.series.primary'`
 // is compile-checked while a raw string stays available as the escape hatch.
+// The raw visx re-exports (LineSeries, AreaSeries, Axis*, ...) forward visx's
+// own props and do NOT resolve token names — theme them via `buildChartTheme`
+// or pass `resolveChartColor(token)` explicitly.
 export {
   chartColorToken,
   chartColorTokens,
