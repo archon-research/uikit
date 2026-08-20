@@ -1,11 +1,27 @@
 import { describe, expect, it } from 'vitest';
 
-import { stringifySearch } from './test-fixtures.js';
+import {
+  createNonConvergingRouter,
+  createPushingRouter,
+  createToyRouter,
+  stringifySearch,
+} from './test-fixtures.js';
+import { resolveEntryUrl, settleEntryUrl } from './testing.js';
 import {
   createSearchParamStripper,
   createValidatedSearchRedirect,
   rendersSameSearch,
 } from './validated-search.js';
+
+const toyRouter = createToyRouter();
+
+function settle(url: string): string {
+  return settleEntryUrl(toyRouter.options, url).url;
+}
+
+function redirectOf(url: string) {
+  return resolveEntryUrl(toyRouter.options, url);
+}
 
 describe('rendersSameSearch', () => {
   it('compares as URL text, so a coerced number matches its string', () => {
@@ -37,6 +53,52 @@ describe('rendersSameSearch', () => {
 });
 
 describe('createValidatedSearchRedirect', () => {
+  it('leaves a URL that already renders what validation applied', () => {
+    expect(redirectOf('/plain').redirectTo).toBeNull();
+    expect(redirectOf('/plain?tab=overview&q=x').redirectTo).toBeNull();
+  });
+
+  it('leaves a URL whose keys are merely out of the canonical order', () => {
+    expect(redirectOf('/plain?q=x&tab=overview').redirectTo).toBeNull();
+  });
+
+  it('rewrites the address bar to what validation kept', () => {
+    expect(settle('/plain?tab=bogus')).toBe('/plain');
+    expect(settle('/plain?tab=bogus&q=x')).toBe('/plain?q=x');
+    expect(settle('/plain?q=%20padded%20')).toBe('/plain?q=padded');
+  });
+
+  it('drops a param no route on the branch validates', () => {
+    expect(settle('/plain?unvalidated=1')).toBe('/plain');
+  });
+
+  it('drops a param that is present but empty', () => {
+    expect(settle('/plain?q=')).toBe('/plain');
+    expect(settle('/plain?q')).toBe('/plain');
+  });
+
+  it('redirects to an explicit href rather than a relative target', () => {
+    const resolution = redirectOf('/plain?tab=bogus');
+
+    expect(resolution.redirectTo).toBe('/plain');
+    expect(resolution.redirectTo).not.toBe('.');
+  });
+
+  it('replaces, so a rejected URL stays out of the back history', () => {
+    expect(redirectOf('/plain?tab=bogus').replace).toBe(true);
+  });
+
+  it('carries the hash across the rewrite', () => {
+    expect(settle('/plain?tab=bogus#section')).toBe('/plain#section');
+  });
+
+  it('reaches a fixed point in one hop, then stops', () => {
+    const settled = settleEntryUrl(toyRouter.options, '/plain?tab=bogus&q=x');
+
+    expect(settled.hops).toEqual(['/plain?tab=bogus&q=x', '/plain?q=x']);
+    expect(redirectOf(settled.url).redirectTo).toBeNull();
+  });
+
   it('is a no-op on a context whose matches carry no strict search', () => {
     const cleanup = createValidatedSearchRedirect({ stringifySearch });
 
@@ -50,11 +112,67 @@ describe('createValidatedSearchRedirect', () => {
 });
 
 describe('createSearchParamStripper', () => {
-  it('is a no-op when the key is already absent', () => {
+  it('drops the key on the branch that owns the value elsewhere', () => {
+    expect(settle('/items/42?item=7')).toBe('/items/42');
+  });
+
+  it('carries every other param across untouched', () => {
+    expect(settle('/items/42?item=7&q=x&tab=detail')).toBe(
+      '/items/42?q=x&tab=detail',
+    );
+  });
+
+  it('leaves the key alone on a branch that does not strip it', () => {
+    expect(settle('/plain?item=7')).toBe('/plain?item=7');
+  });
+
+  it('does not redirect when the key is already absent', () => {
+    expect(redirectOf('/items/42?q=x').redirectTo).toBeNull();
+  });
+
+  it('replaces rather than pushes', () => {
+    expect(redirectOf('/items/42?item=7').replace).toBe(true);
+  });
+
+  it('composes with the root cleanup and settles once', () => {
+    const settled = settleEntryUrl(
+      toyRouter.options,
+      '/items/42?item=7&tab=bogus',
+    );
+
+    expect(settled.url).toBe('/items/42');
+    expect(redirectOf(settled.url).redirectTo).toBeNull();
+  });
+
+  it('is a no-op when the context search is not a record', () => {
     const strip = createSearchParamStripper('item', { stringifySearch });
 
     expect(() =>
       strip({ location: { pathname: '/items/42', hash: '' }, search: {} }),
     ).not.toThrow();
+  });
+});
+
+describe('the loop-safety the cleanup depends on', () => {
+  it('never settles when a schema is not idempotent', () => {
+    const router = createNonConvergingRouter();
+
+    expect(() => settleEntryUrl(router.options, '/plain?grows=a')).toThrow(
+      /never stopped redirecting/,
+    );
+  });
+
+  it('settles for the same tree when the param is absent', () => {
+    const router = createNonConvergingRouter();
+
+    expect(settleEntryUrl(router.options, '/plain').url).toBe('/plain');
+  });
+
+  it('rejects a redirect that pushes instead of replacing', () => {
+    const router = createPushingRouter();
+
+    expect(() => settleEntryUrl(router.options, '/plain')).toThrow(
+      /without replace/,
+    );
   });
 });
