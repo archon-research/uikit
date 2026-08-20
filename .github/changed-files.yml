@@ -21,6 +21,9 @@ demo_relay:
 # `npm test` runs every workspace's suite, so a change confined to one of these
 # still has to trigger the test job.
 vitest:
+  - packages/design-system/**
+  - packages/charting/**
+  - packages/dashboard-kit/**
   - packages/http-client-core/**
   - packages/http-client-react/**
   - packages/http-client-msw/**
