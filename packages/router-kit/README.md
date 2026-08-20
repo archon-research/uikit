@@ -248,10 +248,17 @@ do not normally need either.
 | `@tanstack/react-router` | `^1.170.0`    |
 | `zod`                    | `^4.0.0`      |
 
-Both are peers because both cross the API boundary in a way a second copy would
-break: the router's `redirect` must be the one your router recognizes, and zod
-schemas built here are composed into `z.object({...})` in your app, where two
-copies of zod 4 do not typecheck against each other.
+Both are peers because a second copy of either would break something real:
+
+- **The router** carries its types through module augmentation. Your
+  `declare module '@tanstack/react-router' { interface Register { ... } }` binds
+  to one copy, so a second one leaves your route paths and search types
+  unavailable to it. React context is per-copy too, so hooks from one copy return
+  nothing inside the other's provider.
+- **zod** schemas built here are composed into `z.object({ ... })` in your app.
+  Schemas from two copies are not reliably interchangeable, and when they are
+  not, the failure reads as an opaque variance error at the route definition
+  rather than as a duplicate dependency.
 
 The floor is the line this package is developed and tested against, and the caret
 means router and zod patch/minor upgrades do not need a release here. The one

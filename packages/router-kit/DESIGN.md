@@ -49,10 +49,13 @@ than as separate concerns.
 
 ### `@tanstack/react-router` — peer, `^1.170.0`
 
-The premise of the package. A bundled copy would mean two module instances, two
-`Register` interfaces, and a `redirect` the app's router does not recognize as
-its own. Declared as a devDependency at the same line for the test suite, which
-drives real routers headlessly.
+The premise of the package. A bundled copy would mean two module instances and
+therefore two `Register` interfaces, so the app's own route paths and search
+types would not reach this package's helpers; React context is per-copy as well.
+(Not `redirect` identity — `isRedirect` tests `instanceof Response` against the
+global, so a redirect does survive crossing copies. The types do not.) Declared
+as a devDependency at the same line for the test suite, which drives real routers
+headlessly.
 
 The floor is the line this package is developed and tested against, and it is
 recorded rather than left open for one specific reason: both `validated-search`
@@ -73,11 +76,11 @@ harmless.
 
 Here schemas cross the boundary in both directions. `textParam()` is built by
 this package and composed into `z.object({ ... })` in the app, which is then
-handed to `validateSearch`. Under two copies of zod 4 that composition does not
-typecheck — the schema types are keyed on zod's own internal shape, so a schema
-from copy A is not a `$ZodType` of copy B — and the failure reads as an
-inscrutable variance error rather than as a duplicate dependency. A peer makes it
-one install.
+handed to `validateSearch`. Schemas from two copies of zod 4 are not reliably
+interchangeable in that composition — the types are keyed on zod's own internal
+shape — and when they are not, the failure reads as an inscrutable variance error
+at the route definition rather than as a duplicate dependency. A peer makes it
+one install and the question does not arise.
 
 ### `@archon-research/design-system` — not a dependency at all
 
