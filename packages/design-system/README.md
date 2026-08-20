@@ -123,7 +123,9 @@ With a strict CSP that allows inline scripts only by nonce, pass yours through:
 
 **2. Copied file (`script-src 'self'` — no inline scripts allowed).** The same
 code is built to `dist/theme-bootstrap.js` as a plain browser script. Copy it
-into the directory you serve static assets from, as part of your build:
+into the directory you serve static assets from, as part of your build (under
+the `uikit-cli link` flow this file exists only after the linked checkout has
+run `npm run build` — resolution through the symlink then works as normal):
 
 ```jsonc
 // package.json
