@@ -16,14 +16,14 @@ decisions and what is deliberately not here.
 npm install @archon-research/router-kit @tanstack/react-router zod
 ```
 
-Both are peer dependencies. See [peer-version policy](#peer-version-policy) for
-what that means for upgrades.
+`@tanstack/react-router` and `zod` are both peer dependencies. See
+[peer-version policy](#peer-version-policy) for what that means for upgrades.
 
 ## The thing to know first: the query decoder coerces
 
-The router decodes the query string **before** any `validateSearch` parser runs.
-That decoder rewrites values, so a parser written against `string` meets four
-other shapes in production:
+Your `validateSearch` never sees the raw query text — `parseSearch` has already
+decoded it, and decoding rewrites values. So a parser written against `string`
+meets four other shapes in production:
 
 | URL             | value your parser actually receives |
 | --------------- | ----------------------------------- |
@@ -32,16 +32,30 @@ other shapes in production:
 | `?q=` or `?q`   | the empty string `''`               |
 | `?q=a&q=b`      | the array `['a', 'b']`              |
 
-Registering a custom `parseSearch` does not move this: the decoder runs first and
-your parser only sees what it produced. This is the single most common source of
-"the param works in dev and vanishes in production" — `?page=2` typed by hand
-becomes a number, a `z.string()` schema rejects it, and the route throws.
+This is the single most common source of "the param works in dev and vanishes in
+production" — `?page=2` typed by hand becomes a number, a `z.string()` schema
+rejects it, and the route throws.
 
-The coercion is narrower than it first looks, and the narrowness is what makes
-normalization safe rather than lossy: a number is only produced when the text is
-that number's own canonical spelling, so `0001`, `1e5`, `-0`, `Infinity`, `NaN`,
-and `null` all stay strings. Every value `toSearchText` returns therefore renders
-back to the exact text it came from.
+How much coercion depends on which grammar your router was built with, and both
+common choices coerce:
+
+- **`parseSearchWith(JSON.parse)`** — the router's default, so this is what you
+  get by not configuring one. It applies the decode above and then `JSON.parse`s
+  every value still a string, so `?v=1e5` arrives as `100000`, `?v=null` as
+  `null`, and `?v=-0` as `0`.
+- **`parseSearchWith((value) => value)`** — the identity parser, for apps whose
+  params are all plain text. It stops after the decode, so those three stay
+  strings.
+
+A hand-written `parseSearch` *is* the decoder rather than a stage after it, so it
+can opt out — but then it owns the whole grammar.
+
+`toSearchText` is idempotent under either: feed its own output back through a
+render-and-redecode round trip and you get that output unchanged. What it does
+**not** promise is byte-preserved URL text — under the default grammar `?v=1e5`
+canonicalizes to `100000`, because the value really was decoded to a number.
+That is one rewrite, not a loop; the second pass is stable, and step 4 is what
+proves it.
 
 `textParam()` and `oneOfParam()` absorb all of it. Reach for `toSearchText` or
 `toSearchOption` directly when a control needs to apply the same rule while
@@ -208,17 +222,23 @@ describe('entry URLs', () => {
     '/items?tab=bogus',
     '/items/42?item=7',
     '/unknown/deep/path',
-  ])('settles %s', (url) => {
-    expect(() => settleEntryUrl(router.options, url)).not.toThrow();
+  ])('settles %s', async (url) => {
+    await expect(settleEntryUrl(router.options, url)).resolves.toBeDefined();
   });
 
-  it('rewrites a rejected param out of the address bar', () => {
-    expect(settleEntryUrl(router.options, '/items?tab=bogus').url).toBe(
-      '/items',
-    );
+  it('rewrites a rejected param out of the address bar', async () => {
+    const settled = await settleEntryUrl(router.options, '/items?tab=bogus');
+
+    expect(settled.url).toBe('/items');
   });
 });
 ```
+
+Both entry points are async, so `await` them. That is not incidental: a
+`beforeLoad` is often `async` — an auth guard or a context fetch — and its
+redirect then arrives as a rejected promise rather than a synchronous throw. A
+harness that did not await would report the *rejected* route as the settled one,
+so your spec would pass while production redirected somewhere else.
 
 It takes `router.options` rather than a route tree on purpose. `parseSearch`,
 `stringifySearch`, `trailingSlash`, `caseSensitive`, and `basepath` all decide
@@ -238,8 +258,8 @@ Both assertions cover a failure that is invisible from inside the app:
 
 Known limit: the harness supplies a `beforeLoad` with `location`, `matches`,
 `params`, and `search`. A `beforeLoad` that reads route `context` or calls
-`navigate` throws here rather than being silently skipped — entry-time redirects
-do not normally need either.
+`navigate` fails loudly here rather than being silently skipped — entry-time
+redirects do not normally need either, and a loud failure is the point.
 
 ## Peer-version policy
 
@@ -299,13 +319,23 @@ From the root entry:
 
 From `@archon-research/router-kit/testing`:
 
-| Export                | Kind     |
-| --------------------- | -------- |
-| `settleEntryUrl`      | function |
-| `resolveEntryUrl`     | function |
-| `EntryRouterOptions`  | type     |
-| `EntryUrlResolution`  | type     |
-| `EntryRedirect`       | type     |
-| `EntryLeaf`           | type     |
-| `SettleEntryUrlOptions` | type   |
-| `SettledEntryUrl`     | type     |
+| Export                  | Kind     |
+| ----------------------- | -------- |
+| `settleEntryUrl`        | function |
+| `resolveEntryUrl`       | function |
+| `EntryRouterOptions`    | type     |
+| `EntryUrlResolution`    | type     |
+| `EntryRedirect`         | type     |
+| `EntryLeaf`             | type     |
+| `SettleEntryUrlOptions` | type     |
+| `SettledEntryUrl`       | type     |
+
+Both functions return promises — see [step 4](#4-prove-the-entry-urls-settle).
+
+## See also
+
+- [design-system](../design-system) for `useUrlSyncedTableStateAdapter` and the
+  `DataTable` this package's adapter feeds
+- [http-client-react](../http-client-react) for the TanStack Query layer that a
+  future loader/query glue would have to straddle (see
+  [DESIGN.md](./DESIGN.md#loader-and-query-glue))
