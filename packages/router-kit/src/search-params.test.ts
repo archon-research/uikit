@@ -7,6 +7,8 @@ import {
   toSearchText,
 } from './search-params.js';
 import {
+  jsonParseSearch,
+  jsonStringifySearch,
   parseSearch,
   SEARCH_VALUE_CORPUS,
   stringifySearch,
@@ -17,14 +19,27 @@ import {
  * Renders a normalized value into a query string and decodes it back through
  * the router's own parser, so the idempotence claims below are checked against
  * the real decoder rather than a restatement of what it is believed to do.
+ *
+ * Two grammars, because the amount of coercion depends on which one the router
+ * was built with: the identity parser stops after the qss decode, the default
+ * one JSON-parses on top of it.
  */
 function throughUrl(value: string | undefined): unknown {
   const query = stringifySearch(value === undefined ? {} : { k: value });
   return (parseSearch(query) as Record<string, unknown>).k;
 }
 
+function throughJsonUrl(value: string | undefined): unknown {
+  const query = jsonStringifySearch(value === undefined ? {} : { k: value });
+  return (jsonParseSearch(query) as Record<string, unknown>).k;
+}
+
 function decodeUrl(query: string): unknown {
   return (parseSearch(query) as Record<string, unknown>).k;
+}
+
+function decodeJsonUrl(query: string): unknown {
+  return (jsonParseSearch(query) as Record<string, unknown>).k;
 }
 
 describe('toSearchText — the decoder shapes it exists to absorb', () => {
@@ -84,6 +99,33 @@ describe('toSearchText — the idempotence contract', () => {
       expect(toSearchText(throughUrl(once))).toBe(once);
     },
   );
+
+  // The contract has to hold under the router's *default* grammar too, which
+  // JSON-parses on top of the qss decode and so coerces strictly more. That is
+  // the grammar an app gets by not configuring one.
+  it.each(SEARCH_VALUE_CORPUS.map((value) => ({ value })))(
+    'survives the round trip under the default JSON grammar for %o',
+    ({ value }) => {
+      const once = toSearchText(value);
+
+      expect(toSearchText(throughJsonUrl(once))).toBe(once);
+    },
+  );
+
+  // Idempotence is not text preservation, and the gap is worth pinning: under
+  // the JSON grammar these really were decoded to numbers, so the canonical URL
+  // differs from the one typed — once, and then it holds.
+  it.each([
+    { url: '?k=1e5', identity: '1e5', json: '100000' },
+    { url: '?k=-0', identity: '-0', json: '0' },
+  ])('$url canonicalizes per grammar, then holds', (testCase) => {
+    expect(toSearchText(decodeUrl(testCase.url))).toBe(testCase.identity);
+
+    const jsonOnce = toSearchText(decodeJsonUrl(testCase.url));
+
+    expect(jsonOnce).toBe(testCase.json);
+    expect(toSearchText(throughJsonUrl(jsonOnce))).toBe(jsonOnce);
+  });
 });
 
 describe('toSearchOption', () => {

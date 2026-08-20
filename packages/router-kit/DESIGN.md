@@ -18,11 +18,15 @@ across apps belongs here.
 
 ## The four modules and the failure each removes
 
-**`search-params.ts`** — the query decoder coerces values before any parser
-runs, so a schema written against `string` meets numbers, booleans, empty
-strings, and arrays in production. The builders absorb that, and they are total
-(no input fails, so a route never throws on a hand-edited URL) and idempotent (a
-normalized value survives a render-and-redecode round trip unchanged).
+**`search-params.ts`** — `parseSearch` decodes the query string before
+`validateSearch` sees it, and decoding coerces, so a schema written against
+`string` meets numbers, booleans, empty strings, and arrays in production. How
+much it coerces depends on the grammar — the default `parseSearchWith(JSON.parse)`
+coerces strictly more than an identity parser, which is why the specs check both.
+The builders absorb it, and they are total (no input fails, so a route never
+throws on a hand-edited URL) and idempotent under either grammar. Idempotence is
+not text preservation: the default grammar canonicalizes `?v=1e5` to `100000`
+once, and then holds.
 
 **`validated-search.ts`** — the schemas drop what they cannot honour, but the
 address bar keeps it, so a URL advertises state the page is not in. The root
@@ -145,6 +149,15 @@ router reads differently, which is a non-convergent chain, which is what
 type is assignable without needing an implicit index signature — an app that
 names its search type with an `interface` would otherwise fail to compile at the
 route definition.
+
+**The harness is async.** `resolveEntryUrl` awaits each `beforeLoad`, so the
+public API is `Promise`-returning. That is not a stylistic choice: an `async
+beforeLoad` — the normal shape for an auth guard or a context fetch — throws its
+redirect as a *rejected promise*, which a synchronous `try`/`catch` does not see.
+A sync harness reports the rejected route as the settled one, so the consumer's
+assertion passes while production redirects elsewhere, and the redirect escapes
+as an unattributed unhandled rejection naming neither the route nor the URL.
+Awaiting also subsumes the synchronous case, so both shapes take one path.
 
 **The harness throws rather than returning a failure.** It is a test helper; a
 returned error object gets destructured and ignored. A throw cannot be.

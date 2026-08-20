@@ -6,9 +6,9 @@ import { z } from 'zod';
  *
  * ## Why a normalizer is needed at all
  *
- * The router decodes the query string **before** any `validateSearch` parser
- * runs, and that decoder coerces spellings. A parser written against `string`
- * therefore meets four other shapes in production:
+ * `validateSearch` never sees the raw query text. `parseSearch` has already
+ * decoded it, and decoding coerces spellings, so a parser written against
+ * `string` meets four other shapes in production:
  *
  * | URL              | value reaching the parser |
  * | ---------------- | ------------------------- |
@@ -17,18 +17,29 @@ import { z } from 'zod';
  * | `?q=` or `?q`    | the empty string `''`     |
  * | `?q=a&q=b`       | the array `['a', 'b']`    |
  *
- * Registering a custom `parseSearch` does not move this: the decoder runs first
- * and the custom parser only sees what it produced.
+ * How much coercion depends on the grammar the router was built with, and both
+ * common choices coerce:
  *
- * ## Why the round trip is stable
+ * - `parseSearchWith(JSON.parse)` — the router's **default**. It applies the qss
+ *   decode above and then `JSON.parse`s every value still a string, so `?v=1e5`
+ *   arrives as `100000`, `?v=null` as `null`, and `?v=-0` as `0`.
+ * - `parseSearchWith((value) => value)` — the identity parser, for apps whose
+ *   params are plain text. Stops after the qss decode, so those three stay
+ *   strings.
  *
- * The coercion is narrower than it looks, and that narrowness is what makes
- * this function a fixed point rather than a lossy pass. The decoder only
- * produces a number when the text is that number's own canonical spelling
- * (`+text + '' === text`), so `0001`, `1e5`, `-0`, `Infinity`, `NaN`, and `null`
- * all stay strings. Every non-empty string this returns therefore renders back
- * to the exact text it came from, and re-decodes to a value this maps to the
- * same string again.
+ * A hand-written `parseSearch` is the decoder rather than a stage after it, so
+ * it can opt out entirely — but then it owns the whole grammar.
+ *
+ * ## What is and is not promised
+ *
+ * **Promised: idempotence.** Feeding this function's own output back through a
+ * render-and-redecode round trip returns that output unchanged, under either
+ * grammar above. That is the property the entry-time cleanup needs to terminate.
+ *
+ * **Not promised: byte-preserved URL text.** Under the default grammar `?v=1e5`
+ * canonicalizes to `100000` and `?v=-0` to `0`, because the value really was
+ * decoded to a number. That is one rewrite, not a loop — the second pass is
+ * stable, which is what the settle harness checks.
  */
 export function toSearchText(value: unknown): string | undefined {
   if (typeof value === 'number' || typeof value === 'boolean') {
@@ -57,7 +68,16 @@ export function toSearchOption<T extends string>(
   allowed: readonly T[],
 ): T | undefined {
   const text = toSearchText(value);
-  return allowed.includes(text as T) ? (text as T) : undefined;
+
+  if (text === undefined) {
+    return undefined;
+  }
+
+  // Widened rather than narrowed: `includes` on a `readonly T[]` would demand a
+  // `T` here, which is the very thing being decided. One cast on the way out.
+  return (allowed as readonly string[]).includes(text)
+    ? (text as T)
+    : undefined;
 }
 
 /**
@@ -106,27 +126,19 @@ export function oneOfParam<T extends string>(
 }
 
 /*
- * ## The contract these builders hold
+ * ## Writing a param of your own
  *
- * Every builder here is **total** and **idempotent**, and both properties are
- * load-bearing rather than incidental.
+ * The total-and-idempotent contract (see `toSearchText`) is what
+ * `createValidatedSearchRedirect` needs to terminate, so a custom param has to
+ * keep it. Three rules cover it:
  *
- * **Total** — no input fails. The parser accepts `unknown` and answers with a
- * value or `undefined` for every one of them, so `validateSearch` never rejects
- * a URL. A hand-edited, stale, or bot-mangled param degrades to absent and the
- * route still renders; it cannot 404 the page or throw inside a router
- * transition.
+ *  1. Build on `toSearchText`, so the decoder's coercions are already absorbed.
+ *  2. Keep the transform a pure function of that text — no state, no clock, no
+ *     counter. A param that grows or varies per call cannot converge.
+ *  3. Return absent, or a value that renders to text this module maps back to
+ *     that same value. Notably `null` is *not* such a value: it is neither
+ *     dropped as absent nor stable across both grammars.
  *
- * **Idempotent** — normalizing an already-normalized value, through a full
- * render-and-redecode round trip, returns it unchanged. This is what makes the
- * URL-truthfulness cleanup in `validated-search.ts` terminate: that helper
- * rewrites the address bar to whatever validation applied, so a param whose
- * output failed to re-validate to itself would rewrite the same URL forever.
- * The settle harness in `testing.ts` is the executable check — it follows entry
- * redirects to a fixed point and throws when one is not reached.
- *
- * A custom param built on top of these keeps the contract as long as its
- * transform is a pure function of the normalized text with no state and no
- * clock, and its output is either absent or a value that renders to text this
- * module maps back to that same output.
+ * `settleEntryUrl` (from the `/testing` subpath) is the executable check — point
+ * it at the real route tree and it fails on a param that does not converge.
  */
