@@ -18,9 +18,12 @@ const IS_DEV_WARNING_ENABLED =
  * Every chart color token, keyed by its design-system token path, mapped to the
  * CSS-variable string that reads it.
  *
- * This is the package's authoritative list of token NAMES: `ChartColorToken`
- * derives from its keys, so a chart color prop accepts `'chart.series.primary'`
- * as a checked literal and rejects `'chart.series.primry'` at compile time.
+ * This is the package's authoritative list of token NAMES. `ChartColorToken`
+ * derives from its keys, so `'chart.series.primary'` autocompletes wherever a
+ * chart color is accepted, and a misspelling of it is a compile error wherever
+ * `ChartColorToken` itself is the annotation. On a `ChartColor` prop it is not —
+ * the `(string & {})` arm makes `'chart.series.primry'` legal — so the same list
+ * also backs the dev-time unknown-path warning at the bottom of this file.
  *
  * The names are duplicated from `chartColorSemanticTokens` in the design system
  * rather than imported from it. That is deliberate: the design system is an
@@ -78,9 +81,12 @@ export type ChartColorToken = keyof typeof chartColorTokens;
 /**
  * The type every color-accepting prop in this package takes.
  *
- * Prefer the token form — `color="chart.series.primary"` — which is checked
- * against the design system's token contract, so a typo is a compile error
- * instead of an unresolved `var()` and a silently dropped CSS declaration.
+ * Prefer the token form — `color="chart.series.primary"` — which the editor
+ * autocompletes from the union below. Note what the `(string & {})` arm costs:
+ * a MISSPELLED token path (`'chart.series.primry'`) is a legal `ChartColor`,
+ * because it is a legal string. The compile error only lands where the narrower
+ * `ChartColorToken` is the annotation. A typo'd path is instead caught at
+ * runtime, in development, by {@link resolveChartColor}'s guard.
  *
  * Any other string still works as the escape hatch (a raw `var(...)`, a hex, a
  * `color-mix(...)`, a gradient `url(#id)`), for one-off colors and for values
@@ -127,22 +133,54 @@ const knownCssVarNames: ReadonlySet<string> = new Set(
  */
 const ownedVarPattern = /^var\(\s*(--colors-(?:chart|identity)-[\w-]*)/;
 
+/**
+ * Matches a string SHAPED like a token path in the two namespaces this package
+ * owns. Reached only after the exact-token lookup in {@link resolveChartColor}
+ * has already missed, so a match here is a path that does not exist — the
+ * likeliest way to misuse a `ChartColor` prop, since the `(string & {})` arm of
+ * the type lets `'chart.series.primry'` compile.
+ *
+ * False positives are impossible rather than unlikely: no CSS color syntax
+ * (hex, `rgb()`, `var()`, `color-mix()`, `url()`, a named color) starts with
+ * `chart.` or `identity.`, and both namespaces are enumerated in full above.
+ */
+const ownedTokenPathPattern = /^(?:chart|identity)\./;
+
 /** Warned-once keys, so a color in a per-frame render loop logs a single line. */
 const warnedColors = new Set<string>();
 
+/** Logs `message` the first time `key` is seen. */
+function warnOnce(key: string, message: string): void {
+  if (warnedColors.has(key)) return;
+  warnedColors.add(key);
+  console.warn(message);
+}
+
 /**
  * Dev-only: turn a misspelled chart token into a console signal. Without this a
- * typo'd custom property is invisible — the browser drops the declaration and
- * the mark renders with the SVG default (black, or nothing at all).
+ * typo is invisible in both of its forms — a typo'd custom property makes the
+ * browser drop the declaration, and a typo'd token PATH reaches the SVG
+ * attribute verbatim as an invalid color. Either way the mark renders with the
+ * SVG default (black, or nothing at all).
  */
 function warnUnknownChartColor(color: string): void {
+  if (ownedTokenPathPattern.test(color)) {
+    warnOnce(
+      color,
+      `[charting] "${color}" is not a known chart color token. It reached an ` +
+        `SVG attribute verbatim, which is not a valid color, so the mark will ` +
+        `render unstyled. Check the path against ChartColorToken — the ` +
+        `\`(string & {})\` arm of \`ChartColor\` means a misspelled token ` +
+        `path still compiles.`,
+    );
+    return;
+  }
   const match = ownedVarPattern.exec(color);
   if (!match) return;
   const varName = match[1]!;
   if (knownCssVarNames.has(varName)) return;
-  if (warnedColors.has(varName)) return;
-  warnedColors.add(varName);
-  console.warn(
+  warnOnce(
+    varName,
     `[charting] "${varName}" is not a known chart color token, so this ` +
       `declaration will be dropped and the mark will render unstyled. Pass a ` +
       `token name instead of a raw var() string (e.g. ` +
@@ -155,9 +193,11 @@ function warnUnknownChartColor(color: string): void {
  * value through here before it reaches an SVG attribute. A token name becomes
  * its `var(...)` string; anything else passes through untouched.
  *
- * In development it also warns (once per offending custom property) for a raw
- * `var(--colors-chart-*)` / `var(--colors-identity-*)` string naming a token
- * that does not exist. Production builds strip that check entirely.
+ * In development it also warns — once per offending value — for the two ways a
+ * chart color can be misspelled: a `chart.*` / `identity.*` PATH that is not a
+ * token (which the `(string & {})` arm of {@link ChartColor} lets compile), and
+ * a raw `var(--colors-chart-*)` / `var(--colors-identity-*)` string naming a
+ * custom property that does not exist. Production builds strip both checks.
  */
 export function resolveChartColor(color: ChartColor): string {
   if (Object.hasOwn(chartColorTokens, color)) {

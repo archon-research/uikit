@@ -71,14 +71,28 @@ type ChartColor = ChartColorToken | (string & {});
 <ReferenceBand mode="threshold" value={92} stroke="chart.series.critical" />
 ```
 
-`ChartColorToken` is the union of the token paths in the table above, so
-`'chart.series.primry'` is a **compile error**. That is the whole point. A raw
-`var(--colors-chart-series-primry)` string is not: the custom property does not
-resolve, the browser drops the declaration, and the mark renders with the SVG
-default — silently, in the safe-looking direction. Nothing else catches it
-either. Panda's token validation and `uikit-cli doctor` inspect *generated CSS*,
-and these strings never pass through Panda at all; they go straight into an SVG
-presentation attribute.
+`ChartColorToken` is the union of the token paths in the table above. Be precise
+about what that buys, because the `(string & {})` arm is *also* part of the prop
+type: **a misspelled token path still compiles.** `color="chart.series.primry"`
+is a legal `ChartColor`, since it is a legal string; the compile error only lands
+where `ChartColorToken` itself is the annotation (`chartColorToken(name)`, or a
+`const x: ChartColorToken`). So the contract is two layers, neither of which is a
+type error on a prop:
+
+1. **Authoring:** the union drives editor autocompletion, so the token names are
+   discoverable and the correct spelling is one keystroke away. In practice this
+   is what prevents most typos, not a compile error.
+2. **Dev-time runtime:** `resolveChartColor` warns (see below) for a `chart.*` /
+   `identity.*` path that is not a token, and for a raw
+   `var(--colors-chart-*)` / `var(--colors-identity-*)` string naming a custom
+   property that does not exist.
+
+Both failure modes are otherwise silent and in the safe-looking direction: a
+typo'd path reaches the SVG attribute verbatim as an invalid color, and a typo'd
+custom property makes the browser drop the declaration — either way the mark
+renders with the SVG default. Nothing else catches them. Panda's token validation
+and `uikit-cli doctor` inspect *generated CSS*, and these strings never pass
+through Panda at all; they go straight into an SVG presentation attribute.
 
 **Raw strings remain the escape hatch.** Any other string still works, for
 one-off colors and for values computed at runtime:
@@ -152,13 +166,24 @@ that each entry reads its own custom property. A token added, removed, or rename
 upstream fails that test instead of leaving `ChartColorToken` describing a
 contract that no longer exists.
 
-#### Dev-time guard for raw `var()` strings
+#### Dev-time guard for misspelled colors
 
-A raw string bypasses the type check by design, so the resolver adds a runtime
-backstop. Outside production builds, `resolveChartColor` warns — **once per
-offending custom property** — when it receives a string matching
-`var(--colors-chart-*)` or `var(--colors-identity-*)` whose property name is not
-a known token:
+The `(string & {})` arm means neither form of typo is a compile error on a prop,
+so the resolver is the backstop. Outside production builds, `resolveChartColor`
+warns — **once per offending value** — in two cases.
+
+A token PATH in an owned namespace that is not a token (the likeliest typo, since
+it is what autocompletion was reaching for):
+
+```
+[charting] "chart.series.primry" is not a known chart color token. It reached an
+SVG attribute verbatim, which is not a valid color, so the mark will render
+unstyled. Check the path against ChartColorToken — the `(string & {})` arm of
+`ChartColor` means a misspelled token path still compiles.
+```
+
+A raw `var(--colors-chart-*)` / `var(--colors-identity-*)` string whose property
+name is not a known token:
 
 ```
 [charting] "--colors-chart-series-primry" is not a known chart color token, so
@@ -169,11 +194,12 @@ this checked at compile time.
 
 Two deliberate limits:
 
-- **Scoped to those two namespaces.** Charting cannot know the design system's
-  full color namespace, so a `var(--colors-surface-default)` or
+- **Scoped to the `chart` and `identity` namespaces.** Charting cannot know the
+  design system's full color namespace, so a `var(--colors-surface-default)` or
   `var(--colors-text-muted)` is a legitimate value and is never second-guessed.
-  Within `--colors-chart-*` and `--colors-identity-*` this package *does* know
-  every valid name, so anything else there is a typo.
+  Within those two namespaces this package *does* know every valid name, so
+  anything else there is a typo — and since no CSS color syntax starts with
+  `chart.` or `identity.`, the path check has no false positives to trade off.
 - **Zero production cost.** The check is gated on
   `process.env.NODE_ENV !== 'production'`, computed once at module scope (the
   same pattern as `IS_DEV_WARNING_ENABLED` in the design system's

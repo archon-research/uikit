@@ -69,6 +69,45 @@ describe('resolveChartColor', () => {
 });
 
 describe('the dev-time unknown-token guard', () => {
+  it('warns for a misspelled token PATH, which the type lets compile', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // Not a compile error: the `(string & {})` arm of `ChartColor` makes any
+    // string legal, which is precisely why this runtime check has to exist.
+    const typo: ChartColor = 'chart.series.primry';
+    // The guard reports the value; it does not repair it, so the bad path still
+    // reaches the SVG attribute verbatim.
+    expect(resolveChartColor(typo)).toBe(typo);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]?.[0]).toContain('chart.series.primry');
+  });
+
+  it('warns for a path in the identity namespace that is not a token', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    resolveChartColor('identity.nine');
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('warns only once per offending path', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const typo = 'chart.grd';
+    resolveChartColor(typo);
+    resolveChartColor(typo);
+    resolveChartColor(typo);
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('stays silent for a value not shaped like a token path', () => {
+    // The path check fires on anything starting `chart.` / `identity.`, so what
+    // it must never touch is every OTHER form a `ChartColor` legitimately takes.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    resolveChartColor('#ff0000');
+    resolveChartColor('rebeccapurple');
+    resolveChartColor('url(#series-gradient)');
+    resolveChartColor('color-mix(in srgb, red 14%, transparent)');
+    resolveChartColor('chart.series.primary');
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it('warns for a var() naming a chart token that does not exist', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     resolveChartColor('var(--colors-chart-series-primry, #155eef)');
@@ -117,6 +156,7 @@ describe('the dev-time unknown-token guard', () => {
     const production = await import('./chart-color.js');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     production.resolveChartColor('var(--colors-chart-series-typo-in-prod)');
+    production.resolveChartColor('chart.series.typo-in-prod');
     expect(warn).not.toHaveBeenCalled();
   });
 });
@@ -149,8 +189,10 @@ describe('the ChartColor type', () => {
   });
 
   it('rejects a token name that does not exist', () => {
-    // @ts-expect-error -- a typo'd token is a compile error, not an unresolved
-    // var() and a silently dropped declaration.
+    // Where the NARROW type is the annotation, a typo is a compile error. On a
+    // `ChartColor` prop it is not — see the dev-time guard above, which is what
+    // covers that gap.
+    // @ts-expect-error -- not a member of the token union.
     const typo: ChartColorToken = 'chart.series.primry';
     // @ts-expect-error -- a plausible-but-wrong path shape is caught too.
     const wrongShape: ChartColorToken = 'chart.series.1';
