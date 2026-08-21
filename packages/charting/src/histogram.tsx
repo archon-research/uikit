@@ -145,6 +145,10 @@ export type HistogramSeriesProps = HistogramSeriesVisualProps &
  * mark only positions rects within whatever scales the chart provides.
  */
 export function HistogramSeries(props: HistogramSeriesProps) {
+  // Reads through `props` instead of destructuring with defaults the way every
+  // other mark here does (see `DistributionSeries` below): destructuring a
+  // discriminated union loses the narrowing, so `bins`/`values` have to be read
+  // behind the `in` checks. `color` follows suit inside this function only.
   const color = resolveChartColor(props.color ?? seriesColor.primary);
   const bins = 'bins' in props ? props.bins : undefined;
   const values = 'bins' in props ? undefined : props.values;
@@ -247,11 +251,13 @@ export function DistributionSeries({
   data,
   sort = 'none',
   highlightCount = 0,
-  color: barColor = seriesColor.primary,
-  highlightColor: headColor = seriesColor.critical,
+  color = seriesColor.primary,
+  highlightColor = seriesColor.critical,
 }: DistributionSeriesProps) {
-  const color = resolveChartColor(barColor);
-  const highlightColor = resolveChartColor(headColor);
+  // Resolved once per render, not once per bar: a distribution runs to hundreds
+  // of bars and there are only ever these two colors.
+  const barFill = resolveChartColor(color);
+  const headFill = resolveChartColor(highlightColor);
   const {
     xScale,
     yScale,
@@ -286,7 +292,7 @@ export function DistributionSeries({
             y={yTop}
             width={width}
             height={height}
-            fill={index < highlightCount ? highlightColor : color}
+            fill={index < highlightCount ? headFill : barFill}
           />
         );
       })}

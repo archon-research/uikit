@@ -84,6 +84,12 @@ export function CandlestickSeries<Datum>({
     DataContext,
   ) as XYChartDataContext<Datum>;
 
+  // Resolved once per render, not once per candle: the direction is per-datum
+  // but there are only ever these two colors, and a series can be hundreds of
+  // candles long.
+  const upFill = resolveChartColor(upColor);
+  const downFill = resolveChartColor(downColor);
+
   useEffect(() => {
     if (!registerData) return;
     const highKey = `${dataKey}-high`;
@@ -128,7 +134,7 @@ export function CandlestickSeries<Datum>({
           return null;
         }
         const up = close >= open;
-        const color = resolveChartColor(up ? upColor : downColor);
+        const color = up ? upFill : downFill;
         const bodyTop = Math.min(yOpen, yClose);
         const bodyHeight = Math.max(1, Math.abs(yClose - yOpen));
 

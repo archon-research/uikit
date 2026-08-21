@@ -27,6 +27,7 @@ import {
 } from 'react';
 
 import { resolveChartColor, type ChartColor } from './chart-color.js';
+import { seriesColor } from './theme.js';
 
 /** A closed timestamp interval, in epoch milliseconds. */
 export interface TimeRange {
@@ -645,7 +646,7 @@ export function useTimeRangeBrushGesture() {
 export function DragSelectionOverlay({
   livePx,
   committedPx,
-  fill = 'chart.series.primary',
+  fill = seriesColor.primary,
 }: {
   livePx: PixelRange | null;
   committedPx: PixelRange | null;

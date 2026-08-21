@@ -214,7 +214,8 @@ system: charting reads them at runtime and never imports design-system code, so
 every read carries a hex fallback. That fallback means a mismatch fails
 *silently and in the safe-looking direction* — as it did for the whole `0.7.0`
 era, when `chart.*` did not exist upstream yet and every chart quietly ran on its
-fallback. Two guards now make the contract explicit rather than by-convention:
+fallback. Two guards make the contract explicit rather than by-convention — and
+the third entry below is the check it is easy to assume exists, and does not:
 
 - **Optional peer dependency.** `@archon-research/design-system` is declared as an
   *optional* `peerDependency` (spec `*`, following the monorepo's unversioned
@@ -222,11 +223,17 @@ fallback. Two guards now make the contract explicit rather than by-convention:
   it, but the dependency graph now records who owns these variables. The
   `chart.*` tokens were introduced in design-system `0.8.0`; that is the effective
   version floor for themed (non-fallback) charts.
-- **Detection.** `uikit-cli doctor` scans a consumer's generated CSS and flags any
-  `--colors-chart-*` read that resolves to nothing, turning a silent fallback into
-  a CI failure. Run it after `panda codegen`. Note its blind spot: it reads
-  *generated CSS*, so a `var()` written straight into an SVG attribute never
-  reaches it — that gap is what `ChartColorToken` and the dev-time guard cover.
+- **Detection.** There is none, and that is worth stating plainly rather than
+  implying otherwise. `uikit-cli doctor` checks a consumer's generated CSS for
+  three things — missing `staticCss`, a semantic token that emitted as a bare
+  dotted path, and a roleless `colorPalette` — and not one of them is "a
+  `--colors-chart-*` read that resolves to nothing." Nor could one be, as
+  written: charting's `var()` strings never enter Panda's pipeline, so they are
+  absent from the generated CSS doctor reads. The dev-time guard above does not
+  cover this either — it catches a *misspelled* token, not a correctly spelled
+  one the consumer's design system never emitted. A doctor check that resolved
+  chart custom properties against the consumer's emitted `:root` would close the
+  gap; it does not exist today.
 - **Name parity.** `src/chart-color.sync.test.ts` pins this package's token list
   against the design system's, so the two cannot drift silently (see above).
 
