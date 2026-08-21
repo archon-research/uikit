@@ -10,8 +10,13 @@ See [DESIGN.md](./DESIGN.md) for the contract and its deliberate limits.
 ## Installation
 
 ```bash
-npm install @archon-research/http-client-react @archon-research/http-client-core @tanstack/react-query react react-dom
+npm install @archon-research/http-client-react @archon-research/http-client-core '@tanstack/react-query@^5.89.0' react react-dom
 ```
+
+`@tanstack/react-query` is a **peer** dependency, so the app owns the version and
+the `QueryClient` this package's hooks and options talk to is the same instance
+the app's own `useQuery` calls use. See [peer
+dependencies](#peer-dependencies) for why the range starts at 5.89.0.
 
 ## Usage
 
@@ -213,7 +218,20 @@ be described by one source.
 
 ## Peer dependencies
 
-- `react`, `react-dom`
+- `react`, `react-dom` — `^19.0.0`
+- `@tanstack/react-query` — `^5.89.0`
+
+The react-query floor is not arbitrary. `mutationOptions` invalidates tags
+through the `QueryClient` react-query hands to the mutation callback, which means
+it needs the four-argument `onSuccess(data, variables, onMutateResult, context)`
+signature and `context.client`. Both arrived in **5.89.0**; the release before it
+(5.87.4) passes three arguments and no client, so the package does not typecheck
+against it. Anything from 5.89.0 up works — the package is developed against the
+latest 5.x.
+
+Keeping react-query a peer rather than a dependency is what guarantees one
+`QueryClient` and one cache: two copies in the module graph would give the
+`HttpProvider` and the app's own hooks separate caches.
 
 ## See also
 

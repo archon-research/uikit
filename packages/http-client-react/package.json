@@ -25,10 +25,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@archon-research/http-client-core": "*",
-    "@tanstack/react-query": "5.101.4"
+    "@archon-research/http-client-core": "*"
   },
   "peerDependencies": {
+    "@tanstack/react-query": "^5.89.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -36,6 +36,7 @@
     "@archon-research/oxfmt-config": "*",
     "@archon-research/oxlint-config": "*",
     "@archon-research/tsconfig": "*",
+    "@tanstack/react-query": "5.101.4",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
     "oxfmt": "0.62.0",
