@@ -230,9 +230,13 @@ Four things worth knowing:
   holding that reference as a dependency is then torn down and re-armed on every
   unrelated re-render, and never fires under a burst of keystrokes.
 - **`useNavigate()`'s return value goes straight in.** No wrapper: the adapter
-  fixes all three navigation fields itself. It navigates with `to: '.'`, which
-  keeps the current route's path params — safe here, unlike in a `beforeLoad`
-  redirect, because there is no pending location for `'.'` to resolve against.
+  fixes all three navigation fields itself, and types each as the single value it
+  takes. It navigates with `to: '.'`, which keeps the current route's path params
+  without this package knowing your route tree. A relative target resolves
+  against the pending location if there is one, which is why it is wrong in a
+  `beforeLoad` (that runs *while* one is pending) and right from an event handler
+  (normally none is). The residual case is a write landing inside another
+  navigation's microtask window — a debounced search commit racing a link click.
 - **`sortKey` and `searchKey` have no defaults.** Two tables that silently share
   `sort`/`q` leak whichever state was set last across every switch between them,
   and it reads as a bug in the table rather than in the URL.

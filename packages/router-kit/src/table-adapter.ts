@@ -28,14 +28,25 @@ export interface UrlSyncedTableStateAdapter {
  * `useNavigate()`'s return value satisfies this directly, so the common case
  * passes it straight through with no wrapper.
  *
- * All three fields are fixed by the adapter rather than exposed as options.
+ * All three fields are fixed by the adapter rather than exposed as options, and
+ * typed as the single value each one takes, so a caller reading these options
+ * knows there is no other case to handle.
+ *
  * `to` is `'.'`: table state belongs to the route the user is already on, and a
  * relative target carries that route's path params without this package having
- * to know them. Unlike in a `beforeLoad` redirect, there is no pending location
- * for `'.'` to resolve against, which is what makes it the right target here.
+ * to know them. The router resolves a relative `to` against
+ * `_fromLocation || _pendingLocation || latestLocation`, so the difference from a
+ * `beforeLoad` redirect is which of those is in play: a `beforeLoad` runs *while*
+ * a location is pending, so `'.'` there means the location being navigated to
+ * rather than the one just validated, while a write from an event handler
+ * normally resolves against the committed location. The residual case is a write
+ * that lands inside another navigation's microtask window — a debounced search
+ * commit racing a link click — which then patches the destination's search.
+ * Naming a route here instead would require this package to know the route tree,
+ * which is the one thing it does not.
  */
 export type UrlSyncedTableNavigateOptions = {
-  to: string;
+  to: '.';
   search: (previous: Record<string, unknown>) => Record<string, unknown>;
   replace: true;
 };

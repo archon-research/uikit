@@ -62,6 +62,15 @@ export function typeAssertions(routerNavigate: NavigateFn): void {
     navigate,
   });
 
+  // `to` is the literal `'.'`, not `string`, so a navigate written against this
+  // seam has exactly one target to handle — and `useNavigate()` is still
+  // assignable, which is the assertion above.
+  const relativeNavigate: UrlSyncedTableNavigate = (options) => {
+    const target: '.' = options.to;
+    void target;
+  };
+  void relativeNavigate;
+
   const pushingNavigate: UrlSyncedTableNavigate = (options) => {
     // @ts-expect-error - table state always replaces; `replace` is `true`, not
     // `boolean`, so a push cannot be written by mistake
