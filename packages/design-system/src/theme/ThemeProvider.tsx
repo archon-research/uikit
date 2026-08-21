@@ -36,8 +36,15 @@ function readInitialThemeMode(): ThemeMode {
  * would corrupt the value the user sees after switching back to `'auto'`. Falls
  * back to `matchMedia` whenever no bootstrap ran, so behavior is unchanged
  * without one.
+ *
+ * Exported (but not re-exported from `index.ts`/the package root) so
+ * `ThemeProvider.test.ts` can assert the "explicit mode never consults the
+ * stamp" half directly: under an explicit mode the seeded value is invisible in
+ * the first render's `isDark` (the mode alone decides that) and by the time a
+ * mode switch could reveal it the mount effect has already overwritten it from
+ * `matchMedia`.
  */
-function readSystemPrefersDark(mode: ThemeMode): boolean {
+export function readSystemPrefersDark(mode: ThemeMode): boolean {
   if (!isBrowser()) {
     return false;
   }
