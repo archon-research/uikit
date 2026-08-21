@@ -31,7 +31,7 @@ import {
 import { IS_DEV_WARNING_ENABLED } from '../../hooks/devWarning.js';
 import { Popover } from '../Popover.js';
 import { SearchInput } from '../SearchInput.js';
-import { SkeletonRows } from '../SkeletonRows.js';
+import { SkeletonRows, type SkeletonColumnHint } from '../SkeletonRows.js';
 import { Select } from '../StyledSelect.js';
 import {
   createMagnitudeStateMap,
@@ -168,6 +168,41 @@ export function getCellFlashState(
   return { seq, direction };
 }
 
+/**
+ * Resolves the hints handed to `SkeletonRows` from the consumer's explicit
+ * `skeletonConfig.columnHints` and whatever `DataTable` derived from the column
+ * definitions.
+ *
+ * Hints-*present* is what switches `SkeletonRows` into its detailed
+ * (kind-aware, width-varied) mode, so "no hints" has to be expressed as
+ * `undefined`: an empty array reads as detailed-mode-with-nothing-hinted and
+ * renders every cell as a varied `text` bar — the opposite of both opt-outs
+ * that resolve to a plain uniform skeleton.
+ *
+ * - explicit `[]` — the documented "opt out of derivation entirely and keep the
+ *   plain uniform skeleton" escape hatch.
+ * - absent, with nothing interesting derived — all-`text` derived hints buy no
+ *   extra fidelity but would still flip the skeleton into detailed mode, so an
+ *   unannotated table keeps the plain skeleton it rendered before. Only a
+ *   `numeric` column (what `numericColumnMeta` marks) makes derivation worth
+ *   applying.
+ *
+ * Exported (but not re-exported from `index.ts`/the package root) so
+ * `DataTable.skeletonHints.test.ts` can exercise the branches without
+ * rendering, same as `flashClass`/`getCellFlashState` above.
+ */
+export function resolveSkeletonColumnHints(
+  explicitHints: readonly SkeletonColumnHint[] | undefined,
+  derivedHints: readonly SkeletonColumnHint[],
+): readonly SkeletonColumnHint[] | undefined {
+  if (explicitHints !== undefined) {
+    return explicitHints.length > 0 ? explicitHints : undefined;
+  }
+  return derivedHints.some((hint) => hint.kind === 'numeric')
+    ? derivedHints
+    : undefined;
+}
+
 /** Native-`<select>` faceted filter, populated from
  * `column.getFacetedUniqueValues()` (registered by `useDataTable`). Assumes
  * exact-value matching — give the column an explicit `filterFn` (e.g.
@@ -273,6 +308,18 @@ export type DataTableProps<TData> = {
     columns?: number;
     firstColumnTall?: boolean;
     animate?: boolean;
+    /**
+     * Per-column content hints for the skeleton, index-aligned with the
+     * rendered columns — including the leading expander/selection cells and the
+     * trailing actions cell, which are not real table columns.
+     *
+     * Omit to let `DataTable` derive them: every column whose `meta.align` is
+     * `'right'` (what `numericColumnMeta` sets) is skeletoned as `numeric`, the
+     * rest as `text`. Derivation is safe with zero rows because column `meta`
+     * lives on the column definitions, not the data. Pass `[]` to opt out of
+     * derivation entirely and keep the plain uniform skeleton.
+     */
+    columnHints?: readonly SkeletonColumnHint[];
   };
   renderCell?: (cell: ReactNode) => ReactNode;
   className?: string;
@@ -601,6 +648,39 @@ export function DataTable<TData>({
     (expandable ? 1 : 0) +
     (rowSelectionEnabled ? 1 : 0) +
     (actionsEnabled ? 1 : 0);
+
+  // Skeleton column hints, derived from the column definitions when the
+  // consumer didn't supply their own. `meta.align` is declared on the column
+  // def, so this works with zero rows loaded — the case a skeleton exists for.
+  // Cell order mirrors the body: expander, selection, real columns, actions.
+  const explicitColumnHints = skeletonConfig?.columnHints;
+  const visibleLeafColumns = table.getVisibleLeafColumns();
+  const derivedColumnHints = useMemo((): readonly SkeletonColumnHint[] => {
+    const leadingCount = (expandable ? 1 : 0) + (rowSelectionEnabled ? 1 : 0);
+    const hints: SkeletonColumnHint[] = [];
+
+    // Expander/selection cells hold a ~16px control, not text.
+    for (let index = 0; index < leadingCount; index += 1) {
+      hints.push({ kind: 'text', widthPercent: 40 });
+    }
+    for (const column of visibleLeafColumns) {
+      hints.push(
+        column.columnDef.meta?.align === 'right'
+          ? { kind: 'numeric' }
+          : { kind: 'text' },
+      );
+    }
+    if (actionsEnabled) {
+      hints.push({ kind: 'text', widthPercent: 40 });
+    }
+
+    return hints;
+  }, [visibleLeafColumns, expandable, rowSelectionEnabled, actionsEnabled]);
+
+  const resolvedColumnHints = resolveSkeletonColumnHints(
+    explicitColumnHints,
+    derivedColumnHints,
+  );
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -1219,6 +1299,7 @@ export function DataTable<TData>({
               rows={skeletonConfig?.rows ?? 3}
               columns={skeletonConfig?.columns ?? leafColumnCount}
               firstColumnTall={skeletonConfig?.firstColumnTall ?? true}
+              columnHints={resolvedColumnHints}
               animate={skeletonConfig?.animate}
             />
           </tbody>

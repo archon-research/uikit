@@ -116,7 +116,11 @@ export const panelRecipe = defineSlotRecipe({
     // Corner radius from a token. Defaults to `md` (the previous fixed value);
     // `none` squares the frame, `sm`/`lg` step it.
     radius: {
-      none: { root: { borderRadius: 'none' } },
+      // `'0'`, not `'none'`: there is no `none` radii token, so `'none'` reached
+      // the browser as the invalid `border-radius: none`, was dropped, and the
+      // frame kept the base `md` radius — the one thing this variant exists to
+      // remove.
+      none: { root: { borderRadius: '0' } },
       sm: { root: { borderRadius: 'sm' } },
       md: { root: { borderRadius: 'md' } },
       lg: { root: { borderRadius: 'lg' } },
