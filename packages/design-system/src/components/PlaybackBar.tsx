@@ -31,9 +31,27 @@ export type PlaybackBarMark = {
   label?: string;
 };
 
+/**
+ * `onPlay`/`onPause` are omitted from the base for the same reason `onSelect`
+ * already was: all three are native DOM handlers on `HTMLAttributes` (the media
+ * events), and the transport callbacks below shadow them. Two consequences,
+ * neither of which a consumer can see from the outside — what a consumer may
+ * *pass* is unchanged, since an event-taking handler is rejected either way:
+ *
+ * 1. The props type advertised native media handlers that can never fire. Both
+ *    props are destructured here and wired to the play/pause button's `onClick`,
+ *    so neither ever reaches the root div; a consumer listening for a real media
+ *    event bubbling out of nested content got silence.
+ * 2. Intersecting turned `onPlay` into the overload set
+ *    `ReactEventHandler<HTMLDivElement> & (() => void)`, which is callable *with*
+ *    an event argument. That erased the zero-argument contract at this
+ *    component's own call sites: `onPlay(event)` type-checked here while the
+ *    consumer's declared callback promised to accept nothing. Omitting makes
+ *    that a compile error, which `PlaybackBar.test.ts` pins.
+ */
 export type PlaybackBarProps = Omit<
   HTMLAttributes<HTMLDivElement>,
-  'onSelect'
+  'onSelect' | 'onPlay' | 'onPause'
 > & {
   /** Which transport is driving the shared rendering — flips the bar between "live monitor" and "replay transport" chrome. */
   mode: PlaybackMode;

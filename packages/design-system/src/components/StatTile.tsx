@@ -18,8 +18,27 @@ export type StatTileAccent = 'neutral' | 'success' | 'warning' | 'critical';
 
 export type StatTileProps = HTMLAttributes<HTMLDivElement> & {
   label: ReactNode;
+  /**
+   * The headline figure. The `value` slot is a wrap-friendly inline row, so this
+   * can be a fragment — a number plus a unit, a delta `Badge`, or a trend icon —
+   * without the consumer supplying layout styles. Long values wrap instead of
+   * overflowing the tile.
+   *
+   * Spacing contract: the slot's `gap` (8px) owns the space BETWEEN children,
+   * and literal whitespace between them is not rendered — flex layout drops a
+   * whitespace-only text run between two items. So
+   * `value={<>{n} <span>%</span></>}` renders as `n`, one 8px gap, `%`: the
+   * typed space is gone and cannot be styled back. Write multi-child values
+   * with no separator. For a figure that must read as one uninterrupted string
+   * ("4.2 %"), pass a single text child instead, where its spaces survive.
+   */
   value: ReactNode;
-  /** Optional supporting caption (delta, unit, timeframe). */
+  /**
+   * Optional supporting caption (delta, unit, timeframe). Laid out like `value`
+   * (inline row, wraps) at one gap step tighter, under the same spacing
+   * contract: the 4px gap owns inter-child spacing, literal whitespace between
+   * children is not rendered.
+   */
   sub?: ReactNode;
   /** Semantic coloring for the value + sub caption. */
   tone?: StatTileTone;
