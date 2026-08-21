@@ -7,32 +7,40 @@ import {
   type ChartColorTokenPath,
 } from './chartColorTokens.js';
 
+/**
+ * The runtime half of the leaf definition: a node carrying a `value`. Must stay
+ * identical to the module's `ChartColorTokenLeaf` — the two disagreeing is the
+ * failure the first test below exists to catch, so it must not be re-derived
+ * more strictly here.
+ */
+function isTokenLeaf(node: unknown): boolean {
+  return typeof node === 'object' && node !== null && 'value' in node;
+}
+
+/** Depth-first dotted leaf paths of the token tree, in declaration order. */
+function walkTokenPaths(node: object, prefix = ''): string[] {
+  return Object.entries(node).flatMap(([key, child]) => {
+    const path = prefix === '' ? key : `${prefix}.${key}`;
+    return isTokenLeaf(child) ? [path] : walkTokenPaths(child as object, path);
+  });
+}
+
 describe('chartColorTokenPaths', () => {
-  // Pinned literally: this list is the published token contract, mirrored by
-  // `ChartColorToken` in `@archon-research/charting`. A token added or renamed
-  // above must be a deliberate, reviewed edit here (and in charting), not a
-  // silent widening of the contract.
-  it('enumerates every chart and identity token path', () => {
-    expect(chartColorTokenPaths).toEqual([
-      'chart.axis',
-      'chart.grid',
-      'chart.area.primary',
-      'chart.series.primary',
-      'chart.series.secondary',
-      'chart.series.tertiary',
-      'chart.series.positive',
-      'chart.series.critical',
-      'chart.series.quaternary',
-      'chart.series.quinary',
-      'identity.1',
-      'identity.2',
-      'identity.3',
-      'identity.4',
-      'identity.5',
-      'identity.6',
-      'identity.7',
-      'identity.8',
-    ]);
+  // THE pin between the tree and the published list, and the only check that can
+  // see leaf-definition drift. `chartColorTokenPaths` is written out and checked
+  // against `ChartColorTokenPath` by its annotation, so a path the union does
+  // not contain fails to compile; this walk covers the other direction — a token
+  // the TREE has and the list does not.
+  //
+  // That other direction is not decoration. If `ChartColorTokenLeaf` and
+  // `isTokenLeaf` ever disagree, the offending token drops out of the union
+  // silently (see the note on `ChartColorTokenLeaf`), so no annotation and no
+  // exhaustiveness check at the type level can report it. This walk can: it is
+  // the one place the tree is enumerated without going through the union.
+  it('is exactly the leaf paths of the token tree, in declaration order', () => {
+    expect(chartColorTokenPaths).toEqual(
+      walkTokenPaths(chartColorSemanticTokens),
+    );
   });
 
   it('resolves every path to a dark-aware token leaf', () => {

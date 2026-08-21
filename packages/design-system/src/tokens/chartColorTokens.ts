@@ -79,8 +79,29 @@ export const chartColorSemanticTokens = {
   },
 };
 
-/** A leaf in the token tree above: a dark-aware semantic color token. */
-type ChartColorTokenLeaf = { value: { base: string; _dark: string } };
+/**
+ * A leaf of the token tree above: a node carrying a `value`.
+ *
+ * Exactly as loose as the runtime leaf predicate in `chartColorTokens.test.ts`
+ * (`'value' in node`), deliberately: the two are one definition of "leaf", split
+ * across the type level and the runtime only because neither can express the
+ * other.
+ *
+ * WHY NOT NARROWER: a stricter shape — say `{ value: { base: string; _dark:
+ * string } }` — makes a token that does not match DISAPPEAR from
+ * {@link ChartColorTokenPath} rather than fail loudly. {@link TokenPathsOf}
+ * keeps walking into the non-matching node, bottoms out in `keyof string` and
+ * then in a method type whose `keyof` is `never`, and the whole branch collapses
+ * to `never`. A token written without a `_dark` variant would simply not be in
+ * the union — no error, no garbage member, no token. Nothing at the type level
+ * can report that, which is why the test walks the tree at RUNTIME and compares
+ * the result against {@link chartColorTokenPaths}.
+ *
+ * The `_dark` requirement is real; it is enforced where it can be enforced
+ * without splitting this definition, by the test that resolves every path and
+ * asserts a `{ base, _dark }` pair.
+ */
+type ChartColorTokenLeaf = { value: unknown };
 
 /**
  * Every dotted path to a leaf of `T`, e.g. `'chart.series.primary'`. Walks the
@@ -105,36 +126,41 @@ type TokenPathsOf<T> = {
  */
 export type ChartColorTokenPath = TokenPathsOf<typeof chartColorSemanticTokens>;
 
-/** Narrows a tree node to a token leaf. */
-function isTokenLeaf(node: unknown): node is ChartColorTokenLeaf {
-  return typeof node === 'object' && node !== null && 'value' in node;
-}
-
-/** Depth-first collection of dotted leaf paths, in declaration order. */
-function collectTokenPaths(
-  node: Record<string, unknown>,
-  prefix: string,
-  out: string[],
-): void {
-  for (const [key, child] of Object.entries(node)) {
-    const path = prefix === '' ? key : `${prefix}.${key}`;
-    if (isTokenLeaf(child)) {
-      out.push(path);
-    } else {
-      collectTokenPaths(child as Record<string, unknown>, path, out);
-    }
-  }
-}
-
 /**
  * Every {@link ChartColorTokenPath} as runtime data, in declaration order — the
  * list a cross-package sync test or a token-inspector UI enumerates.
+ *
+ * Written out rather than walked out of the tree at runtime. A walk needs an
+ * `as ChartColorTokenPath[]` on its `string[]` result, because TypeScript cannot
+ * connect an `Object.entries` recursion to the type-level recursion above — and
+ * that assertion is exactly what would LAUNDER a disagreement between the two
+ * notions of "leaf" into a plausible-looking list.
+ *
+ * Nothing is asserted away instead. Each entry here is checked against the union
+ * by the annotation, so a path the tree cannot produce fails to compile; and
+ * `chartColorTokens.test.ts` runs the walk as a test oracle, so a token added
+ * above and not here fails that test.
  */
-export const chartColorTokenPaths: ChartColorTokenPath[] = (() => {
-  const paths: string[] = [];
-  collectTokenPaths(chartColorSemanticTokens, '', paths);
-  return paths as ChartColorTokenPath[];
-})();
+export const chartColorTokenPaths: ChartColorTokenPath[] = [
+  'chart.axis',
+  'chart.grid',
+  'chart.area.primary',
+  'chart.series.primary',
+  'chart.series.secondary',
+  'chart.series.tertiary',
+  'chart.series.positive',
+  'chart.series.critical',
+  'chart.series.quaternary',
+  'chart.series.quinary',
+  'identity.1',
+  'identity.2',
+  'identity.3',
+  'identity.4',
+  'identity.5',
+  'identity.6',
+  'identity.7',
+  'identity.8',
+];
 
 /**
  * The CSS custom-property name Panda emits for a token path, e.g.
