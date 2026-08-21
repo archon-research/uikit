@@ -132,11 +132,23 @@ const PALETTE_ROLE_ASSIGNMENT =
 const PALETTE_ROLE_REFERENCE =
   /var\(\s*--colors-color-palette-([a-z0-9-]+)\s*\)/gi;
 
+/**
+ * `error` is a definite defect and fails the command (non-zero exit); `warn` is
+ * a possible-but-unproven one, printed without affecting the exit code.
+ */
+export type DoctorSeverity = 'error' | 'warn';
+
 export type DoctorIssue =
-  | { kind: 'missing-static-css' }
-  | { kind: 'unresolved-token'; line: number; declaration: string }
+  | { kind: 'missing-static-css'; severity: DoctorSeverity }
+  | {
+      kind: 'unresolved-token';
+      severity: DoctorSeverity;
+      line: number;
+      declaration: string;
+    }
   | {
       kind: 'roleless-color-palette';
+      severity: DoctorSeverity;
       line: number;
       /** Recipe class-name stem the reference and the palette share. */
       scope: string;
@@ -149,6 +161,7 @@ export type DoctorIssue =
     };
 
 export type DoctorReport = {
+  /** True when nothing of `error` severity was found — warnings do not fail. */
   ok: boolean;
   issues: DoctorIssue[];
 };
@@ -339,7 +352,21 @@ function lineOf(css: string, index: number): number {
   return css.slice(0, index).split('\n').length;
 }
 
-/** Role references whose scope can assign a palette that does not define them. */
+/**
+ * Role references whose scope can assign a palette that does not define them.
+ *
+ * SEVERITY. A miss is an `error` only when it is definite — when *every* palette
+ * the scope can be set to lacks the role, so no combination of that scope's
+ * variants avoids the dropped declaration. The one-assignable-palette case is
+ * that condition at its smallest: the palette is the only one there is.
+ *
+ * When some assignable palette does define the role, the pairing is merely
+ * possible, and the stylesheet cannot say whether an app ever makes it: a recipe
+ * exposing `colorPalette: violet` alongside a `solid` emphasis variant may never
+ * combine the two. Reported as a `warn` — worth printing, since a real
+ * combination is silently dropped CSS, but not worth failing a build over an
+ * unproven one.
+ */
 function findRolelessPalettes(
   css: string,
   leaves: LeafRuleset[],
@@ -347,10 +374,14 @@ function findRolelessPalettes(
   const issues: DoctorIssue[] = [];
   for (const [scopeName, scope] of collectPaletteScopes(leaves)) {
     for (const [role, site] of scope.references) {
-      for (const [palette, roles] of scope.palettes) {
-        if (roles.has(role)) continue;
+      const missing = [...scope.palettes]
+        .filter(([, roles]) => !roles.has(role))
+        .map(([palette]) => palette);
+      const definite = missing.length === scope.palettes.size;
+      for (const palette of missing) {
         issues.push({
           kind: 'roleless-color-palette',
+          severity: definite ? 'error' : 'warn',
           line: lineOf(css, site.index),
           scope: scopeName,
           selector: site.selector,
@@ -374,7 +405,7 @@ export function scanGeneratedCss(css: string): DoctorReport {
   const issues: DoctorIssue[] = [];
 
   if (!hasAnyRecipeClass(css)) {
-    issues.push({ kind: 'missing-static-css' });
+    issues.push({ kind: 'missing-static-css', severity: 'error' });
   }
 
   const seen = new Set<string>();
@@ -385,12 +416,20 @@ export function scanGeneratedCss(css: string): DoctorReport {
     const key = `${line}:${declaration}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    issues.push({ kind: 'unresolved-token', line, declaration });
+    issues.push({
+      kind: 'unresolved-token',
+      severity: 'error',
+      line,
+      declaration,
+    });
   }
 
   issues.push(...findRolelessPalettes(css, splitLeafRulesets(css)));
 
-  return { ok: issues.length === 0, issues };
+  return {
+    ok: issues.every((issue) => issue.severity !== 'error'),
+    issues,
+  };
 }
 
 /**
@@ -491,14 +530,20 @@ export class DoctorCommand {
       ? '(panda cssgen)'
       : path.relative(cwd, cssPath) || cssPath;
 
-    if (report.ok) {
+    if (report.issues.length === 0) {
       this.logger.info(`✓ ${relative}: no silently-dropped CSS detected.`);
       return true;
     }
 
+    const emit = (issue: DoctorIssue, message: string): void =>
+      issue.severity === 'error'
+        ? this.logger.error(message)
+        : this.logger.warn(message);
+
     for (const issue of report.issues) {
       if (issue.kind === 'missing-static-css') {
-        this.logger.error(
+        emit(
+          issue,
           `No design-system recipe classes found in ${relative}.\n` +
             "  The design system's recipes are applied by class name, so Panda's\n" +
             '  static extractor cannot see them — without `staticCss` they emit\n' +
@@ -511,26 +556,40 @@ export class DoctorCommand {
             '  flags the case where nothing is wired at all.)',
         );
       } else if (issue.kind === 'unresolved-token') {
-        this.logger.error(
+        emit(
+          issue,
           `${relative}:${issue.line} unresolved token — \`${issue.declaration};\` ` +
             'is an invalid declaration the browser drops. The token path does not ' +
             'resolve to a `var(--…)`; check the token exists in the preset (or you ' +
             'passed a token path where a finished value was expected).',
         );
       } else {
-        this.logger.error(
+        emit(
+          issue,
           `${relative}:${issue.line} roleless colorPalette — \`${issue.selector}\` ` +
             `reads \`var(--colors-color-palette-${issue.role})\`, but the ` +
             `\`${issue.scope}\` scope can be set to \`colorPalette: ${issue.palette}\`, ` +
             `which defines no \`${issue.role}\` role. The custom property is then ` +
             'undefined on that element: valid CSS the browser silently drops, so the ' +
-            'declaration just does not apply. Either style with a role-complete ' +
-            `palette (one whose ruleset maps \`--colors-color-palette-${issue.role}\`), ` +
-            `give \`${issue.palette}\` that role in your preset's colorPalette tokens, ` +
-            'or reference a role the palette does define.',
+            'declaration just does not apply. ' +
+            (issue.severity === 'error'
+              ? 'No palette this scope can take defines that role, so nothing avoids it. '
+              : `Warning only: \`${issue.scope}\` can also take a role-complete palette, ` +
+                'so this breaks only if the two are actually combined. ') +
+            'Either style with a role-complete palette (one whose ruleset maps ' +
+            `\`--colors-color-palette-${issue.role}\`), give \`${issue.palette}\` that ` +
+            "role in your preset's colorPalette tokens, or reference a role the " +
+            'palette does define.',
         );
       }
     }
-    return false;
+
+    if (report.ok) {
+      this.logger.info(
+        `✓ ${relative}: no silently-dropped CSS detected. ` +
+          'The warnings above are unproven combinations, not failures.',
+      );
+    }
+    return report.ok;
   }
 }

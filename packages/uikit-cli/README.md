@@ -69,17 +69,38 @@ optional workflow wrapper.
 ```
 
 Use `--codegen` when you use the Panda PostCSS plugin and never write a frozen
-`styled-system/styles.css`. `doctor` exits non-zero on any finding, so it gates CI.
+`styled-system/styles.css`.
+
+Findings carry a severity. `doctor` exits non-zero on any **error**, so it gates CI;
+**warnings** are printed and do not affect the exit code. Only roleless `colorPalette` can
+warn — see [error or warning](#roleless-colorpalette-error-or-warning) below.
 
 The design system's authoring model has failure modes that produce *no error anywhere* — the
 build passes, the console is clean, and the style simply does not apply. `doctor` scans the
 generated stylesheet for them:
 
-| Check | What silently breaks |
-| --- | --- |
-| `missing-static-css` | No design-system recipe classes were emitted at all, so runtime-selected variants (status tones, dense tables, drawer sizes) render unstyled. Fix by spreading `designSystemStaticCssRecipes` into your Panda config's `staticCss.recipes`. |
-| `unresolved-token` | A declaration whose value is a bare `token.path` (e.g. `color: text.subtle`) rather than a `var(--…)`. Invalid CSS the browser drops. |
-| `roleless-color-palette` | A `colorPalette` value that defines no role for the property styled with it — `var(--colors-color-palette-solid-bg)` is well-formed but undefined in that scope, so the browser drops the declaration. Only `neutral`, `gray`, `green`, `red`, `amber` and `blue` carry full role sub-tokens; other hues map the 50–950 scale only. |
+| Check | Severity | What silently breaks |
+| --- | --- | --- |
+| `missing-static-css` | error | No design-system recipe classes were emitted at all, so runtime-selected variants (status tones, dense tables, drawer sizes) render unstyled. Fix by spreading `designSystemStaticCssRecipes` into your Panda config's `staticCss.recipes`. |
+| `unresolved-token` | error | A declaration whose value is a bare `token.path` (e.g. `color: text.subtle`) rather than a `var(--…)`. Invalid CSS the browser drops. |
+| `roleless-color-palette` | error or warning | A `colorPalette` value that defines no role for the property styled with it — `var(--colors-color-palette-solid-bg)` is well-formed but undefined in that scope, so the browser drops the declaration. Only `neutral`, `gray`, `green`, `red`, `amber` and `blue` carry full role sub-tokens; other hues map the 50–950 scale only. |
+
+#### Roleless `colorPalette`: error or warning
+
+A role reference is only a *definite* miss when every `colorPalette` its scope can be set to
+lacks the role — then no combination of that recipe's variants avoids the dropped declaration.
+When some assignable palette does define the role, the breaking pairing is possible but
+unproven: a recipe exposing `colorPalette: violet` alongside a `solid` emphasis variant may
+never combine the two in an app, and the stylesheet cannot say. That is reported as a warning —
+worth printing, not worth failing a build over.
+
+| Palettes assignable in the scope | Which lack the role | Severity | Exit code |
+| --- | --- | --- | --- |
+| one | it does | error | non-zero |
+| several | all of them | error | non-zero |
+| several | some of them | warning | 0 |
+| several | none | no finding | 0 |
+| none (no `colorPalette` assigned in scope) | — | no finding | 0 |
 
 #### Roleless `colorPalette`: detection boundary
 

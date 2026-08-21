@@ -103,7 +103,8 @@ const badgeSolid =
   '.badge--variant_solid {\n  background: var(--colors-color-palette-solid-bg);\n}';
 
 describe('scanGeneratedCss — roleless colorPalette', () => {
-  it('flags a palette that defines no role for a property styled with it', () => {
+  it('errors on a palette that defines no role for a property styled with it', () => {
+    // One assignable palette, and it lacks the role: the miss is definite.
     const css = [
       healthyCss,
       paletteRuleset('.badge--colorPalette_violet', 'violet', []),
@@ -115,6 +116,7 @@ describe('scanGeneratedCss — roleless colorPalette', () => {
       report.issues.find((i) => i.kind === 'roleless-color-palette'),
     ).toMatchObject({
       kind: 'roleless-color-palette',
+      severity: 'error',
       scope: 'badge',
       selector: '.badge--variant_solid',
       palette: 'violet',
@@ -152,18 +154,44 @@ describe('scanGeneratedCss — roleless colorPalette', () => {
     expect(report.issues).toEqual([]);
   });
 
-  it('flags only the roleless palette when a scope offers both', () => {
+  it('warns (does not error) when only some assignable palettes lack the role', () => {
+    // `badge` can take `green` (role-complete) or `violet` (roleless), so the
+    // pairing that breaks is possible but unproven — an app may never make it.
     const css = [
       healthyCss,
       paletteRuleset('.badge--colorPalette_green', 'green', ROLES),
       paletteRuleset('.badge--colorPalette_violet', 'violet', []),
       badgeSolid,
     ].join('\n');
-    const roleless = scanGeneratedCss(css).issues.filter(
+    const report = scanGeneratedCss(css);
+    const roleless = report.issues.filter(
       (i) => i.kind === 'roleless-color-palette',
     );
     expect(roleless).toHaveLength(1);
-    expect(roleless[0]).toMatchObject({ palette: 'violet', role: 'solid-bg' });
+    expect(roleless[0]).toMatchObject({
+      severity: 'warn',
+      palette: 'violet',
+      role: 'solid-bg',
+    });
+    // Reported, but the check still passes — nothing else in the sheet fails.
+    expect(report.ok).toBe(true);
+  });
+
+  it('errors when every assignable palette lacks the role', () => {
+    // Two palettes, neither role-complete: no combination avoids the drop.
+    const css = [
+      healthyCss,
+      paletteRuleset('.badge--colorPalette_violet', 'violet', []),
+      paletteRuleset('.badge--colorPalette_teal', 'teal', ['subtle-bg']),
+      badgeSolid,
+    ].join('\n');
+    const report = scanGeneratedCss(css);
+    const roleless = report.issues.filter(
+      (i) => i.kind === 'roleless-color-palette',
+    );
+    expect(roleless.map((i) => i.palette).sort()).toEqual(['teal', 'violet']);
+    expect(roleless.every((i) => i.severity === 'error')).toBe(true);
+    expect(report.ok).toBe(false);
   });
 
   it('ignores a role reference with no colorPalette in scope', () => {
@@ -354,6 +382,35 @@ describe('DoctorCommand.execute', () => {
     expect(messages[0]).toContain('.badge--variant_solid');
     expect(messages[0]).toContain('violet');
     expect(messages[0]).toContain('solid-bg');
+  });
+
+  it('warns and still exits zero when a roleless pairing is only possible', () => {
+    // `cli.ts` maps this boolean onto the process exit code, so `true` here is
+    // the exit 0 that lets CI pass with the warning printed.
+    const partialMissCss = [
+      healthyCss,
+      paletteRuleset('.badge--colorPalette_green', 'green', ROLES),
+      paletteRuleset('.badge--colorPalette_violet', 'violet', []),
+      badgeSolid,
+    ].join('\n');
+    const { fs } = makeFs({ '/proj/styled-system/styles.css': partialMissCss });
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    const logger: Logger = {
+      ...silentLogger,
+      error: (m: string) => void errors.push(m),
+      warn: (m: string) => void warnings.push(m),
+    };
+    const executor = {
+      exec: () => ({ stdout: '', stderr: '', success: true }),
+      execQuiet: () => true,
+    } as CommandExecutor;
+    const cmd = new DoctorCommand(fs, logger, executor);
+    expect(cmd.execute(['styled-system/styles.css'], '/proj')).toBe(true);
+    expect(errors).toEqual([]);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('violet');
+    expect(warnings[0]).toContain('solid-bg');
   });
 
   it('reports failure when codegen itself fails', () => {
