@@ -217,7 +217,7 @@ Four things worth knowing:
 
 `settleEntryUrl` builds a memory-history router from **your exported
 `router.options`**, follows every `beforeLoad` redirect to a fixed point, and
-asserts each hop replaces rather than pushes.
+throws if the chain never gets there.
 
 ```ts
 import { settleEntryUrl } from '@archon-research/router-kit/testing';
@@ -256,20 +256,24 @@ your app does not use — passing while production breaks, or failing on a
 difference that exists only in the test. There is one description of the
 grammar, and it is the one the app runs with.
 
-Both assertions cover a failure that is invisible from inside the app:
+Each throw covers a failure that is invisible from inside the app:
 
 - **Non-termination** is a hung tab with a spinning address bar. Here it is a
   thrown error naming the cycle it walked. This is also what catches a
   `stringifySearch` that disagrees with the router's.
-- **A pushed redirect** leaves the rejected URL in the back history, so the back
-  button walks the user straight into the redirect again — a trap no forward
-  navigation reveals.
 - **A schema that rejected the URL** is a thrown error naming the route and the
   validation message. The router does not throw one: it records the rejection on
   the match and carries on with a search no schema produced. So a harness that
   did not look would report the one URL your schemas *could not* validate as
   settled and clean. Step 1's builders are total, so this fires for a schema
   that is not — a bare `z.number()` on a param, most often.
+
+It does **not** assert that a hop replaces rather than pushes, because a
+`beforeLoad` redirect cannot push: every path that follows one overrides
+`replace: true` over the redirect's own options. Such an assertion would fail a
+perfectly good `throw redirect({ to: '/login' })` — `replace` undefined, replaced
+anyway. `resolveEntryUrl` still reports `replace` if you want to pin what your
+own helper *declares*.
 
 Known limit: the harness supplies a `beforeLoad` with `location`, `matches`,
 `params`, and `search`. A `beforeLoad` that reads route `context` or calls

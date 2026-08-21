@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createNonConvergingRouter,
-  createPushingRouter,
   createToyRouter,
   stringifySearch,
 } from './test-fixtures.js';
@@ -84,7 +83,10 @@ describe('createValidatedSearchRedirect', () => {
     expect(resolution.redirectTo).not.toBe('.');
   });
 
-  it('replaces, so a rejected URL stays out of the back history', async () => {
+  // The declared intent, not a guard on router behaviour: the router overrides
+  // `replace: true` on every path that follows a `beforeLoad` redirect, so a
+  // rejected URL stays out of the back history either way.
+  it('declares replace on the redirect it throws', async () => {
     expect((await redirectOf('/plain?tab=bogus')).replace).toBe(true);
   });
 
@@ -133,7 +135,7 @@ describe('createSearchParamStripper', () => {
     expect((await redirectOf('/items/42?q=x')).redirectTo).toBeNull();
   });
 
-  it('replaces rather than pushes', async () => {
+  it('declares replace on the redirect it throws', async () => {
     expect((await redirectOf('/items/42?item=7')).replace).toBe(true);
   });
 
@@ -169,13 +171,5 @@ describe('the loop-safety the cleanup depends on', () => {
     const router = createNonConvergingRouter();
 
     expect((await settleEntryUrl(router.options, '/plain')).url).toBe('/plain');
-  });
-
-  it('rejects a redirect that pushes instead of replacing', async () => {
-    const router = createPushingRouter();
-
-    await expect(settleEntryUrl(router.options, '/plain')).rejects.toThrow(
-      /without replace/,
-    );
   });
 });

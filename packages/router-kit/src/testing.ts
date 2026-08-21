@@ -35,6 +35,12 @@ export type EntryRouterOptions = AnyRouter['options'];
 
 export type EntryRedirect = {
   redirectTo: string;
+  /**
+   * What the thrown redirect *declared*, not what the router will do: every
+   * client path that follows a `beforeLoad` redirect overrides `replace` to
+   * `true`, so an undefined here still replaces. Reported so a spec can pin the
+   * intent its own helper writes.
+   */
   replace: boolean | undefined;
   routeId?: undefined;
   params?: undefined;
@@ -191,25 +197,32 @@ const DEFAULT_MAX_HOPS = 4;
 
 /**
  * Follows an entry URL through every `beforeLoad` redirect to the URL that
- * finally renders, asserting each hop replaces rather than pushes and that the
- * chain terminates.
+ * finally renders, asserting that the chain terminates.
  *
- * Both assertions cover a failure that is invisible from inside the app:
+ * Termination is a failure that is invisible from inside the app. A
+ * URL-truthfulness cleanup rewrites the address bar to whatever validation
+ * applied, so a schema whose output fails to re-validate to itself rewrites the
+ * same URL forever. In a browser that is a hung tab with a spinning address bar;
+ * here it is a thrown error naming the cycle. The same throw catches a cleanup
+ * whose `stringifySearch` disagrees with the router's, because the disagreement
+ * is exactly a failure to converge.
  *
- * - **Termination.** A URL-truthfulness cleanup rewrites the address bar to
- *   whatever validation applied, so a schema whose output fails to re-validate
- *   to itself rewrites the same URL forever. In a browser that is a hung tab
- *   with a spinning address bar; here it is a thrown error naming the cycle.
- *   The same throw catches a cleanup whose `stringifySearch` disagrees with the
- *   router's, because the disagreement is exactly a failure to converge.
+ * ## What this deliberately does *not* assert
  *
- * - **Replace, not push.** A rejected URL that gets *pushed* stays in the back
- *   history, so the back button walks the user straight into the redirect
- *   again — a trap that no forward navigation ever reveals.
+ * A **pushed** redirect would be the other invisible trap — a rejected URL left
+ * in the back history, so the back button walks the user into the redirect
+ * again. It is not asserted here because a `beforeLoad` redirect cannot push:
+ * every path that follows one (`followRedirect`, and the `matchRoutes` rejection
+ * path beside it) spreads the redirect's options and then overrides
+ * `replace: true`. Asserting `replace` here would therefore have been worse than
+ * redundant — it would fail a perfectly good `throw redirect({ to: '/login' })`,
+ * which leaves `replace` undefined and which the router replaces anyway. The
+ * flag is still reported on {@link EntryRedirect} so a spec can pin what its own
+ * redirect *declares*.
  *
- * @throws when a hop pushes instead of replacing, when the chain has not
- * settled within `maxHops`, or when a `beforeLoad` throws something that is not
- * a redirect.
+ * @throws when the chain has not settled within `maxHops`, when a matched
+ * route's `validateSearch` rejected a hop, or when a `beforeLoad` throws
+ * something that is not a redirect.
  *
  * @example
  * ```ts
@@ -240,12 +253,6 @@ export async function settleEntryUrl(
 
     if (result.redirectTo === null) {
       return { url: current, hops, result };
-    }
-
-    if (result.replace !== true) {
-      throw new Error(
-        `"${current}" redirected to "${result.redirectTo}" without replace, leaving a rejected URL in the back history`,
-      );
     }
 
     current = result.redirectTo;

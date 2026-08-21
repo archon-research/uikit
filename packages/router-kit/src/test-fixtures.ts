@@ -250,39 +250,14 @@ export function createThrowingRouter() {
   });
 }
 
-/**
- * A route tree that redirects by pushing rather than replacing, leaving the
- * rejected URL in the back history.
+/*
+ * There is deliberately no "pushing router" fixture. A `beforeLoad` redirect
+ * cannot push: the router spreads the redirect's own options and then overrides
+ * `replace: true` on every path that follows one. Reaching a push therefore took
+ * a hand-built `Response` with fabricated `options`, which is a fixture for a
+ * router that does not exist — and the assertion it fed would have failed a real
+ * `throw redirect({ to })` that left `replace` undefined.
  */
-export function createPushingRouter() {
-  const rootRoute = createRootRoute({
-    validateSearch: sharedSearchSchema,
-  });
-
-  return createRouter({
-    routeTree: rootRoute.addChildren([
-      createRoute({
-        getParentRoute: () => rootRoute,
-        path: '/plain',
-        beforeLoad: () => {
-          throw redirectWithoutReplace('/items');
-        },
-      }),
-      createRoute({ getParentRoute: () => rootRoute, path: '/items' }),
-    ]),
-    trailingSlash: 'never',
-    parseSearch,
-    stringifySearch,
-  });
-}
-
-function redirectWithoutReplace(href: string) {
-  const response = new Response(null, { status: 307 }) as Response & {
-    options: { href: string; replace: boolean };
-  };
-  response.options = { href, replace: false };
-  return response;
-}
 
 /**
  * Values a URL can present to a param parser, spanning everything the query

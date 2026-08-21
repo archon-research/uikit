@@ -40,12 +40,12 @@ three non-obvious constraints (memoized identity, per-route key naming, and a
 read that does not normalize), and the non-obvious three are where every
 hand-rolled copy goes wrong.
 
-**`testing.ts`** — a redirect chain that does not converge is a hung tab, and one
-that pushes instead of replacing is a back-button trap. Neither is visible from
-inside the app, and neither has a natural unit test. The harness makes both a
-thrown error, and does the same for a `validateSearch` that rejected: the router
-records that on the match rather than throwing it, so the URL the schemas could
-not validate is exactly the one a naive harness would report as clean.
+**`testing.ts`** — a redirect chain that does not converge is a hung tab, which
+is not visible from inside the app and has no natural unit test. The harness
+makes it a thrown error, and does the same for a `validateSearch` that rejected:
+the router records that on the match rather than throwing it, so the URL the
+schemas could not validate is exactly the one a naive harness would report as
+clean.
 
 The dependency between them is one-directional and worth stating: module 2's
 termination is module 1's idempotence, and module 4 is the executable proof of
@@ -181,6 +181,19 @@ Awaiting also subsumes the synchronous case, so both shapes take one path.
 
 **The harness throws rather than returning a failure.** It is a test helper; a
 returned error object gets destructured and ignored. A throw cannot be.
+
+**The harness does not assert that a hop replaces rather than pushes.** It did,
+and the assertion was unreachable: `followRedirect` — and the `matchRoutes`
+rejection path beside it — spread the thrown redirect's options and then override
+`replace: true`, so a `beforeLoad` redirect always replaces whatever it declared.
+The only way to reach the branch was a hand-built `Response` with fabricated
+`options`, which is the tell: a fixture for a router that does not exist. Worse
+than redundant, the check was wrong in the one direction that matters — a plain
+`throw redirect({ to: '/login' })` leaves `replace` undefined, and the harness
+would have failed it while production replaced. `EntryRedirect.replace` is still
+reported, now documented as the redirect's declared intent rather than as the
+router's behaviour, because a spec pinning what *this package's* helpers write is
+a real assertion.
 
 **The harness supplies an `origin`.** Client mode is what makes `beforeLoad` run
 the way a cold load runs it, but the router then reads `window.origin`, and that
