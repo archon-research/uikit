@@ -64,6 +64,17 @@ describe('buildWorkerStartOptions', () => {
       }).serviceWorker,
     ).toEqual({ url: '/app/mockServiceWorker.js', options: { scope: '/app' } });
   });
+
+  it('keeps it when a forwarded serviceWorker passes url: undefined', () => {
+    expect(
+      buildWorkerStartOptions({
+        baseUrl: '/app',
+        start: {
+          serviceWorker: { url: undefined, options: { scope: '/app' } },
+        },
+      }).serviceWorker,
+    ).toEqual({ url: '/app/mockServiceWorker.js', options: { scope: '/app' } });
+  });
 });
 
 describe('createIdempotentStart', () => {

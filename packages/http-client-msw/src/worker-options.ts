@@ -52,8 +52,12 @@ export function buildWorkerStartOptions(
       start?.onUnhandledRequest ?? onUnhandledRequest ?? 'bypass',
     quiet: start?.quiet ?? quiet ?? true,
     serviceWorker: {
-      url: resolveWorkerScriptUrl(baseUrl),
       ...start?.serviceWorker,
+      // The same hole one level down: a `serviceWorker` object populated from
+      // another options bag carries an explicit `url: undefined`, which spread
+      // over the resolved path would erase it and send msw to its own default
+      // location — the wrong one for a subpath deployment.
+      url: start?.serviceWorker?.url ?? resolveWorkerScriptUrl(baseUrl),
     },
   };
 }
