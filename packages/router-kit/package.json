@@ -1,0 +1,51 @@
+{
+  "name": "@archon-research/router-kit",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "DESIGN.md",
+    "dist",
+    "src"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "default": "./dist/testing.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build",
+    "type:check": "tsc -p tsconfig.json --noEmit",
+    "lint": "oxlint -c oxlint.config.ts src",
+    "lint:fix": "oxlint -c oxlint.config.ts --fix src",
+    "format": "oxfmt -c oxfmt.config.ts --write src",
+    "format:check": "oxfmt -c oxfmt.config.ts --check src",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@tanstack/react-router": "^1.170.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@archon-research/oxfmt-config": "*",
+    "@archon-research/oxlint-config": "*",
+    "@archon-research/tsconfig": "*",
+    "@tanstack/react-router": "1.170.27",
+    "oxfmt": "0.62.0",
+    "oxlint": "1.77.0",
+    "vitest": "^4.1.9",
+    "zod": "4.4.3"
+  }
+}
