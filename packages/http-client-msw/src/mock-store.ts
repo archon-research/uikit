@@ -27,7 +27,14 @@ export type MockStore<T> = {
   readonly size: number;
   /** Adds an item. Throws on a duplicate id, which is a fixture bug rather than an API condition. */
   insert: (item: T) => T;
-  /** Merges `patch` into an existing item, keeping its position. `undefined` when the id is unknown — a handler turns that into its own 404. */
+  /**
+   * Merges `patch` into an existing item, keeping its position. `undefined`
+   * when the id is unknown — a handler turns that into its own 404.
+   *
+   * A patch may carry the id, which moves the item to it; the old id then
+   * misses. Throws if that id is already taken, like `insert`, and leaves the
+   * store untouched when it does.
+   */
   update: (id: string, patch: Partial<T>) => T | undefined;
   /** `false` when the id is unknown. */
   remove: (id: string) => boolean;
@@ -129,7 +136,35 @@ export function createMockStore<T>(
       if (existing === undefined) return undefined;
 
       const updated = { ...existing, ...patch };
-      items.set(id, updated);
+      // `Partial<T>` admits the id, so the patch can move the item. Re-derived
+      // rather than assumed, because leaving it under the old key desyncs the
+      // map from the items in it: `get(item.id)` misses and `get(oldId)` hands
+      // back an item that no longer claims that id.
+      const nextId = idOf(updated);
+
+      if (nextId === id) {
+        items.set(id, updated);
+
+        return updated;
+      }
+
+      if (items.has(nextId)) {
+        throw new Error(
+          `http-client-msw: createMockStore already holds an item with id "${nextId}"`,
+        );
+      }
+
+      // Rebuilt in order rather than delete-then-set, which would move the item
+      // to the end: `update` keeps an item's position, and a patched id is
+      // still an update. The collision above throws before anything is
+      // touched, so a rejected patch leaves the store as it was.
+      const entries = [...items];
+
+      items.clear();
+      for (const [key, item] of entries) {
+        if (key === id) items.set(nextId, updated);
+        else items.set(key, item);
+      }
 
       return updated;
     },

@@ -136,6 +136,43 @@ describe('createMockStore', () => {
     expect(store.get('t1')?.size).toBe(99);
   });
 
+  it('re-keys when a patch carries a new id, in place', () => {
+    const store = createMockStore(seedThings);
+
+    expect(store.update('t1', { id: 'moved' })).toEqual({
+      id: 'moved',
+      name: 'First',
+      size: 1,
+    });
+    expect(store.get('moved')?.name).toBe('First');
+    expect(store.get('t1')).toBeUndefined();
+    expect(store.has('t1')).toBe(false);
+    expect(store.size).toBe(2);
+    // The re-key is not a remove-and-append: the item keeps its position.
+    expect(store.list().map((thing) => thing.id)).toEqual(['moved', 't2']);
+  });
+
+  it('re-keys through an explicit id selector too', () => {
+    const store = createMockStore<{ slug: string; name: string }>(
+      () => [{ slug: 'a', name: 'A' }],
+      { id: (item) => item.slug },
+    );
+
+    store.update('a', { slug: 'b' });
+
+    expect(store.get('b')?.name).toBe('A');
+    expect(store.get('a')).toBeUndefined();
+  });
+
+  it('rejects a re-key onto another existing id, leaving the store as it was', () => {
+    const store = createMockStore(seedThings);
+
+    expect(() => store.update('t1', { id: 't2', size: 9 })).toThrow(
+      /already holds an item with id "t2"/,
+    );
+    expect(store.list()).toEqual(seedThings());
+  });
+
   it('takes an explicit id selector for items with no `id`', () => {
     const store = createMockStore<{ slug: string }>(() => [{ slug: 'a' }], {
       id: (item) => item.slug,
