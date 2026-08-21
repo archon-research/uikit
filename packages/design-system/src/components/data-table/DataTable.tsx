@@ -168,6 +168,41 @@ export function getCellFlashState(
   return { seq, direction };
 }
 
+/**
+ * Resolves the hints handed to `SkeletonRows` from the consumer's explicit
+ * `skeletonConfig.columnHints` and whatever `DataTable` derived from the column
+ * definitions.
+ *
+ * Hints-*present* is what switches `SkeletonRows` into its detailed
+ * (kind-aware, width-varied) mode, so "no hints" has to be expressed as
+ * `undefined`: an empty array reads as detailed-mode-with-nothing-hinted and
+ * renders every cell as a varied `text` bar — the opposite of both opt-outs
+ * that resolve to a plain uniform skeleton.
+ *
+ * - explicit `[]` — the documented "opt out of derivation entirely and keep the
+ *   plain uniform skeleton" escape hatch.
+ * - absent, with nothing interesting derived — all-`text` derived hints buy no
+ *   extra fidelity but would still flip the skeleton into detailed mode, so an
+ *   unannotated table keeps the plain skeleton it rendered before. Only a
+ *   `numeric` column (what `numericColumnMeta` marks) makes derivation worth
+ *   applying.
+ *
+ * Exported (but not re-exported from `index.ts`/the package root) so
+ * `DataTable.skeletonHints.test.ts` can exercise the branches without
+ * rendering, same as `flashClass`/`getCellFlashState` above.
+ */
+export function resolveSkeletonColumnHints(
+  explicitHints: readonly SkeletonColumnHint[] | undefined,
+  derivedHints: readonly SkeletonColumnHint[],
+): readonly SkeletonColumnHint[] | undefined {
+  if (explicitHints !== undefined) {
+    return explicitHints.length > 0 ? explicitHints : undefined;
+  }
+  return derivedHints.some((hint) => hint.kind === 'numeric')
+    ? derivedHints
+    : undefined;
+}
+
 /** Native-`<select>` faceted filter, populated from
  * `column.getFacetedUniqueValues()` (registered by `useDataTable`). Assumes
  * exact-value matching — give the column an explicit `filterFn` (e.g.
@@ -642,14 +677,10 @@ export function DataTable<TData>({
     return hints;
   }, [visibleLeafColumns, expandable, rowSelectionEnabled, actionsEnabled]);
 
-  // Deriving all-`text` hints would buy nothing but would still switch the
-  // skeleton into its detailed (width-varied) mode, so an unannotated table
-  // keeps the plain uniform skeleton it rendered before.
-  const resolvedColumnHints =
-    explicitColumnHints ??
-    (derivedColumnHints.some((hint) => hint.kind === 'numeric')
-      ? derivedColumnHints
-      : undefined);
+  const resolvedColumnHints = resolveSkeletonColumnHints(
+    explicitColumnHints,
+    derivedColumnHints,
+  );
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
