@@ -135,8 +135,12 @@ altitude response validation, timing, and result shimming want. Anything that
 needs the raw HTTP objects belongs in `openapi-fetch`'s own `client.use()`.
 
 `next()` with no argument passes the context through; `next(ctx)` rewrites it for
-everything downstream. Calling `next` twice from one middleware rejects rather
-than issuing the request twice.
+everything downstream. Not calling `next` at all short-circuits the chain with a
+substitute result. Calling it twice rejects rather than issuing the request
+twice — which also means **a middleware cannot retry**: it has no way to re-issue
+the request it is wrapping. Whole-operation retry is react-query's `retry`/
+`retryDelay`, which re-enter the chain from the top; transport-level retry
+belongs in the `fetch` handed to `createApiClient`, which owns the HTTP call.
 
 The one shipped middleware, `createZodResponseMiddleware`, validates bodies
 against the OpenAPI document through http-client-core's

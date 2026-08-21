@@ -23,9 +23,17 @@ export type QueryApiNext = (ctx?: QueryApiRequestContext) => Promise<unknown>;
 
 /**
  * Onion-style middleware over the *parsed result* of a request, not over
- * `Request`/`Response`. That is the layer response validation, logging, and
- * retry shims want; `openapi-fetch`'s own `use()` middleware remains available
- * on the client for anything that needs the raw HTTP objects.
+ * `Request`/`Response`. That is the altitude for response validation, logging
+ * and timing, rewriting the request on the way in (`next(ctx)`), reshaping the
+ * result on the way out, and short-circuiting with a substitute result by never
+ * calling `next` at all.
+ *
+ * **Not retries.** `next` is single-use per invocation — a second call rejects —
+ * so a middleware cannot re-issue the request it is wrapping. Retrying belongs
+ * either to react-query, whose `retry`/`retryDelay` re-invoke the whole chain
+ * from the top, or to the `fetch` implementation handed to `createApiClient`,
+ * which owns the actual HTTP call. `openapi-fetch`'s own `use()` middleware
+ * remains available on the client for anything that needs the raw HTTP objects.
  */
 export type QueryApiMiddleware = (
   ctx: QueryApiRequestContext,
