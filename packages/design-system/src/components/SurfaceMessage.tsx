@@ -28,7 +28,20 @@ export type SurfaceMessageSlotClassNames = {
   body?: string;
 };
 
-export type SurfaceMessageProps = HTMLAttributes<HTMLDivElement> & {
+/**
+ * The native `title` attribute is omitted from the base, not intersected with:
+ * `title` here is the message's heading. Both are `string`, so the intersection
+ * raised no type error at all — `string & string` is `string` — and that is
+ * precisely what made the collision dangerous: a consumer passing `title` for a
+ * native hover tooltip silently got a rendered heading instead, with nothing to
+ * flag it. Omitting makes the one surviving meaning the declared one. A tooltip
+ * on a message frame is a `SurfaceMessageRoot` concern — compose the parts and
+ * put `title` there.
+ */
+export type SurfaceMessageProps = Omit<
+  HTMLAttributes<HTMLDivElement>,
+  'title'
+> & {
   title: string;
   body: string;
   tone?: SurfaceMessageTone;

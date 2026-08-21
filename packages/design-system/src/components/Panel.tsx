@@ -64,7 +64,15 @@ const PANEL_STATE_COPY: Record<PanelState, { title: string; body: string }> = {
   },
 };
 
-export type PanelProps = HTMLAttributes<HTMLDivElement> & {
+/**
+ * The native `title` attribute is omitted from the base, not intersected with:
+ * `title` here is the panel's header heading. Intersecting instead silently
+ * collapsed this `ReactNode` to `string` (`ReactNode & string`), so a heading
+ * carrying an icon or a `Badge` did not type-check — and a consumer's tooltip
+ * string would have been consumed as the heading. Put a frame tooltip on a
+ * wrapper element.
+ */
+export type PanelProps = Omit<HTMLAttributes<HTMLDivElement>, 'title'> & {
   /** Section-label heading rendered at the start of the header row. */
   title?: ReactNode;
   /** Secondary, muted line aligned to the end of the header row. */
