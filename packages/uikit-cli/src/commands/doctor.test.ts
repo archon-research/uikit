@@ -422,4 +422,30 @@ describe('DoctorCommand.execute', () => {
     const cmd = new DoctorCommand(fs, silentLogger, executor);
     expect(cmd.execute(['--codegen'], '/proj')).toBe(false);
   });
+
+  it('names the command it actually ran when codegen fails', () => {
+    // `--codegen` is doctor's own flag; quoting it back as a panda subcommand
+    // sends the reader looking for something that does not exist.
+    const { fs } = makeFs({});
+    let ran = '';
+    const executor = {
+      exec: (command: string) => {
+        ran = command;
+        return { stdout: '', stderr: 'panda: not found', success: false };
+      },
+      execQuiet: () => false,
+    } as CommandExecutor;
+    const errors: string[] = [];
+    const logger: Logger = {
+      ...silentLogger,
+      error: (m: string) => void errors.push(m),
+    };
+    expect(new DoctorCommand(fs, logger, executor).execute(['--codegen'])).toBe(
+      false,
+    );
+    expect(ran).toContain('panda cssgen --outfile');
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain(ran);
+    expect(errors[0]).not.toContain('cssgen --codegen');
+  });
 });

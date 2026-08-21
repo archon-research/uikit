@@ -535,13 +535,11 @@ export class DoctorCommand {
    */
   private runCodegen(cwd: string): string | null {
     const outfile = path.join(os.tmpdir(), `uikit-doctor-${process.pid}.css`);
-    const result = this.executor.exec(
-      `npx panda cssgen --outfile "${outfile}"`,
-      { cwd, silent: true },
-    );
+    const command = `npx panda cssgen --outfile "${outfile}"`;
+    const result = this.executor.exec(command, { cwd, silent: true });
     if (!result.success || !this.fs.exists(outfile)) {
       this.logger.error(
-        'Could not generate CSS with `panda cssgen --codegen`.\n' +
+        `Could not generate CSS with \`${command}\`.\n` +
           '  Ensure @pandacss/dev is installed and a panda config is present in\n' +
           `  ${cwd}. Underlying error:\n` +
           `  ${(result.stderr || 'panda produced no output file').trim()}`,
