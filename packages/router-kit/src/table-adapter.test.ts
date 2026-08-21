@@ -4,6 +4,7 @@ import {
   createUrlSyncedTableAdapter,
   type UrlSyncedTableNavigateOptions,
 } from './table-adapter.js';
+import { parseSearch, stringifySearch } from './test-fixtures.js';
 
 function adapterFor(search: object | null | undefined) {
   const navigate = vi.fn<(options: UrlSyncedTableNavigateOptions) => void>();
@@ -50,8 +51,25 @@ describe('createUrlSyncedTableAdapter — reads', () => {
     expect(adapter.searchParam).toBe('true');
   });
 
-  it('reads an empty param as absent', () => {
-    const { adapter } = adapterFor({ sort: '', q: '   ' });
+  it('carries a string through verbatim, whitespace and all', () => {
+    // The read and the write are two ends of one loop, so a trim here would
+    // make `'usd '` read back as `'usd'` and the next keystroke land on
+    // `'usdc'`. Trimming is the schema's job, at the route boundary.
+    const { adapter } = adapterFor({ sort: ' name:desc ', q: 'usd coin ' });
+
+    expect(adapter.sortParam).toBe(' name:desc ');
+    expect(adapter.searchParam).toBe('usd coin ');
+  });
+
+  it('reads a present-but-empty param as the empty string it stores', () => {
+    const { adapter } = adapterFor({ sort: '', q: '' });
+
+    expect(adapter.sortParam).toBe('');
+    expect(adapter.searchParam).toBe('');
+  });
+
+  it('reads a value the URL cannot mean as absent', () => {
+    const { adapter } = adapterFor({ sort: ['a', 'b'], q: { nested: true } });
 
     expect(adapter.sortParam).toBeNull();
     expect(adapter.searchParam).toBeNull();
@@ -149,5 +167,77 @@ describe('createUrlSyncedTableAdapter — writes', () => {
 
     expect(adapter.sortParam).toBe('a');
     expect(navigate).not.toHaveBeenCalled();
+  });
+});
+
+/*
+ * The wiring README step 3 describes, end to end: the design system's hook
+ * writes `filter || null` on every search-box change and renders
+ * `searchParam ?? ''` back into the box, and between those two the value makes a
+ * full trip through the URL. A unit test of either end alone cannot see the
+ * failure that matters here — read and write disagreeing about whitespace — so
+ * these two drive the whole loop, one keystroke at a time.
+ */
+
+/** One search-box change: write, render the query string, decode it back. */
+function typeInto(
+  search: Record<string, unknown>,
+  filter: string,
+): Record<string, unknown> {
+  const { adapter, navigate } = adapterFor(search);
+
+  adapter.setSearchParam(filter || null);
+
+  return parseSearch(stringifySearch(patchFrom(navigate, search))) as Record<
+    string,
+    unknown
+  >;
+}
+
+/** What the search box shows for a given URL search, per the hook. */
+function renderedFilter(search: Record<string, unknown>): string {
+  return adapterFor(search).adapter.searchParam ?? '';
+}
+
+describe('createUrlSyncedTableAdapter — the write/read round trip', () => {
+  it('holds every keystroke of a multi-word term, spaces included', () => {
+    let search: Record<string, unknown> = {};
+
+    for (const typed of [
+      'u',
+      'us',
+      'usd',
+      'usd ',
+      'usd c',
+      'usd co',
+      'usd coi',
+      'usd coin',
+      'usd coin ',
+    ]) {
+      search = typeInto(search, typed);
+
+      // The failure this pins: with a trimming read, `'usd '` comes back as
+      // `'usd'` and the next keystroke types `'usdc'`, so the space can never
+      // be entered and a two-word term is untypeable.
+      expect(renderedFilter(search)).toBe(typed);
+    }
+
+    expect(search).toEqual({ q: 'usd coin ' });
+  });
+
+  it('spells the trailing space in the URL and reads it back', () => {
+    const { adapter, navigate } = adapterFor({});
+
+    adapter.setSearchParam('usd ');
+
+    expect(stringifySearch(patchFrom(navigate, {}))).toBe('?q=usd+');
+    expect(renderedFilter({ q: 'usd ' })).toBe('usd ');
+  });
+
+  it('clears back to an empty box and an empty URL', () => {
+    const search = typeInto({ q: 'usd coin ' }, '');
+
+    expect(search).toEqual({});
+    expect(renderedFilter(search)).toBe('');
   });
 });

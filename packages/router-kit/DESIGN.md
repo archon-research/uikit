@@ -36,8 +36,9 @@ and the result is validated again on arrival.
 
 **`table-adapter.ts`** — the design system's table asks for a URL-sync adapter
 and deliberately reads no router. Building one is four lines of obvious code plus
-two non-obvious constraints (memoized identity, per-route key naming), and the
-non-obvious two are where every hand-rolled copy goes wrong.
+three non-obvious constraints (memoized identity, per-route key naming, and a
+read that does not normalize), and the non-obvious three are where every
+hand-rolled copy goes wrong.
 
 **`testing.ts`** — a redirect chain that does not converge is a hung tab, and one
 that pushes instead of replacing is a back-button trap. Neither is visible from
@@ -131,6 +132,23 @@ the memo dependencies are the caller's search object — a value only the caller
 can name. Revisit if a second consumer writes the same `useMemo`.
 
 ## Deliberate design choices worth recording
+
+**The table adapter's read does not reuse `toSearchText`.** It absorbs the same
+decoder coercions — a number or boolean reads as its text, an array or object
+reads as absent — but it carries a string through byte for byte, where
+`toSearchText` trims and degrades empty to absent. Reusing the schema
+normalizer here looked like the obvious economy and is a bug: the adapter's read
+and write are two ends of one loop (the hook renders `searchParam` straight back
+into the search box), so any normalization on the read that the write does not
+apply is a value the user cannot type. `'usd '` would write `?q=usd+`, read back
+`'usd'`, and put the next keystroke on `'usdc'` — a two-word search term becomes
+untypeable, and the table looks broken rather than the URL.
+
+The general rule the two modules split along: **normalization is a schema
+concern, applied once at the route boundary; an adapter transports.** A route
+that wants trimming declares `textParam()`, which is visible in the schema and
+can be swapped for a param that keeps whitespace. Trimming inside the adapter
+would be a second copy of that decision with no way to opt out of it.
 
 **Factories, not bare functions, for the two `beforeLoad` helpers.** Both need
 the app's `stringifySearch`, and a two-argument function cannot be handed

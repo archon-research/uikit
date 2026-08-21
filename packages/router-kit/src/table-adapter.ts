@@ -1,5 +1,3 @@
-import { toSearchText } from './search-params.js';
-
 /**
  * The design system's URL-sync seam for `useUrlSyncedTableStateAdapter`,
  * restated here structurally.
@@ -71,10 +69,11 @@ export type UrlSyncedTableAdapterOptions = {
  * Builds the design system's URL-sync adapter over a router search object and a
  * navigate function.
  *
- * Reads through {@link toSearchText}, so a sort spec that the query decoder
- * coerced (`?sort=1` arriving as the number `1`) still reads as text rather
- * than vanishing. Writes patch only their own key and always replace, so table
- * state does not fill the back button with one entry per keystroke.
+ * Reads absorb the query decoder's coercions, so a sort spec that arrived as
+ * the number `1` still reads as text rather than vanishing, and carry a string
+ * through verbatim (see {@link readParam}). Writes patch only their own key and
+ * always replace, so table state does not fill the back button with one entry
+ * per keystroke.
  *
  * ## The returned object's identity is the caller's problem
  *
@@ -115,21 +114,66 @@ export function createUrlSyncedTableAdapter(
   const { search, sortKey, searchKey, navigate } = options;
   const record = (search ?? {}) as Record<string, unknown>;
 
-  const read = (key: string): string | null =>
-    toSearchText(record[key]) ?? null;
+  return {
+    sortParam: readParam(record[sortKey]),
+    setSortParam: write(navigate, sortKey),
+    searchParam: readParam(record[searchKey]),
+    setSearchParam: write(navigate, searchKey),
+  };
+}
 
-  const write = (key: string) => (value: string | null) => {
+/**
+ * One raw search value, as the seam spells it: the text of the param, or `null`
+ * when the URL holds nothing usable.
+ *
+ * **A string is carried through byte for byte — no trim, and no empty-to-absent
+ * degradation.** That is the load-bearing half of this function, because the
+ * read and the write are two ends of one loop: `setSearchParam` writes the
+ * string it is given, and the value that comes back is what the search box
+ * renders. Trimming on the way in would break the loop for any term with a
+ * trailing space — `'usd '` writes `?q=usd+`, reads back as `'usd'`, and the
+ * next keystroke lands on `'usdc'`, which makes a two-word search term
+ * untypeable. Interior and trailing whitespace therefore survive a
+ * write-read-write round trip unchanged.
+ *
+ * Trimming is a *schema* concern, applied once at the route boundary where it
+ * is visible and opt-in: `textParam()` trims, `deserializeSorting` in the
+ * design system trims each sort id, and a route that wants whitespace preserved
+ * declares a param that keeps it. An adapter that also trimmed would be a
+ * second, invisible copy of that rule with no way to opt out.
+ *
+ * The other half is the coercion the decoder already applied: `?sort=1` reaches
+ * a schema-less read as the number `1`, so numbers and booleans render to their
+ * text rather than reading as absent. Everything else the decoder can produce —
+ * a repeated key's array, an object, `null`, absence — means "no usable value",
+ * which the seam spells `null`.
+ */
+function readParam(value: unknown): string | null {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  return null;
+}
+
+/**
+ * The other end of that loop: patch one key and leave the rest of the search
+ * alone. `null` is written as `undefined`, which is how the URL spells absence —
+ * every other string, empty one included, is written as given.
+ */
+function write(
+  navigate: UrlSyncedTableNavigate,
+  key: string,
+): (value: string | null) => void {
+  return (value) => {
     navigate({
       to: '.',
       search: (previous) => ({ ...previous, [key]: value ?? undefined }),
       replace: true,
     });
-  };
-
-  return {
-    sortParam: read(sortKey),
-    setSortParam: write(sortKey),
-    searchParam: read(searchKey),
-    setSearchParam: write(searchKey),
   };
 }

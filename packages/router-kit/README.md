@@ -189,7 +189,7 @@ export function useItemsTableUrlState(): UseUrlSyncedTableReturn {
 }
 ```
 
-Three things worth knowing:
+Four things worth knowing:
 
 - **`useMemo` is required, not tidy.** `useUrlSyncedTableStateAdapter` memoizes
   the setters it returns *on the adapter object*, so a fresh object per render
@@ -203,6 +203,15 @@ Three things worth knowing:
 - **`sortKey` and `searchKey` have no defaults.** Two tables that silently share
   `sort`/`q` leak whichever state was set last across every switch between them,
   and it reads as a bug in the table rather than in the URL.
+- **The read is verbatim; the schema owns trimming.** A string param reaches the
+  table exactly as the URL holds it, whitespace included, so a write-read-write
+  round trip is lossless. It has to be: the hook renders `searchParam` back into
+  the search box, so an adapter that trimmed would make `'usd '` read back as
+  `'usd'`, land the next keystroke on `'usdc'`, and leave a two-word term
+  untypeable. Trim at the route boundary instead, where it is visible and
+  opt-out-able — `textParam()` does exactly that. Values the URL cannot mean (a
+  repeated key's array, an object) read as absent, and a number or boolean the
+  decoder produced reads as its text.
 
 ### 4. Prove the entry URLs settle
 
