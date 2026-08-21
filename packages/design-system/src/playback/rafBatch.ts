@@ -7,8 +7,7 @@
  * when a burst of events arrives faster than a frame. `createRafBatcher`
  * buffers pushed items and delivers the whole buffer to `onFlush` on the
  * next animation frame, so a frame's worth of events collapse into ONE
- * `setLiveEvents` call (and one array copy) no matter how many arrived
- * inside it.
+ * state commit no matter how many arrived inside it.
  *
  * The batcher also drops work naturally when the tab is hidden: browsers
  * stop firing `requestAnimationFrame`, so the buffer just accumulates and
