@@ -607,9 +607,14 @@ export class DoctorCommand {
     }
 
     if (report.ok) {
+      // Only warnings were printed: say so rather than claiming a clean sheet.
+      const count = report.issues.length;
+      const summary =
+        count === 1
+          ? 'The warning above is an unproven combination, so it does not fail'
+          : `The ${count} warnings above are unproven combinations, so they do not fail`;
       this.logger.info(
-        `✓ ${relative}: no silently-dropped CSS detected. ` +
-          'The warnings above are unproven combinations, not failures.',
+        `✓ ${relative}: nothing definitely dropped. ${summary} the check.`,
       );
     }
     return report.ok;
