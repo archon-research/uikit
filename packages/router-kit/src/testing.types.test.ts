@@ -40,6 +40,10 @@ export async function typeAssertions(): Promise<void> {
   // Un-narrowed reads still work, which is what an assertion usually wants.
   expectTypeOf(resolution.replace).toEqualTypeOf<boolean | undefined>();
 
+  // Both arms report the URL that was resolved, so that needs no narrowing
+  // either.
+  expectTypeOf(resolution.url).toEqualTypeOf<string>();
+
   // Both entry points are async: a `beforeLoad` may be, and awaiting it is what
   // makes an async redirect reachable at all.
   expectTypeOf(settleEntryUrl(options, '/plain')).toEqualTypeOf<

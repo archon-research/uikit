@@ -239,6 +239,26 @@ line between the options this harness takes verbatim and the ones it overrides �
 grammar (`parseSearch`, `stringifySearch`, `trailingSlash`, `caseSensitive`,
 `basepath`) is the caller's; browser-only side effects are not.
 
+**The harness reports URLs in the router's spelling, not the caller's.** Under a
+`basepath` every URL has two: `/app/items` in the address bar, `/items` inside
+the router. The entry URL arrives in the first, and a `beforeLoad` redirect
+target — built from `location.pathname` — is written in the second, so echoing
+the caller's string back would produce a `hops` array holding both, and a settled
+URL whose spelling depended on which hop happened to produce it. Reporting the
+location the router parsed picks the space both ends agree on, and it is the space
+route paths are written in, so an assertion reads like the route tree.
+
+That leaves one hazard worth recording, in the redirect helpers rather than the
+harness: `redirect({ href })` is address-bar space as far as the router is
+concerned — it runs the href through the *input* rewrite before building the
+location it commits — while `createValidatedSearchRedirect` builds its href from
+the router-internal `location.pathname`. The two agree for every basepath that is
+not also a prefix of a route path, because stripping a prefix that is not there
+is a no-op. They disagree for, say, a route at `/app/settings` under a basepath of
+`/app`, where the internal href would be read as the address-bar one and stripped
+to `/settings`. The harness reproduces that faithfully (it feeds the target
+through the same parse the router does) rather than hiding it.
+
 **`EntryUrlResolution`'s arms each declare the other's fields as
 optional-`undefined`.** `redirectTo` stays a real discriminant, but a spec can
 read `.replace` or `.routeId` without narrowing first — which is most of what an

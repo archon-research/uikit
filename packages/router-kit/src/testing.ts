@@ -33,7 +33,26 @@ export type EntryRouterOptions = AnyRouter['options'];
  * un-narrowed resolution, which is most of what an assertion wants to do.
  */
 
-export type EntryRedirect = {
+/**
+ * The URL a resolution is *of*, in the router's own spelling: the location it
+ * parsed, which is the string that was passed in for any router without a
+ * `basepath` or a `rewrite`, and the rewritten form for one with either.
+ *
+ * That matters because a URL under a basepath has two spellings — `/app/items`
+ * in the address bar, `/items` inside the router — and a `beforeLoad` redirect
+ * target is built from `location.pathname`, so it is written in the internal
+ * one. Reporting the caller's string verbatim would put both spellings in a
+ * single `hops` array: unreadable as a cycle, and a settled URL that depends on
+ * which hop produced it. The router's spelling is the one both ends agree on,
+ * and it is the space route paths are written in — so a basepath'd app's
+ * assertions read like its route tree, with the basepath added back only by the
+ * browser.
+ */
+type ResolvedEntryUrl = {
+  url: string;
+};
+
+export type EntryRedirect = ResolvedEntryUrl & {
   redirectTo: string;
   /**
    * What the thrown redirect *declared*, not what the router will do: every
@@ -47,7 +66,7 @@ export type EntryRedirect = {
   search?: undefined;
 };
 
-export type EntryLeaf = {
+export type EntryLeaf = ResolvedEntryUrl & {
   redirectTo: null;
   replace?: undefined;
   routeId: string;
@@ -172,6 +191,12 @@ export async function resolveEntryUrl(
       }
 
       return {
+        url: router.latestLocation.href,
+        // Reported as the redirect declared it, not normalized: an `href` is
+        // taken verbatim because that is how the router takes it, feeding the
+        // string through the location rewrite when it builds the next location —
+        // which is exactly what happens when this becomes the next hop's history
+        // entry. A `to`-shaped redirect has no string to take, so it is built.
         redirectTo:
           thrown.options.href ?? router.buildLocation(thrown.options).href,
         replace: thrown.options.replace,
@@ -182,6 +207,7 @@ export async function resolveEntryUrl(
   const leaf = matches[matches.length - 1];
 
   return {
+    url: router.latestLocation.href,
     redirectTo: null,
     routeId: leaf.routeId,
     params: leaf.params,
@@ -198,9 +224,15 @@ export type SettleEntryUrlOptions = {
 };
 
 export type SettledEntryUrl = {
-  /** The URL the address bar ends on. */
+  /**
+   * The URL the chain ends on, in the router's own spelling (see the note on
+   * {@link EntryUrlResolution}'s `url`).
+   */
   url: string;
-  /** Every URL visited, entry first, in order. */
+  /**
+   * Every URL visited, entry first, in order — each one as the router spells it,
+   * so a basepath'd chain reads in one space rather than two.
+   */
   hops: readonly string[];
   /** The leaf that renders once the chain has run out. */
   result: EntryLeaf;
@@ -258,18 +290,23 @@ export async function settleEntryUrl(
   options: SettleEntryUrlOptions = {},
 ): Promise<SettledEntryUrl> {
   const maxHops = options.maxHops ?? DEFAULT_MAX_HOPS;
-  const hops = [url];
+  const hops: string[] = [];
   let current = url;
 
   for (let hop = 0; hop <= maxHops; hop += 1) {
     const result = await resolveEntryUrl(routerOptions, current);
 
+    // The router's spelling of the URL just resolved, not the string handed in.
+    // The two differ under a basepath, where a redirect target is written in the
+    // router's internal space while the entry URL is written in the browser's; a
+    // chain recorded as a mix of both is unreadable as a cycle.
+    hops.push(result.url);
+
     if (result.redirectTo === null) {
-      return { url: current, hops, result };
+      return { url: result.url, hops, result };
     }
 
     current = result.redirectTo;
-    hops.push(current);
   }
 
   throw new Error(

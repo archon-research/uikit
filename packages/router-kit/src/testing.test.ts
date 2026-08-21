@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createAsyncRedirectRouter,
+  createBasepathRouter,
   createJsonSearchRouter,
   createNonConvergingRouter,
   createRedirectedPastRejectionRouter,
@@ -175,6 +176,79 @@ describe('settleEntryUrl — the caller’s router config decides the answer', (
     );
 
     expect(json.url).toBe('/plain');
+  });
+});
+
+describe('settleEntryUrl — a router served under a basepath', () => {
+  const basepathRouter = createBasepathRouter();
+
+  it('matches the route the address-bar URL names', async () => {
+    const resolution = await resolveEntryUrl(
+      basepathRouter.options,
+      '/app/items/42',
+    );
+
+    expect(resolution.routeId).toBe('/items/$itemId');
+    expect(resolution.params).toEqual({ itemId: '42' });
+  });
+
+  // The address bar holds `/app/plain`; the router — and the route tree, and
+  // every redirect target built from `location.pathname` — says `/plain`. The
+  // reported URL is the router's, so an assertion reads like the route tree.
+  it('reports the URL it resolved in the router’s own spelling', async () => {
+    const resolution = await resolveEntryUrl(
+      basepathRouter.options,
+      '/app/plain?q=x',
+    );
+
+    expect(resolution.url).toBe('/plain?q=x');
+  });
+
+  // Which is also why the chain can feed its own targets back in: a hop written
+  // in the router's space resolves to the same route as the address-bar form.
+  it('resolves a hop written in that spelling to the same route', async () => {
+    const resolution = await resolveEntryUrl(
+      basepathRouter.options,
+      '/plain?q=x',
+    );
+
+    expect(resolution.routeId).toBe('/plain');
+    expect(resolution.url).toBe('/plain?q=x');
+  });
+
+  it('reports a redirect target as the redirect declared it', async () => {
+    const resolution = await resolveEntryUrl(
+      basepathRouter.options,
+      '/app/plain?tab=bogus',
+    );
+
+    expect(resolution.redirectTo).toBe('/plain');
+  });
+
+  // The entry URL arrives in one spelling and every redirect target is written
+  // in the other, so the whole point of reporting the router's spelling is that
+  // a chain does not read as a mix of the two.
+  it('records every hop of a chain in one spelling', async () => {
+    const settled = await settleEntryUrl(
+      basepathRouter.options,
+      '/app/items/42?item=7&tab=bogus',
+    );
+
+    expect(settled.hops).toEqual([
+      '/items/42?item=7&tab=bogus',
+      '/items/42?item=7',
+      '/items/42',
+    ]);
+    expect(settled.url).toBe('/items/42');
+    expect(settled.result.routeId).toBe('/items/$itemId');
+    expect(settled.result.params).toEqual({ itemId: '42' });
+  });
+
+  it('settles a URL that needs no rewrite', async () => {
+    const settled = await settleEntryUrl(basepathRouter.options, '/app/plain');
+
+    expect(settled.url).toBe('/plain');
+    expect(settled.hops).toEqual(['/plain']);
   });
 });
 

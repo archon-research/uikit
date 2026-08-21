@@ -304,6 +304,42 @@ export function createThrowingRouter() {
 }
 
 /**
+ * The same behaviours as {@link createToyRouter}, on a router served under
+ * `/app`. A basepath splits every URL into two spellings — the address-bar one
+ * the browser holds and the internal one route paths are written in — and the
+ * cleanup builds its redirect target from the internal `location.pathname`, so
+ * this is what checks that a chain is still reported in one of them.
+ */
+export function createBasepathRouter() {
+  const rootRoute = createRootRoute({
+    validateSearch: sharedSearchSchema,
+    beforeLoad: createValidatedSearchRedirect({ stringifySearch }),
+  });
+
+  const itemsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/items',
+  });
+
+  return createRouter({
+    routeTree: rootRoute.addChildren([
+      itemsRoute.addChildren([
+        createRoute({
+          getParentRoute: () => itemsRoute,
+          path: '$itemId',
+          beforeLoad: createSearchParamStripper('item', { stringifySearch }),
+        }),
+      ]),
+      createRoute({ getParentRoute: () => rootRoute, path: '/plain' }),
+    ]),
+    basepath: '/app',
+    trailingSlash: 'never',
+    parseSearch,
+    stringifySearch,
+  });
+}
+
+/**
  * A route tree on a router that ships `scrollRestoration: true` — the common
  * production setting, and one that arms a DOM listener from the router
  * constructor. The harness runs headless, so it has to neutralize the option or

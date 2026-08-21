@@ -321,6 +321,13 @@ on would throw `ReferenceError: history is not defined` before a route was
 matched, and every app that sets it would find the harness unusable. Neither
 option has any bearing on what a URL means.
 
+Under a `basepath` (or a `rewrite`), `settled.url` and `settled.hops` come back
+in the **router's** spelling — `/items`, not `/app/items`. Both spellings of an
+entry URL resolve to the same route, so pass whichever you have; but a redirect
+target built inside a `beforeLoad` is written in the router's space, so reporting
+your string verbatim would put two spellings of one URL in a single `hops` array.
+Assert against your route paths, the way you wrote them.
+
 Known limit: the harness supplies a `beforeLoad` with `location`, `matches`,
 `params`, and `search`. A `beforeLoad` that reads route `context` or calls
 `navigate` fails loudly here rather than being silently skipped — entry-time
