@@ -169,6 +169,63 @@ export function createAsyncRedirectRouter() {
 }
 
 /**
+ * A route tree whose root schema *rejects* rather than degrading — the shape a
+ * plain `z.object({ page: z.number() })` takes, which is the most common way a
+ * real app's search validation fails. `matchRoutes` does not throw it: it
+ * records the rejection on the match and carries on with an empty strict
+ * search, so a harness that did not look would report the unvalidatable URL as
+ * settled.
+ */
+export function createRejectingSchemaRouter() {
+  const rootRoute = createRootRoute({
+    // Not one of this package's builders, on purpose: these are total by
+    // construction, so no URL can reach the branch under test through them.
+    validateSearch: z.object({ required: z.string() }),
+  });
+
+  return createRouter({
+    routeTree: rootRoute.addChildren([
+      createRoute({ getParentRoute: () => rootRoute, path: '/plain' }),
+    ]),
+    trailingSlash: 'never',
+    parseSearch,
+    stringifySearch,
+  });
+}
+
+/**
+ * A rejecting schema one level *down*, under a root whose `beforeLoad`
+ * redirects away from that branch. Production never validates the rejecting
+ * route — the ancestor moves the URL first — so the harness must not fail
+ * either. This is what pins the rejection check to match order rather than to a
+ * sweep over every match up front.
+ */
+export function createRedirectedPastRejectionRouter() {
+  const rootRoute = createRootRoute({
+    validateSearch: sharedSearchSchema,
+    beforeLoad: ({ location }: { location: { pathname: string } }) => {
+      if (location.pathname === '/legacy') {
+        throw redirect({ href: '/plain', replace: true });
+      }
+    },
+  });
+
+  return createRouter({
+    routeTree: rootRoute.addChildren([
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: '/legacy',
+        validateSearch: z.object({ required: z.string() }),
+      }),
+      createRoute({ getParentRoute: () => rootRoute, path: '/plain' }),
+    ]),
+    trailingSlash: 'never',
+    parseSearch,
+    stringifySearch,
+  });
+}
+
+/**
  * A route tree whose `beforeLoad` fails for a reason that is not a redirect.
  * The harness must surface it rather than reporting the route as settled.
  */

@@ -43,7 +43,9 @@ hand-rolled copy goes wrong.
 **`testing.ts`** — a redirect chain that does not converge is a hung tab, and one
 that pushes instead of replacing is a back-button trap. Neither is visible from
 inside the app, and neither has a natural unit test. The harness makes both a
-thrown error.
+thrown error, and does the same for a `validateSearch` that rejected: the router
+records that on the match rather than throwing it, so the URL the schemas could
+not validate is exactly the one a naive harness would report as clean.
 
 The dependency between them is one-directional and worth stating: module 2's
 termination is module 1's idempotence, and module 4 is the executable proof of

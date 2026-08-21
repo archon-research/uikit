@@ -85,6 +85,10 @@ type HeadlessBeforeLoadArgs = {
  *
  * `router.load()` is not usable for this — it commits matches through the
  * framework transitioner, so headless it leaves `state.matches` empty.
+ *
+ * @throws when a matched route's `validateSearch` rejected the URL, when a
+ * `beforeLoad` throws something that is not a redirect, or when a `beforeLoad`
+ * reads a context field a headless pass cannot supply.
  */
 export async function resolveEntryUrl(
   routerOptions: EntryRouterOptions,
@@ -105,6 +109,30 @@ export async function resolveEntryUrl(
   const matches = router.matchRoutes(router.latestLocation);
 
   for (const match of matches) {
+    // `matchRoutes` does not throw a `validateSearch` rejection — it records it
+    // on the match as `searchError` and carries on with a strict search of `{}`.
+    // Left unchecked that is the worst outcome available here: the one URL that
+    // *cannot* be validated would be reported as settled, carrying a `search`
+    // no schema produced, so a suite whose whole point is that the schemas are
+    // total would prove it by asserting on the route where they failed. Hence a
+    // throw naming the route and the error, since the schema that rejected is
+    // the only thing worth knowing.
+    //
+    // Checked per match, in match order and before this match's own
+    // `beforeLoad`, because that is where the router checks it (`load-client`
+    // reads `paramsError ?? searchError` at exactly this point): a rejected
+    // match never runs its own `beforeLoad`, while an *ancestor's* has already
+    // run and may legitimately have redirected the URL away from the failure.
+    // `matchRoutes(location, { throwOnError: true })` would be shorter and is
+    // wrong for that reason — it throws during matching, before any
+    // `beforeLoad`, so a URL production redirects away from would fail here.
+    if (match.searchError !== undefined) {
+      throw new Error(
+        `route "${match.routeId}" rejected the search in "${url}": ${describeThrown(match.searchError)}`,
+        { cause: match.searchError },
+      );
+    }
+
     const { beforeLoad } = router.routesById[match.routeId].options;
 
     if (!beforeLoad) {
@@ -231,4 +259,15 @@ export async function settleEntryUrl(
 
 function pluralizeHops(count: number): string {
   return count === 1 ? '1 hop' : `${count} hops`;
+}
+
+/**
+ * The readable half of a thrown value, for a message that has to name why a
+ * schema rejected. A `validateSearch` rejection arrives wrapped in the router's
+ * `SearchParamError`, whose message is the underlying validation message —
+ * zod's key-by-key report, which is the useful part. Anything else a schema can
+ * throw is stringified.
+ */
+function describeThrown(thrown: unknown): string {
+  return thrown instanceof Error ? thrown.message : String(thrown);
 }

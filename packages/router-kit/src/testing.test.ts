@@ -4,6 +4,8 @@ import {
   createAsyncRedirectRouter,
   createJsonSearchRouter,
   createNonConvergingRouter,
+  createRedirectedPastRejectionRouter,
+  createRejectingSchemaRouter,
   createThrowingRouter,
   createToyRouter,
 } from './test-fixtures.js';
@@ -53,6 +55,70 @@ describe('resolveEntryUrl', () => {
     await expect(resolveEntryUrl(router.options, '/plain')).rejects.toThrow(
       'beforeLoad blew up',
     );
+  });
+});
+
+describe('resolveEntryUrl — a schema that rejects', () => {
+  const rejecting = createRejectingSchemaRouter();
+
+  // `matchRoutes` records a `validateSearch` rejection on the match instead of
+  // throwing it, and carries on with a strict search of `{}`. Reporting that as
+  // settled would be the harness at its least useful: the one URL the schemas
+  // could not validate would come back looking clean, carrying a search no
+  // schema produced.
+  it('fails rather than reporting the unvalidatable URL as settled', async () => {
+    await expect(resolveEntryUrl(rejecting.options, '/plain')).rejects.toThrow(
+      /rejected the search in "\/plain"/,
+    );
+  });
+
+  it('names the route whose schema rejected', async () => {
+    await expect(resolveEntryUrl(rejecting.options, '/plain')).rejects.toThrow(
+      /route "__root__"/,
+    );
+  });
+
+  it('carries the validation message through, so the key is visible', async () => {
+    await expect(resolveEntryUrl(rejecting.options, '/plain')).rejects.toThrow(
+      /required/,
+    );
+  });
+
+  it('keeps the rejection as the cause, not just as text', async () => {
+    const thrown = await resolveEntryUrl(rejecting.options, '/plain').catch(
+      (error: unknown) => error,
+    );
+
+    expect((thrown as Error).cause).toBeInstanceOf(Error);
+  });
+
+  it('settles a URL the same schema accepts', async () => {
+    const settled = await settleEntryUrl(
+      rejecting.options,
+      '/plain?required=x',
+    );
+
+    expect(settled.url).toBe('/plain?required=x');
+  });
+
+  it('fails the whole settle, rather than stopping at a bad hop', async () => {
+    await expect(settleEntryUrl(rejecting.options, '/plain')).rejects.toThrow(
+      /rejected the search/,
+    );
+  });
+
+  // The check runs in match order, where the router runs it. An ancestor's
+  // `beforeLoad` has already redirected by the time a rejecting child would be
+  // reached, so the URL production never validates is one this must not fail
+  // on either — which rules out sweeping the matches for rejections up front,
+  // and rules out `matchRoutes(..., { throwOnError: true })`.
+  it('ignores a rejection on a branch an ancestor redirects away from', async () => {
+    const router = createRedirectedPastRejectionRouter();
+
+    const settled = await settleEntryUrl(router.options, '/legacy');
+
+    expect(settled.url).toBe('/plain');
+    expect(settled.result.routeId).toBe('/plain');
   });
 });
 

@@ -264,6 +264,12 @@ Both assertions cover a failure that is invisible from inside the app:
 - **A pushed redirect** leaves the rejected URL in the back history, so the back
   button walks the user straight into the redirect again — a trap no forward
   navigation reveals.
+- **A schema that rejected the URL** is a thrown error naming the route and the
+  validation message. The router does not throw one: it records the rejection on
+  the match and carries on with a search no schema produced. So a harness that
+  did not look would report the one URL your schemas *could not* validate as
+  settled and clean. Step 1's builders are total, so this fires for a schema
+  that is not — a bare `z.number()` on a param, most often.
 
 Known limit: the harness supplies a `beforeLoad` with `location`, `matches`,
 `params`, and `search`. A `beforeLoad` that reads route `context` or calls
