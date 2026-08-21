@@ -32,6 +32,19 @@ export const statTileRecipe = defineSlotRecipe({
     // Plain text renders unchanged: a lone text child becomes one anonymous
     // flex item whose line box is the same height as the block box it
     // replaces, and `gap` has no effect with a single item.
+    //
+    // The contract that follows from being a flex row: `gap` OWNS inter-child
+    // spacing, and literal whitespace between children is not rendered. A
+    // whitespace-only text run between two flex items is dropped by flex
+    // layout (CSS Flexible Box Layout Level 1 § 4 "Flex Items": a sequence of
+    // child text runs containing only white space "is not rendered", as if the
+    // text nodes were `display: none`), so `value={<>{n} <span>%</span></>}`
+    // loses its space and
+    // shows the 8px gap instead. No styling can bring that space back — it
+    // never reaches layout. Write multi-child values with no separator and let
+    // `gap` space them; when a figure must read as one uninterrupted string
+    // ("4.2 %", "1.2 / 3.0"), pass it as a SINGLE text child, where ordinary
+    // white-space handling applies.
     value: {
       display: 'inline-flex',
       alignItems: 'baseline',
@@ -43,7 +56,9 @@ export const statTileRecipe = defineSlotRecipe({
       fontVariantNumeric: 'tabular-nums',
     },
     // Same treatment for the caption (a delta chip or icon next to "+2.4% 24h"),
-    // one gap step tighter to match its smaller type.
+    // one gap step tighter to match its smaller type — and the same whitespace
+    // contract as `value`: the 4px gap owns the spacing, literal whitespace
+    // between children is dropped.
     sub: {
       display: 'inline-flex',
       alignItems: 'baseline',

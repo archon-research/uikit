@@ -149,6 +149,53 @@ export const ValueAdornments = () => (
   </div>
 );
 
+// The spacing contract of a multi-child value, pinned in pixels: the slot's
+// `gap` owns the space between children and literal whitespace between them is
+// NOT rendered (flex layout drops a whitespace-only text run between two
+// items). So the first two tiles render identically — the typed space in the
+// first buys nothing, and neither would an explicit `{' '}`. Only a single text
+// child keeps its own spaces (third tile), because there the space is inside
+// one text run rather than a separator between two items.
+export const ValueSpacing = () => (
+  <div className={frameClassName}>
+    <p className={captionClassName}>
+      Tiles 1 and 2 render the same; only the one-text-child tile keeps a
+      literal space.
+    </p>
+    <StatRow>
+      <StatTile
+        label="Two children, space between"
+        value={
+          <>
+            <span>4.2</span> <span className={unitClassName}>%</span>
+          </>
+        }
+        sub={
+          <>
+            <span>+0.3</span> <span className={unitClassName}>pp</span>
+          </>
+        }
+      />
+      <StatTile
+        label="Two children, no space"
+        value={
+          <>
+            <span>4.2</span>
+            <span className={unitClassName}>%</span>
+          </>
+        }
+        sub={
+          <>
+            <span>+0.3</span>
+            <span className={unitClassName}>pp</span>
+          </>
+        }
+      />
+      <StatTile label="One text child" value="4.2 %" sub="+0.3 pp" />
+    </StatRow>
+  </div>
+);
+
 // In a narrow tile the row wraps instead of overflowing the frame.
 export const ValueWrap = () => (
   <div className={frameClassName}>
