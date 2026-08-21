@@ -32,7 +32,12 @@ export const surfaceMessageRecipe = defineSlotRecipe({
     },
     body: {
       m: '0',
+      // The 8px separates the body from the title above it, so it only applies
+      // when there IS something above it. A body-only message (no `title`, or
+      // Root + Body composed directly) would otherwise sit 8px low inside the
+      // 16px frame padding — visibly off-centre for a one-line message.
       mt: '2',
+      _first: { mt: '0' },
       textStyle: 'bodySm',
       color: 'text.muted',
     },

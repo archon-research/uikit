@@ -91,6 +91,26 @@ export const ClassNameOverrides = () => (
   </div>
 );
 
+// `title` is optional: omitted, no title element is rendered at all, so the body
+// stays centred in the frame instead of sitting 8px low under a phantom heading.
+// The first tile (compound, no title) and the second (Root + Body composed by
+// hand) are the same markup — the compound is only sugar. Third: the same
+// body-only shape on the critical tone.
+export const BodyOnly = () => (
+  <div className={stackClassName}>
+    <SurfaceMessage body="No positions match the current filters." />
+    <SurfaceMessageRoot>
+      <SurfaceMessageBody>
+        No positions match the current filters.
+      </SurfaceMessageBody>
+    </SurfaceMessageRoot>
+    <SurfaceMessage
+      body="Reconciliation has not run since 04:12 UTC."
+      tone="critical"
+    />
+  </div>
+);
+
 export const DashedWithActions = () => (
   <div className={stackClassName}>
     {renderMessage({

@@ -42,7 +42,14 @@ export type SurfaceMessageProps = Omit<
   HTMLAttributes<HTMLDivElement>,
   'title'
 > & {
-  title: string;
+  /**
+   * Heading line. Optional: omit it for a body-only message (the same markup
+   * `SurfaceMessageRoot` + `SurfaceMessageBody` produces), and no title element
+   * is rendered at all — rather than an empty `<p>` that still takes vertical
+   * space. An empty string is treated as omitted for that same reason: a blank
+   * heading would still occupy a line box and push the body down.
+   */
+  title?: string;
   body: string;
   tone?: SurfaceMessageTone;
   /**
@@ -167,9 +174,11 @@ export function SurfaceMessage({
       tone={tone}
       className={cx(className, classNames?.root)}
     >
-      <SurfaceMessageTitle tone={tone} className={classNames?.title}>
-        {title}
-      </SurfaceMessageTitle>
+      {title ? (
+        <SurfaceMessageTitle tone={tone} className={classNames?.title}>
+          {title}
+        </SurfaceMessageTitle>
+      ) : null}
       <SurfaceMessageBody className={classNames?.body}>
         {body}
       </SurfaceMessageBody>
