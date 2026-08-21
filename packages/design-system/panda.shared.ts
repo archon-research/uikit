@@ -31,6 +31,7 @@ import { statRowRecipe, statTileRecipe } from './src/recipes/statTile.recipe';
 import { surfaceMessageRecipe } from './src/recipes/surfaceMessage.recipe';
 import { switchRecipe } from './src/recipes/switch.recipe';
 import { themeToggleRecipe } from './src/recipes/themeToggle.recipe';
+import { chartColorSemanticTokens } from './src/tokens/chartColorTokens';
 
 /**
  * Internal (unpublished) Panda config. Kept in shape-parity with the published
@@ -458,42 +459,8 @@ export const designSystemPandaConfig = {
               value: { base: '{colors.amber.50}', _dark: '{colors.amber.950}' },
             },
           },
-          chart: {
-            axis: {
-              value: { base: '{colors.neutral.500}', _dark: '{colors.neutral.400}' },
-            },
-            grid: {
-              value: { base: '{colors.neutral.200}', _dark: '{colors.neutral.700}' },
-            },
-            area: {
-              primary: {
-                value: { base: '{colors.blue.100}', _dark: '{colors.blue.900}' },
-              },
-            },
-            series: {
-              primary: {
-                value: { base: '{colors.blue.600}', _dark: '{colors.blue.300}' },
-              },
-              secondary: {
-                value: { base: '{colors.teal.600}', _dark: '{colors.teal.300}' },
-              },
-              tertiary: {
-                value: { base: '{colors.violet.600}', _dark: '{colors.violet.300}' },
-              },
-              positive: {
-                value: { base: '{colors.green.600}', _dark: '{colors.green.300}' },
-              },
-              critical: {
-                value: { base: '{colors.red.600}', _dark: '{colors.red.300}' },
-              },
-              quaternary: {
-                value: { base: '{colors.amber.600}', _dark: '{colors.amber.300}' },
-              },
-              quinary: {
-                value: { base: '{colors.pink.600}', _dark: '{colors.pink.300}' },
-              },
-            },
-          },
+          // Shared with the published preset via `src/tokens/chartColorTokens.ts`.
+          chart: chartColorSemanticTokens.chart,
           /**
            * Diverging heat scale — green ↔ grey ↔ red, saturation =
            * magnitude, grey = flat. A SEPARATE token family from
@@ -558,6 +525,12 @@ export const designSystemPandaConfig = {
               fg: { value: { base: '{colors.pink.700}', _dark: '{colors.pink.300}' } },
             },
           },
+          // Identity palette (a stable color per entity). Previously MISSING
+          // here while present in the published preset, so every
+          // `var(--colors-identity-N)` read in this repo's own preview resolved
+          // to nothing — exactly the silent-CSS failure the shared source in
+          // `src/tokens/chartColorTokens.ts` now prevents.
+          identity: chartColorSemanticTokens.identity,
           // ── colorPalette ROLE tokens (role-based, on the 50-950 scale) ──
           ...colorPaletteRoles,
         },

@@ -2,6 +2,7 @@ import { Bar, Line as ShapeLine } from '@visx/shape';
 import { DataContext } from '@visx/xychart';
 import { useContext, useEffect } from 'react';
 
+import { resolveChartColor, type ChartColor } from './chart-color.js';
 import { seriesColor } from './theme.js';
 
 export type CandlestickSeriesProps<Datum> = {
@@ -15,10 +16,17 @@ export type CandlestickSeriesProps<Datum> = {
   closeAccessor: (d: Datum) => number;
   /** Body width in px, clamped to the band's own width when the x-scale is banded. */
   maxBodyWidth?: number;
-  /** Body/wick color for an up (close >= open) candle. Defaults to the positive series token. */
-  upColor?: string;
-  /** Body/wick color for a down (close < open) candle. Defaults to the critical series token. */
-  downColor?: string;
+  /**
+   * Body/wick color for an up (close >= open) candle. Defaults to
+   * `chart.series.positive`. Prefer a token name; a raw CSS color string also
+   * works.
+   */
+  upColor?: ChartColor;
+  /**
+   * Body/wick color for a down (close < open) candle. Defaults to
+   * `chart.series.critical`.
+   */
+  downColor?: ChartColor;
 };
 
 type XYChartDataContext<Datum> = {
@@ -76,6 +84,12 @@ export function CandlestickSeries<Datum>({
     DataContext,
   ) as XYChartDataContext<Datum>;
 
+  // Resolved once per render, not once per candle: the direction is per-datum
+  // but there are only ever these two colors, and a series can be hundreds of
+  // candles long.
+  const upFill = resolveChartColor(upColor);
+  const downFill = resolveChartColor(downColor);
+
   useEffect(() => {
     if (!registerData) return;
     const highKey = `${dataKey}-high`;
@@ -120,7 +134,7 @@ export function CandlestickSeries<Datum>({
           return null;
         }
         const up = close >= open;
-        const color = up ? upColor : downColor;
+        const color = up ? upFill : downFill;
         const bodyTop = Math.min(yOpen, yClose);
         const bodyHeight = Math.max(1, Math.abs(yClose - yOpen));
 
