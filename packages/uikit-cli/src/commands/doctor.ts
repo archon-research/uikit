@@ -432,6 +432,73 @@ export function scanGeneratedCss(css: string): DoctorReport {
   };
 }
 
+/** One member of the issue union, by `kind`. */
+type IssueOf<K extends DoctorIssue['kind']> = Extract<DoctorIssue, { kind: K }>;
+
+function missingStaticCssMessage(relative: string): string {
+  return (
+    `No design-system recipe classes found in ${relative}.\n` +
+    "  The design system's recipes are applied by class name, so Panda's\n" +
+    '  static extractor cannot see them — without `staticCss` they emit\n' +
+    '  nothing, and runtime-selected variants (status tones, dense tables,\n' +
+    '  drawer sizes) render unstyled. Spread the exported map into your\n' +
+    '  Panda config `staticCss`:\n' +
+    "    import { designSystemStaticCssRecipes } from '@archon-research/design-system/recipes';\n" +
+    '    staticCss: { recipes: { ...designSystemStaticCssRecipes } }\n' +
+    '  then re-run `panda codegen`. (A narrowed subset is fine — this only\n' +
+    '  flags the case where nothing is wired at all.)'
+  );
+}
+
+function unresolvedTokenMessage(
+  issue: IssueOf<'unresolved-token'>,
+  relative: string,
+): string {
+  return (
+    `${relative}:${issue.line} unresolved token — \`${issue.declaration};\` ` +
+    'is an invalid declaration the browser drops. The token path does not ' +
+    'resolve to a `var(--…)`; check the token exists in the preset (or you ' +
+    'passed a token path where a finished value was expected).'
+  );
+}
+
+function rolelessColorPaletteMessage(
+  issue: IssueOf<'roleless-color-palette'>,
+  relative: string,
+): string {
+  return (
+    `${relative}:${issue.line} roleless colorPalette — \`${issue.selector}\` ` +
+    `reads \`var(--colors-color-palette-${issue.role})\`, but the ` +
+    `\`${issue.scope}\` scope can be set to \`colorPalette: ${issue.palette}\`, ` +
+    `which defines no \`${issue.role}\` role. The custom property is then ` +
+    'undefined on that element: valid CSS the browser silently drops, so the ' +
+    'declaration just does not apply. ' +
+    (issue.severity === 'error'
+      ? 'No palette this scope can take defines that role, so nothing avoids it. '
+      : `Warning only: \`${issue.scope}\` can also take a role-complete palette, ` +
+        'so this breaks only if the two are actually combined. ') +
+    'Either style with a role-complete palette (one whose ruleset maps ' +
+    `\`--colors-color-palette-${issue.role}\`), give \`${issue.palette}\` that ` +
+    "role in your preset's colorPalette tokens, or reference a role the " +
+    'palette does define.'
+  );
+}
+
+/**
+ * The console message for one finding. Exhaustive over `DoctorIssue` with no
+ * default branch, so adding a `kind` without a message fails to compile.
+ */
+function doctorIssueMessage(issue: DoctorIssue, relative: string): string {
+  switch (issue.kind) {
+    case 'missing-static-css':
+      return missingStaticCssMessage(relative);
+    case 'unresolved-token':
+      return unresolvedTokenMessage(issue, relative);
+    case 'roleless-color-palette':
+      return rolelessColorPaletteMessage(issue, relative);
+  }
+}
+
 /**
  * Locations a Panda project commonly writes `styles.css`, relative to the
  * consumer root. First existing wins; an explicit path always takes precedence.
@@ -535,53 +602,10 @@ export class DoctorCommand {
       return true;
     }
 
-    const emit = (issue: DoctorIssue, message: string): void =>
-      issue.severity === 'error'
-        ? this.logger.error(message)
-        : this.logger.warn(message);
-
     for (const issue of report.issues) {
-      if (issue.kind === 'missing-static-css') {
-        emit(
-          issue,
-          `No design-system recipe classes found in ${relative}.\n` +
-            "  The design system's recipes are applied by class name, so Panda's\n" +
-            '  static extractor cannot see them — without `staticCss` they emit\n' +
-            '  nothing, and runtime-selected variants (status tones, dense tables,\n' +
-            '  drawer sizes) render unstyled. Spread the exported map into your\n' +
-            '  Panda config `staticCss`:\n' +
-            "    import { designSystemStaticCssRecipes } from '@archon-research/design-system/recipes';\n" +
-            '    staticCss: { recipes: { ...designSystemStaticCssRecipes } }\n' +
-            '  then re-run `panda codegen`. (A narrowed subset is fine — this only\n' +
-            '  flags the case where nothing is wired at all.)',
-        );
-      } else if (issue.kind === 'unresolved-token') {
-        emit(
-          issue,
-          `${relative}:${issue.line} unresolved token — \`${issue.declaration};\` ` +
-            'is an invalid declaration the browser drops. The token path does not ' +
-            'resolve to a `var(--…)`; check the token exists in the preset (or you ' +
-            'passed a token path where a finished value was expected).',
-        );
-      } else {
-        emit(
-          issue,
-          `${relative}:${issue.line} roleless colorPalette — \`${issue.selector}\` ` +
-            `reads \`var(--colors-color-palette-${issue.role})\`, but the ` +
-            `\`${issue.scope}\` scope can be set to \`colorPalette: ${issue.palette}\`, ` +
-            `which defines no \`${issue.role}\` role. The custom property is then ` +
-            'undefined on that element: valid CSS the browser silently drops, so the ' +
-            'declaration just does not apply. ' +
-            (issue.severity === 'error'
-              ? 'No palette this scope can take defines that role, so nothing avoids it. '
-              : `Warning only: \`${issue.scope}\` can also take a role-complete palette, ` +
-                'so this breaks only if the two are actually combined. ') +
-            'Either style with a role-complete palette (one whose ruleset maps ' +
-            `\`--colors-color-palette-${issue.role}\`), give \`${issue.palette}\` that ` +
-            "role in your preset's colorPalette tokens, or reference a role the " +
-            'palette does define.',
-        );
-      }
+      const message = doctorIssueMessage(issue, relative);
+      if (issue.severity === 'error') this.logger.error(message);
+      else this.logger.warn(message);
     }
 
     if (report.ok) {
