@@ -1127,8 +1127,8 @@
         "Molecules",
         "Stattile"
       ],
-      "locStart": 174,
-      "locEnd": 178,
+      "locStart": 221,
+      "locEnd": 225,
       "filePath": "src/stories/molecules/stat-tile.stories.tsx",
       "namedExport": "Single",
       "meta": {}
@@ -1157,16 +1157,40 @@
       "namedExport": "ValueAdornments",
       "meta": {}
     },
+    "molecules--stattile--value-spacing": {
+      "name": "Value spacing",
+      "levels": [
+        "Molecules",
+        "Stattile"
+      ],
+      "locStart": 159,
+      "locEnd": 197,
+      "filePath": "src/stories/molecules/stat-tile.stories.tsx",
+      "namedExport": "ValueSpacing",
+      "meta": {}
+    },
     "molecules--stattile--value-wrap": {
       "name": "Value wrap",
       "levels": [
         "Molecules",
         "Stattile"
       ],
-      "locStart": 153,
-      "locEnd": 171,
+      "locStart": 200,
+      "locEnd": 218,
       "filePath": "src/stories/molecules/stat-tile.stories.tsx",
       "namedExport": "ValueWrap",
+      "meta": {}
+    },
+    "molecules--surface-message--body-only": {
+      "name": "Body only",
+      "levels": [
+        "Molecules",
+        "Surface message"
+      ],
+      "locStart": 99,
+      "locEnd": 112,
+      "filePath": "src/stories/molecules/surface-message.stories.tsx",
+      "namedExport": "BodyOnly",
       "meta": {}
     },
     "molecules--surface-message--class-name-overrides": {
@@ -1187,8 +1211,8 @@
         "Molecules",
         "Surface message"
       ],
-      "locStart": 94,
-      "locEnd": 108,
+      "locStart": 114,
+      "locEnd": 128,
       "filePath": "src/stories/molecules/surface-message.stories.tsx",
       "namedExport": "DashedWithActions",
       "meta": {}
