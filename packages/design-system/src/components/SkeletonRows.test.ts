@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { skeletonBarWidthPercent } from './SkeletonRows.js';
+import { resolveBasePercent, skeletonBarWidthPercent } from './SkeletonRows.js';
 
 describe('skeletonBarWidthPercent', () => {
   it('is deterministic across calls', () => {
@@ -48,6 +48,69 @@ describe('skeletonBarWidthPercent', () => {
       expect(skeletonBarWidthPercent(55, 3, 2)).toBe(before);
     } finally {
       Math.random = originalRandom;
+    }
+  });
+});
+
+describe('resolveBasePercent', () => {
+  it('defaults per kind when no width was requested', () => {
+    expect(resolveBasePercent(undefined)).toBe(100);
+    expect(resolveBasePercent({})).toBe(100);
+    expect(resolveBasePercent({ kind: 'text' })).toBe(100);
+    expect(resolveBasePercent({ kind: 'numeric' })).toBe(55);
+    expect(resolveBasePercent({ kind: 'identity' })).toBe(100);
+  });
+
+  it('passes an in-band request through, rounded', () => {
+    expect(resolveBasePercent({ widthPercent: 42 })).toBe(42);
+    expect(resolveBasePercent({ widthPercent: 42.4 })).toBe(42);
+    expect(resolveBasePercent({ widthPercent: 42.6 })).toBe(43);
+  });
+
+  it('raises a request below the visible floor to 10', () => {
+    expect(resolveBasePercent({ widthPercent: 9 })).toBe(10);
+    expect(resolveBasePercent({ widthPercent: 0 })).toBe(10);
+    expect(resolveBasePercent({ widthPercent: -50 })).toBe(10);
+  });
+
+  it('caps a request above the track width at 100', () => {
+    expect(resolveBasePercent({ widthPercent: 101 })).toBe(100);
+    expect(resolveBasePercent({ widthPercent: 400 })).toBe(100);
+  });
+
+  it('falls back to the kind default for a non-finite request', () => {
+    // Clamping cannot rescue NaN — Math.min/Math.max propagate it — and it
+    // would reach the DOM as `width: NaN%`, which browsers drop, collapsing
+    // the bar to nothing.
+    expect(resolveBasePercent({ widthPercent: Number.NaN })).toBe(100);
+    expect(
+      resolveBasePercent({ kind: 'numeric', widthPercent: Number.NaN }),
+    ).toBe(55);
+    expect(resolveBasePercent({ widthPercent: Number.POSITIVE_INFINITY })).toBe(
+      100,
+    );
+    expect(
+      resolveBasePercent({
+        kind: 'numeric',
+        widthPercent: Number.NEGATIVE_INFINITY,
+      }),
+    ).toBe(55);
+  });
+
+  it('never emits a value variance could push outside the band', () => {
+    const hints = [
+      undefined,
+      {},
+      { kind: 'numeric' as const },
+      { widthPercent: 0 },
+      { widthPercent: 500 },
+      { widthPercent: Number.NaN },
+    ];
+    for (const hint of hints) {
+      const base = resolveBasePercent(hint);
+      expect(Number.isFinite(base)).toBe(true);
+      expect(base).toBeGreaterThanOrEqual(10);
+      expect(base).toBeLessThanOrEqual(100);
     }
   });
 });

@@ -34,7 +34,8 @@ export type SkeletonColumnHint = {
   kind?: SkeletonColumnKind;
   /**
    * Bar width as a percentage of the column's inset track, before per-row
-   * variance. Clamped to 10–100. Defaults per `kind`: `text` 100, `numeric` 55,
+   * variance. Rounded and clamped to 10–100; a non-finite value falls back to
+   * the `kind` default. Defaults per `kind`: `text` 100, `numeric` 55,
    * `identity` 100 (its second line is derived from the first).
    */
   widthPercent?: number;
@@ -142,12 +143,28 @@ export function skeletonBarWidthPercent(
   return Math.min(MAX_WIDTH_PERCENT, Math.max(MIN_WIDTH_PERCENT, varied));
 }
 
-function resolveBasePercent(hint: SkeletonColumnHint | undefined): number {
-  const kind = hint?.kind ?? 'text';
-  const requested = hint?.widthPercent ?? DEFAULT_WIDTH_PERCENT[kind];
+/**
+ * A hint's bar width before per-row variance: the requested percentage rounded
+ * and clamped into the visible 10–100 band, or the `kind`'s default when none
+ * was requested.
+ *
+ * A non-finite request (a `NaN` from arithmetic upstream — a division by a zero
+ * total, a parse of a missing value — or an `Infinity`) also falls back to the
+ * default. Clamping cannot rescue `NaN` (`Math.min`/`Math.max` propagate it), and
+ * it would reach the DOM as `width: NaN%`, which browsers discard: the bar would
+ * silently render at its intrinsic zero width, an invisible skeleton.
+ *
+ * Exported for unit tests; not part of the package's public surface.
+ */
+export function resolveBasePercent(
+  hint: SkeletonColumnHint | undefined,
+): number {
+  const fallback = DEFAULT_WIDTH_PERCENT[hint?.kind ?? 'text'];
+  const requested = hint?.widthPercent;
+  const base = Number.isFinite(requested) ? (requested as number) : fallback;
   return Math.min(
     MAX_WIDTH_PERCENT,
-    Math.max(MIN_WIDTH_PERCENT, Math.round(requested)),
+    Math.max(MIN_WIDTH_PERCENT, Math.round(base)),
   );
 }
 

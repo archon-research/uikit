@@ -50,8 +50,14 @@ const contents = `${banner}${THEME_BOOTSTRAP_SCRIPT}`;
 let existing = null;
 try {
   existing = readFileSync(outFile, 'utf8');
-} catch {
-  // Not built yet.
+} catch (error) {
+  // A missing file is the ordinary first-build case. Anything else — no read
+  // permission, a directory sitting at that path, an I/O error — means the
+  // comparison below would be meaningless, and swallowing it would turn a
+  // broken build into a silent overwrite (or a silent skip). Re-throw.
+  if (error.code !== 'ENOENT') {
+    throw error;
+  }
 }
 
 if (existing !== contents) {
