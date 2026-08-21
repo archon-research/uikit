@@ -1,29 +1,25 @@
 import {
-  getCoreRowModel,
-  getExpandedRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
+  useTable,
   type ColumnFiltersState,
   type ColumnOrderState,
   type ColumnPinningState,
   type ColumnSizingState,
+  type ColumnVisibilityState,
   type ExpandedState,
   type OnChangeFn,
+  type RowData,
   type RowSelectionState,
   type SortingState,
-  type Table,
-  type VisibilityState,
 } from '@tanstack/react-table';
 import * as React from 'react';
 
 import { IS_DEV_WARNING_ENABLED } from '../../hooks/devWarning.js';
 import { useIdentityChurnWarning } from '../../hooks/useIdentityChurnWarning.js';
+import { dataTableFeatures, type DataTableFeatures } from './features.js';
 import type {
+  ColumnDef,
   DataTableConfig,
+  Table,
   UrlSyncedTableStateAdapter,
   UseUrlSyncedTableReturn,
 } from './types.js';
@@ -34,7 +30,7 @@ import {
   validateSortingState,
 } from './utils.js';
 
-export function useDataTable<T>(
+export function useDataTable<T extends RowData>(
   data: T[],
   columns: ColumnDef<T>[],
   config: DataTableConfig<T> = {},
@@ -78,12 +74,12 @@ export function useDataTable<T>(
     React.useState<ColumnOrderState>(config.defaultColumnOrder ?? []);
   const [internalColumnPinning, setInternalColumnPinning] =
     React.useState<ColumnPinningState>(
-      config.defaultColumnPinning ?? { left: [], right: [] },
+      config.defaultColumnPinning ?? { start: [], end: [] },
     );
   const [internalRowSelection, setInternalRowSelection] =
     React.useState<RowSelectionState>(config.defaultRowSelection ?? {});
   const [internalColumnVisibility, setInternalColumnVisibility] =
-    React.useState<VisibilityState>(config.defaultColumnVisibility ?? {});
+    React.useState<ColumnVisibilityState>(config.defaultColumnVisibility ?? {});
   const [internalExpanded, setInternalExpanded] = React.useState<ExpandedState>(
     config.defaultExpanded ?? {},
   );
@@ -112,12 +108,20 @@ export function useDataTable<T>(
     config.onColumnPinningChange ?? setInternalColumnPinning;
   const handleRowSelectionChange: OnChangeFn<RowSelectionState> =
     config.onRowSelectionChange ?? setInternalRowSelection;
-  const handleColumnVisibilityChange: OnChangeFn<VisibilityState> =
+  const handleColumnVisibilityChange: OnChangeFn<ColumnVisibilityState> =
     config.onColumnVisibilityChange ?? setInternalColumnVisibility;
   const handleExpandedChange: OnChangeFn<ExpandedState> =
     config.onExpandedChange ?? setInternalExpanded;
 
-  return useReactTable({
+  // Faceted row models back the DataTable's per-column `select` filter
+  // affordance (`column.getFacetedUniqueValues()`) — cheap to register
+  // unconditionally since faceting is computed lazily per-column on demand.
+  // All row models (core/sorted/filtered/expanded/faceted) are registered
+  // once, up front, on `dataTableFeatures` (see `features.ts`) rather than
+  // per-call here — TanStack v9 moved row-model factories from table options
+  // onto the `features` object.
+  return useTable<DataTableFeatures, T>({
+    features: dataTableFeatures,
     data,
     columns,
     state: {
@@ -141,15 +145,6 @@ export function useDataTable<T>(
     onColumnVisibilityChange: handleColumnVisibilityChange,
     onExpandedChange: handleExpandedChange,
     getRowCanExpand: config.getRowCanExpand,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    // Faceted models back the DataTable's per-column `select` filter
-    // affordance (`column.getFacetedUniqueValues()`) — cheap to register
-    // unconditionally since faceting is computed lazily per-column on demand.
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
     globalFilterFn: 'includesString',
     enableSorting: config.enableSorting,
     enableGlobalFilter: config.enableSearch,

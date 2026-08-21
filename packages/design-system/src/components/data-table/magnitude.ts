@@ -1,8 +1,11 @@
-import type { Cell, Row, Table } from '@tanstack/react-table';
+import type { RowData } from '@tanstack/react-table';
 
 import type {
+  Cell,
   DataTableMagnitudeConfig,
   DataTableMagnitudeScale,
+  Row,
+  Table,
 } from './types.js';
 
 type ColumnDomain = {
@@ -19,7 +22,7 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-function getRowScope<TData>(
+function getRowScope<TData extends RowData>(
   table: Table<TData>,
   scope: DataTableMagnitudeConfig<TData>['scope'],
 ): Row<TData>[] {
@@ -28,7 +31,7 @@ function getRowScope<TData>(
     : table.getFilteredRowModel().rows;
 }
 
-function resolveMagnitudeValue<TData>(
+function resolveMagnitudeValue<TData extends RowData>(
   row: Row<TData>,
   cell: Cell<TData, unknown>,
   config: DataTableMagnitudeConfig<TData>,
@@ -59,7 +62,7 @@ function sanitizeDomain(domain: ColumnDomain | null): ColumnDomain | null {
   return domain;
 }
 
-function resolveDomainFromValues<TData>(
+function resolveDomainFromValues<TData extends RowData>(
   values: number[],
   rows: Row<TData>[],
   config: DataTableMagnitudeConfig<TData>,
@@ -86,7 +89,7 @@ function resolveDomainFromValues<TData>(
   return sanitizeDomain(domain);
 }
 
-export function createMagnitudeStateMap<TData>(
+export function createMagnitudeStateMap<TData extends RowData>(
   table: Table<TData>,
 ): Map<string, ColumnMagnitudeState> {
   const stateMap = new Map<string, ColumnMagnitudeState>();

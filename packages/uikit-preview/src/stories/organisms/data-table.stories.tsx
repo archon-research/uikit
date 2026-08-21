@@ -464,7 +464,7 @@ export const MultiRowSelection = () => {
   useEffect(() => {
     setSelectedRows(selectedRowModel.rows.map((row) => row.original));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [table.getState().rowSelection]);
+  }, [table.state.rowSelection]);
 
   return (
     <div className={wrapperClassName}>
