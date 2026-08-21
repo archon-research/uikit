@@ -28,6 +28,7 @@ vitest:
   - packages/http-client-react/**
   - packages/http-client-msw/**
   - packages/router-kit/**
+  - packages/uikit-cli/**
 
 # Only the committed snapshot PNGs. On pull requests the visual-snapshots job
 # checks exactly the stories whose PNGs changed here; the merge-queue run is
