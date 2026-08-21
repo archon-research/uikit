@@ -29,10 +29,29 @@ import { createTagRegistry } from './tags.js';
 
 /**
  * The shape an `openapi-typescript`-generated `paths` type has: every path maps
- * to an object with a key per HTTP method (`never` for the ones the endpoint
- * does not implement). Indexing `TPaths[TPath][TMethod]` needs this.
+ * to an object carrying the HTTP methods that endpoint implements, plus the
+ * path-level `parameters`. This is the constraint on `createQueryApi` and on
+ * every option type below, and it is what makes `TPaths[TPath][TMethod]` legal.
+ *
+ * Every method is *optional* and typed `any` for two reasons that come straight
+ * from the generated output. `openapi-typescript` emits absent operations as
+ * `put?: never`, so a required key rejects real generated paths; and the
+ * operation payload has to widen to `any`, because narrowing it makes
+ * TypeScript resolve `TPaths[TPath][TMethod]` to `<payload> | undefined`, which
+ * then fails `FetchResponse`'s own `Record<string | number, any>` constraint.
+ * Nothing is lost by that: the operation types the api actually reports are
+ * read back off the caller's own `TPaths`, never off this shape.
+ *
+ * What it therefore does *not* do is reject a badly typed client. If the paths
+ * type behind `client` is not a paths map, inference finds no candidate for
+ * `TPaths` and falls back to this constraint, so `createQueryApi` still returns
+ * — as `QueryApi<QueryApiPaths>`, on which no `queryOptions` call typechecks.
+ * The rejection lands on the calls rather than on the construction.
  */
-export type QueryApiPaths = Record<string, Record<HttpMethod, {}>>;
+export type QueryApiPaths = Record<
+  string,
+  { [TMethod in HttpMethod]?: any } & { parameters?: any }
+>;
 
 /**
  * Methods `queryOptions` accepts: the safe, bodyless, cacheable ones. A
@@ -281,12 +300,7 @@ type LooseClientMethod = (
  * explicitly, since naming one disables inference for the rest.
  */
 export function createQueryApi<
-  // Constrained to `{}` rather than `QueryApiPaths` on purpose:
-  // `openapi-typescript` emits absent operations as `put?: never`, which no
-  // `Record<HttpMethod, {}>` accepts. `openapi-fetch`'s own `createClient` makes
-  // the same trade — the tighter shape is asserted inside the option types,
-  // where only the operations that do exist are indexed.
-  TPaths extends {},
+  TPaths extends QueryApiPaths,
   TTag extends string = string,
   TMedia extends MediaType = MediaType,
 >(

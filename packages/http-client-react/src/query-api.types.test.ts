@@ -1,9 +1,13 @@
-import { createApiClient } from '@archon-research/http-client-core';
+import {
+  type ApiClient,
+  createApiClient,
+} from '@archon-research/http-client-core';
 import type { DataTag, QueryClient } from '@tanstack/react-query';
 import { describe, expectTypeOf, it } from 'vitest';
 
-import type { HttpRequestError } from './errors.js';
+import { type HttpRequestError, isHttpRequestError } from './errors.js';
 import { createQueryApi } from './query-api.js';
+import type { QueryApi, QueryApiPaths } from './query-api.js';
 import type { ApiFault, TestPaths, User } from './test-fixtures.js';
 
 /**
@@ -72,10 +76,21 @@ export function typeAssertions(): void {
     HttpRequestError<ApiFault> | Error
   >();
 
-  // The error body is the operation's error response — and optional, because a
-  // failure need not carry one.
-  const fault = {} as HttpRequestError<ApiFault>;
-  expectTypeOf(fault.body).toEqualTypeOf<ApiFault | undefined>();
+  // Narrowing needs no body type parameter: the guard filters the declared
+  // union, so the operation's own error body survives it — and stays optional,
+  // because a failure need not carry a body at all.
+  const failure = readTags(detailOptions).error;
+  if (isHttpRequestError(failure)) {
+    expectTypeOf(failure.body).toEqualTypeOf<ApiFault | undefined>();
+  }
+
+  // A `catch` binding declares nothing, so the body stays `unknown` — the guard
+  // has no type parameter with which to claim otherwise.
+  const caught = failure as unknown;
+  if (isHttpRequestError(caught)) {
+    expectTypeOf(caught.status).toEqualTypeOf<number>();
+    expectTypeOf(caught.body).toEqualTypeOf<unknown>();
+  }
 
   // `select` retypes what a component reads without losing the fetched type.
   const selectedOptions = api.queryOptions('get', '/users', undefined, {
@@ -153,6 +168,21 @@ export function typeAssertions(): void {
   expectTypeOf(
     readTags({ queryKey: api.queryKey('get', '/users') }).data,
   ).toEqualTypeOf<User[]>();
+
+  // `QueryApiPaths` constrains `createQueryApi` itself, not just the option
+  // types it returns, so a paths type that is not a map of path → operations is
+  // rejected at the api's own signature.
+  const notPathsClient = {} as ApiClient<{ '/users': string }>;
+  // @ts-expect-error — `string` is not a map of HTTP method to operation
+  createQueryApi<{ '/users': string }>(notPathsClient);
+
+  // Inferring the same bad paths type off the client is the case the constraint
+  // cannot reject: inference finds no candidate and falls back to the
+  // constraint, so the api is typed `QueryApi<QueryApiPaths>` and it is the
+  // calls on it that fail, not the construction.
+  expectTypeOf(createQueryApi(notPathsClient)).toEqualTypeOf<
+    QueryApi<QueryApiPaths>
+  >();
 }
 
 /**

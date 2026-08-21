@@ -117,6 +117,12 @@ something that is not an HTTP error, so `status` is reachable only after
 `isHttpRequestError(error)`. The guard matches on `name` rather than `instanceof`
 so it survives a consumer ending up with two copies of the package.
 
+The guard takes **no body type parameter**. A check on `name` cannot say
+anything about the body's shape, so a parameter would only have let a call site
+name a type and get it back unchecked. It derives the body type from what the
+argument already declares instead: narrowing a `QueryApiError<TErrorBody>` keeps
+that operation's error body, and narrowing a `catch` binding keeps `unknown`.
+
 ## Middleware contract
 
 `(ctx, next) => Promise<unknown>`, onion order: the instance chain outermost in
@@ -186,10 +192,21 @@ declared surface in agreement — it asserts data/error/param/variable inference
 and `@ts-expect-error`s the calls that must not compile. It is checked by
 `npm run type:check`, not by the vitest run.
 
-`TPaths` is constrained to `{}` rather than `Record<string, Record<HttpMethod,
-{}>>` on the public function: `openapi-typescript` emits absent operations as
-`put?: never`, which no `Record<HttpMethod, {}>` accepts. `openapi-fetch`'s
-`createClient` makes the same trade.
+`TPaths` is constrained by `QueryApiPaths` on `createQueryApi` itself, not only
+inside the option types — the constraint is the same one either side, so there is
+one statement of what a paths type is. Its shape is dictated by the generated
+output: every method **optional**, because `openapi-typescript` emits absent
+operations as `put?: never`, and every operation payload `any`, because
+narrowing it makes `TPaths[TPath][TMethod]` resolve to `<payload> | undefined`,
+which fails `FetchResponse`'s own `Record<string | number, any>` constraint.
+Nothing is lost by the `any`: the types the api reports are read off the
+caller's `TPaths`, never off the constraint.
+
+The limit worth knowing: this rejects a bad *explicit* type argument, not a bad
+*client*. Given a client whose paths type is not a paths map, inference finds no
+candidate for `TPaths` and falls back to the constraint, so `createQueryApi`
+returns `QueryApi<QueryApiPaths>` — an api on which no `queryOptions` call
+typechecks. The error surfaces at the calls rather than at the construction.
 
 Both `queryKey` and `queryOptions` wrap their return in `NoInfer`. Without it, a
 contextual type on the result — the `queryKey` property of an

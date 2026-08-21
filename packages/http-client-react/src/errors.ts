@@ -42,14 +42,33 @@ export class HttpRequestError<TBody = unknown> extends Error {
 }
 
 /**
+ * What {@link isHttpRequestError} narrows `TValue` to: the `HttpRequestError`
+ * member `TValue` already declares, so the body type the operation described
+ * survives the guard, and a bare `HttpRequestError` when `TValue` declares none
+ * — a `catch` binding, where no body type is knowable.
+ */
+type NarrowedHttpRequestError<TValue> = [
+  Extract<TValue, HttpRequestError<unknown>>,
+] extends [never]
+  ? HttpRequestError<unknown>
+  : Extract<TValue, HttpRequestError<unknown>>;
+
+/**
  * Narrows a caught value to {@link HttpRequestError}.
  *
  * Matches on `name` rather than `instanceof` so the guard still holds when a
  * consumer ends up with two copies of this package in its module graph (a
  * bundled app plus a linked workspace build, for instance).
+ *
+ * The body type is *derived* from the argument rather than taken as a type
+ * parameter. A runtime check on `name` can say nothing about the body's shape,
+ * so a `TBody` parameter would have let a call site name any type it liked and
+ * get it back unchecked; deriving it means narrowing a
+ * `QueryApiError<TErrorBody>` yields that operation's own error body, and
+ * narrowing an `unknown` yields `unknown` — which is the truth in both cases.
  */
-export function isHttpRequestError<TBody = unknown>(
-  value: unknown,
-): value is HttpRequestError<TBody> {
+export function isHttpRequestError<TValue>(
+  value: TValue,
+): value is TValue & NarrowedHttpRequestError<TValue> {
   return value instanceof Error && value.name === 'HttpRequestError';
 }

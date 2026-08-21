@@ -135,7 +135,7 @@ describe('queryOptions', () => {
       .catch((thrown: unknown) => thrown);
 
     expect(isHttpRequestError(error)).toBe(true);
-    if (!isHttpRequestError<{ message: string }>(error)) return;
+    if (!isHttpRequestError(error)) return;
 
     expect(error).toBeInstanceOf(HttpRequestError);
     expect(error.status).toBe(404);
