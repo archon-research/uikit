@@ -275,6 +275,15 @@ perfectly good `throw redirect({ to: '/login' })` — `replace` undefined, repla
 anyway. `resolveEntryUrl` still reports `replace` if you want to pin what your
 own helper *declares*.
 
+Two options of yours are overridden rather than honoured, both because a
+headless run cannot mean them: `isServer` is forced false (client mode is what
+makes `beforeLoad` run the way a cold load runs it) and `scrollRestoration` is
+forced off. The second is not cosmetic — the router arms scroll restoration from
+its own constructor via bare `history` and `document` references, so leaving it
+on would throw `ReferenceError: history is not defined` before a route was
+matched, and every app that sets it would find the harness unusable. Neither
+option has any bearing on what a URL means.
+
 Known limit: the harness supplies a `beforeLoad` with `location`, `matches`,
 `params`, and `search`. A `beforeLoad` that reads route `context` or calls
 `navigate` fails loudly here rather than being silently skipped — entry-time

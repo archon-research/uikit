@@ -109,6 +109,19 @@ export async function resolveEntryUrl(
     // ReferenceError rather than yielding undefined, so an origin has to be
     // supplied. The caller's own wins if it set one.
     origin: routerOptions.origin ?? 'http://localhost',
+    // Client mode also arms scroll restoration, and that setup runs from the
+    // router *constructor*, before a single route is matched. It assigns
+    // `history.scrollRestoration` and calls `document.addEventListener` through
+    // bare global references, so headless it throws `ReferenceError: history is
+    // not defined` — meaning any app that ships `scrollRestoration: true`, which
+    // is most of them, could not run this harness at all.
+    //
+    // Forced off rather than defaulted, because the caller's value is exactly
+    // what must not win here, and nothing is lost by ignoring it: scroll
+    // position has no bearing on what a URL means. Matching, search parsing, and
+    // `beforeLoad` are all untouched. (`getScrollRestorationKey` and friends go
+    // unread for the same reason.)
+    scrollRestoration: false,
     history: createMemoryHistory({ initialEntries: [url] }),
   } as EntryRouterOptions);
 

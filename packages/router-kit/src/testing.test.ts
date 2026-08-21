@@ -6,6 +6,7 @@ import {
   createNonConvergingRouter,
   createRedirectedPastRejectionRouter,
   createRejectingSchemaRouter,
+  createScrollRestorationRouter,
   createThrowingRouter,
   createToyRouter,
 } from './test-fixtures.js';
@@ -174,6 +175,36 @@ describe('settleEntryUrl — the caller’s router config decides the answer', (
     );
 
     expect(json.url).toBe('/plain');
+  });
+});
+
+describe('settleEntryUrl — options that only a browser can honour', () => {
+  const scrollRouter = createScrollRestorationRouter();
+
+  // `scrollRestoration: true` is the common production setting, and the router
+  // arms it from its own constructor through bare `history` and `document`
+  // references. Left alone, this harness would throw a ReferenceError before
+  // matching a single route — so every app with the option set would find the
+  // harness simply unusable, for a reason nothing about it explains.
+  it('resolves a router that ships scrollRestoration', async () => {
+    const resolution = await resolveEntryUrl(scrollRouter.options, '/plain');
+
+    expect(resolution.routeId).toBe('/plain');
+  });
+
+  it('settles one, cleanup and all', async () => {
+    const settled = await settleEntryUrl(
+      scrollRouter.options,
+      '/plain?tab=bogus&q=x',
+    );
+
+    expect(settled.url).toBe('/plain?q=x');
+  });
+
+  it('leaves the caller’s own options object untouched', async () => {
+    await resolveEntryUrl(scrollRouter.options, '/plain');
+
+    expect(scrollRouter.options.scrollRestoration).toBe(true);
   });
 });
 

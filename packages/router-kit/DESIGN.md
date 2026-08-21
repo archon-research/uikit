@@ -203,6 +203,18 @@ caller's own wins if it set one — otherwise the harness would only work under
 jsdom, which would force every consumer's router spec into a DOM environment for
 no other reason.
 
+**The harness forces `scrollRestoration` off.** The same client mode that makes
+`beforeLoad` run like a cold load also arms scroll restoration, from the router
+constructor, through bare `history` and `document` references — a
+`ReferenceError` in a headless runtime, thrown before a single route is matched.
+Since `scrollRestoration: true` is what a real app ships, the harness would have
+been unusable for exactly the consumers it is written for. It is forced rather
+than defaulted because the caller's value is the thing that must not win, and
+nothing is lost: scroll position does not change what a URL means. That is the
+line between the options this harness takes verbatim and the ones it overrides —
+grammar (`parseSearch`, `stringifySearch`, `trailingSlash`, `caseSensitive`,
+`basepath`) is the caller's; browser-only side effects are not.
+
 **`EntryUrlResolution`'s arms each declare the other's fields as
 optional-`undefined`.** `redirectTo` stays a real discriminant, but a spec can
 read `.replace` or `.routeId` without narrowing first — which is most of what an

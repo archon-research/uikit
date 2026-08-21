@@ -250,6 +250,29 @@ export function createThrowingRouter() {
   });
 }
 
+/**
+ * A route tree on a router that ships `scrollRestoration: true` — the common
+ * production setting, and one that arms a DOM listener from the router
+ * constructor. The harness runs headless, so it has to neutralize the option or
+ * every consumer with it set gets a `ReferenceError` instead of a settled URL.
+ */
+export function createScrollRestorationRouter() {
+  const rootRoute = createRootRoute({
+    validateSearch: sharedSearchSchema,
+    beforeLoad: createValidatedSearchRedirect({ stringifySearch }),
+  });
+
+  return createRouter({
+    routeTree: rootRoute.addChildren([
+      createRoute({ getParentRoute: () => rootRoute, path: '/plain' }),
+    ]),
+    scrollRestoration: true,
+    trailingSlash: 'never',
+    parseSearch,
+    stringifySearch,
+  });
+}
+
 /*
  * There is deliberately no "pushing router" fixture. A `beforeLoad` redirect
  * cannot push: the router spreads the redirect's own options and then overrides
