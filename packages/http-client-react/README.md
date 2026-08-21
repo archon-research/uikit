@@ -190,6 +190,14 @@ await api.invalidateTags(queryClient, ['positions']);
 `sanitizeQueryInit` and `buildQueryApiKey` are exported for anything that needs
 to derive a key outside an api instance.
 
+One caveat on the last line: `invalidateTags` reaches only the endpoints some
+`api.queryOptions(…, { tags })` call has registered. An entry written straight
+through `setQueryData`, or restored by SSR/persisted-cache hydration, is cached
+under a perfectly good key that the tag has never heard of, and the invalidation
+skips it silently. Register the endpoint once at module scope, or invalidate by
+key prefix — see [the registry's
+boundary](./DESIGN.md#the-registrys-boundary).
+
 ## API surface
 
 | Export | What it does |

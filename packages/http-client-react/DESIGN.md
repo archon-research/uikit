@@ -179,10 +179,46 @@ the registry bounded by endpoint count rather than by cache size. The corollary:
 two queries on one endpoint with different tags cannot be invalidated
 independently — use the key directly for that.
 
-A tag only matches endpoints that some `queryOptions` call has registered in this
-session. Nothing can be cached under an endpoint without such a call, so this is
-not a hole in practice; it does mean `taggedEndpoints` is empty until the first
-render that declares the tag.
+### The registry's boundary
+
+A tag matches only the endpoints some `queryOptions` call has registered on this
+api instance, in this session. Registration happens as a side effect of building
+the options, so the registry is empty until the first call that declares a tag —
+and it is genuinely possible to have a cache entry that no `queryOptions` call
+ever described:
+
+- `queryClient.setQueryData(api.queryKey('get', '/positions'), …)` — a key
+  without options, written directly;
+- `prefetchQuery`/`fetchQuery` against `api.queryKey(…)` rather than against
+  `api.queryOptions(…)`;
+- SSR or persisted-cache **hydration**, which restores entries before any render
+  has run.
+
+Those entries are cached under a `[method, path, …]` key like any other, but the
+tag does not know the endpoint, so `invalidateTags` and `tagFilter` skip them
+silently. This is a real hole, not a theoretical one: the invalidation looks
+correct and simply does nothing.
+
+Two ways out, both explicit:
+
+1. **Register the endpoint once, at module scope.** Building the options is what
+   registers, so the result can be discarded — the call is the registration.
+
+   ```ts
+   // Registers `get /positions` under `positions` at import time, so a later
+   // hydrated or hand-written entry for it is in scope for the tag.
+   void api.queryOptions('get', '/positions', undefined, { tags: ['positions'] });
+   ```
+
+2. **Invalidate by key instead of by tag.** The first two elements of a key are
+   the operation and react-query prefix-matches, so
+   `invalidateQueries({ queryKey: ['get', '/positions'] })` reaches every cached
+   variant whether or not the registry has heard of it.
+
+The registry is deliberately not fixed by scanning the cache for `[method, path]`
+pairs: that would make a tag's membership depend on what happens to be cached at
+the moment of invalidation, which is a worse contract than one that is empty
+until declared.
 
 ## Type-level guarantees
 
