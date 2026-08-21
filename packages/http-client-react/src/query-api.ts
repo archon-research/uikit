@@ -369,6 +369,14 @@ export function createQueryApi<
     );
   };
 
+  /**
+   * Runs after the mutation has already succeeded, which is what makes the
+   * asymmetry below the right one: a literal tag was checked when
+   * `mutationOptions` was called, so it can still throw; a tag a callback
+   * derives from the result can only be checked here, and throwing here would
+   * turn a successful mutation into a failed one and skip the caller's own
+   * `onSuccess`. So an unknown derived tag is warned about and dropped.
+   */
   const resolveInvalidations = (
     invalidates: readonly MutationInvalidation<TTag, never, never>[],
     data: unknown,
@@ -377,16 +385,18 @@ export function createQueryApi<
     const resolved = new Set<TTag>();
 
     for (const entry of invalidates) {
-      const produced =
-        typeof entry === 'function'
-          ? (entry as (d: unknown, v: unknown) => TTag | readonly TTag[])(
-              data,
-              variables,
-            )
-          : entry;
+      if (typeof entry !== 'function') {
+        resolved.add(entry);
+        continue;
+      }
 
-      if (typeof produced === 'string') resolved.add(produced);
-      else for (const tag of produced) resolved.add(tag);
+      const produced = (
+        entry as (d: unknown, v: unknown) => TTag | readonly TTag[]
+      )(data, variables);
+
+      for (const tag of typeof produced === 'string' ? [produced] : produced) {
+        if (registry.acceptOrWarn(tag)) resolved.add(tag);
+      }
     }
 
     return [...resolved];

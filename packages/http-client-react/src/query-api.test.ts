@@ -1,6 +1,6 @@
 import { createApiClient } from '@archon-research/http-client-core';
 import { MutationObserver, QueryClient } from '@tanstack/react-query';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { HttpRequestError, isHttpRequestError } from './errors.js';
 import type { QueryApiMiddleware } from './middleware.js';
@@ -17,6 +17,12 @@ import {
 import { createZodResponseMiddleware } from './zod-response.js';
 
 const ada: User = { id: 'u1', name: 'Ada' };
+
+// Several specs below spy on `console.warn`; leaving one installed would
+// swallow warnings from every spec after it.
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 /** Retries off, so a failure assertion does not wait out the backoff. */
 function createTestQueryClient(): QueryClient {
@@ -298,6 +304,61 @@ describe('mutationOptions', () => {
 
     expect(onSuccess).toHaveBeenCalledTimes(1);
     expect(onSuccess.mock.calls[0]?.[0]).toEqual({ id: 'u2', name: 'Grace' });
+  });
+
+  it('warns and skips an unknown tag a callback derives, without failing the mutation', async () => {
+    const { api, queryClient } = setup();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const onSuccess = vi.fn();
+
+    const listOptions = api.queryOptions('get', '/users', undefined, {
+      tags: ['users'],
+    });
+    await queryClient.fetchQuery(listOptions);
+
+    const observer = new MutationObserver(
+      queryClient,
+      api.mutationOptions('post', '/users', {
+        invalidates: [() => ['users', 'orders' as TestTag]],
+        onSuccess,
+      }),
+    );
+
+    // The unknown tag must not turn a succeeded mutation into a failed one,
+    // and must not cost the caller their own onSuccess.
+    await expect(observer.mutate({ body: { name: 'Grace' } })).resolves.toEqual(
+      {
+        id: 'u2',
+        name: 'Grace',
+      },
+    );
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+
+    // The known tag in the same batch still invalidates.
+    expect(queryClient.getQueryState(listOptions.queryKey)?.isInvalidated).toBe(
+      true,
+    );
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]?.[0]).toContain('unknown tag "orders"');
+
+    // Once per unknown tag, not once per mutation.
+    await observer.mutate({ body: { name: 'Grace' } });
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('throws on an unknown literal tag when the mutation is declared', () => {
+    const { api } = setup();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    // A literal is checked where it is written, before anything has run, so it
+    // still throws rather than warning — that is what catches the typo.
+    expect(() =>
+      api.mutationOptions('post', '/users', {
+        invalidates: ['orders' as TestTag],
+      }),
+    ).toThrow(/unknown tag "orders"/);
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('rejects with a typed error on a failed mutation', async () => {

@@ -153,6 +153,16 @@ single place its cache behaviour lives. On mutation success, tags resolved from
 mutation callback — no `useQueryClient` at the call site, no `QueryClient`
 threaded into the api instance.
 
+**An unknown tag fails where it is written, not where it is used.** A literal in
+`tags` or `invalidates` is checked when the options are built — before anything
+has run — so it throws, which is what catches a typo from an untyped call site.
+A tag an `invalidates` callback derives from the mutation's result can only be
+checked after the mutation has already succeeded, and throwing there would report
+the succeeded mutation as failed and skip the caller's own `onSuccess`. So an
+unknown derived tag is dropped, with one `console.warn` per distinct tag per api
+instance in a non-production build. The mutation's outcome never depends on the
+tag vocabulary.
+
 **Granularity is per `${method} ${path}`, not per key.** Invalidating a tag
 invalidates every cached variant of the endpoints under it, whatever their
 params. That is what "refetch the user list" almost always means, and it keeps
