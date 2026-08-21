@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import {
-  THEME_LEGACY_STORAGE_KEY,
-  THEME_STORAGE_KEY,
   isThemeMode,
+  readStoredThemeValues,
+  writeStoredThemeMode,
 } from './theme-storage.js';
 import { ThemeContext, type ThemeMode } from './useTheme.js';
 
@@ -11,13 +11,12 @@ function isBrowser(): boolean {
   return typeof window !== 'undefined';
 }
 
+/**
+ * Runs during render (a `useState` initializer), so it must not throw —
+ * `readStoredThemeValues` owns the storage guard.
+ */
 function readInitialThemeMode(): ThemeMode {
-  if (!isBrowser()) {
-    return 'auto';
-  }
-
-  const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-  const legacyStored = window.localStorage.getItem(THEME_LEGACY_STORAGE_KEY);
+  const { stored, legacyStored } = readStoredThemeValues();
   const value = stored ?? legacyStored;
 
   return isThemeMode(value) ? value : 'auto';
@@ -96,8 +95,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
 
     isApplyingThemeRef.current = true;
-    window.localStorage.setItem(THEME_STORAGE_KEY, mode);
-    window.localStorage.setItem(THEME_LEGACY_STORAGE_KEY, mode);
+    // Best-effort, and guarded: a storage throw here must not skip the
+    // class/attribute flip below or the page keeps the previous theme.
+    writeStoredThemeMode(mode);
 
     const effectiveTheme = isDark ? 'dark' : 'light';
     document.documentElement.classList.toggle('dark', isDark);
