@@ -152,6 +152,30 @@ that wants trimming declares `textParam()`, which is visible in the schema and
 can be swapped for a param that keeps whitespace. Trimming inside the adapter
 would be a second copy of that decision with no way to opt out of it.
 
+**The cleanup deletes by default, and the escape hatch is an allowlist.** The
+mechanism is subtraction: a key no schema on the route declares is not state, so
+it goes. That is indiscriminate on purpose — the alternative, guessing which
+unknown keys are "probably meaningful", is how a stale `?range=90D` survives —
+but it means a key another system owns is deleted before that system reads it. An
+OAuth `?code=…&state=…` on a callback route is the case this is found through,
+and the symptom (a login that fails with an empty query string) does not point at
+the router.
+
+`preserveKeys` is the exemption, and it is an explicit list rather than a
+heuristic for the same reason the deletion is indiscriminate: the app is the only
+thing that knows a key is owned elsewhere, and writing it down is the smallest
+possible way to say so. A listed key is exempt from the comparison as well as
+from the deletion, which is what keeps it from triggering rewrites of its own and
+out of the convergence argument entirely.
+
+The one sharp edge, recorded because it cannot be designed away: a listed key
+that a schema *also* declares. Validation still wins for a value it produced, but
+zod drops absent optional keys from its output, so "no schema declares this key"
+and "the schema declared it and rejected the value" are indistinguishable at this
+seam — and in the second case the rejected value survives. Hence the documented
+rule (list only keys no schema declares) rather than a runtime guard that could
+not tell the two apart.
+
 **Factories, not bare functions, for the two `beforeLoad` helpers.** Both need
 the app's `stringifySearch`, and a two-argument function cannot be handed
 straight to `beforeLoad`. `createValidatedSearchRedirect({ stringifySearch })`

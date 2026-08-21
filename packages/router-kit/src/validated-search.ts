@@ -13,6 +13,38 @@ export type CanonicalSearchOptions = {
   stringifySearch: StringifySearch;
 };
 
+export type ValidatedSearchRedirectOptions = CanonicalSearchOptions & {
+  /**
+   * Keys to carry across the rewrite even though no schema on the route
+   * declares them.
+   *
+   * The cleanup's whole mechanism is deletion: anything the route's schemas did
+   * not produce is not part of the state on screen, so it is dropped from the
+   * address bar. That is the point — a stale `?range=90D` has to go — and it is
+   * also indiscriminate. A param that some *other* system owns is undeclared
+   * from this route's point of view and disappears just as fast.
+   *
+   * The canonical case is an OAuth callback. The provider returns to
+   * `/callback?code=…&state=…`, the root cleanup runs before the callback
+   * route's own handler gets a chance to read either, and the login fails with
+   * an empty query string and nothing in the logs to explain it. Same shape for
+   * an analytics `?utm_source=…` a tag manager reads on load, or a
+   * `?session_id=…` a payment provider appends.
+   *
+   * So: **declare it or lose it.** Either add the key to a route schema (the
+   * better answer when the app itself reads it — the value is then typed and
+   * part of the route's contract) or list it here (the answer when something
+   * outside the route tree owns it).
+   *
+   * Listed keys are exempt from deletion, not from validation: a key a schema
+   * *did* produce a value for is owned by that schema, and listing it here does
+   * not override what validation applied. What a listed key does get is
+   * exemption from the comparison too, so its mere presence never triggers a
+   * rewrite of its own.
+   */
+  preserveKeys?: readonly string[];
+};
+
 /**
  * The slice of a `beforeLoad` context the cleanup reads. Declared structurally
  * so the real router context is assignable without this package having to name
@@ -63,6 +95,31 @@ export function rendersSameSearch(
   );
 }
 
+/**
+ * The subset of `preserveKeys` this URL actually has to carry: present in the
+ * raw search, and not something validation produced a value for. The second
+ * condition is what keeps the option from overriding a schema — a declared
+ * param's applied value wins, and the key then goes through the normal
+ * comparison rather than being exempted from it.
+ */
+function pickPreservedValues(
+  raw: SearchRecord,
+  applied: SearchRecord,
+  preserveKeys: readonly string[],
+): SearchRecord {
+  return Object.fromEntries(
+    preserveKeys
+      .filter((key) => raw[key] !== undefined && applied[key] === undefined)
+      .map((key) => [key, raw[key]]),
+  );
+}
+
+function withoutKeys(search: SearchRecord, keys: SearchRecord): SearchRecord {
+  return Object.fromEntries(
+    Object.entries(search).filter(([key]) => !(key in keys)),
+  );
+}
+
 function canonicalHref(
   location: { pathname: string; hash: string },
   search: SearchRecord,
@@ -80,6 +137,12 @@ function canonicalHref(
  * so `?range=90D` reads as ninety days of data next to a chart showing the
  * default, and that URL gets shared. This closes the gap: the URL is either the
  * state on screen or it is rewritten.
+ *
+ * The mechanism is deletion, and it does not know what it is deleting: a key no
+ * schema on the route declares is not state, so it goes. When something outside
+ * the route tree owns a key — an OAuth `code`, a `utm_source` — say so with
+ * {@link ValidatedSearchRedirectOptions.preserveKeys}, or it is dropped before
+ * anything reads it.
  *
  * Belongs on the **root** route, where the last match's `_strictSearch` is the
  * whole applied set (each route's strict search already folds in every parent
@@ -102,11 +165,18 @@ function canonicalHref(
  * `stringifySearch` here that disagrees with the one the router was built with
  * — the mismatch shows up as non-convergence.
  *
+ * A preserved key cannot break either requirement: it is exempt from the
+ * comparison as well as from the deletion, so its presence never triggers a
+ * rewrite and it cannot be the param that fails to converge.
+ *
  * @example
  * ```ts
  * const stringifySearch = stringifySearchWith(JSON.stringify);
  * const redirectToValidatedSearch = createValidatedSearchRedirect({
  *   stringifySearch,
+ *   // Owned outside the route tree: the OAuth provider appends these on the
+ *   // way back, and the callback route reads them after this has run.
+ *   preserveKeys: ['code', 'state'],
  * });
  *
  * const rootRoute = createRootRoute({
@@ -118,17 +188,25 @@ function canonicalHref(
  * ```
  */
 export function createValidatedSearchRedirect(
-  options: CanonicalSearchOptions,
+  options: ValidatedSearchRedirectOptions,
 ): (context: ValidatedSearchContext) => void {
-  return ({ location, matches }) => {
-    const applied = toSearchRecord(matches[matches.length - 1]?._strictSearch);
+  const preserveKeys = options.preserveKeys ?? [];
 
-    if (rendersSameSearch(toSearchRecord(location.search), applied)) {
+  return ({ location, matches }) => {
+    const raw = toSearchRecord(location.search);
+    const applied = toSearchRecord(matches[matches.length - 1]?._strictSearch);
+    const preserved = pickPreservedValues(raw, applied, preserveKeys);
+
+    if (rendersSameSearch(withoutKeys(raw, preserved), applied)) {
       return;
     }
 
     throw redirect({
-      href: canonicalHref(location, applied, options.stringifySearch),
+      href: canonicalHref(
+        location,
+        { ...applied, ...preserved },
+        options.stringifySearch,
+      ),
       replace: true,
     });
   };

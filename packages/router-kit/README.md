@@ -141,6 +141,39 @@ Two properties, both load-bearing:
   again on arrival, so a param whose output fails to re-validate to itself
   redirects forever.
 
+#### Declare it or lose it
+
+Read the mechanism literally: **any key no schema on the route declares is
+deleted from the URL.** That is the feature — a stale `?range=90D` has to go —
+and it does not know what it is deleting. A param some *other* system owns is
+undeclared from this route's point of view, and it goes just as fast.
+
+The way this is found in production is an OAuth callback. The provider returns
+the user to `/callback?code=…&state=…`, the root cleanup runs first, and the
+callback route reads an empty query string. The login fails, and nothing in the
+logs mentions the URL. Same shape for a `?utm_source=…` a tag manager reads on
+load, or a `?session_id=…` a payment provider appends.
+
+Two ways out, and the first is usually right:
+
+1. **Declare the key in a route schema.** Then it is typed, it is part of the
+   route's contract, and `useSearch` can read it.
+2. **Allowlist it**, for keys something outside the route tree owns:
+
+```ts
+beforeLoad: createValidatedSearchRedirect({
+  stringifySearch,
+  preserveKeys: ['code', 'state'],
+});
+```
+
+An allowlisted key is exempt from the deletion *and* from the comparison, so its
+presence never triggers a rewrite on its own, and it cannot be the param that
+fails to converge. List only keys no schema declares: a listed key never
+overrides a value validation produced, but for a value validation *rejected*
+there is no applied value to lose to, so the rejected one survives in the address
+bar — which is the lie this whole step exists to remove.
+
 For the sibling case — a value that moved out of the query string on one branch
 while shared links still carry the old key — `createSearchParamStripper` drops
 one key and carries the rest across:
@@ -337,6 +370,7 @@ From the root entry:
 | `SearchRecord`                    | type     | `validated-search`   |
 | `StringifySearch`                 | type     | `validated-search`   |
 | `CanonicalSearchOptions`          | type     | `validated-search`   |
+| `ValidatedSearchRedirectOptions`  | type     | `validated-search`   |
 | `ValidatedSearchContext`          | type     | `validated-search`   |
 | `SearchParamStripperContext`      | type     | `validated-search`   |
 | `createUrlSyncedTableAdapter`     | function | `table-adapter`      |

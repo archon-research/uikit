@@ -82,6 +82,59 @@ export function createToyRouter() {
 }
 
 /**
+ * The same tree as {@link createToyRouter}, plus an allowlist for the two keys
+ * an OAuth provider appends on the way back. Neither is declared by any schema
+ * on the route, so without the allowlist the cleanup deletes both before the
+ * callback route reads them — the login then fails with an empty query string
+ * and nothing to explain it.
+ */
+export function createPreservingRouter() {
+  const rootRoute = createRootRoute({
+    validateSearch: sharedSearchSchema,
+    beforeLoad: createValidatedSearchRedirect({
+      stringifySearch,
+      preserveKeys: ['code', 'state'],
+    }),
+  });
+
+  return createRouter({
+    routeTree: rootRoute.addChildren([
+      createRoute({ getParentRoute: () => rootRoute, path: '/callback' }),
+      createRoute({ getParentRoute: () => rootRoute, path: '/plain' }),
+    ]),
+    trailingSlash: 'never',
+    parseSearch,
+    stringifySearch,
+  });
+}
+
+/**
+ * An allowlist that shadows two keys the shared schema already declares — the
+ * misuse of `preserveKeys`, kept as a fixture because the two halves of what it
+ * does are worth pinning: a value validation *produced* still wins, and a value
+ * validation *rejected* survives, which is the reason to list only keys no
+ * schema on the route declares.
+ */
+export function createShadowingPreserveRouter() {
+  const rootRoute = createRootRoute({
+    validateSearch: sharedSearchSchema,
+    beforeLoad: createValidatedSearchRedirect({
+      stringifySearch,
+      preserveKeys: ['q', 'tab'],
+    }),
+  });
+
+  return createRouter({
+    routeTree: rootRoute.addChildren([
+      createRoute({ getParentRoute: () => rootRoute, path: '/plain' }),
+    ]),
+    trailingSlash: 'never',
+    parseSearch,
+    stringifySearch,
+  });
+}
+
+/**
  * A route tree whose schema is *not* idempotent: the param grows on every pass,
  * so the cleanup rewrites a different URL each time and never settles. This is
  * the failure the harness exists to name.

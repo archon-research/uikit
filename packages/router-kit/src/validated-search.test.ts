@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createNonConvergingRouter,
+  createPreservingRouter,
+  createShadowingPreserveRouter,
   createToyRouter,
   stringifySearch,
 } from './test-fixtures.js';
@@ -113,6 +115,92 @@ describe('createValidatedSearchRedirect', () => {
         matches: [],
       }),
     ).not.toThrow();
+  });
+});
+
+describe('createValidatedSearchRedirect — preserveKeys', () => {
+  const preserving = createPreservingRouter();
+
+  async function settlePreserving(url: string): Promise<string> {
+    return (await settleEntryUrl(preserving.options, url)).url;
+  }
+
+  // The default, restated on the exact URL the option exists for: an OAuth
+  // callback arrives carrying two keys no schema on the route declares, and
+  // deletion does not know they are not stale state.
+  it('deletes an undeclared key when nothing declares it preserved', async () => {
+    expect(await settle('/plain?code=abc&state=xyz')).toBe('/plain');
+  });
+
+  it('carries an allowlisted key across untouched', async () => {
+    expect(await settlePreserving('/callback?code=abc&state=xyz')).toBe(
+      '/callback?code=abc&state=xyz',
+    );
+  });
+
+  it('does not redirect at all for an allowlisted key on its own', async () => {
+    const resolution = await resolveEntryUrl(
+      preserving.options,
+      '/callback?code=abc',
+    );
+
+    expect(resolution.redirectTo).toBeNull();
+  });
+
+  it('keeps the allowlisted key through a rewrite of something else', async () => {
+    expect(await settlePreserving('/plain?tab=bogus&q=x&code=abc')).toBe(
+      '/plain?q=x&code=abc',
+    );
+  });
+
+  it('still deletes a key that is neither declared nor allowlisted', async () => {
+    expect(await settlePreserving('/callback?code=abc&utm=1')).toBe(
+      '/callback?code=abc',
+    );
+  });
+
+  it('converges: the rewritten URL is a fixed point', async () => {
+    const settled = await settleEntryUrl(
+      preserving.options,
+      '/plain?tab=bogus&code=abc',
+    );
+
+    expect(settled.hops).toEqual([
+      '/plain?tab=bogus&code=abc',
+      '/plain?code=abc',
+    ]);
+    expect(
+      (await resolveEntryUrl(preserving.options, settled.url)).redirectTo,
+    ).toBeNull();
+  });
+
+  it('leaves the allowlist inert when the key is absent', async () => {
+    expect(await settlePreserving('/plain?tab=bogus')).toBe('/plain');
+  });
+
+  describe('listing a key a schema declares', () => {
+    const shadowing = createShadowingPreserveRouter();
+
+    async function settleShadowing(url: string): Promise<string> {
+      return (await settleEntryUrl(shadowing.options, url)).url;
+    }
+
+    // Half of what makes the rule "list only undeclared keys": validation still
+    // owns a value it produced, so the allowlist cannot freeze the raw text.
+    it('does not override the value validation applied', async () => {
+      expect(await settleShadowing('/plain?q=%20padded%20')).toBe(
+        '/plain?q=padded',
+      );
+    });
+
+    // The other half, and the reason for the rule: a value validation *rejected*
+    // has no applied value to lose to, so the allowlist keeps it in the address
+    // bar — the URL then advertises a tab the page is not on.
+    it('keeps a value validation rejected, which is the misuse', async () => {
+      expect(await settleShadowing('/plain?tab=bogus')).toBe(
+        '/plain?tab=bogus',
+      );
+    });
   });
 });
 

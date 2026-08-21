@@ -22,4 +22,5 @@ export {
   type SearchRecord,
   type StringifySearch,
   type ValidatedSearchContext,
+  type ValidatedSearchRedirectOptions,
 } from './validated-search.js';
