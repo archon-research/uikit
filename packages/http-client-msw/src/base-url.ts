@@ -12,9 +12,17 @@
 /** How an origin-relative API base is matched. See {@link resolveHandlerBase}. */
 export type MockOriginMatching = 'any' | 'exact';
 
-/** A scheme plus authority, or a protocol-relative `//host` — both pin the host. */
-const ABSOLUTE_URL = /^([a-z][a-z\d+.-]*:)?\/\//i;
+/** A scheme plus authority — `https://api.test`. Pins both scheme and host. */
+const ABSOLUTE_URL = /^[a-z][a-z\d+.-]*:\/\//i;
 
+/** A protocol-relative `//api.test` — pins the host, leaves the scheme open. */
+const PROTOCOL_RELATIVE_URL = /^\/\//;
+
+/**
+ * Whether the base carries its own scheme. A protocol-relative `//host` does
+ * not, and so is *not* absolute here — see {@link resolveHandlerBase}, which
+ * has to prefix one for msw to match it at all.
+ */
 export function isAbsoluteUrl(url: string): boolean {
   return ABSOLUTE_URL.test(url);
 }
@@ -38,6 +46,11 @@ export function normalizeApiBaseUrl(baseUrl?: string): string {
  * `'exact'` opts out and keeps the path relative — same-origin matching only,
  * and node tests then need an absolute `baseUrl`. An absolute base already pins
  * the origin, so the setting does not apply to one.
+ *
+ * A protocol-relative `//host` is prefixed under *both* settings. It pins the
+ * host but not the scheme, and msw matches a bare `//host` pattern against
+ * neither `http:` nor `https:` — the request escapes to the real network. The
+ * wildcard stands in for the scheme only, so the host stays pinned.
  */
 export function resolveHandlerBase(
   baseUrl: string | undefined,
@@ -45,7 +58,11 @@ export function resolveHandlerBase(
 ): string {
   const normalized = normalizeApiBaseUrl(baseUrl);
 
-  if (isAbsoluteUrl(normalized) || origin === 'exact') return normalized;
+  if (isAbsoluteUrl(normalized)) return normalized;
+
+  const pinsHost = PROTOCOL_RELATIVE_URL.test(normalized);
+
+  if (origin === 'exact' && !pinsHost) return normalized;
 
   return `*${normalized}`;
 }

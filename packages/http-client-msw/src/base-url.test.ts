@@ -1,7 +1,10 @@
+import { http, HttpResponse } from 'msw';
+import { setupServer } from 'msw/node';
 import { describe, expect, it } from 'vitest';
 
 import {
   isAbsoluteUrl,
+  type MockOriginMatching,
   normalizeApiBaseUrl,
   resolveHandlerBase,
   resolveWorkerScriptUrl,
@@ -35,9 +38,8 @@ describe('isAbsoluteUrl', () => {
     expect(isAbsoluteUrl('')).toBe(false);
   });
 
-  it('counts a protocol-relative base as absolute, since it pins the host', () => {
-    expect(isAbsoluteUrl('//api.test/v1')).toBe(true);
-    expect(resolveHandlerBase('//api.test/v1', 'any')).toBe('//api.test/v1');
+  it('does not count a protocol-relative base, which carries no scheme', () => {
+    expect(isAbsoluteUrl('//api.test/v1')).toBe(false);
   });
 });
 
@@ -60,6 +62,101 @@ describe('resolveHandlerBase', () => {
     expect(resolveHandlerBase('https://api.test/v1', 'exact')).toBe(
       'https://api.test/v1',
     );
+  });
+
+  it('wildcards a protocol-relative base under either setting', () => {
+    expect(resolveHandlerBase('//api.test/v1/', 'any')).toBe('*//api.test/v1');
+    expect(resolveHandlerBase('//api.test/v1', 'exact')).toBe('*//api.test/v1');
+  });
+});
+
+/**
+ * The contract that actually matters is whether msw matches, not what string
+ * comes back — a resolved base can read perfectly and still match nothing, at
+ * which point the request escapes to the real network instead of failing.
+ *
+ * So these drive the resolved base through `setupServer`. The trailing
+ * catch-all is what makes them match tests: msw resolves handlers in
+ * declaration order, so a request the resolved base does not match falls
+ * through to the sentinel rather than reaching the network, and the assertion
+ * is which of the two answered.
+ */
+const answeredBy = async (
+  baseUrl: string | undefined,
+  origin: MockOriginMatching,
+  url: string,
+): Promise<'base' | 'sentinel'> => {
+  const server = setupServer(
+    http.get(`${resolveHandlerBase(baseUrl, origin)}/things`, () =>
+      HttpResponse.json('base'),
+    ),
+    http.all(/.*/, () => HttpResponse.json('sentinel')),
+  );
+
+  server.listen({ onUnhandledRequest: 'error' });
+  try {
+    return (await (await fetch(url)).json()) as 'base' | 'sentinel';
+  } finally {
+    server.close();
+  }
+};
+
+describe('resolveHandlerBase — matching under msw', () => {
+  it('matches a protocol-relative base on either scheme', async () => {
+    await expect(
+      answeredBy('//api.test/v1', 'any', 'http://api.test/v1/things'),
+    ).resolves.toBe('base');
+    await expect(
+      answeredBy('//api.test/v1', 'any', 'https://api.test/v1/things'),
+    ).resolves.toBe('base');
+    await expect(
+      answeredBy('//api.test/v1', 'exact', 'https://api.test/v1/things'),
+    ).resolves.toBe('base');
+  });
+
+  it('still pins the host of a protocol-relative base', async () => {
+    await expect(
+      answeredBy('//api.test/v1', 'any', 'https://elsewhere.test/v1/things'),
+    ).resolves.toBe('sentinel');
+  });
+
+  it('matches an absolute base on its own scheme and host only', async () => {
+    await expect(
+      answeredBy('https://api.test/v1/', 'any', 'https://api.test/v1/things'),
+    ).resolves.toBe('base');
+    await expect(
+      answeredBy('https://api.test/v1', 'any', 'http://api.test/v1/things'),
+    ).resolves.toBe('sentinel');
+    await expect(
+      answeredBy('https://api.test/v1', 'any', 'https://other.test/v1/things'),
+    ).resolves.toBe('sentinel');
+  });
+
+  it('matches any origin when no base is given', async () => {
+    await expect(
+      answeredBy(undefined, 'any', 'http://localhost/things'),
+    ).resolves.toBe('base');
+    await expect(
+      answeredBy(undefined, 'any', 'https://api.test/things'),
+    ).resolves.toBe('base');
+  });
+
+  it('matches any origin for a relative base by default', async () => {
+    await expect(
+      answeredBy('/api', 'any', 'http://localhost/api/things'),
+    ).resolves.toBe('base');
+    await expect(
+      answeredBy('/api', 'any', 'https://api.test/api/things'),
+    ).resolves.toBe('base');
+  });
+
+  it('matches nothing in node for a relative base under `exact`', async () => {
+    // The documented cost of opting out: node request URLs are always
+    // absolute, so the relative pattern never matches and a node test needs an
+    // absolute `baseUrl` of its own.
+    await expect(
+      answeredBy('/api', 'exact', 'http://localhost/api/things'),
+    ).resolves.toBe('sentinel');
   });
 });
 
