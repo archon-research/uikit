@@ -196,6 +196,51 @@ function collectRecipeStems(leaves: LeafRuleset[]): Set<string> {
 }
 
 /**
+ * Split a selector list on top-level commas only. A comma inside a functional
+ * pseudo-class (`:is(.a--x, .b--y)`, `:not(…)`, `:where(…)`) separates that
+ * pseudo-class's arguments, not selectors — splitting there yields fragments
+ * that are not selectors at all (`.badge--variant_solid:is(.a--x`), whose
+ * rightmost recipe class is an argument rather than the styled element, so the
+ * reference is attributed to a scope that does not exist. A backslash escapes
+ * the next character, since Panda escapes parens inside class names
+ * (`.w_calc\(100\%\)`).
+ */
+function splitSelectorList(selectorList: string): string[] {
+  const selectors: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < selectorList.length; i++) {
+    const char = selectorList[i];
+    if (char === '\\') i++;
+    else if (char === '(') depth++;
+    else if (char === ')') depth = Math.max(0, depth - 1);
+    else if (char === ',' && depth === 0) {
+      selectors.push(selectorList.slice(start, i));
+      start = i + 1;
+    }
+  }
+  selectors.push(selectorList.slice(start));
+  return selectors;
+}
+
+/**
+ * Blank out functional-pseudo argument lists before the subject is read. Their
+ * contents narrow *when* the rule matches; the class naming the element it
+ * styles is always written outside the parens, so an argument must never win the
+ * scope. They also carry commas and whitespace that would otherwise read as
+ * selector-list and descendant separators.
+ */
+function stripPseudoArguments(selector: string): string {
+  let stripped = selector;
+  let previous: string;
+  do {
+    previous = stripped;
+    stripped = stripped.replace(/(?<!\\)\([^()]*\)/g, '');
+  } while (stripped !== previous);
+  return stripped;
+}
+
+/**
  * The recipe stem of the element a selector actually styles: its rightmost
  * compound. `.dark .toggleSwitch__thumb` scopes to `toggleSwitch`, not to
  * whatever the ancestors are — attributing a reference to an ancestor's recipe
@@ -205,7 +250,9 @@ function subjectRecipeStem(
   selector: string,
   stems: Set<string>,
 ): string | null {
-  const compounds = selector.split(/[\s>+~]+/).filter(Boolean);
+  const compounds = stripPseudoArguments(selector)
+    .split(/[\s>+~]+/)
+    .filter(Boolean);
   for (let i = compounds.length - 1; i >= 0; i--) {
     const recipeClasses = [...compounds[i].matchAll(RECIPE_CLASS)];
     const last = recipeClasses.at(-1);
@@ -263,7 +310,7 @@ function collectPaletteScopes(
     const references = [...leaf.body.matchAll(PALETTE_ROLE_REFERENCE)];
     if (!assignment && references.length === 0) continue;
 
-    for (const rawSelector of leaf.selector.split(',')) {
+    for (const rawSelector of splitSelectorList(leaf.selector)) {
       const selector = rawSelector.trim();
       const stem = subjectRecipeStem(selector, stems);
       if (!stem) continue; // unknown scope — see DETECTION BOUNDARY

@@ -200,6 +200,28 @@ describe('scanGeneratedCss — roleless colorPalette', () => {
     ).toMatchObject({ scope: 'chip', palette: 'violet', role: 'subtle-bg' });
   });
 
+  it('splits a selector list at top level, not on commas inside :is()', () => {
+    // Splitting on every comma would cut this into `.badge--variant_solid:is(.a--x`
+    // and `.b--y)`, scoping the reference to `a`/`b` — recipes that do not exist —
+    // and losing the finding.
+    const selector = '.badge--variant_solid:is(.a--x, .b--y)';
+    const css = [
+      healthyCss,
+      paletteRuleset('.badge--colorPalette_violet', 'violet', []),
+      `${selector} {\n  background: var(--colors-color-palette-solid-bg);\n}`,
+    ].join('\n');
+    const roleless = scanGeneratedCss(css).issues.filter(
+      (i) => i.kind === 'roleless-color-palette',
+    );
+    expect(roleless).toHaveLength(1);
+    expect(roleless[0]).toMatchObject({
+      scope: 'badge',
+      selector,
+      palette: 'violet',
+      role: 'solid-bg',
+    });
+  });
+
   it('scopes a reference to the element it styles, not to an ancestor recipe', () => {
     // The palette is assigned on an outer recipe; doctor does not simulate the
     // cascade, so the inner reference is not attributed to `panel`.
