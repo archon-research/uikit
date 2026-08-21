@@ -45,7 +45,9 @@ export type MockSetup = {
  *
  * ```ts
  * const rng = createSeededRng(42);
- * const things = createMockStore(() => seedThings(rng));
+ * const things = createMockStore(() => [
+ *   { id: 't1', name: 'First', size: rng.int(1, 100) },
+ * ]);
  *
  * export const mocks = setupMocks(
  *   [mock.get('/things', ({ response }) => response(200).json(things.list()))],

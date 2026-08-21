@@ -14,13 +14,18 @@ export type MockStoreOptions<T> = {
 };
 
 /**
- * Aliasing, since it is observable: `get` and `insert` hand back the **stored**
- * object, so mutating one writes through to the store. `update` replaces it with
+ * Aliasing, since it is observable: `get`, `insert`, and the elements of
+ * `list` are the **stored** objects, so mutating one writes through to the
+ * store — only `list`'s array is a copy. `update` replaces the item with
  * a merged copy instead, which leaves any reference taken before the update
  * stale. Read again after an update rather than holding a reference across one.
  */
 export type MockStore<T> = {
-  /** Every item, in insertion order. A fresh array, so callers cannot reorder the store. */
+  /**
+   * Every item, in insertion order. The array is fresh, so sorting, slicing, or
+   * splicing it cannot reorder the store — but its elements are the stored
+   * objects, not copies, so mutating one writes through like `get` does.
+   */
   list: () => T[];
   get: (id: string) => T | undefined;
   has: (id: string) => boolean;

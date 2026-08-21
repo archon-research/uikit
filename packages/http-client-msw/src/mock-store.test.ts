@@ -56,9 +56,21 @@ describe('createMockStore', () => {
     const store = createMockStore(seedThings);
     const list = store.list();
     list.pop();
+    list.reverse();
 
     expect(store.list()).toHaveLength(2);
+    expect(store.list().map((thing) => thing.id)).toEqual(['t1', 't2']);
     expect(store.list()).not.toBe(store.list());
+  });
+
+  it('but the elements alias the stored items, like `get`', () => {
+    const store = createMockStore(seedThings);
+    const [first] = store.list();
+
+    expect(first).toBe(store.get('t1'));
+    first.name = 'Mutated';
+
+    expect(store.get('t1')?.name).toBe('Mutated');
   });
 
   it('re-seeds on reset', () => {
