@@ -111,7 +111,12 @@ Outside a prop, `chartColorToken(name)` returns the same string for use in a
 `buildChartTheme` is this package's wrapper over visx's, resolving `colors`,
 `gridColor`, `gridColorDark`, `backgroundColor`, and the `fill`/`stroke` of the
 label and axis-line style blocks. Raw-string configs behave exactly as they did
-against visx's function directly.
+against visx's function directly — including partial style blocks. visx merges
+each block by spreading it over its own defaults, so the wrapper writes a
+`fill`/`stroke` key back only when the caller's block carried one:
+`xAxisLineStyles: { strokeWidth: 3 }` keeps visx's default stroke, and
+`svgLabelBig: { fontSize: 14 }` keeps the themed fill, rather than being blanked
+by a key set to `undefined`.
 
 The `AxisBottom`/`AxisTop`/`AxisLeft`/`AxisRight` wrappers are the documented
 exception: their props are visx's own, forwarded wholesale as an escape hatch, so

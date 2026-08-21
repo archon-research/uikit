@@ -94,6 +94,11 @@ type VisxThemeConfig = Parameters<typeof visxBuildChartTheme>[0];
 type VisxTextStyles = NonNullable<VisxThemeConfig['svgLabelBig']>;
 type VisxLineStyles = NonNullable<VisxThemeConfig['xAxisLineStyles']>;
 
+/** A `svgLabel*` block as authored here: visx's, with a {@link ChartColor} fill. */
+type ChartTextStyles = Omit<VisxTextStyles, 'fill'> & { fill?: ChartColor };
+/** A `*LineStyles` block as authored here: visx's, with a {@link ChartColor} stroke. */
+type ChartLineStyles = Omit<VisxLineStyles, 'stroke'> & { stroke?: ChartColor };
+
 /**
  * {@link buildChartTheme}'s config: visx's, with every color field widened to
  * {@link ChartColor} so a theme can be described in token names.
@@ -116,19 +121,31 @@ export type ChartThemeConfig = Omit<
   colors: ChartColor[];
   gridColor: ChartColor;
   gridColorDark: ChartColor;
-  svgLabelBig?: Omit<VisxTextStyles, 'fill'> & { fill?: ChartColor };
-  svgLabelSmall?: Omit<VisxTextStyles, 'fill'> & { fill?: ChartColor };
-  xAxisLineStyles?: Omit<VisxLineStyles, 'stroke'> & { stroke?: ChartColor };
-  yAxisLineStyles?: Omit<VisxLineStyles, 'stroke'> & { stroke?: ChartColor };
-  xTickLineStyles?: Omit<VisxLineStyles, 'stroke'> & { stroke?: ChartColor };
-  yTickLineStyles?: Omit<VisxLineStyles, 'stroke'> & { stroke?: ChartColor };
+  svgLabelBig?: ChartTextStyles;
+  svgLabelSmall?: ChartTextStyles;
+  xAxisLineStyles?: ChartLineStyles;
+  yAxisLineStyles?: ChartLineStyles;
+  xTickLineStyles?: ChartLineStyles;
+  yTickLineStyles?: ChartLineStyles;
 };
 
-/** Resolves the `fill` of a label style block, leaving other keys untouched. */
-function resolveTextStyles<T extends { fill?: ChartColor }>(
-  styles: T | undefined,
-): (Omit<T, 'fill'> & { fill?: string }) | undefined {
-  if (!styles) return undefined;
+/**
+ * Resolves the `fill` of a label style block, leaving other keys untouched.
+ *
+ * WHY THE `in` CHECK: visx's `buildChartTheme` merges each style block by
+ * SPREADING it over its own defaults (`{ ...defaults, fill: textColor,
+ * ...config.svgLabelBig }`), so a `fill` key present with the value `undefined`
+ * overwrites the default text color with nothing rather than falling back to it.
+ * Writing the key back only when the input carried it is what keeps
+ * `svgLabelBig: { fontSize: 14 }` a font-size override instead of also blanking
+ * the themed fill. A `fill` the caller explicitly set to `undefined` IS
+ * forwarded: this wrapper translates token names and changes nothing else, so
+ * such a config behaves as it would against visx's function directly.
+ */
+function resolveTextStyles(
+  styles: ChartTextStyles | undefined,
+): VisxTextStyles | undefined {
+  if (!styles || !('fill' in styles)) return styles;
   const { fill, ...rest } = styles;
   return {
     ...rest,
@@ -136,11 +153,15 @@ function resolveTextStyles<T extends { fill?: ChartColor }>(
   };
 }
 
-/** Resolves the `stroke` of an axis/tick line style block. */
-function resolveLineStyles<T extends { stroke?: ChartColor }>(
-  styles: T | undefined,
-): (Omit<T, 'stroke'> & { stroke?: string }) | undefined {
-  if (!styles) return undefined;
+/**
+ * Resolves the `stroke` of an axis/tick line style block. Same key-presence rule
+ * as {@link resolveTextStyles} — visx spreads these over `gridColor` /
+ * `gridColorDark` defaults, so `{ strokeWidth: 3 }` must not carry a `stroke`.
+ */
+function resolveLineStyles(
+  styles: ChartLineStyles | undefined,
+): VisxLineStyles | undefined {
+  if (!styles || !('stroke' in styles)) return styles;
   const { stroke, ...rest } = styles;
   return {
     ...rest,
