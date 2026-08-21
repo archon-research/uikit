@@ -38,8 +38,14 @@ import { z } from 'zod';
  *
  * **Not promised: byte-preserved URL text.** Under the default grammar `?v=1e5`
  * canonicalizes to `100000` and `?v=-0` to `0`, because the value really was
- * decoded to a number. That is one rewrite, not a loop — the second pass is
- * stable, which is what the settle harness checks.
+ * decoded to a number.
+ *
+ * That rewrite is the *grammar's*, not the cleanup's, and it costs no redirect:
+ * the router restringifies the decoded search whenever it builds a location, and
+ * its own mount-time commit is what puts the canonical form in the address bar.
+ * The cleanup's rewrites are the ones that show up as a redirect. Either way it
+ * is one rewrite and not a loop — the second pass is stable, and
+ * `settleEntryUrl` pins the settled form of both under both grammars.
  */
 export function toSearchText(value: unknown): string | undefined {
   if (typeof value === 'number' || typeof value === 'boolean') {

@@ -54,8 +54,12 @@ can opt out — but then it owns the whole grammar.
 render-and-redecode round trip and you get that output unchanged. What it does
 **not** promise is byte-preserved URL text — under the default grammar `?v=1e5`
 canonicalizes to `100000`, because the value really was decoded to a number.
-That is one rewrite, not a loop; the second pass is stable, and step 4 is what
-proves it.
+
+That rewrite is the *grammar's*, and it costs no redirect: the router
+restringifies the decoded search whenever it builds a location, so its own
+mount-time commit puts `?v=100000` in the address bar. Step 2's rewrites are the
+ones that redirect. Either way it is one rewrite, not a loop; the second pass is
+stable, and step 4 pins the settled form of both under both grammars.
 
 `textParam()` and `oneOfParam()` absorb all of it. Reach for `toSearchText` or
 `toSearchOption` directly when a control needs to apply the same rule while

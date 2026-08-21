@@ -26,7 +26,9 @@ coerces strictly more than an identity parser, which is why the specs check both
 The builders absorb it, and they are total (no input fails, so a route never
 throws on a hand-edited URL) and idempotent under either grammar. Idempotence is
 not text preservation: the default grammar canonicalizes `?v=1e5` to `100000`
-once, and then holds.
+once, and then holds — the grammar's own parse/stringify round trip does that,
+with no redirect involved, which is why the harness pins the settled URL per
+grammar rather than assuming one canonical spelling.
 
 **`validated-search.ts`** — the schemas drop what they cannot honour, but the
 address bar keeps it, so a URL advertises state the page is not in. The root

@@ -179,6 +179,123 @@ describe('settleEntryUrl — the caller’s router config decides the answer', (
   });
 });
 
+/*
+ * A URL is canonicalized by two independent things, and a spec that cannot tell
+ * them apart cannot tell a working app from a looping one:
+ *
+ *  - the **grammar**, when the search survives a parse-and-restringify round
+ *    trip in a different spelling. `?q=1e5` under the router's default grammar
+ *    really is the number `100000`, so `100000` is how the router writes it back.
+ *    This costs no redirect at all — the router does it while building the
+ *    location, and its own mount-time rewrite is what puts it in the address bar.
+ *  - the **cleanup**, when validation dropped or rewrote something. That is a
+ *    redirect, and it shows up as a second hop.
+ *
+ * Both are visible below as the hop count, on the same entry URLs under both
+ * grammars. The values are the ones `search-params.ts` documents, checked at the
+ * level a consumer actually sees: URL in, URL out.
+ */
+const GRAMMAR_CASES = [
+  {
+    entry: '/plain?q=1e5',
+    identity: { url: '/plain?q=1e5', q: '1e5', hops: 1 },
+    json: { url: '/plain?q=100000', q: '100000', hops: 1 },
+  },
+  {
+    entry: '/plain?q=-0',
+    identity: { url: '/plain?q=-0', q: '-0', hops: 1 },
+    json: { url: '/plain?q=0', q: '0', hops: 1 },
+  },
+  {
+    entry: '/plain?q=1.50',
+    identity: { url: '/plain?q=1.50', q: '1.50', hops: 1 },
+    json: { url: '/plain?q=1.5', q: '1.5', hops: 1 },
+  },
+  {
+    // Not valid JSON — `JSON.parse('0001')` throws — so the default grammar
+    // leaves it a string, and a leading-zero identifier survives both.
+    entry: '/plain?q=0001',
+    identity: { url: '/plain?q=0001', q: '0001', hops: 1 },
+    json: { url: '/plain?q=0001', q: '0001', hops: 1 },
+  },
+  {
+    // Quotes are JSON syntax under the default grammar and text under the
+    // identity one.
+    entry: '/plain?q=%22quoted%22',
+    identity: { url: '/plain?q=%22quoted%22', q: '"quoted"', hops: 1 },
+    json: { url: '/plain?q=quoted', q: 'quoted', hops: 1 },
+  },
+  {
+    // The one case where the two grammars disagree about whether there is any
+    // value at all: `null` decodes to the value `null`, which no param can
+    // mean, so the cleanup deletes the key — the second hop.
+    entry: '/plain?q=null',
+    identity: { url: '/plain?q=null', q: 'null', hops: 1 },
+    json: { url: '/plain', q: undefined, hops: 2 },
+  },
+  {
+    // Both grammars canonicalize, by different routes: the identity one trims
+    // (a cleanup redirect, two hops), the default one parses the padded text as
+    // a number (no redirect, one hop).
+    entry: '/plain?q=%201e5%20',
+    identity: { url: '/plain?q=1e5', q: '1e5', hops: 2 },
+    json: { url: '/plain?q=100000', q: '100000', hops: 1 },
+  },
+] as const;
+
+describe('settleEntryUrl — the canonical form each grammar produces', () => {
+  const identityRouter = createToyRouter();
+  const jsonRouter = createJsonSearchRouter();
+
+  it.each(GRAMMAR_CASES)(
+    'settles $entry under the identity grammar',
+    async ({ entry, identity }) => {
+      const settled = await settleEntryUrl(identityRouter.options, entry);
+
+      expect(settled.url).toBe(identity.url);
+      expect(settled.hops).toHaveLength(identity.hops);
+      expect((settled.result.search as { q?: unknown }).q).toBe(identity.q);
+    },
+  );
+
+  it.each(GRAMMAR_CASES)(
+    'settles $entry under the router’s default grammar',
+    async ({ entry, json }) => {
+      const settled = await settleEntryUrl(jsonRouter.options, entry);
+
+      expect(settled.url).toBe(json.url);
+      expect(settled.hops).toHaveLength(json.hops);
+      expect((settled.result.search as { q?: unknown }).q).toBe(json.q);
+    },
+  );
+
+  // Spelled out once, because the hop counts above are the whole point: the
+  // grammar's rewrite is invisible in the chain (it happens as the location is
+  // built) while the cleanup's is a hop.
+  it('shows the grammar’s rewrite in the first hop, not in a second', async () => {
+    const identity = await settleEntryUrl(
+      identityRouter.options,
+      '/plain?q=%201e5%20',
+    );
+    const json = await settleEntryUrl(jsonRouter.options, '/plain?q=%201e5%20');
+
+    expect(identity.hops).toEqual(['/plain?q=+1e5+', '/plain?q=1e5']);
+    expect(json.hops).toEqual(['/plain?q=100000']);
+  });
+
+  it('is stable on a second pass, under both grammars', async () => {
+    for (const router of [identityRouter, jsonRouter]) {
+      for (const { entry } of GRAMMAR_CASES) {
+        const once = await settleEntryUrl(router.options, entry);
+        const twice = await settleEntryUrl(router.options, once.url);
+
+        expect(twice.url).toBe(once.url);
+        expect(twice.hops).toEqual([once.url]);
+      }
+    }
+  });
+});
+
 describe('settleEntryUrl — a router served under a basepath', () => {
   const basepathRouter = createBasepathRouter();
 
