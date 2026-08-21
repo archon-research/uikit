@@ -354,7 +354,7 @@ recorded rather than left open.
 
 `@archon-research/design-system` is **not** a dependency of this package, not
 even an optional peer. The table adapter's type is restated structurally; see
-[DESIGN.md](./DESIGN.md).
+[DESIGN.md](./DESIGN.md), which ships in the tarball alongside this file.
 
 ## Exported surface
 
@@ -400,8 +400,12 @@ Both functions return promises — see [step 4](#4-prove-the-entry-urls-settle).
 
 ## See also
 
-- [design-system](../design-system) for `useUrlSyncedTableStateAdapter` and the
-  `DataTable` this package's adapter feeds
-- [http-client-react](../http-client-react) for the TanStack Query layer that a
-  future loader/query glue would have to straddle (see
-  [DESIGN.md](./DESIGN.md#loader-and-query-glue))
+Sibling packages are linked by full URL, not by `../`: this file ships in the
+published tarball, where a relative path to another package resolves to nothing.
+
+- [design-system](https://github.com/archon-research/uikit/tree/main/packages/design-system)
+  for `useUrlSyncedTableStateAdapter` and the `DataTable` this package's adapter
+  feeds
+- [http-client-react](https://github.com/archon-research/uikit/tree/main/packages/http-client-react)
+  for the TanStack Query layer that a future loader/query glue would have to
+  straddle (see [DESIGN.md](./DESIGN.md#loader-and-query-glue))
