@@ -153,7 +153,22 @@ import { applyThemeBootstrap } from '@archon-research/design-system';
 applyThemeBootstrap();
 ```
 
-All three make the same decision: a stored `light` / `dark` wins, `auto` (and no
+Or, as the first statement of your entry module, import the built script for its
+side effect — the same code as the copied file in option 2, but bundled with your
+app instead of served separately:
+
+```typescript
+import '@archon-research/design-system/theme-bootstrap.js';
+```
+
+This form is safe from tree-shaking: the package is otherwise marked
+`sideEffects: false`, and `dist/theme-bootstrap.js` is listed as the one
+exception, so bundlers keep it even though the import binds no name. Note that it
+runs when your entry bundle runs, not before the document's stylesheets — put it
+above every other import, and prefer option 1 or 2 if your entry bundle is
+deferred.
+
+Every form makes the same decision: a stored `light` / `dark` wins, `auto` (and no
 stored value) resolves against `prefers-color-scheme`, the pre-rename storage key
 is still honoured, and unavailable storage falls back to the system preference
 rather than throwing. When a bootstrap has run, `ThemeProvider` seeds its first

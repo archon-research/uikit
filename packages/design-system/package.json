@@ -5,7 +5,9 @@
     "access": "public"
   },
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/theme-bootstrap.js"
+  ],
   "files": [
     "dist",
     "src",

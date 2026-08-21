@@ -8,6 +8,13 @@
 // `<script src>`. Generating it from the built module keeps one source of truth
 // — the string that `ThemeProvider` shares its storage keys with — so the file
 // can never drift from the inline form.
+//
+// `outFile` below is load-bearing beyond this script: the same path is the
+// `./theme-bootstrap.js` export target and the lone entry in the package's
+// `sideEffects` array, which is what stops a bundler tree-shaking away a
+// side-effect-only `import '.../theme-bootstrap.js'`. Renaming it means editing
+// both entries in package.json to match, or that import silently disappears
+// from consumer bundles.
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
