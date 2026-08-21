@@ -8,6 +8,7 @@ import { createQueryApi } from './query-api.js';
 import {
   createFetchStub,
   emptyResponse,
+  headResponse,
   jsonResponse,
   type TestPaths,
   type TestTag,
@@ -37,6 +38,7 @@ function setup(
     'GET /users': () => jsonResponse([ada]),
     'GET /users/u1': () => jsonResponse(ada),
     'GET /users/missing': () => jsonResponse({ message: 'no such user' }, 404),
+    'HEAD /users': () => headResponse(),
     'POST /users': async (request) => {
       const body = (await request.json()) as { name: string };
       return jsonResponse({ id: 'u2', name: body.name }, 201);
@@ -133,6 +135,18 @@ describe('queryOptions', () => {
     expect(error.method).toBe('get');
     expect(error.path).toBe('/users/{id}');
     expect(error.message).toContain('GET /users/{id}');
+  });
+
+  it('resolves a HEAD to null even when Content-Length is non-zero', async () => {
+    const { api, queryClient, stub } = setup();
+
+    // `openapi-fetch` never parses a body for HEAD, so `data` is `undefined`
+    // however the response is framed. Without the HEAD branch this rejects
+    // with react-query's "Query data cannot be undefined".
+    await expect(
+      queryClient.fetchQuery(api.queryOptions('head', '/users')),
+    ).resolves.toBeNull();
+    expect(stub.requests[0]?.method).toBe('HEAD');
   });
 
   it("threads react-query's abort signal into the request init", async () => {

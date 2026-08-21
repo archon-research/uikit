@@ -298,11 +298,10 @@ export function createQueryApi<
   const methods = client as unknown as Record<string, LooseClientMethod>;
 
   const send = async (ctx: QueryApiRequestContext): Promise<unknown> => {
-    const call = methods[ctx.method.toUpperCase()];
+    const method = ctx.method.toUpperCase();
+    const call = methods[method];
     if (!call) {
-      throw new Error(
-        `http-client-react: client has no ${ctx.method.toUpperCase()} method`,
-      );
+      throw new Error(`http-client-react: client has no ${method} method`);
     }
 
     const { data, error, response } = await call(ctx.path, ctx.init);
@@ -316,8 +315,14 @@ export function createQueryApi<
       });
     }
 
-    // react-query rejects `undefined` as query data, and a 204 or an
-    // explicitly empty body legitimately has none.
+    // A HEAD response has no body by definition, so `openapi-fetch` resolves
+    // `data: undefined` whatever the status and whatever `Content-Length`
+    // claims — and it claims the size the matching GET would have returned, so
+    // the emptiness checks below do not catch it. react-query rejects
+    // `undefined` as query data.
+    if (method === 'HEAD') return data ?? null;
+
+    // Same conversion for the other two ways a 2xx legitimately has no body.
     if (
       response.status === 204 ||
       response.headers.get('Content-Length') === '0'

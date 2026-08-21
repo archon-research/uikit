@@ -79,6 +79,18 @@ export function typeAssertions(): void {
   expectTypeOf(selectedOptions.select).parameter(0).toEqualTypeOf<User[]>();
   expectTypeOf(readTags(selectedOptions).data).toEqualTypeOf<User[]>();
 
+  // HEAD is in the query method union, so a declared HEAD operation has to be
+  // reachable through it — and only on the path that declares one.
+  const headOptions = api.queryOptions('head', '/users', {
+    params: { query: { search: 'ada' } },
+  });
+  expectTypeOf(headOptions.queryKey).toExtend<
+    readonly ['head', '/users', { query?: Record<string, unknown> }]
+  >();
+
+  // @ts-expect-error — /users/{id} declares no HEAD operation
+  api.queryOptions('head', '/users/{id}', { params: { path: { id: 'u1' } } });
+
   // @ts-expect-error — `params.path.id` is required by the operation
   api.queryOptions('get', '/users/{id}');
 

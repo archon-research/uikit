@@ -103,6 +103,9 @@ treats a rejection as failure. The `queryFn` converts:
   `method`/`path`, and the raw `Response`.
 - A 204, or a response with `Content-Length: 0`, resolves to `null` — react-query
   rejects `undefined` as query data.
+- A `HEAD` resolves to `null` unconditionally. A HEAD response has no body by
+  definition, so `openapi-fetch` parses none; its `Content-Length` echoes the
+  size the matching `GET` would have returned, so neither check above catches it.
 
 The declared error type is `HttpRequestError<TErrorBody> | Error`, not
 `HttpRequestError` alone. That is honest rather than convenient: a transport

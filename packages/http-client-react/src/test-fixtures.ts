@@ -61,10 +61,32 @@ export type TestPaths = {
         };
       };
     };
+    /**
+     * A real HEAD operation, not `head?: never`: `queryOptions` accepts `head`,
+     * so leaving it absent everywhere would let the query method union claim
+     * support nothing type-checks. Its 200 declares no content, which is what
+     * `openapi-typescript` emits for a bodyless response.
+     */
+    head: NoBody & {
+      parameters: {
+        query?: { search?: string };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      responses: {
+        200: { headers: Record<string, unknown>; content?: never };
+        500: {
+          headers: Record<string, unknown>;
+          content: {
+            'application/json': ApiFault;
+          };
+        };
+      };
+    };
     put?: never;
     delete?: never;
     options?: never;
-    head?: never;
     patch?: never;
     trace?: never;
   };
@@ -172,4 +194,19 @@ export function jsonResponse(body: unknown, status = 200): Response {
 /** A no-content response, for the 204 branch of the query function. */
 export function emptyResponse(status = 204): Response {
   return new Response(null, { status });
+}
+
+/**
+ * A HEAD response: 200, no body, and a `Content-Length` echoing the size of the
+ * entity the matching GET would return. That header is what makes HEAD its own
+ * case — neither the 204 nor the `Content-Length: 0` branch catches it.
+ */
+export function headResponse(contentLength = '42'): Response {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Content-Length': contentLength,
+      'Content-Type': 'application/json',
+    },
+  });
 }
