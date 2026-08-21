@@ -57,7 +57,7 @@ export type MockApiOptions = {
  * object, for the rare route that is not in the OpenAPI document at all (an
  * auth callback on another host, say).
  */
-export type MockApi<TPaths extends {}> = OpenApiHttpHandlers<TPaths>;
+export type MockApi<TPaths extends object> = OpenApiHttpHandlers<TPaths>;
 
 /**
  * Creates typed msw request-handler factories bound to a generated OpenAPI
@@ -71,7 +71,10 @@ export type MockApi<TPaths extends {}> = OpenApiHttpHandlers<TPaths>;
  * from the contract makes every test that depends on it a false pass.
  *
  * `TPaths` must be passed explicitly; there is no value argument to infer it
- * from.
+ * from — which is why the constraint is `object` rather than the `{}` that
+ * openapi-msw itself accepts. Every primitive but `null` and `undefined`
+ * satisfies `{}`, so a mistyped type argument compiled into a factory offering
+ * no paths at all.
  *
  * ```ts
  * const mock = createMockApi<paths>({ baseUrl: '/api' });
@@ -84,7 +87,7 @@ export type MockApi<TPaths extends {}> = OpenApiHttpHandlers<TPaths>;
  * ];
  * ```
  */
-export function createMockApi<TPaths extends {}>(
+export function createMockApi<TPaths extends object>(
   options: MockApiOptions = {},
 ): MockApi<TPaths> {
   return createOpenApiHttp<TPaths>({

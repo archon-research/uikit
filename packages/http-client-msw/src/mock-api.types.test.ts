@@ -29,6 +29,13 @@ describe('createMockApi — inference', () => {
 });
 
 export function typeAssertions(): void {
+  // A type argument that is not an object shape is rejected, rather than
+  // compiling into a factory that offers no paths at all.
+  // @ts-expect-error — a string is not a `paths` type
+  createMockApi<'nonsense'>();
+  // @ts-expect-error — nor is a number
+  createMockApi<7>();
+
   // Only paths that declare the method are offered per factory.
   expectTypeOf<MockPathsFor<typeof mock.get>>().toEqualTypeOf<
     '/things' | '/things/{id}'
