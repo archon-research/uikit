@@ -16,8 +16,17 @@
  * NOT `as const`: property names are literal in the inferred type either way
  * (which is all {@link ChartColorTokenPath} needs), while the values stay
  * mutable `string`s so Panda's own token types accept them.
+ *
+ * Frozen because it is a module-scope singleton that both Panda configs and the
+ * package barrel hand out by reference. The freeze is SHALLOW on purpose: it
+ * stops a namespace being replaced or added (`tokens.identity = …`,
+ * `Object.assign(tokens, …)`), which is the plausible accident, and stops
+ * nothing deeper. A deep freeze would trade that for a real risk — Panda's
+ * config merge walks these same nested objects, and both configs pass
+ * `.chart`/`.identity` in by reference rather than copying, so a frozen leaf
+ * could throw inside a consumer's codegen.
  */
-export const chartColorSemanticTokens = {
+export const chartColorSemanticTokens = Object.freeze({
   chart: {
     axis: {
       value: { base: '{colors.neutral.500}', _dark: '{colors.neutral.400}' },
@@ -77,7 +86,7 @@ export const chartColorSemanticTokens = {
       value: { base: '{colors.orange.600}', _dark: '{colors.orange.400}' },
     },
   },
-};
+});
 
 /**
  * A leaf of the token tree above: a node carrying a `value`.
