@@ -197,6 +197,16 @@ export function emptyResponse(status = 204): Response {
 }
 
 /**
+ * A failure with an explicitly empty body. `openapi-fetch` short-circuits on
+ * `Content-Length: 0` and resolves `error: undefined`, which is the case
+ * `HttpRequestError.body`'s `| undefined` exists for. Without the header the
+ * body is parsed as text and comes back as `''`, not `undefined`.
+ */
+export function emptyFaultResponse(status = 500): Response {
+  return new Response(null, { status, headers: { 'Content-Length': '0' } });
+}
+
+/**
  * A HEAD response: 200, no body, and a `Content-Length` echoing the size of the
  * entity the matching GET would return. That header is what makes HEAD its own
  * case — neither the 204 nor the `Content-Length: 0` branch catches it.

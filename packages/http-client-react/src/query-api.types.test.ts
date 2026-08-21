@@ -72,6 +72,11 @@ export function typeAssertions(): void {
     HttpRequestError<ApiFault> | Error
   >();
 
+  // The error body is the operation's error response — and optional, because a
+  // failure need not carry one.
+  const fault = {} as HttpRequestError<ApiFault>;
+  expectTypeOf(fault.body).toEqualTypeOf<ApiFault | undefined>();
+
   // `select` retypes what a component reads without losing the fetched type.
   const selectedOptions = api.queryOptions('get', '/users', undefined, {
     select: (users) => users.length,

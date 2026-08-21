@@ -100,7 +100,10 @@ treats a rejection as failure. The `queryFn` converts:
 
 - Non-2xx (or any `error`) rejects with `HttpRequestError`, carrying `status`,
   `statusText`, the parsed `body` typed from the operation's error responses, the
-  `method`/`path`, and the raw `Response`.
+  `method`/`path`, and the raw `Response`. `body` is `TBody | undefined`, not
+  `TBody`: a 5xx from something in front of the API, or any non-2xx with
+  `Content-Length: 0`, leaves `openapi-fetch` nothing to parse. Narrowing with
+  `isHttpRequestError` gets you `status` for free but still not a body.
 - A 204, or a response with `Content-Length: 0`, resolves to `null` — react-query
   rejects `undefined` as query data.
 - A `HEAD` resolves to `null` unconditionally. A HEAD response has no body by

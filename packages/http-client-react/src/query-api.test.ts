@@ -7,6 +7,7 @@ import type { QueryApiMiddleware } from './middleware.js';
 import { createQueryApi } from './query-api.js';
 import {
   createFetchStub,
+  emptyFaultResponse,
   emptyResponse,
   headResponse,
   jsonResponse,
@@ -44,6 +45,7 @@ function setup(
     'GET /users': () => jsonResponse([ada]),
     'GET /users/u1': () => jsonResponse(ada),
     'GET /users/missing': () => jsonResponse({ message: 'no such user' }, 404),
+    'GET /users/gone': () => emptyFaultResponse(),
     'HEAD /users': () => headResponse(),
     'POST /users': async (request) => {
       const body = (await request.json()) as { name: string };
@@ -141,6 +143,25 @@ describe('queryOptions', () => {
     expect(error.method).toBe('get');
     expect(error.path).toBe('/users/{id}');
     expect(error.message).toContain('GET /users/{id}');
+  });
+
+  it('leaves body undefined when the failing response carries none', async () => {
+    const { api, queryClient } = setup();
+
+    const error = await queryClient
+      .fetchQuery(
+        api.queryOptions('get', '/users/{id}', {
+          params: { path: { id: 'gone' } },
+        }),
+      )
+      .catch((thrown: unknown) => thrown);
+
+    // Not every failure has a parseable body — which is why `body` is typed
+    // `TBody | undefined` rather than `TBody`.
+    expect(isHttpRequestError(error)).toBe(true);
+    if (!isHttpRequestError(error)) return;
+    expect(error.status).toBe(500);
+    expect(error.body).toBeUndefined();
   });
 
   it('resolves a HEAD to null even when Content-Length is non-zero', async () => {

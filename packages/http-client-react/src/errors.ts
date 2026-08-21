@@ -15,15 +15,18 @@ export class HttpRequestError<TBody = unknown> extends Error {
   readonly statusText: string;
   /**
    * The response body parsed by `openapi-fetch`, typed from the operation's
-   * error responses. `undefined` when the failing response had no body.
+   * error responses — and `| undefined`, because a failure need not have one: a
+   * 5xx from a proxy, or any non-2xx with an empty body, leaves nothing to
+   * parse. Declaring it as `TBody` alone would let a consumer read through to a
+   * property of a body that is not there.
    */
-  readonly body: TBody;
+  readonly body: TBody | undefined;
   readonly response: Response;
 
   constructor(init: {
     method: string;
     path: string;
-    body: TBody;
+    body: TBody | undefined;
     response: Response;
   }) {
     super(
