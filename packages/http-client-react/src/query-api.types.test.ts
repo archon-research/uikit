@@ -2,8 +2,9 @@ import {
   type ApiClient,
   createApiClient,
 } from '@archon-research/http-client-core';
+import { useQuery } from '@tanstack/react-query';
 import type { DataTag, QueryClient } from '@tanstack/react-query';
-import { describe, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { type HttpRequestError, isHttpRequestError } from './errors.js';
 import { createQueryApi } from './query-api.js';
@@ -17,9 +18,9 @@ import type { ApiFault, TestPaths, User } from './test-fixtures.js';
  * the generic surface it claims.
  *
  * `expectTypeOf` and `@ts-expect-error` are checked by `npm run type:check`, so
- * the assertions live in a function that is never called — several of them
- * would throw or issue requests if they ran. The `it` block below only keeps
- * vitest from reporting the file as empty.
+ * the assertions live in functions that are never called — several of them would
+ * throw or issue requests if they ran, and one calls `useQuery` outside a React
+ * render purely to borrow its overload resolution.
  */
 
 const client = createApiClient<TestPaths>('https://api.test');
@@ -38,9 +39,15 @@ type ResolvedQueryFn<
 > = Awaited<ReturnType<TOptions['queryFn']>>;
 
 describe('createQueryApi — inference', () => {
-  it('is asserted by tsc, not at runtime', () => {
-    expectTypeOf(api.queryOptions).toBeFunction();
-    expectTypeOf(api.mutationOptions).toBeFunction();
+  // A real assertion rather than a placeholder: the file's whole premise is
+  // that this api instance was constructed, and everything asserted below is
+  // about the options it builds.
+  it('builds options whose key is the operation', () => {
+    expect(api.queryOptions('get', '/users').queryKey).toEqual([
+      'get',
+      '/users',
+      {},
+    ]);
   });
 });
 
@@ -97,6 +104,17 @@ export function typeAssertions(): void {
     select: (users) => users.length,
   });
   expectTypeOf(selectedOptions.select).parameter(0).toEqualTypeOf<User[]>();
+
+  // The assertion that matters: the options' `TData` is the *selected* type, so
+  // this is what a component reads. Asserted through the real `useQuery` rather
+  // than a stand-in, since matching its overload resolution is the point.
+  expectTypeOf(useQuery(selectedOptions).data).toEqualTypeOf<
+    number | undefined
+  >();
+  expectTypeOf(useQuery(listOptions).data).toEqualTypeOf<User[] | undefined>();
+
+  // And the key's brand still carries the *fetched* type, not the selected one:
+  // `getQueryData` on this key hands back what the endpoint returned.
   expectTypeOf(readTags(selectedOptions).data).toEqualTypeOf<User[]>();
 
   // HEAD is in the query method union, so a declared HEAD operation has to be
