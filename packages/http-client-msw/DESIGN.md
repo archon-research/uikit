@@ -186,8 +186,10 @@ specific way mocks fail:
   seed is a *function*, re-run on every reset, so a handler mutating an item in
   place cannot corrupt the next test's starting point — provided the function
   constructs its items rather than returning a shared array. Unknown ids return
-  `undefined`/`false` for a handler to turn into its own 404; a duplicate insert
-  throws, because that is a fixture bug rather than an API state.
+  `undefined`/`false` for a handler to turn into its own 404; a duplicate id
+  throws on every write path — insert, seed, `replaceAll`, and an `update` whose
+  patch moves an item onto a taken id — because that is a fixture bug rather
+  than an API state.
 - **`createSeededRng(seed)`** — `Math.random` in a mock makes a failing test
   unreproducible and a visual snapshot unstable. mulberry32: 32 bits of state and
   a handful of integer ops, cheap enough to call inside a handler. Statistical
