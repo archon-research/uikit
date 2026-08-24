@@ -125,11 +125,11 @@ export {
   type UseTreeViewReturn,
 } from '@ark-ui/react/tree-view';
 export { Tooltip } from '@ark-ui/react/tooltip';
-export type {
-  CellContext,
-  ColumnDef,
-  SortingState,
-} from '@tanstack/react-table';
+export type { SortingState } from '@tanstack/react-table';
+// Deprecated compatibility aliases — see their `@deprecated` JSDoc in
+// `components/data-table/types.ts` for why they're no longer straight
+// re-exports of `@tanstack/react-table`'s own types.
+export type { CellContext, ColumnDef } from './components/data-table/types.js';
 export { Tabs } from '@ark-ui/react/tabs';
 export { Toggle } from '@ark-ui/react/toggle';
 export { ToggleGroup } from '@ark-ui/react/toggle-group';

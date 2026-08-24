@@ -1,10 +1,11 @@
+import type { RowData } from '@tanstack/react-table';
+
 import type {
   CellContext,
   ColumnDef,
+  DataTableColumnAlign,
   HeaderContext,
-} from '@tanstack/react-table';
-
-import type { DataTableColumnAlign } from './types.js';
+} from './types.js';
 
 /**
  * A column entry accepted by {@link defineColumns}: a real column definition, or
@@ -13,7 +14,11 @@ import type { DataTableColumnAlign } from './types.js';
  * factory can therefore inline `tier === 'wide' && { ... }` without a local
  * `present()`/`filter(Boolean)` helper.
  */
-export type DataTableColumnEntry<T> = ColumnDef<T> | false | null | undefined;
+export type DataTableColumnEntry<T extends RowData> =
+  | ColumnDef<T>
+  | false
+  | null
+  | undefined;
 
 /**
  * Render-prop context for a {@link DataTable} body cell, pinned to the row type
@@ -21,13 +26,16 @@ export type DataTableColumnEntry<T> = ColumnDef<T> | false | null | undefined;
  * be typed without importing `CellContext` from `@tanstack/react-table`
  * directly — e.g. `cell: (ctx: DataTableCell<Row>) => ...`.
  */
-export type DataTableCell<T, V = unknown> = CellContext<T, V>;
+export type DataTableCell<T extends RowData, V = unknown> = CellContext<T, V>;
 
 /**
  * Render-prop context for a {@link DataTable} header, pinned to `T` (and
  * optionally `V`). The header counterpart of {@link DataTableCell}.
  */
-export type DataTableHeader<T, V = unknown> = HeaderContext<T, V>;
+export type DataTableHeader<T extends RowData, V = unknown> = HeaderContext<
+  T,
+  V
+>;
 
 /**
  * Build a `ColumnDef<T>[]` for {@link useDataTable} / {@link DataTable} from a
@@ -50,7 +58,7 @@ export type DataTableHeader<T, V = unknown> = HeaderContext<T, V>;
  * const table = useDataTable(rows, columns); // no `as never`
  * ```
  */
-export function defineColumns<T>(
+export function defineColumns<T extends RowData>(
   ...columns: Array<DataTableColumnEntry<T>>
 ): ColumnDef<T>[] {
   return columns.filter((column): column is ColumnDef<T> => Boolean(column));
@@ -62,7 +70,10 @@ export function defineColumns<T>(
  * width map, a pinned-column set) has to cast. Use this — and
  * {@link defineIdentifiedColumns} — when every column supplies an `id`.
  */
-export type IdentifiedColumnDef<T, V = unknown> = ColumnDef<T, V> & {
+export type IdentifiedColumnDef<T extends RowData, V = unknown> = ColumnDef<
+  T,
+  V
+> & {
   id: string;
 };
 
@@ -80,7 +91,7 @@ export type IdentifiedColumnDef<T, V = unknown> = ColumnDef<T, V> & {
  * const widths = new Map(columns.map((c) => [c.id, 120])); // c.id is string
  * ```
  */
-export function defineIdentifiedColumns<T>(
+export function defineIdentifiedColumns<T extends RowData>(
   ...columns: Array<IdentifiedColumnDef<T> | false | null | undefined>
 ): IdentifiedColumnDef<T>[] {
   return columns.filter((column): column is IdentifiedColumnDef<T> =>

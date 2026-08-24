@@ -14,9 +14,9 @@ import {
   StatRow,
   StatTile,
   useDataTable,
+  type ColumnDef,
   type StatTileTone,
 } from '@archon-research/design-system';
-import type { ColumnDef } from '@tanstack/react-table';
 import {
   useCallback,
   useRef,

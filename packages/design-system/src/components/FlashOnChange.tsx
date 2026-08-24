@@ -196,8 +196,7 @@ export function FlashOnChange({
         </span>
       ) : null}
       {announce && tone != null && direction !== 'none' ? (
-        <span
-          role="status"
+        <output
           aria-live="polite"
           style={{
             position: 'absolute',
@@ -209,7 +208,7 @@ export function FlashOnChange({
           }}
         >
           {direction === 'up' ? 'increased' : 'decreased'}
-        </span>
+        </output>
       ) : null}
     </span>
   );

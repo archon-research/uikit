@@ -87,6 +87,7 @@ export function ProportionBar({
       <div
         className="proportionBar__track"
         data-part="track"
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- composite multi-segment bar; a native `<img>` can't render its DOM children, so `role="img"` collapses them into one accessible label instead
         role="img"
         aria-label={caption}
       >

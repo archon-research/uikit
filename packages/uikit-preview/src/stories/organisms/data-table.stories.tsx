@@ -6,7 +6,7 @@ import {
   useDataTable,
 } from '@archon-research/design-system';
 import type { SortingState } from '@tanstack/react-table';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { css } from '../../../styled-system/css';
 
@@ -480,7 +480,7 @@ export const MultiRowSelection = () => {
   useEffect(() => {
     setSelectedRows(selectedRowModel.rows.map((row) => row.original));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [table.getState().rowSelection]);
+  }, [table.state.rowSelection]);
 
   return (
     <div className={wrapperClassName}>
@@ -581,6 +581,20 @@ const toolbarColumns = defineColumns<Row>(
   },
 );
 
+// Hoisted (rather than an inline arrow prop) so it's a stable render-prop
+// function, not a component defined on every `Toolbar` render.
+function renderTokenRowActions(row: Row): ReactNode {
+  return (
+    <button
+      type="button"
+      aria-label={`Actions for ${row.symbol}`}
+      onClick={() => {}}
+    >
+      ⋯
+    </button>
+  );
+}
+
 export const Toolbar = () => {
   const table = useDataTable<Row>(rows, toolbarColumns, {
     enableSearch: true,
@@ -599,15 +613,7 @@ export const Toolbar = () => {
         enableDensityToggle
         enableFullScreen
         searchPlaceholder="Search tokens…"
-        rowActions={(row) => (
-          <button
-            type="button"
-            aria-label={`Actions for ${row.symbol}`}
-            onClick={() => {}}
-          >
-            ⋯
-          </button>
-        )}
+        rowActions={renderTokenRowActions}
       />
     </div>
   );

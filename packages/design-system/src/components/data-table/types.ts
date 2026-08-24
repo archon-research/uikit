@@ -1,18 +1,82 @@
 import type {
-  ColumnDef,
+  Cell as TanstackCell,
+  CellContext as TanstackCellContext,
+  CellData,
+  Column as TanstackColumn,
+  ColumnDef as TanstackColumnDef,
   ColumnFiltersState,
   ColumnOrderState,
   ColumnPinningState,
   ColumnResizeMode,
   ColumnSizingState,
+  ColumnVisibilityState,
   ExpandedState,
+  HeaderContext as TanstackHeaderContext,
+  ReactTable as TanstackReactTable,
   RowData,
   RowSelectionState,
   OnChangeFn,
-  Row,
+  Row as TanstackRow,
   SortingState,
-  VisibilityState,
+  TableFeatures,
 } from '@tanstack/react-table';
+
+import type { DataTableFeatures } from './features.js';
+
+/**
+ * Fixed-`TFeatures` aliases over TanStack v9's now-3-parameter generics,
+ * pinned to this package's single {@link DataTableFeatures} registration
+ * (see `features.ts`). Every `DataTable`/`useDataTable` type in this file
+ * uses these instead of importing `Table`/`Row`/`Column`/`Cell`/
+ * `HeaderContext` directly from `@tanstack/react-table` — internal only, not
+ * re-exported from the package root.
+ */
+export type Table<TData extends RowData> = TanstackReactTable<
+  DataTableFeatures,
+  TData
+>;
+export type Row<TData extends RowData> = TanstackRow<DataTableFeatures, TData>;
+export type Column<TData extends RowData, TValue = unknown> = TanstackColumn<
+  DataTableFeatures,
+  TData,
+  TValue
+>;
+export type Cell<TData extends RowData, TValue = unknown> = TanstackCell<
+  DataTableFeatures,
+  TData,
+  TValue
+>;
+export type HeaderContext<
+  TData extends RowData,
+  TValue = unknown,
+> = TanstackHeaderContext<DataTableFeatures, TData, TValue>;
+
+/**
+ * @deprecated Re-exported from the package root for backward compatibility
+ * with the pre-v9 `ColumnDef<TData, TValue>` shape (previously a direct
+ * re-export of `@tanstack/react-table`'s own type, which lost its default
+ * type parameter in v9 and now requires a `TFeatures` argument). This alias
+ * fixes `TFeatures` to this package's {@link DataTableFeatures} registration
+ * to keep the old two-generic call shape working. Prefer typing columns via
+ * {@link defineColumns}/{@link defineIdentifiedColumns}, which don't require
+ * naming this type directly.
+ */
+export type ColumnDef<
+  TData extends RowData,
+  TValue = unknown,
+> = TanstackColumnDef<DataTableFeatures, TData, TValue>;
+
+/**
+ * @deprecated Re-exported from the package root for backward compatibility;
+ * see {@link ColumnDef}'s deprecation note — same v9 default-type-parameter
+ * removal, same fixed-`TFeatures` fix. Prefer {@link DataTableCell}, which
+ * exists for exactly this purpose (typing a cell renderer without importing
+ * `CellContext` from `@tanstack/react-table` directly).
+ */
+export type CellContext<
+  TData extends RowData,
+  TValue = unknown,
+> = TanstackCellContext<DataTableFeatures, TData, TValue>;
 
 export type DataTableMagnitudeScale = 'log' | 'linear';
 
@@ -47,7 +111,7 @@ export interface DataTableMagnitudeConfig<TData> {
   ) => string | null;
 }
 
-export interface DataTableConfig<T = unknown> {
+export interface DataTableConfig<T extends RowData = Record<string, unknown>> {
   enableSearch?: boolean;
   enableSorting?: boolean;
   sorting?: SortingState;
@@ -165,9 +229,9 @@ export interface DataTableConfig<T = unknown> {
    * toolbar show/hide menu; a column opts out of hiding with
    * `enableHiding: false` on its `ColumnDef`.
    */
-  columnVisibility?: VisibilityState;
-  onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
-  defaultColumnVisibility?: VisibilityState;
+  columnVisibility?: ColumnVisibilityState;
+  onColumnVisibilityChange?: OnChangeFn<ColumnVisibilityState>;
+  defaultColumnVisibility?: ColumnVisibilityState;
   /**
    * Controlled row-expansion state (TanStack's `expanded` feature). Uncontrolled
    * by default (internal `useState`, seeded from `defaultExpanded`). Pair with
@@ -207,7 +271,7 @@ export interface UseUrlSyncedTableReturn {
   setGlobalFilter: (filter: string) => void;
 }
 
-export type TypedColumnDef<T> = ColumnDef<T> & {
+export type TypedColumnDef<T extends RowData> = ColumnDef<T> & {
   searchable?: boolean;
   sortable?: boolean;
 };
@@ -228,7 +292,11 @@ export type TypedColumnDef<T> = ColumnDef<T> & {
 export type DataTableFilterVariant = 'text' | 'select';
 
 declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData extends RowData, TValue> {
+  interface ColumnMeta<
+    in out TFeatures extends TableFeatures,
+    in out TData extends RowData,
+    TValue extends CellData = CellData,
+  > {
     magnitude?: DataTableMagnitudeConfig<TData>;
     /**
      * Horizontal alignment applied to this column's header and body cells.
