@@ -65,6 +65,14 @@ jobs:
       - name: Type check
         run: npm run type:check
 
+      # uikit-preview is this repo's own Panda consumer, and the type check above
+      # runs its `panda codegen`/`cssgen` — so a real generated stylesheet exists
+      # by this point. Scanning it here gates doctor's silent-CSS checks against
+      # real output: unwired `staticCss`, unresolved token paths, and roleless
+      # `colorPalette` values all fail the job instead of shipping quietly.
+      - name: Doctor the preview stylesheet
+        run: node packages/uikit-cli/dist/cli.js doctor packages/uikit-preview/styled-system/styles.css
+
   check-agent-marketplace:
     needs: detect-changes
     if: |
