@@ -1,0 +1,15 @@
+{
+  "extends": "@archon-research/tsconfig/node",
+  "compilerOptions": {
+    "allowImportingTsExtensions": false,
+    // The package ships both a browser entry (`msw/browser`, service worker)
+    // and a node entry (`msw/node`), so DOM and node types both have to
+    // resolve. That is why it extends the node preset and widens `lib` rather
+    // than picking one environment's preset.
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node"]
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}

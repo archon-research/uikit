@@ -19,6 +19,8 @@ packages/
   uikit-preview/    Ladle preview site for components and tokens
   http-client-core/ OpenAPI + Zod based HTTP client helpers
   http-client-react/React Query integration on top of core client
+  http-client-msw/  Typed MSW mocks keyed off the same OpenAPI paths type
+  router-kit/       Search-param schemas, URL cleanup, and router test harness
   webmcp/           WebMCP UI tool-registration layer (document.modelContext)
   mcp-connect/      Harness connection UI (chat icon, status, connect modal)
   mcp-relay/        Host-agnostic WebMCP relay protocol core (sans-I/O, TS)
@@ -35,6 +37,8 @@ packages/
 - `@archon-research/uikit-preview`
 - `@archon-research/http-client-core`
 - `@archon-research/http-client-react`
+- `@archon-research/http-client-msw`
+- `@archon-research/router-kit`
 - `@archon-research/webmcp`
 - `@archon-research/mcp-connect`
 - `@archon-research/mcp-relay`
@@ -47,7 +51,7 @@ If you are adapting this template for another organization, you can replace the 
 Install packages from npm:
 
 ```bash
-npm install @archon-research/tsconfig @archon-research/oxlint-config @archon-research/oxfmt-config @archon-research/design-system @archon-research/charting @archon-research/http-client-core @archon-research/http-client-react @archon-research/webmcp @archon-research/mcp-connect @archon-research/uikit-cli
+npm install @archon-research/tsconfig @archon-research/oxlint-config @archon-research/oxfmt-config @archon-research/design-system @archon-research/charting @archon-research/http-client-core @archon-research/http-client-react @archon-research/http-client-msw @archon-research/router-kit @archon-research/webmcp @archon-research/mcp-connect @archon-research/uikit-cli
 ```
 
 Each package has its own npm page with detailed documentation and usage examples.
@@ -70,6 +74,8 @@ See the individual package READMEs for specific usage examples:
 - [charting](./packages/charting/README.md)
 - [http-client-core](./packages/http-client-core/README.md)
 - [http-client-react](./packages/http-client-react/README.md)
+- [http-client-msw](./packages/http-client-msw/README.md)
+- [router-kit](./packages/router-kit/README.md)
 - [webmcp](./packages/webmcp/README.md)
 - [mcp-connect](./packages/mcp-connect/README.md)
 - [mcp-relay](./packages/mcp-relay/README.md)

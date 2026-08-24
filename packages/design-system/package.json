@@ -5,10 +5,13 @@
     "access": "public"
   },
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/theme-bootstrap.js"
+  ],
   "files": [
     "dist",
-    "src"
+    "src",
+    "scripts"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -32,10 +35,11 @@
     "./drawer": {
       "types": "./dist/components/Drawer.d.ts",
       "default": "./dist/components/Drawer.js"
-    }
+    },
+    "./theme-bootstrap.js": "./dist/theme-bootstrap.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/emit-theme-bootstrap.mjs",
     "clean": "rm -rf dist",
     "prepare": "npm run build",
     "type:check": "tsc -p tsconfig.json --noEmit",
@@ -58,10 +62,14 @@
   },
   "devDependencies": {
     "@archon-research/oxlint-config": "*",
+    "@testing-library/react": "^16.3.2",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
-    "oxfmt": "0.62.0",
-    "oxlint": "1.77.0",
+    "jsdom": "^30.0.0",
+    "oxfmt": "0.63.0",
+    "oxlint": "1.78.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "vitest": "^4.1.9"
   }
 }

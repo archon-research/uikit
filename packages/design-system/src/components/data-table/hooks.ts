@@ -160,6 +160,15 @@ export function useDataTable<T extends RowData>(
   });
 }
 
+/**
+ * Runs `sorting`/`globalFilter` controlled by two URL query params via
+ * `adapter` (see {@link UrlSyncedTableStateAdapter}). This hook never touches
+ * `window.location`, `history`, or a router itself — the consumer's adapter is
+ * the only thing that does, so any router (or none) can back it. Wire the
+ * returned `sorting`/`globalFilter`/`setSorting`/`setGlobalFilter` straight
+ * into `useDataTable`'s `config` to make the table URL-controlled. The
+ * uncontrolled default (no adapter) is `useDataTable`'s own internal state.
+ */
 export function useUrlSyncedTableStateAdapter(
   adapter: UrlSyncedTableStateAdapter,
 ): UseUrlSyncedTableReturn {

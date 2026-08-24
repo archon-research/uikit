@@ -26,22 +26,186 @@ There is no `getComputedStyle` resolution hook and no rebuild-on-theme-change.
 
 ### Token contract
 
-Source of truth is `packages/design-system/panda.shared.ts` (semantic chart
-tokens, each with a `_dark` variant):
+Source of truth is `packages/design-system/src/tokens/chartColorTokens.ts`. That
+module is the one place the `chart.*` and `identity.*` semantic token families
+are defined (each with a `_dark` variant); both the published preset
+(`src/panda-preset.ts`) and the internal config (`panda.shared.ts`) spread it, so
+they cannot disagree about which tokens exist.
 
-| Role | Token CSS variable |
-| --- | --- |
-| Series 1..5 | `--colors-chart-series-primary`, `-secondary`, `-tertiary`, `-positive`, `-critical` |
-| Area fill | `--colors-chart-area-primary` |
-| Axis line / labels | `--colors-chart-axis` |
-| Gridlines | `--colors-chart-grid` |
-| Text / tooltip text | `--colors-text-*` (e.g. `--colors-text-muted`) |
-| Surface / tooltip background | `--colors-surface-default` |
+| Role | Token path | Token CSS variable |
+| --- | --- | --- |
+| Series, ordinal | `chart.series.primary`, `.secondary`, `.tertiary`, `.quaternary`, `.quinary` | `--colors-chart-series-primary`, … |
+| Series, semantic | `chart.series.positive`, `.critical` | `--colors-chart-series-positive`, `-critical` |
+| Area fill | `chart.area.primary` | `--colors-chart-area-primary` |
+| Axis line / labels | `chart.axis` | `--colors-chart-axis` |
+| Gridlines | `chart.grid` | `--colors-chart-grid` |
+| Per-entity identity | `identity.1` … `identity.8` | `--colors-identity-1` … `-8` |
+| Text / tooltip text | — | `--colors-text-*` (e.g. `--colors-text-muted`) |
+| Surface / tooltip background | — | `--colors-surface-default` |
 
-For more than three ordinal series the design system also provides
-`--colors-chart-series-quaternary` and `-quinary` (`positive`/`critical` stay
-*semantic*, not ordinal slots 4–5). `chartTokens` can be extended onto them
-without a new contract.
+`positive`/`critical` are *semantic* members of the ramp, not ordinal slots 4–5;
+`quaternary`/`quinary` are the ordinal continuation past `tertiary`.
+`chartTokens.series` — the array visx indexes for its default per-`dataKey`
+colors — deliberately stays at the five original roles, because appending to it
+would re-color existing charts with six or more series. To use the extra hues,
+name them per series or pass an explicit `colors` array to `buildChartTheme`.
+
+The `identity.*` family is a *per-entity* palette (an entity keeps one color
+across a bar, a line, and a legend whatever role it plays), distinct from the
+`chart.series.*` role ramp. `useIdentityPalette` in the design system hashes an
+id to one of those slots.
+
+### Naming a color: `ChartColor`
+
+Every color-accepting prop this package declares takes `ChartColor`:
+
+```ts
+type ChartColor = ChartColorToken | (string & {});
+```
+
+**The token form is the default.** Pass the token path as a string literal:
+
+```tsx
+<ChartLegend items={[{ label: 'Account', color: 'chart.series.primary' }]} />
+<CandlestickSeries upColor="chart.series.positive" downColor="chart.series.critical" />
+<ReferenceBand mode="threshold" value={92} stroke="chart.series.critical" />
+```
+
+`ChartColorToken` is the union of the token paths in the table above. Be precise
+about what that buys, because the `(string & {})` arm is *also* part of the prop
+type: **a misspelled token path still compiles.** `color="chart.series.primry"`
+is a legal `ChartColor`, since it is a legal string; the compile error only lands
+where `ChartColorToken` itself is the annotation (`chartColorToken(name)`, or a
+`const x: ChartColorToken`). So the contract is two layers, neither of which is a
+type error on a prop:
+
+1. **Authoring:** the union drives editor autocompletion, so the token names are
+   discoverable and the correct spelling is one keystroke away. In practice this
+   is what prevents most typos, not a compile error.
+2. **Dev-time runtime:** `resolveChartColor` warns (see below) for a `chart.*` /
+   `identity.*` path that is not a token, and for a raw
+   `var(--colors-chart-*)` / `var(--colors-identity-*)` string naming a custom
+   property that does not exist.
+
+Both failure modes are otherwise silent and in the safe-looking direction: a
+typo'd path reaches the SVG attribute verbatim as an invalid color, and a typo'd
+custom property makes the browser drop the declaration — either way the mark
+renders with the SVG default. Nothing else catches them. Panda's token validation
+and `uikit-cli doctor` inspect *generated CSS*, and these strings never pass
+through Panda at all; they go straight into an SVG presentation attribute.
+
+**Raw strings remain the escape hatch.** Any other string still works, for
+one-off colors and for values computed at runtime:
+
+```tsx
+// A runtime-chosen color: `useIdentityPalette` returns raw var() strings.
+const palette = useIdentityPalette(instrumentIds);
+<ChartLegend items={ids.map((id) => ({ label: id, color: palette[id]! }))} />
+
+// A hex, a color-mix, an SVG gradient reference.
+<HistogramSeries values={values} color="#0f766e" />
+<DistributionSeries data={data} color="url(#bar-gradient)" />
+```
+
+The `string & {}` intersection (rather than a bare `string`) is what keeps the
+literal union's editor autocomplete alive — a bare `string` in the union would
+absorb the literals and suggest nothing.
+
+Both forms resolve through one function, `resolveChartColor`, called at the
+boundary where a prop meets an SVG attribute. A token name becomes its
+`var(...)` string; anything else passes through untouched. Because
+`resolveChartColor('chart.series.primary')` and `seriesColor.primary` are the
+*same string*, converting a chart from one form to the other is a pixel-identical
+change — the `ReaderLayer` story is written in token names against an unchanged
+snapshot to demonstrate exactly that.
+
+Outside a prop, `chartColorToken(name)` returns the same string for use in a
+`style` object, a design-system `css()` call, or an SVG gradient stop.
+
+`buildChartTheme` is this package's wrapper over visx's, resolving `colors`,
+`gridColor`, `gridColorDark`, `backgroundColor`, and the `fill`/`stroke` of the
+label and axis-line style blocks. Raw-string configs behave exactly as they did
+against visx's function directly — including partial style blocks. visx merges
+each block by spreading it over its own defaults, so the wrapper writes a
+`fill`/`stroke` key back only when the caller's block carried one:
+`xAxisLineStyles: { strokeWidth: 3 }` keeps visx's default stroke, and
+`svgLabelBig: { fontSize: 14 }` keeps the themed fill, rather than being blanked
+by a key set to `undefined`.
+
+The `AxisBottom`/`AxisTop`/`AxisLeft`/`AxisRight` wrappers are the documented
+exception: their props are visx's own, forwarded wholesale as an escape hatch, so
+their `stroke`/`tickStroke`/`labelProps.fill` keep taking raw strings. Themed
+axes get their tokens from `chartTheme` and need no color prop at all.
+
+#### Why the union is duplicated, and what keeps it honest
+
+`ChartColorToken` derives from the keys of `chartColorTokens` in
+`src/chart-color.ts` — a charting-local table, not an import from the design
+system. Two things forced that:
+
+1. **`definePreset` erases the token names.** It is typed
+   `(preset: Preset) => Preset`, so the preset object's literal keys are gone
+   from its type; no union can be derived from the preset as authored. The
+   design system now defines the families in a plain object literal
+   (`src/tokens/chartColorTokens.ts`) precisely so a `ChartColorTokenPath` union
+   *can* be walked out of the tree, and exports both that type and the paths as
+   runtime data.
+2. **The design system is an *optional* peer here.** A type-only import would
+   put an unresolvable module reference in this package's published `.d.ts`.
+   Under the `skipLibCheck` that nearly every consumer runs, that does not fail
+   — it silently widens the union to `any`, reintroducing the exact class of
+   quiet failure this type exists to remove. Charting also needs its own copy
+   regardless, because it must emit `var(...)` strings *with hex fallbacks* when
+   the design system is absent, and the upstream data carries no fallbacks.
+
+`src/chart-color.sync.test.ts` closes the loop: it imports
+`chartColorTokenPaths` from the design system's source by relative path (a
+test-only import, excluded from `tsconfig.build.json`, so nothing reaches the
+published output) and asserts the two lists are identical, in the same order, and
+that each entry reads its own custom property. A token added, removed, or renamed
+upstream fails that test instead of leaving `ChartColorToken` describing a
+contract that no longer exists.
+
+#### Dev-time guard for misspelled colors
+
+The `(string & {})` arm means neither form of typo is a compile error on a prop,
+so the resolver is the backstop. Outside production builds, `resolveChartColor`
+warns — **once per offending value** — in two cases.
+
+A token PATH in an owned namespace that is not a token (the likeliest typo, since
+it is what autocompletion was reaching for):
+
+```
+[charting] "chart.series.primry" is not a known chart color token. It reached an
+SVG attribute verbatim, which is not a valid color, so the mark will render
+unstyled. Check the path against ChartColorToken — the `(string & {})` arm of
+`ChartColor` means a misspelled token path still compiles.
+```
+
+A raw `var(--colors-chart-*)` / `var(--colors-identity-*)` string whose property
+name is not a known token:
+
+```
+[charting] "--colors-chart-series-primry" is not a known chart color token, so
+this declaration will be dropped and the mark will render unstyled. Pass a token
+name instead of a raw var() string (e.g. color="chart.series.primary") to have
+this checked at compile time.
+```
+
+Two deliberate limits:
+
+- **Scoped to the `chart` and `identity` namespaces.** Charting cannot know the
+  design system's full color namespace, so a `var(--colors-surface-default)` or
+  `var(--colors-text-muted)` is a legitimate value and is never second-guessed.
+  Within those two namespaces this package *does* know every valid name, so
+  anything else there is a typo — and since no CSS color syntax starts with
+  `chart.` or `identity.`, the path check has no false positives to trade off.
+- **Zero production cost.** The check is gated on
+  `process.env.NODE_ENV !== 'production'`, computed once at module scope (the
+  same pattern as `IS_DEV_WARNING_ENABLED` in the design system's
+  `hooks/devWarning.ts`). Bundlers replace that expression statically, so a
+  production build collapses the guard to `false` and dead-code-eliminates the
+  warning path.
 
 #### Enforcement across the package boundary
 
@@ -50,7 +214,8 @@ system: charting reads them at runtime and never imports design-system code, so
 every read carries a hex fallback. That fallback means a mismatch fails
 *silently and in the safe-looking direction* — as it did for the whole `0.7.0`
 era, when `chart.*` did not exist upstream yet and every chart quietly ran on its
-fallback. Two guards now make the contract explicit rather than by-convention:
+fallback. Two guards make the contract explicit rather than by-convention — and
+the third entry below is the check it is easy to assume exists, and does not:
 
 - **Optional peer dependency.** `@archon-research/design-system` is declared as an
   *optional* `peerDependency` (spec `*`, following the monorepo's unversioned
@@ -58,20 +223,40 @@ fallback. Two guards now make the contract explicit rather than by-convention:
   it, but the dependency graph now records who owns these variables. The
   `chart.*` tokens were introduced in design-system `0.8.0`; that is the effective
   version floor for themed (non-fallback) charts.
-- **Detection.** `uikit-cli doctor` scans a consumer's generated CSS and flags any
-  `--colors-chart-*` read that resolves to nothing, turning a silent fallback into
-  a CI failure. Run it after `panda codegen`.
+- **Detection.** There is none, and that is worth stating plainly rather than
+  implying otherwise. `uikit-cli doctor` checks a consumer's generated CSS for
+  three things — missing `staticCss`, a semantic token that emitted as a bare
+  dotted path, and a roleless `colorPalette` — and not one of them is "a
+  `--colors-chart-*` read that resolves to nothing." Nor could one be, as
+  written: charting's `var()` strings never enter Panda's pipeline, so they are
+  absent from the generated CSS doctor reads. The dev-time guard above does not
+  cover this either — it catches a *misspelled* token, not a correctly spelled
+  one the consumer's design system never emitted. A doctor check that resolved
+  chart custom properties against the consumer's emitted `:root` would close the
+  gap; it does not exist today.
+- **Name parity.** `src/chart-color.sync.test.ts` pins this package's token list
+  against the design system's, so the two cannot drift silently (see above).
 
 The package exposes:
 
-- `chartTokens`: the role-to-`var(...)`-string map above (single source), plus
+- `chartColorTokens`: the token-path-to-`var(...)`-string table — the single
+  place the token names and their hex fallbacks are defined. `ChartColorToken`
+  derives from its keys.
+- `ChartColor` / `chartColorToken` / `resolveChartColor`: the typed color
+  contract described above.
+- `chartTokens`: the role-keyed map of the values this package's own components
+  reach for. Aliases `chartColorTokens` for the chart families, and additionally
+  carries `surface`/`label` (outside the chart namespace) and the
   `breachFill`/`bandFill` alpha tints for reference bands (see below).
-- `chartTheme`: `buildChartTheme(chartTokens)` from `@visx/xychart`, for `XYChart`
-  consumers. `colors` is the ordered series array; `gridColor` and the axis/tick
-  line styles and `svgLabel*` fills are wired from the same tokens.
-- `seriesColor`: the same series tokens, keyed by role (`primary`, `secondary`,
-  `tertiary`, `positive`, `critical`), for custom marks and legends that need a
-  single color rather than the full `chartTheme`.
+- `chartTheme`: the ready-built theme for `XYChart` consumers. `colors` is the
+  ordered series array; `gridColor`, the axis/tick line styles, and the
+  `svgLabel*` fills are wired from the same tokens.
+- `buildChartTheme`: the token-resolving wrapper over visx's, for a chart that
+  needs a custom palette or grid color.
+- `seriesColor`: the series tokens keyed by short role name (`primary`,
+  `secondary`, `tertiary`, `positive`, `critical`, `quaternary`, `quinary`), for
+  custom marks and visx props that need a single raw color string rather than the
+  full `chartTheme`.
 
 `XYChart` consumes `chartTheme`; primitive-based components (`ReferenceBand`,
 `CandlestickSeries`, `TimeRangeBrush`, `ChartLegend`, and the planned
@@ -87,10 +272,15 @@ the design-system panel and heading recipes (`panelSection`, `sectionHeading`,
 
 Current (exported from the package root):
 
-- `chartTokens`, `chartTheme`, `seriesColor`: the theme contract above.
+- `chartColorTokens`, `ChartColor`, `ChartColorToken`, `chartColorToken`,
+  `resolveChartColor`: the typed color contract above.
+- `chartTokens`, `chartTheme`, `buildChartTheme`, `seriesColor`: the theme
+  contract above. `buildChartTheme` is this package's resolving wrapper, NOT the
+  bare `@visx/xychart` export — it is a superset, so raw-string configs are
+  unaffected.
 - A curated set of visx re-exports: `XYChart`, `Axis`, `Grid`, `Tooltip`,
   `LineSeries`, `AreaSeries`, `BarSeries`, `BarGroup`, `BarStack`, `GlyphSeries`,
-  `buildChartTheme`, plus the `Animated*` variants (`AnimatedAxis`,
+  plus the `Animated*` variants (`AnimatedAxis`,
   `AnimatedGrid`, `AnimatedLineSeries`, `AnimatedAreaSeries`,
   `AnimatedAreaStack`, `AnimatedBarSeries`, `AnimatedBarGroup`,
   `AnimatedBarStack`, `AnimatedGlyphSeries`), `DataContext`, and

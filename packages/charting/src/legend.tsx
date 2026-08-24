@@ -1,9 +1,13 @@
+import { resolveChartColor, type ChartColor } from './chart-color.js';
 import { chartTokens } from './theme.js';
 
 export type ChartLegendItem = {
   label: string;
-  /** Swatch color. Usually one of `seriesColor.*`. */
-  color: string;
+  /**
+   * Swatch color. Prefer a token name (`'chart.series.primary'`); a raw CSS
+   * color string also works, which is what `useIdentityPalette` returns.
+   */
+  color: ChartColor;
   /**
    * Stable identity for interaction callbacks. Defaults to `label` when
    * omitted, so a legend built from unique labels needs no explicit id.
@@ -60,9 +64,10 @@ function Swatch({
   dash,
 }: {
   shape: 'swatch' | 'line';
-  color: string;
+  color: ChartColor;
   dash?: boolean;
 }) {
+  const resolved = resolveChartColor(color);
   return (
     <svg width={14} height={14} aria-hidden="true">
       {shape === 'line' ? (
@@ -71,12 +76,12 @@ function Swatch({
           y1={7}
           x2={14}
           y2={7}
-          stroke={color}
+          stroke={resolved}
           strokeWidth={2}
           strokeDasharray={dash ? '3 2' : undefined}
         />
       ) : (
-        <rect x={1} y={1} width={12} height={12} rx={2} fill={color} />
+        <rect x={1} y={1} width={12} height={12} rx={2} fill={resolved} />
       )}
     </svg>
   );
@@ -172,7 +177,7 @@ export function ChartLegend({
                 style={{
                   textDecoration: item.hidden ? 'line-through' : undefined,
                   fontWeight: item.emphasis ? 700 : undefined,
-                  color: colorLabel ? item.color : undefined,
+                  color: colorLabel ? resolveChartColor(item.color) : undefined,
                 }}
               >
                 {item.label}
@@ -199,7 +204,9 @@ export function ChartLegend({
         >
           <Swatch shape={shape} color={item.color} dash={item.dash} />
           {colorLabel ? (
-            <span style={{ color: item.color }}>{item.label}</span>
+            <span style={{ color: resolveChartColor(item.color) }}>
+              {item.label}
+            </span>
           ) : (
             item.label
           )}

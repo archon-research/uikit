@@ -231,6 +231,14 @@ export interface DataTableConfig<T extends RowData = Record<string, unknown>> {
   getRowCanExpand?: (row: Row<T>) => boolean;
 }
 
+/**
+ * Injected seam for `useUrlSyncedTableStateAdapter` (`hooks.ts`): the consumer
+ * owns the actual URL (`useSearchParams`, a router, whatever) and supplies the
+ * current `sortParam`/`searchParam` plus setters that write them back. Nothing
+ * in `data-table` reads `window.location` or any router directly — the two
+ * params are the only surface. Mirrors `UrlSyncedFilterAdapter`
+ * (`filter-state/urlSync.ts`).
+ */
 export interface UrlSyncedTableStateAdapter {
   sortParam: string | null;
   setSortParam: (value: string | null) => void;

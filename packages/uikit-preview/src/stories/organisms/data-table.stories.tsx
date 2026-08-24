@@ -133,6 +133,22 @@ export const Loading = () => {
   );
 };
 
+// No `columnHints` passed: `DataTable` derives them from the column definitions,
+// so the right-aligned `amountUsd` column skeletons as a shorter trailing bar
+// while the text columns stay full width. Column `meta` is readable with zero
+// rows loaded, which is what makes the derivation possible at skeleton time.
+export const LoadingDerivedSkeletonHints = () => {
+  const table = useDataTable([], numericColumns as never, {
+    enableSorting: true,
+  });
+
+  return (
+    <div className={wrapperClassName}>
+      <DataTable table={table} isLoading skeletonConfig={{ rows: 4 }} />
+    </div>
+  );
+};
+
 export const RowSelection = () => {
   const [selectedRowKey, setSelectedRowKey] = useState<string | null>(
     'Base:WETH',

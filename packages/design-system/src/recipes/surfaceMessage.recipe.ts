@@ -1,5 +1,15 @@
 import { defineSlotRecipe } from '@pandacss/dev';
 
+/**
+ * The `SurfaceMessage` component applies these slots by their stable Panda class
+ * names. It previously duplicated them as inline `style` objects, which is where
+ * the one value below that is not this recipe's original comes from: the shipped
+ * component rendered an 8px frame (`radii.lg`), because an inline
+ * `border-radius: 8px` outranks any class. `radii.md` (6px) was declared here
+ * but never reached a pixel. Kept as `lg` so removing the inline styles changes
+ * nothing visually; a consumer applying the recipe class on its own bare markup
+ * now gets the same 8px the component always drew.
+ */
 export const surfaceMessageRecipe = defineSlotRecipe({
   className: 'surfaceMessage',
   description:
@@ -7,7 +17,7 @@ export const surfaceMessageRecipe = defineSlotRecipe({
   slots: ['root', 'title', 'body', 'actions'],
   base: {
     root: {
-      borderRadius: 'md',
+      borderRadius: 'lg',
       borderWidth: '1px',
       borderStyle: 'solid',
       borderColor: 'border.subtle',
@@ -22,7 +32,12 @@ export const surfaceMessageRecipe = defineSlotRecipe({
     },
     body: {
       m: '0',
+      // The 8px separates the body from the title above it, so it only applies
+      // when there IS something above it. A body-only message (no `title`, or
+      // Root + Body composed directly) would otherwise sit 8px low inside the
+      // 16px frame padding — visibly off-centre for a one-line message.
       mt: '2',
+      _first: { mt: '0' },
       textStyle: 'bodySm',
       color: 'text.muted',
     },

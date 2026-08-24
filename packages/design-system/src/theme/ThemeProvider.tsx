@@ -1,33 +1,58 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
+import {
+  isThemeMode,
+  readStoredThemeValues,
+  writeStoredThemeMode,
+} from './theme-storage.js';
 import { ThemeContext, type ThemeMode } from './useTheme.js';
-
-const STORAGE_KEY = 'theme';
-const LEGACY_STORAGE_KEY = 'archon-theme';
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
 }
 
+/**
+ * Runs during render (a `useState` initializer), so it must not throw —
+ * `readStoredThemeValues` owns the storage guard.
+ */
 function readInitialThemeMode(): ThemeMode {
-  if (!isBrowser()) {
-    return 'auto';
-  }
-
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  const legacyStored = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+  const { stored, legacyStored } = readStoredThemeValues();
   const value = stored ?? legacyStored;
 
-  if (value === 'light' || value === 'dark' || value === 'auto') {
-    return value;
-  }
-
-  return 'auto';
+  return isThemeMode(value) ? value : 'auto';
 }
 
-function readSystemPrefersDark(): boolean {
+/**
+ * In `'auto'` mode the pre-paint bootstrap (`THEME_BOOTSTRAP_SCRIPT`) has
+ * already stamped the resolved system preference onto `<html data-theme>`, so
+ * reading it back keeps the provider's first render in agreement with what the
+ * user is already looking at. That agreement is what stops a hydrated page from
+ * flashing: server-rendered markup has no `matchMedia` to consult, so without
+ * this the provider's first client commit would reset `<html>` to light.
+ *
+ * Only consulted for `'auto'` — under an explicit `'light'`/`'dark'` the stamped
+ * attribute reflects that choice, not the system preference, and seeding from it
+ * would corrupt the value the user sees after switching back to `'auto'`. Falls
+ * back to `matchMedia` whenever no bootstrap ran, so behavior is unchanged
+ * without one.
+ *
+ * Exported (but not re-exported from `index.ts`/the package root) so
+ * `ThemeProvider.test.ts` can assert the "explicit mode never consults the
+ * stamp" half directly: under an explicit mode the seeded value is invisible in
+ * the first render's `isDark` (the mode alone decides that) and by the time a
+ * mode switch could reveal it the mount effect has already overwritten it from
+ * `matchMedia`.
+ */
+export function readSystemPrefersDark(mode: ThemeMode): boolean {
   if (!isBrowser()) {
     return false;
+  }
+
+  if (mode === 'auto') {
+    const appliedTheme = document.documentElement.dataset.theme;
+    if (appliedTheme === 'dark' || appliedTheme === 'light') {
+      return appliedTheme === 'dark';
+    }
   }
 
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -35,8 +60,8 @@ function readSystemPrefersDark(): boolean {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(readInitialThemeMode);
-  const [systemPrefersDark, setSystemPrefersDark] = useState(
-    readSystemPrefersDark,
+  const [systemPrefersDark, setSystemPrefersDark] = useState(() =>
+    readSystemPrefersDark(mode),
   );
   const isApplyingThemeRef = useRef(false);
 
@@ -70,8 +95,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
 
     isApplyingThemeRef.current = true;
-    window.localStorage.setItem(STORAGE_KEY, mode);
-    window.localStorage.setItem(LEGACY_STORAGE_KEY, mode);
+    // Best-effort, and guarded: a storage throw here must not skip the
+    // class/attribute flip below or the page keeps the previous theme.
+    writeStoredThemeMode(mode);
 
     const effectiveTheme = isDark ? 'dark' : 'light';
     document.documentElement.classList.toggle('dark', isDark);
