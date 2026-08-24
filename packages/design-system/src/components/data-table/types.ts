@@ -26,11 +26,10 @@ import type { DataTableFeatures } from './features.js';
 /**
  * Fixed-`TFeatures` aliases over TanStack v9's now-3-parameter generics,
  * pinned to this package's single {@link DataTableFeatures} registration
- * (see `features.ts`). Every `DataTable`/`useDataTable` type in this file —
- * and every consumer of this package — uses these instead of importing
- * `Table`/`Row`/`Column`/`Cell`/`ColumnDef`/`CellContext`/`HeaderContext`
- * directly from `@tanstack/react-table`, so the public API keeps the same
- * two-generic (`<TData, TValue>`) shape it had under v8.
+ * (see `features.ts`). Every `DataTable`/`useDataTable` type in this file
+ * uses these instead of importing `Table`/`Row`/`Column`/`Cell`/
+ * `HeaderContext` directly from `@tanstack/react-table` — internal only, not
+ * re-exported from the package root.
  */
 export type Table<TData extends RowData> = TanstackReactTable<
   DataTableFeatures,
@@ -47,18 +46,37 @@ export type Cell<TData extends RowData, TValue = unknown> = TanstackCell<
   TData,
   TValue
 >;
-export type ColumnDef<
-  TData extends RowData,
-  TValue = unknown,
-> = TanstackColumnDef<DataTableFeatures, TData, TValue>;
-export type CellContext<
-  TData extends RowData,
-  TValue = unknown,
-> = TanstackCellContext<DataTableFeatures, TData, TValue>;
 export type HeaderContext<
   TData extends RowData,
   TValue = unknown,
 > = TanstackHeaderContext<DataTableFeatures, TData, TValue>;
+
+/**
+ * @deprecated Re-exported from the package root for backward compatibility
+ * with the pre-v9 `ColumnDef<TData, TValue>` shape (previously a direct
+ * re-export of `@tanstack/react-table`'s own type, which lost its default
+ * type parameter in v9 and now requires a `TFeatures` argument). This alias
+ * fixes `TFeatures` to this package's {@link DataTableFeatures} registration
+ * to keep the old two-generic call shape working. Prefer typing columns via
+ * {@link defineColumns}/{@link defineIdentifiedColumns}, which don't require
+ * naming this type directly.
+ */
+export type ColumnDef<
+  TData extends RowData,
+  TValue = unknown,
+> = TanstackColumnDef<DataTableFeatures, TData, TValue>;
+
+/**
+ * @deprecated Re-exported from the package root for backward compatibility;
+ * see {@link ColumnDef}'s deprecation note — same v9 default-type-parameter
+ * removal, same fixed-`TFeatures` fix. Prefer {@link DataTableCell}, which
+ * exists for exactly this purpose (typing a cell renderer without importing
+ * `CellContext` from `@tanstack/react-table` directly).
+ */
+export type CellContext<
+  TData extends RowData,
+  TValue = unknown,
+> = TanstackCellContext<DataTableFeatures, TData, TValue>;
 
 export type DataTableMagnitudeScale = 'log' | 'linear';
 
