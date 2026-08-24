@@ -51,6 +51,9 @@ export const statTileRecipe = defineSlotRecipe({
       flexWrap: 'wrap',
       gap: '2',
       minWidth: '0',
+      // A figure has no break opportunities, so flexWrap alone cannot save a
+      // long unspaced value in a narrow tile.
+      overflowWrap: 'anywhere',
       textStyle: 'panelTitle',
       color: 'text.strong',
       fontVariantNumeric: 'tabular-nums',

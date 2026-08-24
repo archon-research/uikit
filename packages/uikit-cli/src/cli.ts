@@ -205,17 +205,16 @@ try {
   const discovery = new PackageDiscovery(fs);
   const validator = new LinkValidator(fs, logger);
 
-  // Handle lint/format commands
+  // Lint and format forward the tool's verdict as the exit code — exiting 0
+  // unconditionally left `--check` runs unable to gate CI.
   if (mode === 'lint') {
     const lintCmd = new LintCommand(executor);
-    lintCmd.execute(commandArgs);
-    process.exit(0);
+    process.exit(lintCmd.execute(commandArgs) ? 0 : 1);
   }
 
   if (mode === 'format') {
     const formatCmd = new FormatCommand(executor, fs);
-    formatCmd.execute(commandArgs);
-    process.exit(0);
+    process.exit(formatCmd.execute(commandArgs) ? 0 : 1);
   }
 
   // Doctor scans the consumer's generated CSS; it runs in the consumer cwd and

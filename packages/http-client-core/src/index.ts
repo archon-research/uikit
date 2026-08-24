@@ -5,8 +5,8 @@ import { z } from 'zod';
 /**
  * The `openapi-fetch` / `openapi-typescript` helper types that anything built
  * on this client needs. They are re-exported here so downstream packages
- * (`http-client-react`, and the planned mock layer) type against the same
- * helper versions this package is pinned to, rather than each declaring its own
+ * (`http-client-react` and `http-client-msw`) type against the same helper
+ * versions this package is pinned to, rather than each declaring its own
  * dependency on the OpenAPI toolchain.
  */
 export type {

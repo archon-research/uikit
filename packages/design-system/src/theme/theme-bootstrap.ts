@@ -2,6 +2,7 @@ import {
   THEME_LEGACY_STORAGE_KEY,
   THEME_STORAGE_KEY,
   isThemeMode,
+  readStoredThemeValues,
 } from './theme-storage.js';
 import { type ThemeMode } from './useTheme.js';
 
@@ -42,15 +43,7 @@ export function applyThemeBootstrap(): void {
     return;
   }
 
-  let stored: string | null = null;
-  let legacyStored: string | null = null;
-  try {
-    stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-    legacyStored = window.localStorage.getItem(THEME_LEGACY_STORAGE_KEY);
-  } catch {
-    // Storage can throw outright rather than return null. Fall through to the
-    // system preference instead of failing the whole bootstrap.
-  }
+  const { stored, legacyStored } = readStoredThemeValues();
 
   const prefersDark =
     typeof window.matchMedia === 'function' &&

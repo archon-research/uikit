@@ -12,12 +12,12 @@ export class LintCommand {
     this.executor = executor;
   }
 
-  execute(args: string[]): void {
+  execute(args: string[]): boolean {
     const escapedArgs = args.map((arg) => shellEscape(arg)).join(' ');
     const oxlintBinary = shellEscape(resolveCliBinary('oxlint', 'bin/oxlint'));
 
-    this.executor.exec(`${oxlintBinary} ${escapedArgs}`.trim(), {
+    return this.executor.exec(`${oxlintBinary} ${escapedArgs}`.trim(), {
       cwd: process.cwd(),
-    });
+    }).success;
   }
 }

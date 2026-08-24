@@ -17,7 +17,7 @@ export class FormatCommand {
     this.fs = fs;
   }
 
-  execute(args: string[]): void {
+  execute(args: string[]): boolean {
     const modifiedArgs = [...args];
     const defaultConfig = './.oxfmtrc.ts';
 
@@ -33,9 +33,9 @@ export class FormatCommand {
     const escapedArgs = modifiedArgs.map((arg) => shellEscape(arg)).join(' ');
     const oxfmtBinary = shellEscape(resolveCliBinary('oxfmt', 'bin/oxfmt'));
 
-    this.executor.exec(`${oxfmtBinary} ${escapedArgs}`.trim(), {
+    return this.executor.exec(`${oxfmtBinary} ${escapedArgs}`.trim(), {
       cwd: process.cwd(),
-    });
+    }).success;
   }
 
   private hasConfigFlag(args: string[]): boolean {
