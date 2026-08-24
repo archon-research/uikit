@@ -33,14 +33,14 @@
     "@archon-research/mcp-relay": "*",
     "@archon-research/oxlint-config": "*",
     "@archon-research/tsconfig": "*",
-    "@cloudflare/vitest-pool-workers": "^0.20.0",
+    "@cloudflare/vitest-pool-workers": "^0.21.0",
     "@cloudflare/workers-types": "^5.0.0",
     "@ladle/react": "^5.1.1",
     "@pandacss/dev": "^1.10.0",
     "@playwright/test": "1.62.1",
     "@types/node": "^24.7.2",
-    "oxfmt": "0.62.0",
-    "oxlint": "1.77.0",
+    "oxfmt": "0.63.0",
+    "oxlint": "1.78.0",
     "vitest": "^4.1.9",
     "wrangler": "^4.100.0"
   }
