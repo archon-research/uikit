@@ -24,7 +24,33 @@
       versioningTemplate: "node",
     },
   ],
+  // Renovate merges packageRules in array order, and the LAST matching rule
+  // wins for any field set by more than one match (groupName included). The
+  // per-package groups below must stay after the generic minor/patch
+  // catch-alls, or a catch-all match silently steals the grouping — which is
+  // exactly how conventional-changelog-writer (see the override in
+  // package.json) drifted out of the semantic-release-tooling group and into
+  // an unrelated npm-minor-patch PR, reintroducing the drift that group was
+  // added to prevent.
   packageRules: [
+    {
+      // Node dependencies - minor and patch only
+      matchDatasources: ["npm"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "npm-minor-patch",
+    },
+    {
+      // GitHub Actions - minor and patch only
+      matchDatasources: ["github-actions"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "actions-minor-patch",
+    },
+    {
+      // Node runtime version file - minor and patch only
+      matchDatasources: ["node-version"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "node-runtime-minor-patch",
+    },
     {
       matchPackageNames: [
         "oxfmt",
@@ -59,24 +85,6 @@
         "conventional-changelog-writer",
       ],
       groupName: "semantic-release-tooling",
-    },
-    {
-      // Node dependencies - minor and patch only
-      matchDatasources: ["npm"],
-      matchUpdateTypes: ["minor", "patch"],
-      groupName: "npm-minor-patch",
-    },
-    {
-      // GitHub Actions - minor and patch only
-      matchDatasources: ["github-actions"],
-      matchUpdateTypes: ["minor", "patch"],
-      groupName: "actions-minor-patch",
-    },
-    {
-      // Node runtime version file - minor and patch only
-      matchDatasources: ["node-version"],
-      matchUpdateTypes: ["minor", "patch"],
-      groupName: "node-runtime-minor-patch",
     },
   ],
   // Open all PRs as drafts for supply chain review
