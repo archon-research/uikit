@@ -128,6 +128,7 @@ export function Meter({
       <div
         className="meter__track"
         data-part="track"
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- native `<meter>` can't be styled (custom track/fill/markers), so this is the standard ARIA-authoring-practices pattern for a custom-styled meter
         role="meter"
         aria-valuenow={value}
         aria-valuemin={min}

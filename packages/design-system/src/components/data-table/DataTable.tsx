@@ -1230,6 +1230,7 @@ export function DataTable<TData extends RowData>({
                         data-resizing={
                           header.column.getIsResizing() ? 'true' : undefined
                         }
+                        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- draggable/keyboard-resizable splitter; `<hr>` is a void, non-interactive element and can't carry this handle's drag/keyboard behavior
                         role="separator"
                         aria-orientation="vertical"
                         aria-label={`Resize ${columnLabel}`}
@@ -1330,6 +1331,7 @@ export function DataTable<TData extends RowData>({
               <tbody aria-hidden="true">
                 <tr>
                   <td
+                    aria-hidden="true"
                     colSpan={leafColumnCount}
                     style={{ height: paddingTop, padding: 0, border: 0 }}
                   />
@@ -1347,6 +1349,7 @@ export function DataTable<TData extends RowData>({
               <tbody aria-hidden="true">
                 <tr>
                   <td
+                    aria-hidden="true"
                     colSpan={leafColumnCount}
                     style={{ height: paddingBottom, padding: 0, border: 0 }}
                   />
