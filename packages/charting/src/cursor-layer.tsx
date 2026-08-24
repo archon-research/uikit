@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from 'react';
 
+import { resolveChartColor, type ChartColor } from './chart-color.js';
 import { chartTokens } from './theme.js';
 
 export type CursorSeries = {
@@ -15,7 +16,11 @@ export type CursorSeries = {
    * readout dot to the wrong series across renders otherwise.
    */
   id?: string;
-  color: string;
+  /**
+   * Readout-dot color. Prefer a token name (`'chart.series.primary'`); a raw
+   * CSS color string also works.
+   */
+  color: ChartColor;
   /** Series value at an x-domain stop, or `null` where the series has no point. */
   valueAt: (x: number) => number | null;
 };
@@ -23,6 +28,11 @@ export type CursorSeries = {
 /** One readout point resolved at the active cursor stop. */
 export type CursorPoint = {
   id: string;
+  /**
+   * The series' color as a ready-to-use CSS string — already resolved from its
+   * `CursorSeries.color`, so a tooltip render prop can drop it straight into a
+   * `style` without resolving anything itself.
+   */
   color: string;
   /** Pixel y of the dot. */
   y: number;
@@ -244,7 +254,7 @@ export function ChartCursorLayer({
           return [
             {
               id: entry.id ?? String(index),
-              color: entry.color,
+              color: resolveChartColor(entry.color),
               y: py,
               value,
             },

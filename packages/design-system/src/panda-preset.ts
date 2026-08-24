@@ -43,6 +43,7 @@ import { surfaceMessageRecipe } from './recipes/surfaceMessage.recipe.js';
 import { switchRecipe } from './recipes/switch.recipe.js';
 import { themeToggleRecipe } from './recipes/themeToggle.recipe.js';
 import { infoTipRecipe, tooltipRecipe } from './recipes/tooltip.recipe.js';
+import { chartColorSemanticTokens } from './tokens/chartColorTokens.js';
 
 /**
  * BREAKING VALUE-CHANGES (batch into the next major):
@@ -644,69 +645,10 @@ export const designSystemPreset = definePreset({
               value: { base: '{colors.amber.50}', _dark: '{colors.amber.950}' },
             },
           },
-          chart: {
-            axis: {
-              value: {
-                base: '{colors.neutral.500}',
-                _dark: '{colors.neutral.400}',
-              },
-            },
-            grid: {
-              value: {
-                base: '{colors.neutral.200}',
-                _dark: '{colors.neutral.700}',
-              },
-            },
-            area: {
-              primary: {
-                value: {
-                  base: '{colors.blue.100}',
-                  _dark: '{colors.blue.900}',
-                },
-              },
-            },
-            series: {
-              primary: {
-                value: {
-                  base: '{colors.blue.600}',
-                  _dark: '{colors.blue.300}',
-                },
-              },
-              secondary: {
-                value: {
-                  base: '{colors.teal.600}',
-                  _dark: '{colors.teal.300}',
-                },
-              },
-              tertiary: {
-                value: {
-                  base: '{colors.violet.600}',
-                  _dark: '{colors.violet.300}',
-                },
-              },
-              positive: {
-                value: {
-                  base: '{colors.green.600}',
-                  _dark: '{colors.green.300}',
-                },
-              },
-              critical: {
-                value: { base: '{colors.red.600}', _dark: '{colors.red.300}' },
-              },
-              quaternary: {
-                value: {
-                  base: '{colors.amber.600}',
-                  _dark: '{colors.amber.300}',
-                },
-              },
-              quinary: {
-                value: {
-                  base: '{colors.pink.600}',
-                  _dark: '{colors.pink.300}',
-                },
-              },
-            },
-          },
+          // Defined in `src/tokens/chartColorTokens.ts` — the one source this
+          // preset and the internal `panda.shared.ts` config both read, so the
+          // chart families cannot drift between them again.
+          chart: chartColorSemanticTokens.chart,
           /**
            * Diverging heat scale — green ↔ grey ↔ red, saturation =
            * magnitude, grey = flat. A SEPARATE token family from
@@ -831,47 +773,10 @@ export const designSystemPreset = definePreset({
               },
             },
           },
-          // Identity palette: a stable color PER ENTITY, distinct from the
-          // role ramp (`chart.series.*`). An entity's color is the same in a
-          // bar, a line, and a legend whatever role it plays. `useIdentityPalette`
-          // hashes an id to one of these slots; consumers reference
-          // `var(--colors-identity-N)` so SVG and CSS both theme (and dark-mode)
-          // correctly. Eight visually distinct hues, dark-aware.
-          identity: {
-            '1': {
-              value: { base: '{colors.blue.600}', _dark: '{colors.blue.400}' },
-            },
-            '2': {
-              value: { base: '{colors.teal.600}', _dark: '{colors.teal.400}' },
-            },
-            '3': {
-              value: {
-                base: '{colors.violet.600}',
-                _dark: '{colors.violet.400}',
-              },
-            },
-            '4': {
-              value: {
-                base: '{colors.amber.600}',
-                _dark: '{colors.amber.400}',
-              },
-            },
-            '5': {
-              value: { base: '{colors.pink.600}', _dark: '{colors.pink.400}' },
-            },
-            '6': {
-              value: { base: '{colors.cyan.600}', _dark: '{colors.cyan.400}' },
-            },
-            '7': {
-              value: { base: '{colors.lime.600}', _dark: '{colors.lime.400}' },
-            },
-            '8': {
-              value: {
-                base: '{colors.orange.600}',
-                _dark: '{colors.orange.400}',
-              },
-            },
-          },
+          // Identity palette (a stable color per entity, distinct from the
+          // `chart.series.*` role ramp) — defined alongside the chart families
+          // in `src/tokens/chartColorTokens.ts`.
+          identity: chartColorSemanticTokens.identity,
           // ── colorPalette ROLE tokens (role-based, on the 50-950 scale) ──
           ...colorPaletteRoles,
         },
