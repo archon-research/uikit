@@ -1031,10 +1031,22 @@
         "Molecules",
         "Skeleton rows"
       ],
-      "locStart": 88,
-      "locEnd": 100,
+      "locStart": 129,
+      "locEnd": 141,
       "filePath": "src/stories/molecules/skeleton-rows.stories.tsx",
       "namedExport": "Static",
+      "meta": {}
+    },
+    "molecules--skeleton-rows--table-shaped": {
+      "name": "Table shaped",
+      "levels": [
+        "Molecules",
+        "Skeleton rows"
+      ],
+      "locStart": 98,
+      "locEnd": 127,
+      "filePath": "src/stories/molecules/skeleton-rows.stories.tsx",
+      "namedExport": "TableShaped",
       "meta": {}
     },
     "molecules--skeleton-stack--default": {
@@ -1079,8 +1091,8 @@
         "Molecules",
         "Stattile"
       ],
-      "locStart": 63,
-      "locEnd": 83,
+      "locStart": 76,
+      "locEnd": 96,
       "filePath": "src/stories/molecules/stat-tile.stories.tsx",
       "namedExport": "Density",
       "meta": {}
@@ -1091,8 +1103,8 @@
         "Molecules",
         "Stattile"
       ],
-      "locStart": 52,
-      "locEnd": 60,
+      "locStart": 65,
+      "locEnd": 73,
       "filePath": "src/stories/molecules/stat-tile.stories.tsx",
       "namedExport": "LabelCase",
       "meta": {}
@@ -1103,8 +1115,8 @@
         "Molecules",
         "Stattile"
       ],
-      "locStart": 24,
-      "locEnd": 33,
+      "locStart": 37,
+      "locEnd": 46,
       "filePath": "src/stories/molecules/stat-tile.stories.tsx",
       "namedExport": "Row",
       "meta": {}
@@ -1115,8 +1127,8 @@
         "Molecules",
         "Stattile"
       ],
-      "locStart": 86,
-      "locEnd": 90,
+      "locStart": 221,
+      "locEnd": 225,
       "filePath": "src/stories/molecules/stat-tile.stories.tsx",
       "namedExport": "Single",
       "meta": {}
@@ -1127,10 +1139,70 @@
         "Molecules",
         "Stattile"
       ],
-      "locStart": 36,
-      "locEnd": 49,
+      "locStart": 49,
+      "locEnd": 62,
       "filePath": "src/stories/molecules/stat-tile.stories.tsx",
       "namedExport": "Tones",
+      "meta": {}
+    },
+    "molecules--stattile--value-adornments": {
+      "name": "Value adornments",
+      "levels": [
+        "Molecules",
+        "Stattile"
+      ],
+      "locStart": 100,
+      "locEnd": 150,
+      "filePath": "src/stories/molecules/stat-tile.stories.tsx",
+      "namedExport": "ValueAdornments",
+      "meta": {}
+    },
+    "molecules--stattile--value-spacing": {
+      "name": "Value spacing",
+      "levels": [
+        "Molecules",
+        "Stattile"
+      ],
+      "locStart": 159,
+      "locEnd": 197,
+      "filePath": "src/stories/molecules/stat-tile.stories.tsx",
+      "namedExport": "ValueSpacing",
+      "meta": {}
+    },
+    "molecules--stattile--value-wrap": {
+      "name": "Value wrap",
+      "levels": [
+        "Molecules",
+        "Stattile"
+      ],
+      "locStart": 200,
+      "locEnd": 218,
+      "filePath": "src/stories/molecules/stat-tile.stories.tsx",
+      "namedExport": "ValueWrap",
+      "meta": {}
+    },
+    "molecules--surface-message--body-only": {
+      "name": "Body only",
+      "levels": [
+        "Molecules",
+        "Surface message"
+      ],
+      "locStart": 99,
+      "locEnd": 112,
+      "filePath": "src/stories/molecules/surface-message.stories.tsx",
+      "namedExport": "BodyOnly",
+      "meta": {}
+    },
+    "molecules--surface-message--class-name-overrides": {
+      "name": "Class name overrides",
+      "levels": [
+        "Molecules",
+        "Surface message"
+      ],
+      "locStart": 82,
+      "locEnd": 92,
+      "filePath": "src/stories/molecules/surface-message.stories.tsx",
+      "namedExport": "ClassNameOverrides",
       "meta": {}
     },
     "molecules--surface-message--dashed-with-actions": {
@@ -1139,8 +1211,8 @@
         "Molecules",
         "Surface message"
       ],
-      "locStart": 75,
-      "locEnd": 89,
+      "locStart": 114,
+      "locEnd": 128,
       "filePath": "src/stories/molecules/surface-message.stories.tsx",
       "namedExport": "DashedWithActions",
       "meta": {}
@@ -1151,8 +1223,8 @@
         "Molecules",
         "Surface message"
       ],
-      "locStart": 56,
-      "locEnd": 63,
+      "locStart": 61,
+      "locEnd": 68,
       "filePath": "src/stories/molecules/surface-message.stories.tsx",
       "namedExport": "Default",
       "meta": {}
@@ -1163,8 +1235,8 @@
         "Molecules",
         "Surface message"
       ],
-      "locStart": 65,
-      "locEnd": 73,
+      "locStart": 70,
+      "locEnd": 78,
       "filePath": "src/stories/molecules/surface-message.stories.tsx",
       "namedExport": "Muted",
       "meta": {}
@@ -1259,8 +1331,8 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 563,
-      "locEnd": 602,
+      "locStart": 572,
+      "locEnd": 611,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "ColoredLegend",
       "meta": {}
@@ -1283,8 +1355,8 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 618,
-      "locEnd": 666,
+      "locStart": 627,
+      "locEnd": 681,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "Distribution",
       "meta": {}
@@ -1295,8 +1367,8 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 433,
-      "locEnd": 559,
+      "locStart": 442,
+      "locEnd": 568,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "ReaderLayer",
       "meta": {}
@@ -1319,8 +1391,8 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 729,
-      "locEnd": 751,
+      "locStart": 744,
+      "locEnd": 766,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "SyncedCrosshair",
       "meta": {}
@@ -1427,8 +1499,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 431,
-      "locEnd": 454,
+      "locStart": 447,
+      "locEnd": 470,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "ColumnResizeReorderPin",
       "meta": {}
@@ -1439,8 +1511,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 307,
-      "locEnd": 346,
+      "locStart": 323,
+      "locEnd": 362,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "CompactDensity",
       "meta": {}
@@ -1451,8 +1523,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 160,
-      "locEnd": 212,
+      "locStart": 176,
+      "locEnd": 228,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "ControlledState",
       "meta": {}
@@ -1475,8 +1547,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 603,
-      "locEnd": 633,
+      "locStart": 619,
+      "locEnd": 649,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "ExpandableRows",
       "meta": {}
@@ -1487,8 +1559,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 233,
-      "locEnd": 248,
+      "locStart": 249,
+      "locEnd": 264,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "HeaderCasingPolicy",
       "meta": {}
@@ -1505,14 +1577,26 @@
       "namedExport": "Loading",
       "meta": {}
     },
+    "organisms--data-table--loading-derived-skeleton-hints": {
+      "name": "Loading derived skeleton hints",
+      "levels": [
+        "Organisms",
+        "Data table"
+      ],
+      "locStart": 140,
+      "locEnd": 150,
+      "filePath": "src/stories/organisms/data-table.stories.tsx",
+      "namedExport": "LoadingDerivedSkeletonHints",
+      "meta": {}
+    },
     "organisms--data-table--magnitude-columns": {
       "name": "Magnitude columns",
       "levels": [
         "Organisms",
         "Data table"
       ],
-      "locStart": 490,
-      "locEnd": 534,
+      "locStart": 506,
+      "locEnd": 550,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "MagnitudeColumns",
       "meta": {}
@@ -1523,8 +1607,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 456,
-      "locEnd": 488,
+      "locStart": 472,
+      "locEnd": 504,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "MultiRowSelection",
       "meta": {}
@@ -1535,8 +1619,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 278,
-      "locEnd": 305,
+      "locStart": 294,
+      "locEnd": 321,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "NumericMonoColumn",
       "meta": {}
@@ -1547,8 +1631,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 250,
-      "locEnd": 276,
+      "locStart": 266,
+      "locEnd": 292,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "RightAlignedNumericColumn",
       "meta": {}
@@ -1559,8 +1643,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 136,
-      "locEnd": 158,
+      "locStart": 152,
+      "locEnd": 174,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "RowSelection",
       "meta": {}
@@ -1571,8 +1655,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 568,
-      "locEnd": 598,
+      "locStart": 584,
+      "locEnd": 614,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "Toolbar",
       "meta": {}
@@ -2202,10 +2286,21 @@
       "levels": [
         "Tokens"
       ],
-      "locStart": 385,
-      "locEnd": 431,
+      "locStart": 464,
+      "locEnd": 510,
       "filePath": "src/stories/tokens/tokens.stories.tsx",
       "namedExport": "SemanticTokens",
+      "meta": {}
+    },
+    "tokens--shadows": {
+      "name": "Shadows",
+      "levels": [
+        "Tokens"
+      ],
+      "locStart": 442,
+      "locEnd": 462,
+      "filePath": "src/stories/tokens/tokens.stories.tsx",
+      "namedExport": "Shadows",
       "meta": {}
     },
     "tokens--sizes": {
