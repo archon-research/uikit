@@ -7,6 +7,11 @@
     "packages/charting/dist/candlestick.js": [
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
     ],
+    "packages/charting/dist/chart-color.js": [
+      "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/visx-charts.stories.tsx"
+    ],
     "packages/charting/dist/chart-data-table.js": [
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
     ],
@@ -57,6 +62,7 @@
     "packages/design-system/dist/components/Badge.js": [
       "packages/uikit-preview/src/stories/atoms/badge.stories.tsx",
       "packages/uikit-preview/src/stories/molecules/panel.stories.tsx",
+      "packages/uikit-preview/src/stories/molecules/stat-tile.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
       "packages/uikit-preview/src/stories/templates/activity-feed.stories.tsx",
       "packages/uikit-preview/src/stories/templates/allocation-dashboard.stories.tsx",
@@ -330,6 +336,21 @@
     ],
     "packages/design-system/dist/playback/useTransportHotkeys.js": [
       "packages/uikit-preview/src/stories/organisms/playback-bar.stories.tsx"
+    ],
+    "packages/design-system/dist/theme/theme-storage.js": [
+      "packages/uikit-preview/src/stories/molecules/theme-toggle.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/visx-charts.stories.tsx",
+      "packages/uikit-preview/src/stories/playground/playground.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/activity-feed.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/allocation-dashboard.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/allocation-grid-states.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/filter-bar.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/risk-detail-drawer.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/sidebar-layout.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/split-layout.stories.tsx",
+      "packages/uikit-preview/src/stories/tokens/tokens.stories.tsx"
     ],
     "packages/design-system/dist/theme/ThemeProvider.js": [
       "packages/uikit-preview/src/stories/molecules/theme-toggle.stories.tsx",
@@ -755,14 +776,12 @@
     "packages/uikit-preview/styled-system/css/cva.js": [
       "packages/uikit-preview/src/stories/atoms/segmented-control.stories.tsx",
       "packages/uikit-preview/src/stories/atoms/switch.stories.tsx",
-      "packages/uikit-preview/src/stories/molecules/surface-message.stories.tsx",
       "packages/uikit-preview/src/stories/templates/activity-feed.stories.tsx",
       "packages/uikit-preview/src/stories/templates/filter-bar.stories.tsx"
     ],
     "packages/uikit-preview/styled-system/css/cx.js": [
       "packages/uikit-preview/src/stories/atoms/segmented-control.stories.tsx",
       "packages/uikit-preview/src/stories/atoms/switch.stories.tsx",
-      "packages/uikit-preview/src/stories/molecules/surface-message.stories.tsx",
       "packages/uikit-preview/src/stories/templates/activity-feed.stories.tsx",
       "packages/uikit-preview/src/stories/templates/filter-bar.stories.tsx"
     ],
@@ -828,7 +847,6 @@
     "packages/uikit-preview/styled-system/recipes/create-recipe.js": [
       "packages/uikit-preview/src/stories/atoms/segmented-control.stories.tsx",
       "packages/uikit-preview/src/stories/atoms/switch.stories.tsx",
-      "packages/uikit-preview/src/stories/molecules/surface-message.stories.tsx",
       "packages/uikit-preview/src/stories/templates/activity-feed.stories.tsx",
       "packages/uikit-preview/src/stories/templates/filter-bar.stories.tsx"
     ],
@@ -836,9 +854,6 @@
       "packages/uikit-preview/src/stories/atoms/segmented-control.stories.tsx",
       "packages/uikit-preview/src/stories/templates/activity-feed.stories.tsx",
       "packages/uikit-preview/src/stories/templates/filter-bar.stories.tsx"
-    ],
-    "packages/uikit-preview/styled-system/recipes/surface-message.js": [
-      "packages/uikit-preview/src/stories/molecules/surface-message.stories.tsx"
     ],
     "packages/uikit-preview/styled-system/recipes/toggle-switch.js": [
       "packages/uikit-preview/src/stories/atoms/switch.stories.tsx"
