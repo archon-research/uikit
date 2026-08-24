@@ -1,11 +1,63 @@
-import { type CSSProperties, type HTMLAttributes, type ReactNode } from 'react';
+import { type HTMLAttributes, type ReactNode } from 'react';
+
+/**
+ * Class names emitted by the `surfaceMessage` slot recipe (registered in the
+ * preset + staticCss). The design-system package builds with `tsc` and ships no
+ * generated `styled-system`, so styling is applied by stable Panda class names.
+ * Conventions: slot base = `${className}__${slot}`; a slot variant =
+ * `${className}__${slot}--${key}_${value}`.
+ *
+ * These parts used to carry inline `style` objects instead, which beat any
+ * consumer `className` (inline styles outrank classes at every specificity), so
+ * a message could not be restyled from the outside. All of it now lives in the
+ * recipe and a consumer `className` composes LAST.
+ */
+const cx = (...classes: Array<string | false | null | undefined>): string =>
+  classes.filter(Boolean).join(' ');
 
 export type SurfaceMessageTone = 'default' | 'muted' | 'dashed' | 'critical';
 
-export type SurfaceMessageProps = {
-  title: string;
+/**
+ * Per-slot `className` escape hatch for {@link SurfaceMessage}. No `actions`
+ * key: the compound renders actions as `children`, so that slot is styled by
+ * passing `className` to {@link SurfaceMessageActions} directly.
+ */
+export type SurfaceMessageSlotClassNames = {
+  root?: string;
+  title?: string;
+  body?: string;
+};
+
+/**
+ * The native `title` attribute is omitted from the base, not intersected with:
+ * `title` here is the message's heading. Both are `string`, so the intersection
+ * raised no type error at all — `string & string` is `string` — and that is
+ * precisely what made the collision dangerous: a consumer passing `title` for a
+ * native hover tooltip silently got a rendered heading instead, with nothing to
+ * flag it. Omitting makes the one surviving meaning the declared one. A tooltip
+ * on a message frame is a `SurfaceMessageRoot` concern — compose the parts and
+ * put `title` there.
+ */
+export type SurfaceMessageProps = Omit<
+  HTMLAttributes<HTMLDivElement>,
+  'title'
+> & {
+  /**
+   * Heading line. Optional: omit it for a body-only message (the same markup
+   * `SurfaceMessageRoot` + `SurfaceMessageBody` produces), and no title element
+   * is rendered at all — rather than an empty `<p>` that still takes vertical
+   * space. An empty string is treated as omitted for that same reason: a blank
+   * heading would still occupy a line box and push the body down.
+   */
+  title?: string;
   body: string;
   tone?: SurfaceMessageTone;
+  /**
+   * Per-slot `className` escape hatch, merged onto each slot's classes — so a
+   * consumer can style the title or body without reaching in through a Panda
+   * class-name substring selector. `className` targets the root.
+   */
+  classNames?: SurfaceMessageSlotClassNames;
   children?: ReactNode;
 };
 
@@ -13,69 +65,36 @@ export type SurfaceMessageRootProps = HTMLAttributes<HTMLDivElement> & {
   tone?: SurfaceMessageTone;
 };
 
-export type SurfaceMessageTitleProps = HTMLAttributes<HTMLParagraphElement>;
+export type SurfaceMessageTitleProps = HTMLAttributes<HTMLParagraphElement> & {
+  /** Must match the root's tone: `critical` recolors the title. */
+  tone?: SurfaceMessageTone;
+};
 export type SurfaceMessageBodyProps = HTMLAttributes<HTMLParagraphElement>;
 export type SurfaceMessageActionsProps = HTMLAttributes<HTMLDivElement>;
 
-const wrapperStyle: CSSProperties = {
-  borderRadius: 8,
-  borderWidth: 1,
-  borderStyle: 'solid',
-  borderColor: 'var(--colors-border-subtle, #d0d5dd)',
-  background: 'var(--colors-surface-subtle, #f8f9fb)',
-  padding: 16,
-};
-
-const titleStyle: CSSProperties = {
-  margin: 0,
-  fontSize: 14,
-  fontWeight: 600,
-  color: 'var(--colors-text-strong, #111827)',
-};
-
-const bodyStyle: CSSProperties = {
-  margin: 0,
-  marginTop: 8,
-  fontSize: 14,
-  color: 'var(--colors-text-muted, #667085)',
-};
-
-function getWrapperStyle(tone: SurfaceMessageTone): CSSProperties {
-  if (tone === 'dashed') {
-    return { ...wrapperStyle, borderStyle: 'dashed' };
-  }
-
-  if (tone === 'muted') {
-    return {
-      ...wrapperStyle,
-      background: 'var(--colors-surface-default, #ffffff)',
-    };
-  }
-
-  if (tone === 'critical') {
-    return {
-      ...wrapperStyle,
-      background: 'var(--colors-bg-critical, #fef2f2)',
-      borderColor: 'var(--colors-text-critical, #dc2626)',
-    };
-  }
-
-  return wrapperStyle;
-}
+/** A tone with no styles of its own emits no class, so skip it. */
+const toneSuffix = (tone: SurfaceMessageTone) =>
+  tone === 'default' ? false : `--tone_${tone}`;
 
 export function SurfaceMessageRoot({
   tone = 'default',
-  style,
+  className,
   children,
   ...props
 }: SurfaceMessageRootProps) {
+  const suffix = toneSuffix(tone);
+
   return (
     <div
       {...props}
+      className={cx(
+        'surfaceMessage__root',
+        suffix && `surfaceMessage__root${suffix}`,
+        className,
+      )}
       data-scope="surface-message"
       data-part="root"
       data-tone={tone}
-      style={{ ...getWrapperStyle(tone), ...style }}
     >
       {children}
     </div>
@@ -83,16 +102,23 @@ export function SurfaceMessageRoot({
 }
 
 export function SurfaceMessageTitle({
-  style,
+  tone = 'default',
+  className,
   children,
   ...props
 }: SurfaceMessageTitleProps) {
+  const suffix = toneSuffix(tone);
+
   return (
     <p
       {...props}
+      className={cx(
+        'surfaceMessage__title',
+        suffix && `surfaceMessage__title${suffix}`,
+        className,
+      )}
       data-scope="surface-message"
       data-part="title"
-      style={{ ...titleStyle, ...style }}
     >
       {children}
     </p>
@@ -100,16 +126,16 @@ export function SurfaceMessageTitle({
 }
 
 export function SurfaceMessageBody({
-  style,
+  className,
   children,
   ...props
 }: SurfaceMessageBodyProps) {
   return (
     <p
       {...props}
+      className={cx('surfaceMessage__body', className)}
       data-scope="surface-message"
       data-part="body"
-      style={{ ...bodyStyle, ...style }}
     >
       {children}
     </p>
@@ -117,16 +143,16 @@ export function SurfaceMessageBody({
 }
 
 export function SurfaceMessageActions({
-  style,
+  className,
   children,
   ...props
 }: SurfaceMessageActionsProps) {
   return (
     <div
       {...props}
+      className={cx('surfaceMessage__actions', className)}
       data-scope="surface-message"
       data-part="actions"
-      style={style}
     >
       {children}
     </div>
@@ -137,20 +163,25 @@ export function SurfaceMessage({
   title,
   body,
   tone = 'default',
+  classNames,
+  className,
   children,
+  ...rest
 }: SurfaceMessageProps) {
   return (
-    <SurfaceMessageRoot tone={tone}>
-      <SurfaceMessageTitle
-        style={
-          tone === 'critical'
-            ? { color: 'var(--colors-text-critical, #dc2626)' }
-            : undefined
-        }
-      >
-        {title}
-      </SurfaceMessageTitle>
-      <SurfaceMessageBody>{body}</SurfaceMessageBody>
+    <SurfaceMessageRoot
+      {...rest}
+      tone={tone}
+      className={cx(className, classNames?.root)}
+    >
+      {title ? (
+        <SurfaceMessageTitle tone={tone} className={classNames?.title}>
+          {title}
+        </SurfaceMessageTitle>
+      ) : null}
+      <SurfaceMessageBody className={classNames?.body}>
+        {body}
+      </SurfaceMessageBody>
       {children}
     </SurfaceMessageRoot>
   );

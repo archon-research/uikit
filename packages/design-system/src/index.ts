@@ -48,6 +48,7 @@ export {
   type SurfaceMessageTitleProps,
   type SurfaceMessageBodyProps,
   type SurfaceMessageActionsProps,
+  type SurfaceMessageSlotClassNames,
   type SurfaceMessageTone,
 } from './components/SurfaceMessage.js';
 export {
