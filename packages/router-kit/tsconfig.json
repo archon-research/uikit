@@ -1,0 +1,19 @@
+{
+  "extends": "@archon-research/tsconfig/node",
+  "compilerOptions": {
+    // The node preset, not the react one: nothing here renders. The router is a
+    // peer, so its types resolve regardless, but they reference `History`,
+    // `Location`, and `URL`, so the DOM lib has to be present even though this
+    // package never touches the document.
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    // Empty, rather than the `["node"]` the sibling consumers of this preset
+    // pin: they have a node entry point and this package calls no node API.
+    // Left unset entirely, tsc pulls in every `@types/*` hoisted to the
+    // workspace root, so a stray transitive global could satisfy a reference
+    // here that would fail in a consumer's install.
+    "types": []
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
