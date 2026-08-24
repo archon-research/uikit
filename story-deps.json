@@ -7,6 +7,11 @@
     "packages/charting/dist/candlestick.js": [
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
     ],
+    "packages/charting/dist/chart-color.js": [
+      "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/visx-charts.stories.tsx"
+    ],
     "packages/charting/dist/chart-data-table.js": [
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
     ],
@@ -323,6 +328,21 @@
     ],
     "packages/design-system/dist/playback/useTransportHotkeys.js": [
       "packages/uikit-preview/src/stories/organisms/playback-bar.stories.tsx"
+    ],
+    "packages/design-system/dist/theme/theme-storage.js": [
+      "packages/uikit-preview/src/stories/molecules/theme-toggle.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/visx-charts.stories.tsx",
+      "packages/uikit-preview/src/stories/playground/playground.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/activity-feed.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/allocation-dashboard.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/allocation-grid-states.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/filter-bar.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/risk-detail-drawer.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/sidebar-layout.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/split-layout.stories.tsx",
+      "packages/uikit-preview/src/stories/tokens/tokens.stories.tsx"
     ],
     "packages/design-system/dist/theme/ThemeProvider.js": [
       "packages/uikit-preview/src/stories/molecules/theme-toggle.stories.tsx",
