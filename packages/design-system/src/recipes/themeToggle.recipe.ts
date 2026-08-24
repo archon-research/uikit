@@ -117,7 +117,8 @@ export const themeToggleRecipe = defineSlotRecipe({
           borderWidth: '0',
           borderColor: 'transparent',
           bg: 'transparent',
-          borderRadius: 'none',
+          // There is no `none` radii token; the literal 0 is what squares the button.
+          borderRadius: '0',
           _hover: {
             bg: 'transparent',
             color: 'text.default',
