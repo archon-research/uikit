@@ -1079,8 +1079,8 @@
         "Molecules",
         "Stattile"
       ],
-      "locStart": 63,
-      "locEnd": 83,
+      "locStart": 76,
+      "locEnd": 96,
       "filePath": "src/stories/molecules/stat-tile.stories.tsx",
       "namedExport": "Density",
       "meta": {}
@@ -1091,8 +1091,8 @@
         "Molecules",
         "Stattile"
       ],
-      "locStart": 52,
-      "locEnd": 60,
+      "locStart": 65,
+      "locEnd": 73,
       "filePath": "src/stories/molecules/stat-tile.stories.tsx",
       "namedExport": "LabelCase",
       "meta": {}
@@ -1103,8 +1103,8 @@
         "Molecules",
         "Stattile"
       ],
-      "locStart": 24,
-      "locEnd": 33,
+      "locStart": 37,
+      "locEnd": 46,
       "filePath": "src/stories/molecules/stat-tile.stories.tsx",
       "namedExport": "Row",
       "meta": {}
@@ -1115,8 +1115,8 @@
         "Molecules",
         "Stattile"
       ],
-      "locStart": 86,
-      "locEnd": 90,
+      "locStart": 221,
+      "locEnd": 225,
       "filePath": "src/stories/molecules/stat-tile.stories.tsx",
       "namedExport": "Single",
       "meta": {}
@@ -1127,10 +1127,70 @@
         "Molecules",
         "Stattile"
       ],
-      "locStart": 36,
-      "locEnd": 49,
+      "locStart": 49,
+      "locEnd": 62,
       "filePath": "src/stories/molecules/stat-tile.stories.tsx",
       "namedExport": "Tones",
+      "meta": {}
+    },
+    "molecules--stattile--value-adornments": {
+      "name": "Value adornments",
+      "levels": [
+        "Molecules",
+        "Stattile"
+      ],
+      "locStart": 100,
+      "locEnd": 150,
+      "filePath": "src/stories/molecules/stat-tile.stories.tsx",
+      "namedExport": "ValueAdornments",
+      "meta": {}
+    },
+    "molecules--stattile--value-spacing": {
+      "name": "Value spacing",
+      "levels": [
+        "Molecules",
+        "Stattile"
+      ],
+      "locStart": 159,
+      "locEnd": 197,
+      "filePath": "src/stories/molecules/stat-tile.stories.tsx",
+      "namedExport": "ValueSpacing",
+      "meta": {}
+    },
+    "molecules--stattile--value-wrap": {
+      "name": "Value wrap",
+      "levels": [
+        "Molecules",
+        "Stattile"
+      ],
+      "locStart": 200,
+      "locEnd": 218,
+      "filePath": "src/stories/molecules/stat-tile.stories.tsx",
+      "namedExport": "ValueWrap",
+      "meta": {}
+    },
+    "molecules--surface-message--body-only": {
+      "name": "Body only",
+      "levels": [
+        "Molecules",
+        "Surface message"
+      ],
+      "locStart": 99,
+      "locEnd": 112,
+      "filePath": "src/stories/molecules/surface-message.stories.tsx",
+      "namedExport": "BodyOnly",
+      "meta": {}
+    },
+    "molecules--surface-message--class-name-overrides": {
+      "name": "Class name overrides",
+      "levels": [
+        "Molecules",
+        "Surface message"
+      ],
+      "locStart": 82,
+      "locEnd": 92,
+      "filePath": "src/stories/molecules/surface-message.stories.tsx",
+      "namedExport": "ClassNameOverrides",
       "meta": {}
     },
     "molecules--surface-message--dashed-with-actions": {
@@ -1139,8 +1199,8 @@
         "Molecules",
         "Surface message"
       ],
-      "locStart": 75,
-      "locEnd": 89,
+      "locStart": 114,
+      "locEnd": 128,
       "filePath": "src/stories/molecules/surface-message.stories.tsx",
       "namedExport": "DashedWithActions",
       "meta": {}
@@ -1151,8 +1211,8 @@
         "Molecules",
         "Surface message"
       ],
-      "locStart": 56,
-      "locEnd": 63,
+      "locStart": 61,
+      "locEnd": 68,
       "filePath": "src/stories/molecules/surface-message.stories.tsx",
       "namedExport": "Default",
       "meta": {}
@@ -1163,8 +1223,8 @@
         "Molecules",
         "Surface message"
       ],
-      "locStart": 65,
-      "locEnd": 73,
+      "locStart": 70,
+      "locEnd": 78,
       "filePath": "src/stories/molecules/surface-message.stories.tsx",
       "namedExport": "Muted",
       "meta": {}
@@ -2202,10 +2262,21 @@
       "levels": [
         "Tokens"
       ],
-      "locStart": 385,
-      "locEnd": 431,
+      "locStart": 464,
+      "locEnd": 510,
       "filePath": "src/stories/tokens/tokens.stories.tsx",
       "namedExport": "SemanticTokens",
+      "meta": {}
+    },
+    "tokens--shadows": {
+      "name": "Shadows",
+      "levels": [
+        "Tokens"
+      ],
+      "locStart": 442,
+      "locEnd": 462,
+      "filePath": "src/stories/tokens/tokens.stories.tsx",
+      "namedExport": "Shadows",
       "meta": {}
     },
     "tokens--sizes": {
