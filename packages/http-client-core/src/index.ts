@@ -1,10 +1,39 @@
 import createClient from 'openapi-fetch';
+import type { ClientOptions } from 'openapi-fetch';
 import { z } from 'zod';
+
+/**
+ * The `openapi-fetch` / `openapi-typescript` helper types that anything built
+ * on this client needs. They are re-exported here so downstream packages
+ * (`http-client-react` and `http-client-msw`) type against the same helper
+ * versions this package is pinned to, rather than each declaring its own
+ * dependency on the OpenAPI toolchain.
+ */
+export type {
+  Client as ApiClient,
+  ClientOptions as ApiClientOptions,
+  FetchResponse,
+  MaybeOptionalInit,
+} from 'openapi-fetch';
+export type {
+  HttpMethod,
+  MediaType,
+  PathsWithMethod,
+  RequiredKeysOf,
+} from 'openapi-typescript-helpers';
 
 export type JsonSchema = z.core.JSONSchema.JSONSchema;
 
-export const createApiClient = <TPaths extends {}>(baseUrl: string = '/') => {
-  return createClient<TPaths>({ baseUrl });
+/**
+ * `options` is the full `openapi-fetch` client config minus `baseUrl`, which
+ * stays the first positional argument for backwards compatibility. It is what
+ * lets a test or a mock layer inject its own `fetch`.
+ */
+export const createApiClient = <TPaths extends {}>(
+  baseUrl: string = '/',
+  options?: Omit<ClientOptions, 'baseUrl'>,
+) => {
+  return createClient<TPaths>({ ...options, baseUrl });
 };
 
 export function normalizeOpenApiRefs(value: unknown): unknown {

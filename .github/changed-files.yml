@@ -17,6 +17,19 @@ demo_relay:
   - .github/workflows/deploy-relay.yml
   - .github/changed-files.yml
 
+# Packages with vitest specs that the `demo_relay` group does not already cover.
+# `npm test` runs every workspace's suite, so a change confined to one of these
+# still has to trigger the test job.
+vitest:
+  - packages/design-system/**
+  - packages/charting/**
+  - packages/dashboard-kit/**
+  - packages/http-client-core/**
+  - packages/http-client-react/**
+  - packages/http-client-msw/**
+  - packages/router-kit/**
+  - packages/uikit-cli/**
+
 # Only the committed snapshot PNGs. On pull requests the visual-snapshots job
 # checks exactly the stories whose PNGs changed here; the merge-queue run is
 # unconditional and re-checks the full suite (see ci.yml).

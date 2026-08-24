@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "openapi-fetch": "0.17.0",
+    "openapi-typescript-helpers": "0.1.0",
     "zod": "4.4.3"
   },
   "peerDependencies": {

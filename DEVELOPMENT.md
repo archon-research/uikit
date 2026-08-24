@@ -162,7 +162,7 @@ See `uikit-cli` package documentation for more details.
 
 1. Workspaces under `packages/*` are resolved through npm workspaces.
 2. Shared config packages (`tsconfig`, `oxlint-config`, `oxfmt-config`) provide reusable defaults for consumer apps.
-3. Runtime packages (`design-system`, `http-client-core`, `http-client-react`) are consumed directly from source in local development.
+3. Runtime packages (`design-system`, `charting`, `dashboard-kit`, `router-kit`, `http-client-core`, `http-client-react`, `http-client-msw`, `webmcp`, `mcp-connect`, `mcp-relay`) ship a built library that consumer apps import. In local development they resolve through the npm-workspace symlink to that package's own `dist/`, so a change is picked up after a rebuild, not straight from `src/`.
 4. `uikit-cli` links local package builds into consumer repositories to support fast co-development loops.
 
 ## Versioning
@@ -262,6 +262,16 @@ npm publish --workspaces --registry https://registry.npmjs.org
 - Purpose: React Query provider and hooks integration
 - Key dependencies: `@tanstack/react-query`, `@archon-research/http-client-core`
 - Peer dependency: `react`
+
+### HTTP client MSW mocks
+
+- Package: `@archon-research/http-client-msw`
+- Purpose: Typed msw request handlers derived from the same generated OpenAPI `paths` type as the
+  client and query layers, plus environment-neutral setup and stateful fixture helpers
+- Key dependencies: `openapi-msw`
+- Peer dependency: `msw`
+- Entry points: the root export is environment-neutral; `/browser` wraps `setupWorker` and `/node`
+  wraps `setupServer`, so neither environment's msw import reaches the other's bundle
 
 ### Tooling config packages
 

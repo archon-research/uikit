@@ -4,10 +4,25 @@
 export {
   axisLabelStyle,
   axisTickLabelStyle,
+  buildChartTheme,
   chartTheme,
   chartTokens,
   seriesColor,
 } from './theme.js';
+export type { ChartThemeConfig } from './theme.js';
+
+// Typed chart color tokens: the default way to name a color in this package.
+// Props declared BY THIS PACKAGE take `ChartColor`, so `'chart.series.primary'`
+// is compile-checked while a raw string stays available as the escape hatch.
+// The raw visx re-exports (LineSeries, AreaSeries, Axis*, ...) forward visx's
+// own props and do NOT resolve token names — theme them via `buildChartTheme`
+// or pass `resolveChartColor(token)` explicitly.
+export {
+  chartColorToken,
+  chartColorTokens,
+  resolveChartColor,
+} from './chart-color.js';
+export type { ChartColor, ChartColorToken } from './chart-color.js';
 
 // Curated visx surface, so consumers depend on this package, not @visx/* directly.
 export {
@@ -24,7 +39,9 @@ export {
   BarGroup,
   BarStack,
   GlyphSeries,
-  buildChartTheme,
+  // NOTE: `buildChartTheme` is NOT re-exported from here — the token-resolving
+  // wrapper in `theme.js` (exported above) takes its place. It is a superset:
+  // raw-string configs behave identically, token names additionally work.
   // Animated variants (spring-driven transitions between data changes).
   AnimatedAxis,
   AnimatedGrid,
