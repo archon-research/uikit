@@ -1,10 +1,5 @@
 import { Progress } from '@ark-ui/react/progress';
-import {
-  flexRender,
-  type Column,
-  type Row,
-  type Table,
-} from '@tanstack/react-table';
+import { flexRender, type RowData } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   Check,
@@ -31,14 +26,20 @@ import {
 import { IS_DEV_WARNING_ENABLED } from '../../hooks/devWarning.js';
 import { Popover } from '../Popover.js';
 import { SearchInput } from '../SearchInput.js';
-import { SkeletonRows } from '../SkeletonRows.js';
+import { SkeletonRows, type SkeletonColumnHint } from '../SkeletonRows.js';
 import { Select } from '../StyledSelect.js';
 import {
   createMagnitudeStateMap,
   formatMagnitudeValueText,
   normalizeMagnitudeValue,
 } from './magnitude.js';
-import type { DataTableColumnAlign, DataTableDensity } from './types.js';
+import type {
+  Column,
+  DataTableColumnAlign,
+  DataTableDensity,
+  Row,
+  Table,
+} from './types.js';
 import { shouldWarnMissingGetRowId } from './utils.js';
 
 /**
@@ -168,11 +169,46 @@ export function getCellFlashState(
   return { seq, direction };
 }
 
+/**
+ * Resolves the hints handed to `SkeletonRows` from the consumer's explicit
+ * `skeletonConfig.columnHints` and whatever `DataTable` derived from the column
+ * definitions.
+ *
+ * Hints-*present* is what switches `SkeletonRows` into its detailed
+ * (kind-aware, width-varied) mode, so "no hints" has to be expressed as
+ * `undefined`: an empty array reads as detailed-mode-with-nothing-hinted and
+ * renders every cell as a varied `text` bar — the opposite of both opt-outs
+ * that resolve to a plain uniform skeleton.
+ *
+ * - explicit `[]` — the documented "opt out of derivation entirely and keep the
+ *   plain uniform skeleton" escape hatch.
+ * - absent, with nothing interesting derived — all-`text` derived hints buy no
+ *   extra fidelity but would still flip the skeleton into detailed mode, so an
+ *   unannotated table keeps the plain skeleton it rendered before. Only a
+ *   `numeric` column (what `numericColumnMeta` marks) makes derivation worth
+ *   applying.
+ *
+ * Exported (but not re-exported from `index.ts`/the package root) so
+ * `DataTable.skeletonHints.test.ts` can exercise the branches without
+ * rendering, same as `flashClass`/`getCellFlashState` above.
+ */
+export function resolveSkeletonColumnHints(
+  explicitHints: readonly SkeletonColumnHint[] | undefined,
+  derivedHints: readonly SkeletonColumnHint[],
+): readonly SkeletonColumnHint[] | undefined {
+  if (explicitHints !== undefined) {
+    return explicitHints.length > 0 ? explicitHints : undefined;
+  }
+  return derivedHints.some((hint) => hint.kind === 'numeric')
+    ? derivedHints
+    : undefined;
+}
+
 /** Native-`<select>` faceted filter, populated from
  * `column.getFacetedUniqueValues()` (registered by `useDataTable`). Assumes
  * exact-value matching — give the column an explicit `filterFn` (e.g.
  * `'equalsString'`) since the table-wide auto default is a substring match. */
-function FacetedColumnFilter<TData>({
+function FacetedColumnFilter<TData extends RowData>({
   column,
 }: {
   column: Column<TData, unknown>;
@@ -208,7 +244,7 @@ function FacetedColumnFilter<TData>({
 }
 
 /** Free-text per-column filter input. */
-function TextColumnFilter<TData>({
+function TextColumnFilter<TData extends RowData>({
   column,
 }: {
   column: Column<TData, unknown>;
@@ -233,11 +269,21 @@ function TextColumnFilter<TData>({
 /**
  * The `pinned` slot-variant class, for a header/body cell whose column is
  * currently pinned. `'none'` is the slot base (no class emitted).
+ *
+ * TanStack v9 renamed pinning positions from physical `'left'`/`'right'` to
+ * logical `'start'`/`'end'` (see `column.getIsPinned()`). This app has no RTL
+ * support and the recipe's `pinned` variant is still keyed by the old
+ * physical names (`dataTable__${slot}--pinned_left`/`right`), so `'start'`
+ * maps to `'left'` and `'end'` to `'right'` here rather than touching the
+ * recipe.
  */
 const pinnedClass = (
   slot: 'headerCell' | 'bodyCell',
-  pinned: 'left' | 'right' | false,
-): string | false => (pinned ? `dataTable__${slot}--pinned_${pinned}` : false);
+  pinned: 'start' | 'end' | false,
+): string | false => {
+  if (!pinned) return false;
+  return `dataTable__${slot}--pinned_${pinned === 'start' ? 'left' : 'right'}`;
+};
 
 /**
  * Sticky pixel offset for a pinned column — the one part of pinning that's a
@@ -246,18 +292,18 @@ const pinnedClass = (
  * `maxHeight` elsewhere in this component; the recipe's `pinned` variant
  * supplies everything else (position/z-index/background/separator rule).
  */
-function pinnedOffsetStyle<TData>(
+function pinnedOffsetStyle<TData extends RowData>(
   column: Column<TData, unknown>,
 ): CSSProperties {
   const pinned = column.getIsPinned();
   if (!pinned) return {};
   return {
-    left: pinned === 'left' ? `${column.getStart('left')}px` : undefined,
-    right: pinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+    left: pinned === 'start' ? `${column.getStart('start')}px` : undefined,
+    right: pinned === 'end' ? `${column.getAfter('end')}px` : undefined,
   };
 }
 
-export type DataTableProps<TData> = {
+export type DataTableProps<TData extends RowData> = {
   table: Table<TData>;
   isLoading: boolean;
   onRowClick?: (row: TData) => void;
@@ -273,6 +319,18 @@ export type DataTableProps<TData> = {
     columns?: number;
     firstColumnTall?: boolean;
     animate?: boolean;
+    /**
+     * Per-column content hints for the skeleton, index-aligned with the
+     * rendered columns — including the leading expander/selection cells and the
+     * trailing actions cell, which are not real table columns.
+     *
+     * Omit to let `DataTable` derive them: every column whose `meta.align` is
+     * `'right'` (what `numericColumnMeta` sets) is skeletoned as `numeric`, the
+     * rest as `text`. Derivation is safe with zero rows because column `meta`
+     * lives on the column definitions, not the data. Pass `[]` to opt out of
+     * derivation entirely and keep the plain uniform skeleton.
+     */
+    columnHints?: readonly SkeletonColumnHint[];
   };
   renderCell?: (cell: ReactNode) => ReactNode;
   className?: string;
@@ -451,7 +509,11 @@ function CopyButton({ value }: { value: string }) {
 }
 
 /** Toolbar show/hide-columns menu (a popover of checkboxes over hideable columns). */
-function ColumnVisibilityMenu<TData>({ table }: { table: Table<TData> }) {
+function ColumnVisibilityMenu<TData extends RowData>({
+  table,
+}: {
+  table: Table<TData>;
+}) {
   const columns = table
     .getAllLeafColumns()
     .filter((column) => column.getCanHide());
@@ -496,7 +558,7 @@ function ColumnVisibilityMenu<TData>({ table }: { table: Table<TData> }) {
   );
 }
 
-export function DataTable<TData>({
+export function DataTable<TData extends RowData>({
   table,
   isLoading,
   onRowClick,
@@ -584,10 +646,10 @@ export function DataTable<TData>({
   // renders what's actually wired up. Row selection follows the same
   // pattern below.
   const resizingEnabled = Boolean(table.options.enableColumnResizing);
-  const columnPinningState = table.getState().columnPinning;
+  const columnPinningState = table.state.columnPinning;
   const hasPinnedColumns =
-    (columnPinningState?.left?.length ?? 0) > 0 ||
-    (columnPinningState?.right?.length ?? 0) > 0;
+    (columnPinningState?.start?.length ?? 0) > 0 ||
+    (columnPinningState?.end?.length ?? 0) > 0;
   // `table-layout: fixed` is required for either a resize drag or a pinned
   // column's sticky offset to mean anything (see the recipe's `fixedLayout`
   // variant), so it turns on whenever either is in play — even if
@@ -601,6 +663,39 @@ export function DataTable<TData>({
     (expandable ? 1 : 0) +
     (rowSelectionEnabled ? 1 : 0) +
     (actionsEnabled ? 1 : 0);
+
+  // Skeleton column hints, derived from the column definitions when the
+  // consumer didn't supply their own. `meta.align` is declared on the column
+  // def, so this works with zero rows loaded — the case a skeleton exists for.
+  // Cell order mirrors the body: expander, selection, real columns, actions.
+  const explicitColumnHints = skeletonConfig?.columnHints;
+  const visibleLeafColumns = table.getVisibleLeafColumns();
+  const derivedColumnHints = useMemo((): readonly SkeletonColumnHint[] => {
+    const leadingCount = (expandable ? 1 : 0) + (rowSelectionEnabled ? 1 : 0);
+    const hints: SkeletonColumnHint[] = [];
+
+    // Expander/selection cells hold a ~16px control, not text.
+    for (let index = 0; index < leadingCount; index += 1) {
+      hints.push({ kind: 'text', widthPercent: 40 });
+    }
+    for (const column of visibleLeafColumns) {
+      hints.push(
+        column.columnDef.meta?.align === 'right'
+          ? { kind: 'numeric' }
+          : { kind: 'text' },
+      );
+    }
+    if (actionsEnabled) {
+      hints.push({ kind: 'text', widthPercent: 40 });
+    }
+
+    return hints;
+  }, [visibleLeafColumns, expandable, rowSelectionEnabled, actionsEnabled]);
+
+  const resolvedColumnHints = resolveSkeletonColumnHints(
+    explicitColumnHints,
+    derivedColumnHints,
+  );
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -919,7 +1014,7 @@ export function DataTable<TData>({
 
   const hasToolbar = toolbar;
   const searchable = Boolean(table.options.enableGlobalFilter);
-  const globalFilter = (table.getState().globalFilter as string) ?? '';
+  const globalFilter = (table.state.globalFilter as string) ?? '';
   const selectedCount = table.getSelectedRowModel().rows.length;
 
   const tableRoot = (
@@ -985,7 +1080,13 @@ export function DataTable<TData>({
                     checked={table.getIsAllRowsSelected()}
                     ref={(element) => {
                       if (element) {
-                        element.indeterminate = table.getIsSomeRowsSelected();
+                        // v9: `getIsSomeRowsSelected()` now means "at least
+                        // one selected" (true even when ALL are selected),
+                        // so the indeterminate state has to be rebuilt from
+                        // the matching all-selected predicate.
+                        element.indeterminate =
+                          table.getIsSomeRowsSelected() &&
+                          !table.getIsAllRowsSelected();
                       }
                     }}
                     onChange={table.getToggleAllRowsSelectedHandler()}
@@ -1114,7 +1215,7 @@ export function DataTable<TData>({
                             }
                             title={pinned ? 'Unpin column' : 'Pin column left'}
                             onClick={() =>
-                              header.column.pin(pinned ? false : 'left')
+                              header.column.pin(pinned ? false : 'start')
                             }
                           >
                             {pinned ? <PinOff size={12} /> : <Pin size={12} />}
@@ -1129,6 +1230,7 @@ export function DataTable<TData>({
                         data-resizing={
                           header.column.getIsResizing() ? 'true' : undefined
                         }
+                        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- draggable/keyboard-resizable splitter; `<hr>` is a void, non-interactive element and can't carry this handle's drag/keyboard behavior
                         role="separator"
                         aria-orientation="vertical"
                         aria-label={`Resize ${columnLabel}`}
@@ -1219,6 +1321,7 @@ export function DataTable<TData>({
               rows={skeletonConfig?.rows ?? 3}
               columns={skeletonConfig?.columns ?? leafColumnCount}
               firstColumnTall={skeletonConfig?.firstColumnTall ?? true}
+              columnHints={resolvedColumnHints}
               animate={skeletonConfig?.animate}
             />
           </tbody>
@@ -1228,6 +1331,7 @@ export function DataTable<TData>({
               <tbody aria-hidden="true">
                 <tr>
                   <td
+                    aria-hidden="true"
                     colSpan={leafColumnCount}
                     style={{ height: paddingTop, padding: 0, border: 0 }}
                   />
@@ -1245,6 +1349,7 @@ export function DataTable<TData>({
               <tbody aria-hidden="true">
                 <tr>
                   <td
+                    aria-hidden="true"
                     colSpan={leafColumnCount}
                     style={{ height: paddingBottom, padding: 0, border: 0 }}
                   />

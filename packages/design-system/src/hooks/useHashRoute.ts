@@ -29,6 +29,15 @@ function parseHash(): HashRoute {
  * const [route, navigate] = useHashRoute();
  * // route.path === 'risk' for '#/risk/detail'; navigate('risk/detail')
  * ```
+ *
+ * @deprecated This hook reads/writes `window.location.hash` directly with no
+ * injected seam, coupling the design system to a specific routing mechanism.
+ * Real consumers should bring their own router (or a small injected
+ * adapter, the way `useUrlSyncedTableStateAdapter` and
+ * `useUrlSyncedFilterStore` do) instead of depending on this hook. It is kept
+ * only for demo/preview use inside this monorepo (e.g. switching between
+ * Ladle stories via the URL) and is not part of the supported design-system
+ * contract for consuming applications.
  */
 export function useHashRoute(): readonly [HashRoute, (to: string) => void] {
   const [route, setRoute] = useState<HashRoute>(parseHash);

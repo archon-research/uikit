@@ -19,6 +19,15 @@ export {
 } from './layouts/SplitLayout.js';
 export { ThemeProvider } from './theme/ThemeProvider.js';
 export {
+  THEME_BOOTSTRAP_SCRIPT,
+  applyThemeBootstrap,
+  resolveBootstrapTheme,
+} from './theme/theme-bootstrap.js';
+export {
+  THEME_STORAGE_KEY,
+  THEME_LEGACY_STORAGE_KEY,
+} from './theme/theme-storage.js';
+export {
   useTheme,
   type ThemeContextValue,
   type ThemeMode,
@@ -29,13 +38,23 @@ export {
   IDENTITY_SLOT_COUNT,
 } from './theme/useIdentityPalette.js';
 export {
+  chartColorCssVarName,
+  chartColorSemanticTokens,
+  chartColorTokenPaths,
+  type ChartColorTokenPath,
+} from './tokens/index.js';
+export {
   useMediaQuery,
   usePrefersReducedMotion,
   useSettled,
   useHashRoute,
   type HashRoute,
 } from './hooks/index.js';
-export { SkeletonRows } from './components/SkeletonRows.js';
+export {
+  SkeletonRows,
+  type SkeletonColumnHint,
+  type SkeletonColumnKind,
+} from './components/SkeletonRows.js';
 export { SkeletonStack } from './components/SkeletonStack.js';
 export {
   SurfaceMessage,
@@ -48,6 +67,7 @@ export {
   type SurfaceMessageTitleProps,
   type SurfaceMessageBodyProps,
   type SurfaceMessageActionsProps,
+  type SurfaceMessageSlotClassNames,
   type SurfaceMessageTone,
 } from './components/SurfaceMessage.js';
 export {
@@ -105,11 +125,11 @@ export {
   type UseTreeViewReturn,
 } from '@ark-ui/react/tree-view';
 export { Tooltip } from '@ark-ui/react/tooltip';
-export type {
-  CellContext,
-  ColumnDef,
-  SortingState,
-} from '@tanstack/react-table';
+export type { SortingState } from '@tanstack/react-table';
+// Deprecated compatibility aliases — see their `@deprecated` JSDoc in
+// `components/data-table/types.ts` for why they're no longer straight
+// re-exports of `@tanstack/react-table`'s own types.
+export type { CellContext, ColumnDef } from './components/data-table/types.js';
 export { Tabs } from '@ark-ui/react/tabs';
 export { Toggle } from '@ark-ui/react/toggle';
 export { ToggleGroup } from '@ark-ui/react/toggle-group';

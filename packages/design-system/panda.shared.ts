@@ -31,200 +31,46 @@ import { statRowRecipe, statTileRecipe } from './src/recipes/statTile.recipe';
 import { surfaceMessageRecipe } from './src/recipes/surfaceMessage.recipe';
 import { switchRecipe } from './src/recipes/switch.recipe';
 import { themeToggleRecipe } from './src/recipes/themeToggle.recipe';
+import { chartColorSemanticTokens } from './src/tokens/chartColorTokens';
+import {
+  animationTokens,
+  bgColors,
+  borderColors,
+  categoricalColors,
+  colorPaletteRoleTokens,
+  colorSchemeGlobalCss,
+  elevationShadows,
+  fgColors,
+  heatColors,
+  interactiveColors,
+  microFontSizes,
+  motionKeyframes,
+  overlayColors,
+  scrollbarColors,
+  surfaceColors,
+  textColors,
+  zIndexTokens,
+} from './src/tokens/sharedThemeTokens';
 
 /**
- * Internal (unpublished) Panda config. Kept in shape-parity with the published
- * `src/panda-preset.ts`: same semantic token families, colorPalette role tokens,
- * keyframes/animations, and dark-aware shadows. The one thing that lives ONLY
- * here is `staticCss` — it is a Panda ROOT-config key and cannot be carried by a
- * preset (see the note on `staticCss` below).
+ * Internal (unpublished) Panda config — the one this repo's own preview
+ * (`packages/uikit-preview/panda.config.ts`) actually runs.
+ *
+ * Every semantic token family, colorPalette role, keyframe, animation and
+ * shadow below is now a reference into `src/tokens/sharedThemeTokens.ts`, the
+ * single source it shares with the published `src/panda-preset.ts`. It used to
+ * restate all of them inline, and the two copies drifted — that is how
+ * `identity.*` came to exist in the preset but not here, silently emitting no
+ * CSS for every `var(--colors-identity-N)` the preview read.
+ *
+ * What still lives ONLY here: `staticCss` (a Panda ROOT-config key a preset
+ * cannot carry — see the note below) and the other root-only keys
+ * (`jsxFramework`, `outExtension`, `preflight`, `studio`).
+ *
+ * What is still stated inline and is NOT shared: `textStyles`, `recipes` and
+ * `slotRecipes`, because they genuinely DIFFER from the preset's rather than
+ * duplicating them. See the comments at those keys.
  */
-
-/**
- * Role-based colorPalette tokens on uikit's Tailwind-style
- * 50-950 scale. Each role exposes `bg` / `fg` / `border`, plus
- * `bgHover` / `bgActive` where interaction applies, with `base` and `_dark`
- * values so a role is structurally dark-aware. Selected via `colorPalette="green"`.
- */
-const chromaticRoles = (hue: string, solidFg = '{colors.white}') => ({
-  solid: {
-    bg: { value: { base: `{colors.${hue}.600}`, _dark: `{colors.${hue}.500}` } },
-    fg: { value: { base: solidFg, _dark: solidFg } },
-    border: { value: { base: `{colors.${hue}.600}`, _dark: `{colors.${hue}.500}` } },
-    bgHover: { value: { base: `{colors.${hue}.700}`, _dark: `{colors.${hue}.400}` } },
-    bgActive: { value: { base: `{colors.${hue}.800}`, _dark: `{colors.${hue}.300}` } },
-  },
-  subtle: {
-    bg: { value: { base: `{colors.${hue}.100}`, _dark: `{colors.${hue}.900}` } },
-    fg: { value: { base: `{colors.${hue}.700}`, _dark: `{colors.${hue}.200}` } },
-    border: { value: { base: `{colors.${hue}.200}`, _dark: `{colors.${hue}.800}` } },
-    bgHover: { value: { base: `{colors.${hue}.200}`, _dark: `{colors.${hue}.800}` } },
-    bgActive: { value: { base: `{colors.${hue}.300}`, _dark: `{colors.${hue}.700}` } },
-  },
-  surface: {
-    bg: { value: { base: `{colors.${hue}.50}`, _dark: `{colors.${hue}.950}` } },
-    fg: { value: { base: `{colors.${hue}.700}`, _dark: `{colors.${hue}.200}` } },
-    border: { value: { base: `{colors.${hue}.200}`, _dark: `{colors.${hue}.800}` } },
-  },
-  outline: {
-    bg: { value: { base: 'transparent', _dark: 'transparent' } },
-    fg: { value: { base: `{colors.${hue}.700}`, _dark: `{colors.${hue}.300}` } },
-    border: { value: { base: `{colors.${hue}.600}`, _dark: `{colors.${hue}.500}` } },
-    bgHover: { value: { base: `{colors.${hue}.50}`, _dark: `{colors.${hue}.950}` } },
-  },
-  plain: {
-    bg: { value: { base: 'transparent', _dark: 'transparent' } },
-    fg: { value: { base: `{colors.${hue}.700}`, _dark: `{colors.${hue}.300}` } },
-    border: { value: { base: 'transparent', _dark: 'transparent' } },
-    bgHover: { value: { base: `{colors.${hue}.50}`, _dark: `{colors.${hue}.950}` } },
-    bgActive: { value: { base: `{colors.${hue}.100}`, _dark: `{colors.${hue}.900}` } },
-  },
-});
-
-const neutralRoles = {
-  solid: {
-    bg: { value: { base: '{colors.neutral.900}', _dark: '{colors.neutral.100}' } },
-    fg: { value: { base: '{colors.white}', _dark: '{colors.neutral.900}' } },
-    border: { value: { base: '{colors.neutral.900}', _dark: '{colors.neutral.100}' } },
-    bgHover: { value: { base: '{colors.neutral.800}', _dark: '{colors.neutral.200}' } },
-    bgActive: { value: { base: '{colors.neutral.700}', _dark: '{colors.neutral.300}' } },
-  },
-  subtle: {
-    bg: { value: { base: '{colors.neutral.100}', _dark: '{colors.neutral.800}' } },
-    fg: { value: { base: '{colors.neutral.700}', _dark: '{colors.neutral.200}' } },
-    border: { value: { base: '{colors.neutral.200}', _dark: '{colors.neutral.700}' } },
-    bgHover: { value: { base: '{colors.neutral.200}', _dark: '{colors.neutral.700}' } },
-    bgActive: { value: { base: '{colors.neutral.300}', _dark: '{colors.neutral.600}' } },
-  },
-  surface: {
-    bg: { value: { base: '{colors.neutral.50}', _dark: '{colors.neutral.900}' } },
-    fg: { value: { base: '{colors.neutral.700}', _dark: '{colors.neutral.200}' } },
-    border: { value: { base: '{colors.neutral.200}', _dark: '{colors.neutral.700}' } },
-  },
-  outline: {
-    bg: { value: { base: 'transparent', _dark: 'transparent' } },
-    fg: { value: { base: '{colors.neutral.700}', _dark: '{colors.neutral.200}' } },
-    border: { value: { base: '{colors.neutral.400}', _dark: '{colors.neutral.600}' } },
-    bgHover: { value: { base: '{colors.neutral.100}', _dark: '{colors.neutral.800}' } },
-  },
-  plain: {
-    bg: { value: { base: 'transparent', _dark: 'transparent' } },
-    fg: { value: { base: '{colors.neutral.700}', _dark: '{colors.neutral.200}' } },
-    border: { value: { base: 'transparent', _dark: 'transparent' } },
-    bgHover: { value: { base: '{colors.neutral.100}', _dark: '{colors.neutral.800}' } },
-    bgActive: { value: { base: '{colors.neutral.200}', _dark: '{colors.neutral.700}' } },
-  },
-};
-
-const colorPaletteRoles = {
-  neutral: neutralRoles,
-  gray: neutralRoles,
-  green: chromaticRoles('green'),
-  red: chromaticRoles('red'),
-  amber: chromaticRoles('amber', '{colors.neutral.900}'),
-  blue: chromaticRoles('blue'),
-};
-
-const keyframes = {
-  indicatorPulse: {
-    '0%, 100%': { opacity: '1', transform: 'scale(1)' },
-    '50%': { opacity: '0.55', transform: 'scale(0.9)' },
-  },
-  feedRowFlash: {
-    '0%': { backgroundColor: 'var(--colors-interactive-selected)' },
-    '100%': { backgroundColor: 'transparent' },
-  },
-  dataTableFlashPositive: {
-    '0%': { backgroundColor: 'var(--colors-bg-success)' },
-    '100%': { backgroundColor: 'transparent' },
-  },
-  dataTableFlashCritical: {
-    '0%': { backgroundColor: 'var(--colors-bg-critical)' },
-    '100%': { backgroundColor: 'transparent' },
-  },
-  // Two-phase flash (`DataTable`'s `flashOnUpdate="two-phase"`): hold the
-  // tint at full strength, then an independently-timed fade — as two
-  // separate keyframes rather than `dataTableFlashPositive`'s single
-  // ease-out, so the hold and fade durations can differ (see the
-  // `dataTableFlashTwoPhase` animation token below). Named generically
-  // (not `dataTable*`) because the hold/fade shape — tint via a CSS custom
-  // property, hold, then fade to transparent — isn't specific to tables.
-  flashHold: {
-    '0%, 100%': { backgroundColor: 'var(--data-table-flash-color)' },
-  },
-  flashFade: {
-    from: { backgroundColor: 'var(--data-table-flash-color)' },
-    to: { backgroundColor: 'transparent' },
-  },
-  valueSettleIn: {
-    '0%': { opacity: '0', transform: 'translateY(-0.25rem)' },
-    '100%': { opacity: '1', transform: 'translateY(0)' },
-  },
-  edgeRun: {
-    '0%': { strokeDashoffset: '16' },
-    '100%': { strokeDashoffset: '0' },
-  },
-  drawerSlide: {
-    '0%': { transform: 'translateX(100%)' },
-    '100%': { transform: 'translateX(0)' },
-  },
-};
-
-const animationTokens = {
-  indicatorPulse: {
-    value: 'indicatorPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-  },
-  feedRowFlash: { value: 'feedRowFlash 1.2s ease-out' },
-  dataTableFlashPositive: { value: 'dataTableFlashPositive 1s ease-out' },
-  dataTableFlashCritical: { value: 'dataTableFlashCritical 1s ease-out' },
-  // Report spec: hold ~300-500ms, then an independently-timed fade
-  // ~800-1000ms. The CSS `animation` shorthand takes comma-separated
-  // definitions, so both phases (and the fade's own delay, offset past the
-  // end of the hold) live in this one token — `DataTable` just sets
-  // `--data-table-flash-color` per direction (see the `dataTable` recipe's
-  // `flashTwoPhase` variant) and applies this animation unchanged.
-  dataTableFlashTwoPhase: {
-    value:
-      'flashHold 400ms linear both, flashFade 900ms ease-out 400ms both',
-  },
-  valueSettleIn: { value: 'valueSettleIn 200ms ease-out' },
-  edgeRun: { value: 'edgeRun 1s linear infinite' },
-  drawerSlide: {
-    value: 'drawerSlide 220ms cubic-bezier(0.32, 0.72, 0, 1)',
-  },
-};
-
-/**
- * Dark-aware elevation shadows: the `_dark` variants pair a stronger drop shadow
- * with an inset top highlight so a raised panel reads as raised on a near-black
- * background (a single black rgba shadow is invisible there).
- */
-const shadows = {
-  elevation: {
-    value: {
-      base: '0 1px 2px 0 rgba(15, 23, 42, 0.08), 0 1px 3px 0 rgba(15, 23, 42, 0.06)',
-      _dark: '0 1px 2px 0 rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)',
-    },
-  },
-  xs: {
-    value: {
-      base: '0 1px 2px 0 rgba(15, 23, 42, 0.06)',
-      _dark: '0 1px 2px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.05)',
-    },
-  },
-  sm: {
-    value: {
-      base: '0 1px 3px 0 rgba(15, 23, 42, 0.10), 0 1px 2px -1px rgba(15, 23, 42, 0.10)',
-      _dark: '0 2px 4px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)',
-    },
-  },
-  overlay: {
-    value: {
-      base: '0 12px 32px -8px rgba(9, 9, 11, 0.25), 0 4px 12px -4px rgba(9, 9, 11, 0.12)',
-      _dark: '0 16px 40px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06)',
-    },
-  },
-};
 
 export const designSystemPandaConfig = {
   jsxFramework: 'react',
@@ -239,44 +85,24 @@ export const designSystemPandaConfig = {
   staticCss: {
     recipes: designSystemStaticCssRecipes,
   },
-  // Tell the UA which scheme is active so native surfaces (scrollbars, caret,
-  // <select> popups) match the theme flipped on <html>.
-  globalCss: {
-    ':root': { colorScheme: 'light' },
-    '.dark, [data-theme="dark"]': { colorScheme: 'dark' },
-  },
+  globalCss: colorSchemeGlobalCss,
   studio: {
     logo: 'UI',
   },
   theme: {
     extend: {
-      keyframes,
+      keyframes: motionKeyframes,
       tokens: {
         animations: animationTokens,
-        // Real small end for the type scale (see panda-preset.ts). NOTE:
-        // redefining `2xs` off Panda's 8px default is a BREAKING value-change.
-        fontSizes: {
-          '3xs': { value: '0.625rem' }, // 10px
-          '2xs': { value: '0.6875rem' }, // 11px (was Panda default 8px)
-        },
-        zIndex: {
-          hide: { value: -1 },
-          base: { value: 0 },
-          docked: { value: 10 },
-          dropdown: { value: 1000 },
-          sticky: { value: 1100 },
-          banner: { value: 1200 },
-          overlay: { value: 1300 },
-          modal: { value: 1400 },
-          popover: { value: 1500 },
-          skipNav: { value: 1600 },
-          toast: { value: 1700 },
-          tooltip: { value: 1800 },
-        },
+        fontSizes: microFontSizes,
+        zIndex: zIndexTokens,
       },
-      // This shared config (consumed by uikit-preview) previously defined NO
-      // textStyles, so every recipe `textStyle: '…'` reference silently emitted
-      // nothing here. Mirror the preset's textStyles so recipes render fully.
+      // NOT shared with the preset, unlike the tokens above: this list is
+      // MISSING the preset's `figure` entry (the other six are identical). That
+      // is real DRIFT, not duplication — folding the two together would add CSS
+      // here — so it stays inline until the drift is fixed deliberately.
+      // (It previously defined NO textStyles at all, so every recipe
+      // `textStyle: '…'` reference silently emitted nothing.)
       textStyles: {
         sectionLabel: {
           value: { fontSize: 'xs', fontWeight: 'medium', letterSpacing: 'wide' },
@@ -297,6 +123,14 @@ export const designSystemPandaConfig = {
           value: { fontSize: '2xs', lineHeight: 'relaxed' },
         },
       },
+      // Also NOT shared, same reason: this config registers only 9 of the
+      // preset's 13 recipes and 21 of its 28 slot recipes. The 11 it omits
+      // (`figure`, `tooltip`, `flash`, `statusPillRow`, `meter`,
+      // `proportionBar`, `proportionList`, `infoTip`, `statusPill`, `popover`,
+      // `keyValueTable`) therefore emit NO CSS in this build even though
+      // `designSystemStaticCssRecipes` above lists all 41 — those components
+      // render unstyled in the preview. Fixing it changes rendered output and
+      // snapshot baselines, so it is deliberately left alone here.
       recipes: {
         button: buttonRecipe,
         panelAction: panelActionRecipe,
@@ -309,224 +143,27 @@ export const designSystemPandaConfig = {
         badge: badgeRecipe,
       },
       semanticTokens: {
-        shadows,
+        shadows: elevationShadows,
         colors: {
-          // ── Elevation ramp (theme-stable): canvas -> default -> subtle ──
-          surface: {
-            canvas: {
-              value: { base: '{colors.neutral.50}', _dark: '{colors.neutral.950}' },
-            },
-            default: {
-              value: { base: '{colors.white}', _dark: '{colors.neutral.900}' },
-            },
-            subtle: {
-              value: { base: '{colors.neutral.100}', _dark: '{colors.neutral.800}' },
-            },
-            muted: {
-              value: { base: '{colors.neutral.100}', _dark: '{colors.neutral.800}' },
-            },
-            hover: {
-              value: { base: '{colors.neutral.100}', _dark: '{colors.neutral.700}' },
-            },
-          },
-          text: {
-            default: {
-              value: { base: '{colors.neutral.700}', _dark: '{colors.neutral.300}' },
-            },
-            strong: {
-              value: { base: '{colors.neutral.950}', _dark: '{colors.white}' },
-            },
-            muted: {
-              value: { base: '{colors.neutral.500}', _dark: '{colors.neutral.400}' },
-            },
-            interactive: {
-              value: { base: '{colors.blue.600}', _dark: '{colors.blue.300}' },
-            },
-            link: {
-              value: { base: '{colors.blue.600}', _dark: '{colors.blue.300}' },
-            },
-            success: {
-              value: { base: '{colors.green.600}', _dark: '{colors.green.300}' },
-            },
-            critical: {
-              value: { base: '{colors.red.600}', _dark: '{colors.red.300}' },
-            },
-            warning: {
-              value: { base: '{colors.amber.600}', _dark: '{colors.amber.300}' },
-            },
-            inverse: {
-              value: { base: '{colors.neutral.50}', _dark: '{colors.neutral.50}' },
-            },
-          },
-          border: {
-            hairline: {
-              value: {
-                base: 'rgba(9, 9, 11, 0.06)',
-                _dark: 'rgba(255, 255, 255, 0.08)',
-              },
-            },
-            subtle: {
-              value: { base: '{colors.neutral.300}', _dark: '{colors.neutral.700}' },
-            },
-            default: {
-              value: { base: '{colors.neutral.400}', _dark: '{colors.neutral.600}' },
-            },
-            strong: {
-              value: { base: '{colors.neutral.500}', _dark: '{colors.neutral.500}' },
-            },
-          },
-          interactive: {
-            hover: {
-              value: { base: '{colors.blue.50}', _dark: '{colors.blue.950}' },
-            },
-            selected: {
-              value: {
-                base: '{colors.blue.100}',
-                _dark:
-                  'color-mix(in srgb, {colors.blue.500} 24%, {colors.surface.default})',
-              },
-            },
-            accent: {
-              value: { base: '{colors.blue.600}', _dark: '{colors.blue.600}' },
-            },
-          },
-          scrollbar: {
-            thumb: {
-              value: { base: '{colors.neutral.300}', _dark: '{colors.neutral.600}' },
-            },
-            track: {
-              value: { base: '{colors.neutral.100}', _dark: '{colors.neutral.800}' },
-            },
-          },
-          overlay: {
-            backdrop: {
-              value: { base: 'rgba(9, 9, 11, 0.55)', _dark: 'rgba(0, 0, 0, 0.65)' },
-            },
-            tooltip: {
-              value: { base: '{colors.neutral.800}', _dark: '{colors.neutral.800}' },
-            },
-          },
-          fg: {
-            default: {
-              value: { base: '{colors.neutral.900}', _dark: '{colors.neutral.100}' },
-            },
-          },
-          bg: {
-            canvas: {
-              value: { base: '{colors.neutral.50}', _dark: '{colors.neutral.950}' },
-            },
-            success: {
-              value: { base: '{colors.green.50}', _dark: '{colors.green.950}' },
-            },
-            critical: {
-              value: { base: '{colors.red.50}', _dark: '{colors.red.950}' },
-            },
-            warning: {
-              value: { base: '{colors.amber.50}', _dark: '{colors.amber.950}' },
-            },
-          },
-          chart: {
-            axis: {
-              value: { base: '{colors.neutral.500}', _dark: '{colors.neutral.400}' },
-            },
-            grid: {
-              value: { base: '{colors.neutral.200}', _dark: '{colors.neutral.700}' },
-            },
-            area: {
-              primary: {
-                value: { base: '{colors.blue.100}', _dark: '{colors.blue.900}' },
-              },
-            },
-            series: {
-              primary: {
-                value: { base: '{colors.blue.600}', _dark: '{colors.blue.300}' },
-              },
-              secondary: {
-                value: { base: '{colors.teal.600}', _dark: '{colors.teal.300}' },
-              },
-              tertiary: {
-                value: { base: '{colors.violet.600}', _dark: '{colors.violet.300}' },
-              },
-              positive: {
-                value: { base: '{colors.green.600}', _dark: '{colors.green.300}' },
-              },
-              critical: {
-                value: { base: '{colors.red.600}', _dark: '{colors.red.300}' },
-              },
-              quaternary: {
-                value: { base: '{colors.amber.600}', _dark: '{colors.amber.300}' },
-              },
-              quinary: {
-                value: { base: '{colors.pink.600}', _dark: '{colors.pink.300}' },
-              },
-            },
-          },
-          /**
-           * Diverging heat scale — green ↔ grey ↔ red, saturation =
-           * magnitude, grey = flat. A SEPARATE token family from
-           * `chart.series.*` (never a third hue for neutral, and never
-           * repurposed from the categorical ramp's slots — a
-           * deliberate constraint of this family, not a third hue). Seven fixed steps (`neg3…flat…pos3`)
-           * rather than a continuous gradient: bucketing reads more
-           * reliably than interpolation at tile size, and keeps the whole
-           * scale expressible as tokens instead of runtime color math.
-           * `fgStrong`/`fgSubtle` are the label colors for a saturated vs.
-           * low-saturation/flat cell, respectively.
-           */
-          heat: {
-            pos3: {
-              value: { base: '{colors.green.600}', _dark: '{colors.green.500}' },
-            },
-            pos2: {
-              value: { base: '{colors.green.400}', _dark: '{colors.green.700}' },
-            },
-            pos1: {
-              value: { base: '{colors.green.200}', _dark: '{colors.green.900}' },
-            },
-            flat: {
-              value: { base: '{colors.neutral.200}', _dark: '{colors.neutral.700}' },
-            },
-            neg1: {
-              value: { base: '{colors.red.200}', _dark: '{colors.red.900}' },
-            },
-            neg2: {
-              value: { base: '{colors.red.400}', _dark: '{colors.red.700}' },
-            },
-            neg3: {
-              value: { base: '{colors.red.600}', _dark: '{colors.red.500}' },
-            },
-            fgStrong: {
-              value: { base: '{colors.white}', _dark: '{colors.neutral.950}' },
-            },
-            fgSubtle: {
-              value: { base: '{colors.neutral.900}', _dark: '{colors.neutral.100}' },
-            },
-          },
-          // Categorical (status-free) encoding; hue order matches chart.series.
-          categorical: {
-            '1': {
-              bg: { value: { base: '{colors.blue.50}', _dark: '{colors.blue.950}' } },
-              fg: { value: { base: '{colors.blue.700}', _dark: '{colors.blue.300}' } },
-            },
-            '2': {
-              bg: { value: { base: '{colors.teal.50}', _dark: '{colors.teal.950}' } },
-              fg: { value: { base: '{colors.teal.700}', _dark: '{colors.teal.300}' } },
-            },
-            '3': {
-              bg: { value: { base: '{colors.violet.50}', _dark: '{colors.violet.950}' } },
-              fg: { value: { base: '{colors.violet.700}', _dark: '{colors.violet.300}' } },
-            },
-            '4': {
-              bg: { value: { base: '{colors.amber.50}', _dark: '{colors.amber.950}' } },
-              fg: { value: { base: '{colors.amber.800}', _dark: '{colors.amber.300}' } },
-            },
-            '5': {
-              bg: { value: { base: '{colors.pink.50}', _dark: '{colors.pink.950}' } },
-              fg: { value: { base: '{colors.pink.700}', _dark: '{colors.pink.300}' } },
-            },
-          },
+          // Each family is defined in `src/tokens/sharedThemeTokens.ts` — the
+          // one source this config and the published `src/panda-preset.ts`
+          // both read. The rationale for every ramp lives there.
+          surface: surfaceColors,
+          text: textColors,
+          border: borderColors,
+          interactive: interactiveColors,
+          scrollbar: scrollbarColors,
+          overlay: overlayColors,
+          fg: fgColors,
+          bg: bgColors,
+          // The chart/identity families have their own shared module,
+          // `src/tokens/chartColorTokens.ts`.
+          chart: chartColorSemanticTokens.chart,
+          heat: heatColors,
+          categorical: categoricalColors,
+          identity: chartColorSemanticTokens.identity,
           // ── colorPalette ROLE tokens (role-based, on the 50-950 scale) ──
-          ...colorPaletteRoles,
+          ...colorPaletteRoleTokens,
         },
       },
       slotRecipes: {

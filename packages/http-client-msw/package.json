@@ -1,0 +1,56 @@
+{
+  "name": "@archon-research/http-client-msw",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "src"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "default": "./dist/browser.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "default": "./dist/node.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build",
+    "type:check": "tsc -p tsconfig.json --noEmit",
+    "lint": "oxlint -c oxlint.config.ts src",
+    "lint:fix": "oxlint -c oxlint.config.ts --fix src",
+    "format": "oxfmt -c oxfmt.config.ts --write src",
+    "format:check": "oxfmt -c oxfmt.config.ts --check src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "openapi-msw": "2.0.0"
+  },
+  "peerDependencies": {
+    "msw": "^2.10.5"
+  },
+  "devDependencies": {
+    "@archon-research/oxfmt-config": "*",
+    "@archon-research/oxlint-config": "*",
+    "@archon-research/tsconfig": "*",
+    "@types/node": "24.13.3",
+    "msw": "2.14.6",
+    "oxfmt": "0.62.0",
+    "oxlint": "1.77.0",
+    "vitest": "^4.1.9"
+  }
+}

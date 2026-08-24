@@ -53,8 +53,12 @@ export type UsePlaybackResult<TPayload = unknown> = {
   speed: number;
   /**
    * Every event surfaced so far, oldest first. Replay: all events with
-   * `timestamp <= clock`. Live: the accumulated buffer since mount (or since
-   * the source identity last changed).
+   * `timestamp <= clock` (a fresh filtered array per clock move). Live: the
+   * accumulated buffer since mount (or since the source identity last
+   * changed) — grown IN PLACE, so the array identity is STABLE across
+   * appends and changes only when the source identity resets. Live
+   * consumers must therefore derive from `events.length` (or the elements),
+   * never memoize on the array identity itself.
    */
   events: PlaybackEvent<TPayload>[];
   latestEvent: PlaybackEvent<TPayload> | null;
@@ -67,6 +71,18 @@ export type UsePlaybackResult<TPayload = unknown> = {
   /** Replay-only; no-op for live sources. Jumps to the next/previous event's timestamp (event-stepping, not time-stepping). */
   step(direction?: StepDirection): void;
 };
+
+/**
+ * Append `items` to `target` IN PLACE, preserving order. Deliberately a plain
+ * loop, not `target.push(...items)`: spread passes `items` as function
+ * ARGUMENTS, and engines cap the argument count (V8 at ~65k) — a live
+ * source's initial catch-up fan-in can arrive as ONE batch far larger than
+ * that, and the resulting RangeError would drop the whole batch. Exported for
+ * tests.
+ */
+export function appendInPlace<T>(target: T[], items: readonly T[]): void {
+  for (const item of items) target.push(item);
+}
 
 function sortEvents<T>(events: PlaybackEvent<T>[]): PlaybackEvent<T>[] {
   return [...events].sort((a, b) =>
@@ -200,7 +216,21 @@ export function usePlayback<TPayload = unknown>({
   // ---- Live -----------------------------------------------------------
 
   const liveAutoplay = autoplay ?? true;
-  const [liveEvents, setLiveEvents] = useState<PlaybackEvent<TPayload>[]>([]);
+  // The live master array lives in a REF and grows IN PLACE; `liveVersion`
+  // is the render trigger. Holding it in state and re-creating it per flush
+  // (`setLiveEvents(previous => [...previous, ...batch])`) re-copied EVERY
+  // accumulated event on EVERY flush — O(all events so far), forever. A
+  // long-running feed accumulates hundreds of thousands of events with a
+  // batch arriving every few seconds, so that per-flush re-copy grows without
+  // bound and dominates the tab's allocation profile as sustained GC
+  // pressure. In-place growth makes a flush O(batch).
+  //
+  // The identity contract this trades on is documented on `events` in
+  // `UsePlaybackResult`: stable identity across appends, a fresh (empty)
+  // array only when the source identity resets — consumers derive from
+  // `events.length`, never from the array identity.
+  const liveEventsRef = useRef<PlaybackEvent<TPayload>[]>([]);
+  const [, setLiveVersion] = useState(0);
   const [liveClock, setLiveClock] = useState<number>(() => Date.now());
   const [liveStatus, setLiveStatus] = useState<PlaybackStatus>(
     liveAutoplay ? 'connecting' : 'paused',
@@ -212,16 +242,20 @@ export function usePlayback<TPayload = unknown>({
     if (source.kind !== 'live') return;
     livePlayingRef.current = liveAutoplay;
     liveBufferRef.current = [];
-    setLiveEvents([]);
+    liveEventsRef.current = [];
+    setLiveVersion((version) => version + 1);
     setLiveStatus(liveAutoplay ? 'connecting' : 'paused');
 
-    // A frame's worth of arriving events collapse into ONE `setLiveEvents`
-    // call (one array copy) instead of one per event — see rafBatch.ts.
+    // A frame's worth of arriving events collapse into ONE in-place append +
+    // version bump instead of one state commit per event — see rafBatch.ts.
     // `onEvent` still fires per event, in arrival order, on flush: batching
     // the state *commit* is the optimization, not the event contract a
-    // consumer observes.
+    // consumer observes. (`appendInPlace`, not `push(...batch)`: the initial
+    // catch-up fan-in is one batch that can exceed the engine's max argument
+    // count — see its doc.)
     const batcher = createRafBatcher<PlaybackEvent<TPayload>>((batch) => {
-      setLiveEvents((previous) => [...previous, ...batch]);
+      appendInPlace(liveEventsRef.current, batch);
+      setLiveVersion((version) => version + 1);
       const last = batch[batch.length - 1];
       if (last) setLiveClock(last.timestamp);
       for (const event of batch) onEventRef.current?.(event);
@@ -269,7 +303,11 @@ export function usePlayback<TPayload = unknown>({
     if (liveBufferRef.current.length > 0) {
       const buffered = liveBufferRef.current;
       liveBufferRef.current = [];
-      setLiveEvents((previous) => [...previous, ...buffered]);
+      // In-place for the same two reasons as the flush: no O(all-events)
+      // re-copy, and a long pause can buffer a backlog past the engine's max
+      // argument count.
+      appendInPlace(liveEventsRef.current, buffered);
+      setLiveVersion((version) => version + 1);
       const last = buffered[buffered.length - 1];
       if (last) setLiveClock(last.timestamp);
       buffered.forEach((event) => onEventRef.current?.(event));
@@ -344,6 +382,10 @@ export function usePlayback<TPayload = unknown>({
     };
   }
 
+  // Reading the ref during render is sound here: every mutation site above
+  // pairs its append with a `setLiveVersion` bump, so a render always follows
+  // a mutation and re-reads the array at its new length.
+  const liveEvents = liveEventsRef.current;
   return {
     mode,
     status: liveStatus,
