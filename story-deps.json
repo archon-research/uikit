@@ -102,6 +102,14 @@
     "packages/design-system/dist/components/data-table/define-columns.js": [
       "packages/uikit-preview/src/stories/organisms/data-table.stories.tsx"
     ],
+    "packages/design-system/dist/components/data-table/features.js": [
+      "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/data-table-virtualized.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/data-table.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/filter-primitives.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/allocation-dashboard.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/allocation-grid-states.stories.tsx"
+    ],
     "packages/design-system/dist/components/data-table/hooks.js": [
       "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/data-table-virtualized.stories.tsx",

@@ -1547,8 +1547,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 619,
-      "locEnd": 649,
+      "locStart": 625,
+      "locEnd": 655,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "ExpandableRows",
       "meta": {}
@@ -1655,8 +1655,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 584,
-      "locEnd": 614,
+      "locStart": 598,
+      "locEnd": 620,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "Toolbar",
       "meta": {}
