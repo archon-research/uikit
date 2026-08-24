@@ -220,9 +220,10 @@ boundary](./DESIGN.md#the-registrys-boundary).
 
 Optimistic updates, cache updaters, cross-tab cache sync, infinite queries, and
 `POST`-backed reads are deliberately out of scope — see
-[DESIGN.md](./DESIGN.md#deliberately-out-of-v1). A mock layer keyed off the same
-`paths` type is planned as a separate package, so a fixture and a request will
-be described by one source.
+[DESIGN.md](./DESIGN.md#deliberately-out-of-v1). The mock layer is a separate
+package: [http-client-msw](../http-client-msw) keys its handlers off the same
+`paths` type, so a fixture and the request it stands in for are described by one
+source.
 
 ## Peer dependencies
 
@@ -245,3 +246,5 @@ Keeping react-query a peer rather than a dependency is what guarantees one
 
 - [http-client-core](../http-client-core) for the client factory and the
   OpenAPI/zod helpers
+- [http-client-msw](../http-client-msw) for the mock layer keyed off the same
+  `paths` type

@@ -13,10 +13,10 @@ response is, what its error responses are. Nothing is restated in a hand-written
 endpoint registry, a key factory, or a hooks file, because every restatement is
 a thing that can drift from the spec while still compiling.
 
-The consequence worth naming: **a mock layer belongs on the same premise.** A
-planned sibling package will derive request handlers from the same `paths` type,
-so a fixture that no longer matches the API fails to typecheck rather than
-silently passing a test.
+The consequence worth naming: **a mock layer belongs on the same premise.** The
+sibling `http-client-msw` package derives msw request handlers from the same
+`paths` type, so a fixture that no longer matches the API fails to typecheck
+rather than silently passing a test.
 
 ## Verdict on `openapi-react-query`
 
