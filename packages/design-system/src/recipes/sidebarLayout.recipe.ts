@@ -123,8 +123,14 @@ export const sidebarLayoutRecipe = defineSlotRecipe({
       zIndex: '1',
       transitionProperty: 'background-color',
       transitionDuration: 'fast',
-      '&:hover, &[data-focus]': { bg: 'interactive.accent' },
-      '&[data-dragging]': { bg: 'interactive.accent' },
+      '&:hover, &[data-focus]': {
+        bg: 'interactive.accent',
+        '& [data-part="indicator"]': { bg: 'transparent' },
+      },
+      '&[data-dragging]': {
+        bg: 'interactive.accent',
+        '& [data-part="indicator"]': { bg: 'transparent' },
+      },
     },
     horizontalResizeTrigger: {
       position: 'relative',
@@ -138,8 +144,14 @@ export const sidebarLayoutRecipe = defineSlotRecipe({
       zIndex: '1',
       transitionProperty: 'background-color',
       transitionDuration: 'fast',
-      '&:hover, &[data-focus]': { bg: 'interactive.accent' },
-      '&[data-dragging]': { bg: 'interactive.accent' },
+      '&:hover, &[data-focus]': {
+        bg: 'interactive.accent',
+        '& [data-part="indicator"]': { bg: 'transparent' },
+      },
+      '&[data-dragging]': {
+        bg: 'interactive.accent',
+        '& [data-part="indicator"]': { bg: 'transparent' },
+      },
     },
     verticalResizeIndicator: {
       position: 'absolute',

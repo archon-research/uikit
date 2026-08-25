@@ -57,12 +57,18 @@ export const splitLayoutRecipe = defineSlotRecipe({
         my: '-1',
         cursor: 'row-resize',
       },
-      '&:hover, &[data-focus]': { bg: 'interactive.accent' },
-      '&[data-dragging]': { bg: 'interactive.accent' },
+      '&:hover, &[data-focus]': {
+        bg: 'interactive.accent',
+        '& [data-part="indicator"]': { bg: 'transparent' },
+      },
+      '&[data-dragging]': {
+        bg: 'interactive.accent',
+        '& [data-part="indicator"]': { bg: 'transparent' },
+      },
     },
     // A static separator line at rest; the trigger's own hover/focus/drag
-    // tint (above) visually subsumes it during interaction, so this never
-    // needs its own interactive state.
+    // tint (above) turns this transparent during interaction so its own
+    // `border.subtle` fill doesn't show through as a seam in the accent fill.
     resizeTriggerIndicator: {
       position: 'absolute',
       bg: 'border.subtle',
