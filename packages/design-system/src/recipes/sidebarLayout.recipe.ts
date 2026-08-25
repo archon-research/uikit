@@ -121,16 +121,11 @@ export const sidebarLayoutRecipe = defineSlotRecipe({
       bg: 'transparent',
       cursor: 'col-resize',
       zIndex: '1',
-      transitionProperty: 'background-color',
-      transitionDuration: 'fast',
-      '&:hover, &[data-focus]': {
-        bg: 'interactive.accent',
-        '& [data-part="indicator"]': { bg: 'transparent' },
-      },
-      '&[data-dragging]': {
-        bg: 'interactive.accent',
-        '& [data-part="indicator"]': { bg: 'transparent' },
-      },
+      '&:hover [data-part="indicator"], &[data-focus] [data-part="indicator"], &[data-dragging] [data-part="indicator"]':
+        {
+          width: '2px',
+          bg: 'interactive.accent',
+        },
     },
     horizontalResizeTrigger: {
       position: 'relative',
@@ -142,16 +137,11 @@ export const sidebarLayoutRecipe = defineSlotRecipe({
       bg: 'transparent',
       cursor: 'row-resize',
       zIndex: '1',
-      transitionProperty: 'background-color',
-      transitionDuration: 'fast',
-      '&:hover, &[data-focus]': {
-        bg: 'interactive.accent',
-        '& [data-part="indicator"]': { bg: 'transparent' },
-      },
-      '&[data-dragging]': {
-        bg: 'interactive.accent',
-        '& [data-part="indicator"]': { bg: 'transparent' },
-      },
+      '&:hover [data-part="indicator"], &[data-focus] [data-part="indicator"], &[data-dragging] [data-part="indicator"]':
+        {
+          height: '2px',
+          bg: 'interactive.accent',
+        },
     },
     verticalResizeIndicator: {
       position: 'absolute',
@@ -161,6 +151,8 @@ export const sidebarLayoutRecipe = defineSlotRecipe({
       width: '1px',
       transform: 'translateX(-50%)',
       bg: 'border.subtle',
+      transitionProperty: 'background-color, width',
+      transitionDuration: 'fast',
     },
     horizontalResizeIndicator: {
       position: 'absolute',
@@ -170,6 +162,8 @@ export const sidebarLayoutRecipe = defineSlotRecipe({
       height: '1px',
       transform: 'translateY(-50%)',
       bg: 'border.subtle',
+      transitionProperty: 'background-color, height',
+      transitionDuration: 'fast',
     },
   },
   variants: {
