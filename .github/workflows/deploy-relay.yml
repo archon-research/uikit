@@ -57,6 +57,10 @@ jobs:
           node-version-file: .node-version
           cache: npm
 
+      - name: Enable Corepack
+        if: steps.guard.outputs.configured == 'true'
+        run: corepack enable npm
+
       - name: Install dependencies
         if: steps.guard.outputs.configured == 'true'
         run: npm ci
