@@ -42,6 +42,7 @@ export const splitLayoutRecipe = defineSlotRecipe({
       flexShrink: '0',
       p: '0',
       border: 'none',
+      outline: 'none',
       bg: 'transparent',
       zIndex: '1',
       transitionProperty: 'background-color',
