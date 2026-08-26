@@ -57,16 +57,20 @@ function itemId(item: ChartLegendItem): string {
   return item.id ?? item.label;
 }
 
-/** The swatch SVG shared by the static and interactive item renderers. */
-function Swatch({
-  shape,
-  color,
-  dash,
-}: {
+export type SwatchProps = {
   shape: 'swatch' | 'line';
   color: ChartColor;
   dash?: boolean;
-}) {
+};
+
+/**
+ * The small swatch SVG (a filled rect, or a line for line/area series) used by
+ * `ChartLegend`'s item renderers. Exported standalone so a hand-composed
+ * legend or interactive-legend binding can reuse the same themed swatch
+ * markup instead of re-deriving it — see DESIGN.md's guidance on composing
+ * from `Swatch` rather than growing `ChartLegend` itself.
+ */
+export function Swatch({ shape, color, dash }: SwatchProps) {
   const resolved = resolveChartColor(color);
   return (
     <svg width={14} height={14} aria-hidden="true">

@@ -114,9 +114,15 @@ export type {
 export { CandlestickSeries } from './candlestick.js';
 export type { CandlestickSeriesProps } from './candlestick.js';
 
-// Provided legend (static, or interactive toggle/hover).
-export { ChartLegend } from './legend.js';
-export type { ChartLegendItem, ChartLegendProps } from './legend.js';
+// Provided legend (static, or interactive toggle/hover), plus the small
+// themed swatch SVG it renders per item, standalone for a hand-composed
+// legend or interactive-legend binding.
+export { ChartLegend, Swatch } from './legend.js';
+export type {
+  ChartLegendItem,
+  ChartLegendProps,
+  SwatchProps,
+} from './legend.js';
 
 // Reader layer: accessible + interactive read affordances over a chart.
 // Accessible table mirror of chart series (screen-reader / "show data").
@@ -125,10 +131,13 @@ export type { ChartDataTableProps } from './chart-data-table.js';
 // End-of-line series labels with collision-avoidance stacking.
 export { DirectLabels, resolveLabelPositions } from './direct-labels.js';
 export type { DirectLabelsProps, DirectLabelItem } from './direct-labels.js';
-// Snap-to-datum crosshair + per-series readout + positioned tooltip.
-export { ChartCursorLayer, nearestStop } from './cursor-layer.js';
+// Snap-to-datum crosshair + per-series readout + positioned tooltip, plus the
+// standalone themed crosshair line it draws internally (stateless, positioned
+// via props) for a hand-composed chart that only needs the line itself.
+export { ChartCursorLayer, Crosshair, nearestStop } from './cursor-layer.js';
 export type {
   ChartCursorLayerProps,
+  CrosshairProps,
   CursorSeries,
   CursorPoint,
   CursorTooltipContext,
