@@ -574,6 +574,12 @@ needed. Bespoke charts use the curated re-exports plus `chartTokens` directly.
   consumer.
 - The subpath-exports restructuring already `Planned` above (this pass kept
   everything on the flat root barrel to match the existing package shape).
+- Interactive-legend / cross-chart-emphasis (a legend that auto-wires to the
+  interaction group store, or dims/hides series marks from it) is not built
+  yet. When it lands, compose it from `Swatch` plus a `LegendItem` primitive
+  (existing or added) plus a small binding hook — not by adding a
+  `bindToGroup` flag or more props directly onto `ChartLegend`, which would
+  make one component responsible for both static rendering and store wiring.
 
 ## Related
 

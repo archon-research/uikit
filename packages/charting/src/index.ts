@@ -114,9 +114,15 @@ export type {
 export { CandlestickSeries } from './candlestick.js';
 export type { CandlestickSeriesProps } from './candlestick.js';
 
-// Provided legend (static, or interactive toggle/hover).
-export { ChartLegend } from './legend.js';
-export type { ChartLegendItem, ChartLegendProps } from './legend.js';
+// Provided legend (static, or interactive toggle/hover), plus the small
+// themed swatch SVG it renders per item, standalone for a hand-composed
+// legend or interactive-legend binding.
+export { ChartLegend, Swatch } from './legend.js';
+export type {
+  ChartLegendItem,
+  ChartLegendProps,
+  SwatchProps,
+} from './legend.js';
 
 // Reader layer: accessible + interactive read affordances over a chart.
 // Accessible table mirror of chart series (screen-reader / "show data").
