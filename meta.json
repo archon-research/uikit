@@ -2193,10 +2193,22 @@
         "Templates",
         "Sidebar layout"
       ],
-      "locStart": 157,
-      "locEnd": 168,
+      "locStart": 158,
+      "locEnd": 169,
       "filePath": "src/stories/templates/sidebar-layout.stories.tsx",
       "namedExport": "Default",
+      "meta": {}
+    },
+    "templates--sidebar-layout--resize-handle-focused": {
+      "name": "Resize handle focused",
+      "levels": [
+        "Templates",
+        "Sidebar layout"
+      ],
+      "locStart": 176,
+      "locEnd": 195,
+      "filePath": "src/stories/templates/sidebar-layout.stories.tsx",
+      "namedExport": "ResizeHandleFocused",
       "meta": {}
     },
     "templates--sidebar-layout--stacked": {
@@ -2205,8 +2217,8 @@
         "Templates",
         "Sidebar layout"
       ],
-      "locStart": 186,
-      "locEnd": 198,
+      "locStart": 213,
+      "locEnd": 225,
       "filePath": "src/stories/templates/sidebar-layout.stories.tsx",
       "namedExport": "Stacked",
       "meta": {}
