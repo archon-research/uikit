@@ -1,48 +1,9 @@
 import { definePreset } from '@pandacss/dev';
 
-import { badgeRecipe } from './recipes/badge.recipe.js';
-import { buttonRecipe } from './recipes/button.recipe.js';
-import { chipRecipe } from './recipes/chip.recipe.js';
-import { codeRecipe } from './recipes/code.recipe.js';
-import { dataTableRecipe } from './recipes/dataTable.recipe.js';
-import { drawerRecipe } from './recipes/drawer.recipe.js';
-import { emptyStateRecipe } from './recipes/emptyState.recipe.js';
-import { facetedMultiSelectRecipe } from './recipes/facetedMultiSelect.recipe.js';
-import { figureRecipe } from './recipes/figure.recipe.js';
-import { flashRecipe } from './recipes/flash.recipe.js';
-import { heatCellRecipe } from './recipes/heatCell.recipe.js';
-import { indicatorRecipe } from './recipes/indicator.recipe.js';
-import { inputRecipe } from './recipes/input.recipe.js';
-import { interactiveItemRecipe } from './recipes/interactiveItem.recipe.js';
-import { keyValueTableRecipe } from './recipes/keyValueTable.recipe.js';
 import {
-  meterRecipe,
-  proportionBarRecipe,
-  proportionListRecipe,
-} from './recipes/meter.recipe.js';
-import { pageShellRecipe } from './recipes/pageShell.recipe.js';
-import { panelRecipe } from './recipes/panel.recipe.js';
-import { panelActionRecipe } from './recipes/panelAction.recipe.js';
-import { panelSectionRecipe } from './recipes/panelSection.recipe.js';
-import { playbackBarRecipe } from './recipes/playbackBar.recipe.js';
-import { popoverRecipe } from './recipes/popover.recipe.js';
-import { rangeSliderRecipe } from './recipes/rangeSlider.recipe.js';
-import { searchInputRecipe } from './recipes/searchInput.recipe.js';
-import { sectionHeadingRecipe } from './recipes/sectionHeading.recipe.js';
-import { segmentedControlRecipe } from './recipes/segmentedControl.recipe.js';
-import { selectRecipe } from './recipes/select.recipe.js';
-import { sidebarGridRecipe } from './recipes/sidebarGrid.recipe.js';
-import { sidebarLayoutRecipe } from './recipes/sidebarLayout.recipe.js';
-import { splitLayoutRecipe } from './recipes/splitLayout.recipe.js';
-import { statRowRecipe, statTileRecipe } from './recipes/statTile.recipe.js';
-import {
-  statusPillRecipe,
-  statusPillRowRecipe,
-} from './recipes/statusPill.recipe.js';
-import { surfaceMessageRecipe } from './recipes/surfaceMessage.recipe.js';
-import { switchRecipe } from './recipes/switch.recipe.js';
-import { themeToggleRecipe } from './recipes/themeToggle.recipe.js';
-import { infoTipRecipe, tooltipRecipe } from './recipes/tooltip.recipe.js';
+  designSystemRecipes,
+  designSystemSlotRecipes,
+} from './recipes/sharedRecipes.js';
 import { chartColorSemanticTokens } from './tokens/chartColorTokens.js';
 import {
   animationTokens,
@@ -132,11 +93,11 @@ export const designSystemPreset = definePreset({
           ...colorPaletteRoleTokens,
         },
       },
-      // NOT shared with `panda.shared.ts`, unlike everything above: that config
-      // is missing `figure` (its other six entries are identical). That is real
-      // DRIFT, not duplication — unifying it would add CSS to the internal
-      // build — so the two lists stay separate until the drift is fixed
-      // deliberately.
+      // NOT shared with `panda.shared.ts` via a module like
+      // `sharedThemeTokens.ts`, but kept in sync by hand: both configs define
+      // the same seven text styles below (`figure` included — the `meter` and
+      // `keyValueTable` slot recipes reference it, so a config missing it
+      // would silently drop just their tabular-numeral styling).
       textStyles: {
         sectionLabel: {
           value: {
@@ -192,60 +153,13 @@ export const designSystemPreset = definePreset({
           },
         },
       },
-      // Also NOT shared, and for the same reason: `panda.shared.ts` registers
-      // only 9 of these 13 recipes and 21 of the 28 slot recipes below. The 11
-      // it omits (`figure`, `tooltip`, `flash`, `statusPillRow`, `meter`,
-      // `proportionBar`, `proportionList`, `infoTip`, `statusPill`, `popover`,
-      // `keyValueTable`) emit no CSS in the internal build even though
-      // `designSystemStaticCssRecipes` lists all 41 — so those components
-      // currently render unstyled in this repo's own preview. Fixing that
-      // changes rendered output and snapshots, so it is left as-is here rather
-      // than folded into a no-op refactor.
-      recipes: {
-        button: buttonRecipe,
-        panelAction: panelActionRecipe,
-        interactiveItem: interactiveItemRecipe,
-        sectionHeading: sectionHeadingRecipe,
-        panelSection: panelSectionRecipe,
-        statRow: statRowRecipe,
-        code: codeRecipe,
-        pageShell: pageShellRecipe,
-        badge: badgeRecipe,
-        figure: figureRecipe,
-        tooltip: tooltipRecipe,
-        flash: flashRecipe,
-        statusPillRow: statusPillRowRecipe,
-      },
-      slotRecipes: {
-        surfaceMessage: surfaceMessageRecipe,
-        segmentedControl: segmentedControlRecipe,
-        toggleSwitch: switchRecipe,
-        input: inputRecipe,
-        drawer: drawerRecipe,
-        statTile: statTileRecipe,
-        sidebarGrid: sidebarGridRecipe,
-        indicator: indicatorRecipe,
-        select: selectRecipe,
-        searchInput: searchInputRecipe,
-        emptyState: emptyStateRecipe,
-        themeToggle: themeToggleRecipe,
-        sidebarLayout: sidebarLayoutRecipe,
-        splitLayout: splitLayoutRecipe,
-        panel: panelRecipe,
-        dataTable: dataTableRecipe,
-        chip: chipRecipe,
-        facetedMultiSelect: facetedMultiSelectRecipe,
-        rangeSlider: rangeSliderRecipe,
-        playbackBar: playbackBarRecipe,
-        heatCell: heatCellRecipe,
-        meter: meterRecipe,
-        proportionBar: proportionBarRecipe,
-        proportionList: proportionListRecipe,
-        infoTip: infoTipRecipe,
-        statusPill: statusPillRecipe,
-        popover: popoverRecipe,
-        keyValueTable: keyValueTableRecipe,
-      },
+      // Shared with `panda.shared.ts` via `./recipes/sharedRecipes.ts` — both
+      // configs reference the same `designSystemRecipes` /
+      // `designSystemSlotRecipes` maps, so the internal build and this
+      // published preset structurally cannot register a different recipe set
+      // again the way they used to (see that module's doc comment).
+      recipes: designSystemRecipes,
+      slotRecipes: designSystemSlotRecipes,
     },
   },
 });
