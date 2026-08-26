@@ -4,6 +4,7 @@ import {
   ThemeProvider,
   ThemeToggle,
 } from '@archon-research/design-system';
+import { useEffect } from 'react';
 
 import { css } from '../../../styled-system/css';
 
@@ -166,6 +167,32 @@ export const Default = () => (
     </div>
   </ThemeProvider>
 );
+
+// Ladle has no `play` function, but a real DOM focus event drives Ark
+// Splitter's own state machine (data-focus / :focus-visible), so mounting
+// with the trigger already focused exercises the same visual state a user
+// hits mid-drag — this is what would have caught the resize-trigger's
+// double-outline regression (missing `outline: none` + designed focus ring).
+export const ResizeHandleFocused = () => {
+  useEffect(() => {
+    document
+      .querySelector<HTMLElement>('[aria-label="Resize sidebar"]')
+      ?.focus();
+  }, []);
+
+  return (
+    <ThemeProvider>
+      <div className={shellClassName}>
+        <SidebarLayout
+          bottomPanel={bottomPanel}
+          main={main}
+          sidebar={sidebar}
+          topBar={topBar}
+        />
+      </div>
+    </ThemeProvider>
+  );
+};
 
 const narrowShellClassName = css({
   height: '100vh',

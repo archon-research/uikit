@@ -99,4 +99,17 @@ const emitStoryDeps = (): Plugin => {
 
 export default {
   plugins: [emitStoryDeps()],
+  // `ladle preview` (snapshot:serve, used by snapshot:update[:all] and the
+  // Playwright webServer) opens a browser tab by default. That server is
+  // only ever meant to be scraped by Playwright, not looked at, so keep it
+  // headless. `server.open` (ladle serve / `npm run dev`) is untouched.
+  //
+  // Must be the string `'none'`, not `false`: Ladle's own open-decision
+  // ternary (`viteConfig.preview.open ? viteConfig.preview.open : undefined`)
+  // uses the value as its own truthiness check, so `false` collapses back to
+  // `undefined` and it opens anyway. Only a truthy sentinel like `'none'`
+  // survives that check and is itself recognized as "don't open".
+  preview: {
+    open: 'none',
+  },
 };
