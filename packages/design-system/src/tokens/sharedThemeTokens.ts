@@ -31,10 +31,10 @@ import type { Config } from '@pandacss/dev';
  * instead, because those properties are typed as unions that a widened
  * `string` would not satisfy.
  *
- * DELIBERATELY NOT SHARED — `textStyles`, `recipes` and `slotRecipes` differ
- * between the two configs today and are left inline in each. See the comments
- * at those keys; the difference is real drift, not duplication, and unifying it
- * would change rendered output.
+ * NOT SHARED BY THIS MODULE — `recipes` and `slotRecipes` now have their own
+ * shared module, `../recipes/sharedRecipes.ts`, following this same pattern.
+ * `textStyles` is still left inline in each config (hand-kept identical); see
+ * the comments at that key in both files.
  */
 
 type ThemeExtend = NonNullable<NonNullable<Config['theme']>['extend']>;
