@@ -2,6 +2,7 @@ import { DataContext } from '@visx/xychart';
 import {
   useContext,
   useState,
+  type ComponentPropsWithoutRef,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from 'react';
@@ -110,6 +111,49 @@ export function nearestStop(stops: number[], value: number): number {
     else hi = mid;
   }
   return value - stops[lo]! <= stops[hi]! - value ? stops[lo]! : stops[hi]!;
+}
+
+export type CrosshairProps = {
+  /** Pixel x of the crosshair (already resolved via `xScale`). */
+  x: number;
+  /** Pixel y of the plot top (`margin.top`). */
+  top: number;
+  /** Plot inner height (`innerHeight`) the line spans. */
+  height: number;
+} & Omit<ComponentPropsWithoutRef<'line'>, 'x1' | 'y1' | 'x2' | 'y2'>;
+
+/**
+ * A stateless, themed vertical crosshair line: the direct analog of the
+ * themed standalone axes (`AxisBottom`/`AxisLeft`/...) for the crosshair mark
+ * `ChartCursorLayer` draws internally. Unlike `ChartCursorLayer`, this has no
+ * tooltip, no per-series readout dots, and no cursor state of its own — it
+ * just draws one line at a pixel `x` the caller already resolved (from a
+ * shared cursor position, e.g. `useSyncedCursor`), for a hand-composed chart
+ * that only needs the crosshair line itself.
+ */
+export function Crosshair({
+  x,
+  top,
+  height,
+  stroke = chartTokens.axis,
+  strokeWidth = 1,
+  strokeDasharray = '3 3',
+  pointerEvents = 'none',
+  ...rest
+}: CrosshairProps) {
+  return (
+    <line
+      x1={x}
+      y1={top}
+      x2={x}
+      y2={top + height}
+      stroke={stroke}
+      strokeWidth={strokeWidth}
+      strokeDasharray={strokeDasharray}
+      pointerEvents={pointerEvents}
+      {...rest}
+    />
+  );
 }
 
 /**
@@ -301,16 +345,7 @@ export function ChartCursorLayer({
 
       {cx !== undefined && cx !== null ? (
         <>
-          <line
-            x1={cx}
-            y1={top}
-            x2={cx}
-            y2={top + innerHeight}
-            stroke={chartTokens.axis}
-            strokeWidth={1}
-            strokeDasharray="3 3"
-            pointerEvents="none"
-          />
+          <Crosshair x={cx} top={top} height={innerHeight} />
           {points.map((point) => (
             <circle
               key={point.id}
