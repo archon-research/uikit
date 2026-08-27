@@ -239,6 +239,7 @@ Everything else outside a workspace falls back to publishing everything, as does
 
 Three things worth knowing:
 
+- **The base ref is overridable.** By default the diff is taken against `origin/main`, so it covers everything the branch has accumulated. For a stacked branch — or to scope a re-release to just the newest commits — pass `base_ref` to the bump workflow with the stack's immediate base or the previous release tag. Leaving it empty keeps the default.
 - **Only prerelease branches narrow the list.** Releases from `main` always publish the full set. To force a full publish from a branch, run the bump workflow with the `publish_all` input.
 - **Versions can diverge across packages on the `dev` dist-tag.** `semantic-release` still bumps every `package.json` to the same version, but only the affected packages are published, so npm can carry `design-system@0.9.0-my-branch.4` alongside `charting@0.9.0-my-branch.3`. That resolves correctly -- every internal range is `*` and no package bundles a sibling -- but `@dev` is no longer guaranteed to be one coherent set.
 - **Each package must declare the internal packages it uses.** The graph is built from the manifests, so an undeclared workspace dependency is an invisible edge, and its dependent can be skipped when it should have been republished.
