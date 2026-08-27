@@ -2,7 +2,7 @@
 
 Shared frontend toolkit monorepo for TypeScript and React projects.
 
-It contains reusable configuration packages, a UI design-system package, and HTTP client utilities that can be consumed directly from source during local development.
+It contains shared build configuration, a Panda CSS design-system with charting and dashboard layers on top, typed HTTP client utilities, router helpers, and a WebMCP stack for exposing in-app tools to AI harnesses.
 
 Live preview: https://archon-research.github.io/uikit/
 
@@ -13,10 +13,11 @@ packages/
   tsconfig/         Shared TypeScript configs (base, react, node)
   oxlint-config/    Shared Oxlint configs (base, react)
   oxfmt-config/     Shared Oxfmt config
-  agent-marketplace/Plugin marketplace content and generators
+  agent-marketplace/ Plugin marketplace content and generators (private)
   design-system/    Shared UI components and style recipes
   charting/         Dedicated charting primitives package
-  uikit-preview/    Ladle preview site for components and tokens
+  dashboard-kit/    Schema-driven dashboard registry and renderer
+  uikit-preview/    Ladle preview site for components and tokens (private)
   http-client-core/ OpenAPI + Zod based HTTP client helpers
   http-client-react/React Query integration on top of core client
   http-client-msw/  Typed MSW mocks keyed off the same OpenAPI paths type
@@ -29,12 +30,14 @@ packages/
 
 ## Packages
 
+Published to npm:
+
 - `@archon-research/tsconfig`
 - `@archon-research/oxlint-config`
 - `@archon-research/oxfmt-config`
 - `@archon-research/design-system`
 - `@archon-research/charting`
-- `@archon-research/uikit-preview`
+- `@archon-research/dashboard-kit`
 - `@archon-research/http-client-core`
 - `@archon-research/http-client-react`
 - `@archon-research/http-client-msw`
@@ -44,6 +47,11 @@ packages/
 - `@archon-research/mcp-relay`
 - `@archon-research/uikit-cli`
 
+Private to this repository, not published:
+
+- `@archon-research/uikit-preview` — the Ladle preview site
+- `@archon-research/agent-marketplace` — plugin content and generators
+
 If you are adapting this template for another organization, you can replace the package scope and names while keeping the same structure and workflows.
 
 ## Installation
@@ -51,7 +59,7 @@ If you are adapting this template for another organization, you can replace the 
 Install packages from npm:
 
 ```bash
-npm install @archon-research/tsconfig @archon-research/oxlint-config @archon-research/oxfmt-config @archon-research/design-system @archon-research/charting @archon-research/http-client-core @archon-research/http-client-react @archon-research/http-client-msw @archon-research/router-kit @archon-research/webmcp @archon-research/mcp-connect @archon-research/uikit-cli
+npm install @archon-research/tsconfig @archon-research/oxlint-config @archon-research/oxfmt-config @archon-research/design-system @archon-research/charting @archon-research/dashboard-kit @archon-research/http-client-core @archon-research/http-client-react @archon-research/http-client-msw @archon-research/router-kit @archon-research/webmcp @archon-research/mcp-connect @archon-research/mcp-relay @archon-research/uikit-cli
 ```
 
 Each package has its own npm page with detailed documentation and usage examples.
@@ -72,6 +80,7 @@ See the individual package READMEs for specific usage examples:
 - [oxfmt-config](./packages/oxfmt-config/README.md)
 - [design-system](./packages/design-system/README.md)
 - [charting](./packages/charting/README.md)
+- [dashboard-kit](./packages/dashboard-kit/README.md)
 - [http-client-core](./packages/http-client-core/README.md)
 - [http-client-react](./packages/http-client-react/README.md)
 - [http-client-msw](./packages/http-client-msw/README.md)
