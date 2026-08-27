@@ -259,8 +259,9 @@ The package exposes:
   full `chartTheme`.
 
 `XYChart` consumes `chartTheme`; primitive-based components (`ReferenceBand`,
-`CandlestickSeries`, `TimeRangeBrush`, `ChartLegend`, and the planned
-`Sparkline`) read `chartTokens`/`seriesColor` directly. All derive from the one
+`CandlestickSeries`, `TimeRangeBrush`, `ChartLegend`, the themed standalone
+axes, `ChartCursorLayer`, `HistogramSeries`/`DistributionSeries`, and the
+planned `Sparkline`) read `chartTokens`/`seriesColor` directly. All derive from the one
 token contract, so they render consistently.
 
 This package owns chart concerns only. Card chrome (a paneled container with a
@@ -277,7 +278,9 @@ Current (exported from the package root):
 - `chartTokens`, `chartTheme`, `buildChartTheme`, `seriesColor`: the theme
   contract above. `buildChartTheme` is this package's resolving wrapper, NOT the
   bare `@visx/xychart` export — it is a superset, so raw-string configs are
-  unaffected.
+  unaffected. `axisLabelStyle`/`axisTickLabelStyle` expose the same axis tokens
+  as plain style objects, so a hand-composed chart can style an axis unit label
+  or a custom SVG text node without re-declaring `var(--colors-*)`.
 - A curated set of visx re-exports: `XYChart`, `Axis`, `Grid`, `Tooltip`,
   `LineSeries`, `AreaSeries`, `BarSeries`, `BarGroup`, `BarStack`, `GlyphSeries`,
   plus the `Animated*` variants (`AnimatedAxis`,
@@ -289,6 +292,33 @@ Current (exported from the package root):
   chart's live `xScale`/`yScale` — see `CandlestickSeries` and `ReferenceBand`
   below for the pattern. `EventEmitterProvider` is the shared event bus that
   backs the cross-chart interaction layer below.
+- The rest of the curated visx surface, on the same rule: the `curve*` factories
+  (`curveLinear`, `curveMonotoneX`, `curveNatural`, `curveStep`,
+  `curveStepAfter`, `curveStepBefore`, `curveBasis`) for a series' `curve` prop,
+  and the low-level composition primitives a chart that steps off the
+  single-plot `XYChart` happy path needs — `Group`, `Area`, `AreaStack`, `Bar`,
+  `Line`, `LinePath`, `scaleBand`, `scaleLinear`, `scaleTime`. All are already
+  dependencies of this package; surfacing them is what lets a faceted
+  small-multiple or a hand-composed stack be built without adding `@visx/*` as a
+  direct app dependency. Pair them with the themed axes below so a composed
+  chart still renders on-theme.
+- **`AxisBottom` / `AxisTop` / `AxisLeft` / `AxisRight`** (`axis.tsx`):
+  token-themed wrappers over the *standalone* `@visx/axis` components. The
+  in-chart `<Axis>` reads its styling from the theme context; the standalone
+  axes a hand-composed chart needs do not, and default to unthemed black. These
+  apply the same tokens `chartTheme` uses, and forward every visx prop, so
+  `stroke`/`tickLabelProps` stay overridable per call.
+- **`ResponsiveChart`** (`responsive.tsx`): `XYChart` needs a pixel width, and a
+  chart in a fluid grid cell has none until it is measured. `ResponsiveChart`
+  measures its container and hands `{ width, height }` to a render-prop child;
+  `useChartDimensions` derives the height from an aspect ratio with a floor
+  (four oscillating lines squeezed into 110px is the failure it prevents), and
+  `useContainerWidth` is the width-only primitive for a chart that computes its
+  own height. `deriveLeftMargin` sizes the value-axis gutter from the tick
+  strings that will actually be drawn — a constant margin is a guess about how
+  long the numbers get, and a fixed 56px that fits `$108.6k` clips `$500.0M`.
+  `FALLBACK_CHART_WIDTH` is the pre-measurement / no-`ResizeObserver` width each
+  consumer was otherwise redeclaring.
 - **`TimeRangeBrush`** (`brush.tsx`): a compact mini-area-chart with a
   draggable selection (`@visx/brush`), reporting the selected numeric domain
   window. Pair it with a main chart over the same numeric x-domain (epoch ms
@@ -308,8 +338,47 @@ Current (exported from the package root):
   `@visx/shape` (`Bar` for the body, `Line` for the wick), since `XYChart` has
   no OHLC series type. Registers synthetic high/low entries into the chart's
   data registry so the y-scale auto-extends to the candle extremes.
+- **`HistogramSeries` / `DistributionSeries`** (`histogram.tsx`): frequency and
+  distribution marks, since `XYChart` has neither. `HistogramSeries` draws one
+  rect per bin from either precomputed `bins` or raw `values` (a discriminated
+  union, so supplying neither is a type error rather than a silently empty
+  chart); `DistributionSeries` draws one thin ordinal bar per datum with the
+  first `highlightCount` in a highlight color — the shape a plain `BarSeries`
+  cannot express once the bar count runs into the hundreds and only the leading
+  few matter. Both position rects within whatever scales the chart provides, so
+  the consumer sets the matching domains. The binning and sorting are exported
+  as pure functions (`histogramBins`, `sortDistribution`, `DEFAULT_BIN_COUNT`).
 - **`ChartLegend`** (`legend.tsx`): a provided, token-themed legend. Replaces
-  hand-rolled per-story legend markup.
+  hand-rolled per-story legend markup. `interactive` turns each item into a
+  focusable toggle button with `onToggle`/`onHover`; the default stays a static
+  `role="list"` with the markup it had before that option existed. Those are
+  plain callbacks rather than a `bindToGroup` flag, so binding to the shared
+  store (`useToggleHiddenKey`, `useSetHighlightedKey`) stays at the call site
+  and one component is not responsible for both rendering and store wiring.
+  `Swatch` — the small themed swatch SVG it renders per item — is exported
+  standalone so a hand-composed legend reuses the same markup instead of
+  re-deriving it.
+- **`ChartCursorLayer`** (`cursor-layer.tsx`): a snap-to-datum crosshair with
+  per-series readout dots and a tooltip positioned from a render prop, plus a
+  focusable slider whose arrows step between stops and whose Enter/Space commits
+  (and optionally pins) the cursor. Prefer it over visx `Tooltip`'s
+  `showVerticalCrosshair`, which renders the crosshair in a body-level portal
+  and so can detach from the plot on scroll. `Crosshair` is the stateless themed
+  line it draws internally — the crosshair analog of the themed standalone axes
+  — exported for a chart that only needs the line at a pixel `x` it already
+  resolved (from `useSyncedCursor`, say); `nearestStop` is the pure snapping
+  helper. Keeps its own cursor state, so it does not touch the interaction layer
+  unless the consumer feeds it a `cursor` prop.
+- **`DirectLabels`** (`direct-labels.tsx`): end-of-line series labels at the
+  plot's right edge, nudged apart so adjacent labels do not collide.
+  `resolveLabelPositions` is the pure placement function behind it — ideal `y`s
+  in, collision-free `y`s in the same order out — exported for unit testing.
+- **`ChartDataTable`** (`chart-data-table.tsx`): an accessible `<table>` mirror
+  of a chart's series, visually hidden by default. A chart drawn as inline SVG
+  carries no tabular structure for assistive tech; this is the fallback the
+  Accessibility section below asks for, and `visuallyHidden={false}` turns the
+  same table into a visible "show data" panel. Its styling is inlined rather
+  than taken from the design system, for the same reason as `ChartLegend`.
 - **Cross-chart interaction layer** (`interaction.tsx`): see the dedicated
   section below.
 - **Series downsampling** (`downsample.ts`): `downsample`/`lttb`/
@@ -328,8 +397,10 @@ Planned:
   `@archon-research/charting/shape`, `/scale`, `/axis`, `/xychart`) covering the
   supported set: `scale, shape, axis, grid, group, curve, tooltip, responsive,
   text, legend, glyph, gradient, xychart`. Subpaths (not one flat barrel) avoid
-  name collisions across visx packages and keep the type-checker fast. Set
-  `"sideEffects": false` and ship ESM so unused re-exports tree-shake.
+  name collisions across visx packages and keep the type-checker fast. The
+  tree-shaking half of this is already done — the package ships ESM with
+  `"sideEffects": false` — so what remains is the split itself; `package.json`
+  still declares a single `"."` export.
 
 ### Governance: brush and zoom are now first-class dependencies
 
@@ -358,11 +429,17 @@ hover or a selection. `src/interaction.tsx` closes that gap with four pieces:
 
 - **`SyncedChartGroup`** — a provider that wraps a stack of charts (and any
   other widget) in one shared `DashboardInteractionProvider` (a React context
-  holding `timeRange`, `hoveredTimestamp`, a free-form `filters` bag, and
-  `highlightedKey`, with narrow selector hooks:
+  holding `timeRange`, `hoveredTimestamp`, a free-form `filters` bag,
+  `highlightedKey`, and its first-class partner `hiddenKeys` — the
+  click-to-hide set behind an interactive legend — with narrow selector hooks:
   `useSelectedTimeRange`/`useHoveredTimestamp`/`useHighlightedKey`/
-  `useDashboardFilter`, plus the per-key `useInteractionValue` below) plus one
-  shared visx `EventEmitterProvider`. Because
+  `useHiddenKeys`/`useDashboardFilter`, plus the per-key `useInteractionValue`
+  below) plus one shared visx `EventEmitterProvider`. The write half is carried
+  in a separate, identity-stable dispatch context (`useInteractionDispatch`,
+  aliased `useInteractionSetters`, and the named `useSetHighlightedKey`/
+  `useSetHiddenKeys`/`useToggleHiddenKey`/`useSetHoveredTimestamp`), so a
+  component that only writes — a legend firing hover/click, a filter control —
+  never subscribes and never re-renders on a cursor tick. Because
   `XYChart` only creates its own `EventEmitterProvider` when one is missing
   from context, every `<XYChart>` nested inside a `SyncedChartGroup`
   automatically shares the same mitt bus — the exact mechanism visx's own
@@ -375,7 +452,10 @@ hover or a selection. `src/interaction.tsx` closes that gap with four pieces:
 - **`useSyncedCursorHandlers(xAccessor)`** — wires an `<XYChart>`'s top-level
   `onPointerMove`/`onPointerOut` to `hoveredTimestamp`, reading the timestamp
   straight off the nearest datum (via the caller's own accessor) rather than
-  inverting a scale.
+  inverting a scale. `useSyncedCursor()` is the counterpart for a chart that is
+  *not* built on `@visx/xychart` (raw SVG, canvas, WebGL): it reads, publishes,
+  and imperatively subscribes to the same shared timestamp without importing
+  `@visx/*` or hardcoding visx's internal event-source string.
 - **`useInteractionValue(key)`** — a per-key subscription so a widget bound
   to one field (e.g. `highlightedKey`) is not re-rendered by unrelated,
   hover-frequency updates (e.g. `hoveredTimestamp`). See the dedicated
@@ -540,7 +620,8 @@ needed. Bespoke charts use the curated re-exports plus `chartTokens` directly.
 
 - Each chart root carries `role="img"` and a descriptive `aria-label`.
 - For data-dense charts, provide a visually-hidden data-table fallback so the
-  underlying values are reachable by assistive tech.
+  underlying values are reachable by assistive tech — `ChartDataTable` is that
+  fallback, and is exported for exactly this.
 - Decorative icons stay `aria-hidden`; chart SVGs are not decorative.
 
 ## Out of scope (for now)
@@ -574,12 +655,6 @@ needed. Bespoke charts use the curated re-exports plus `chartTokens` directly.
   consumer.
 - The subpath-exports restructuring already `Planned` above (this pass kept
   everything on the flat root barrel to match the existing package shape).
-- Interactive-legend / cross-chart-emphasis (a legend that auto-wires to the
-  interaction group store, or dims/hides series marks from it) is not built
-  yet. When it lands, compose it from `Swatch` plus a `LegendItem` primitive
-  (existing or added) plus a small binding hook — not by adding a
-  `bindToGroup` flag or more props directly onto `ChartLegend`, which would
-  make one component responsible for both static rendering and store wiring.
 
 ## Related
 
