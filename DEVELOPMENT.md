@@ -229,7 +229,11 @@ A prerelease cut from a feature branch publishes only the packages that branch a
 
 `bump.yml` runs `.github/scripts/affected-packages.ts`, which diffs the branch against its merge-base with `origin/main`, maps each changed file to the workspace that owns it, and expands downstream over the workspace dependency graph (`dependencies`, `peerDependencies` and `devDependencies`). The resulting list is passed to the publish workflow's `packages` input, and both workflows log which packages were skipped.
 
-It falls back to publishing everything whenever a change cannot be attributed to a single package -- root config, the lockfile, CI itself -- and whenever the diff cannot be computed. Over-publishing is safe; missing a package is not.
+A small allowlist of repo-root paths attributes to no package at all, because they cannot change what any package publishes: the root `README.md`, `LICENSE`, `DEVELOPMENT.md`, `docs/`, `.github/` (CI decides how a release runs, not what is inside a tarball), `.releaserc.json`, and the housekeeping dotfiles. Each package carries its own README, so the root one documents the repo rather than any artifact. The root `package.json` joins them only when the fields that reach into builds are untouched — `dependencies`, `devDependencies`, `optionalDependencies`, `overrides`, `engines`, `packageManager` and `workspaces` each force a full publish, since root devDependencies include `typescript`.
+
+Deliberately *not* on that list: `.node-version` and `.npmrc`, which change how packages are built and installed.
+
+Everything else outside a workspace falls back to publishing everything, as does an uncomputable diff. Over-publishing is safe; missing a package is not.
 
 Three things worth knowing:
 
