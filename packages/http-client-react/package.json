@@ -1,7 +1,6 @@
 {
   "name": "@archon-research/http-client-react",
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "type": "module",
