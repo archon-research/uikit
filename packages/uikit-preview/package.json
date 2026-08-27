@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@archon-research/mcp-relay": "*",
+    "@archon-research/oxfmt-config": "*",
     "@archon-research/oxlint-config": "*",
     "@archon-research/tsconfig": "*",
     "@cloudflare/vitest-pool-workers": "^0.21.0",

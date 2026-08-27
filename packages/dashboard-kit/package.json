@@ -42,6 +42,7 @@
   "devDependencies": {
     "@archon-research/charting": "*",
     "@archon-research/design-system": "*",
+    "@archon-research/oxfmt-config": "*",
     "@archon-research/oxlint-config": "*",
     "@archon-research/tsconfig": "*",
     "@types/react": "19.2.18",

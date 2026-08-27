@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@archon-research/oxfmt-config": "*",
+    "@archon-research/tsconfig": "*",
     "@types/node": "24.13.3",
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0"

@@ -26,6 +26,7 @@
     }
   },
   "devDependencies": {
+    "@archon-research/tsconfig": "*",
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0"
   }
