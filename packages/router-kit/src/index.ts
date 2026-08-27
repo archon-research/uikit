@@ -24,5 +24,3 @@ export {
   type ValidatedSearchContext,
   type ValidatedSearchRedirectOptions,
 } from './validated-search.js';
-
-// [debug] temporary marker to exercise affected-package publishing; reverted.
