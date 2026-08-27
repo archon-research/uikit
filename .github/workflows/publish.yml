@@ -88,7 +88,7 @@ jobs:
           # release path, and the only behaviour available to the `release:
           # created` trigger, which has no branch to compute an affected set
           # from. bump.yml narrows the list for prerelease branches -- see
-          # .github/scripts/affected-packages.mjs.
+          # .github/scripts/affected-packages.ts.
           requested="$(printf '%s' "$REQUESTED_PACKAGES" | tr ' ' '\n' | sed '/^$/d' | sort -u)"
           if [ -z "$requested" ]; then
             selected="$publishable"

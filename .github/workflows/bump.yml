@@ -38,7 +38,7 @@ jobs:
         # Prereleases publish only what the branch touched; releases from the
         # default branch always publish a coherent full set.
         if: ${{ github.ref_name != github.event.repository.default_branch && !inputs.publish_all }}
-        run: node .github/scripts/affected-packages.mjs
+        run: node .github/scripts/affected-packages.ts
 
       - name: Enable Corepack
         run: corepack enable npm

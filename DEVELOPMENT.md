@@ -227,7 +227,7 @@ This allows testing publish workflows and dev releases from feature branches.
 
 A prerelease cut from a feature branch publishes only the packages that branch actually affects, instead of republishing byte-identical copies of everything else.
 
-`bump.yml` runs `.github/scripts/affected-packages.mjs`, which diffs the branch against its merge-base with `origin/main`, maps each changed file to the workspace that owns it, and expands downstream over the workspace dependency graph (`dependencies`, `peerDependencies` and `devDependencies`). The resulting list is passed to the publish workflow's `packages` input, and both workflows log which packages were skipped.
+`bump.yml` runs `.github/scripts/affected-packages.ts`, which diffs the branch against its merge-base with `origin/main`, maps each changed file to the workspace that owns it, and expands downstream over the workspace dependency graph (`dependencies`, `peerDependencies` and `devDependencies`). The resulting list is passed to the publish workflow's `packages` input, and both workflows log which packages were skipped.
 
 It falls back to publishing everything whenever a change cannot be attributed to a single package -- root config, the lockfile, CI itself -- and whenever the diff cannot be computed. Over-publishing is safe; missing a package is not.
 

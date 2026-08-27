@@ -25,6 +25,16 @@ import net from 'node:net';
 import path from 'node:path';
 import process from 'node:process';
 
+/** `dist/story-deps.json`: built module (repo-rel) -> story files using it. */
+type StoryDeps = {
+  modules: Record<string, string[]>;
+};
+
+/** The slice of Ladle's `dist/meta.json` this script reads. */
+type PreviewMeta = {
+  stories: Record<string, { filePath: string }>;
+};
+
 const packageDir = process.cwd();
 const repoRoot = path.resolve(packageDir, '..', '..');
 const PREVIEW_PKG_DIR = path
@@ -34,12 +44,12 @@ const PREVIEW_PKG_DIR = path
 const PREVIEW_PKG_NAME = PREVIEW_PKG_DIR.slice('packages/'.length); // uikit-preview
 const PREVIEW_PREFIX = `${PREVIEW_PKG_DIR}/`;
 
-const git = (args) => {
+const git = (args: string[]): string | null => {
   const result = spawnSync('git', args, { cwd: repoRoot, encoding: 'utf8' });
   return result.status === 0 ? result.stdout.trim() : null;
 };
 
-const resolveBase = () => {
+const resolveBase = (): string | null => {
   if (process.env.SNAPSHOT_BASE) return process.env.SNAPSHOT_BASE;
   for (const ref of ['origin/main', 'main']) {
     if (git(['rev-parse', '--verify', '--quiet', ref]) !== null) return ref;
@@ -47,9 +57,9 @@ const resolveBase = () => {
   return null;
 };
 
-const changedFiles = () => {
-  const files = new Set();
-  const add = (out) => {
+const changedFiles = (): string[] => {
+  const files = new Set<string>();
+  const add = (out: string | null) => {
     if (out)
       for (const line of out.split('\n'))
         if (line.trim()) files.add(line.trim());
@@ -74,8 +84,8 @@ const runBuild = () => {
   if (build.status !== 0) process.exit(build.status ?? 1);
 };
 
-const waitForPort = (port, host, timeoutMs) =>
-  new Promise((resolve, reject) => {
+const waitForPort = (port: number, host: string, timeoutMs: number) =>
+  new Promise<void>((resolve, reject) => {
     const deadline = Date.now() + timeoutMs;
     const attempt = () => {
       const socket = net.connect(port, host);
@@ -99,7 +109,7 @@ const waitForPort = (port, host, timeoutMs) =>
  * already-listening port means Playwright skips its own `npm run build &&
  * serve` — so the whole update does exactly one build (the one above).
  */
-const runPlaywright = async (storyIds) => {
+const runPlaywright = async (storyIds: string[] | null) => {
   const env = { ...process.env };
   if (storyIds) {
     env.SNAPSHOT_STORY_IDS = storyIds.join(',');
@@ -148,6 +158,35 @@ const runPlaywright = async (storyIds) => {
   }
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const isStoryDeps = (value: unknown): value is StoryDeps =>
+  isRecord(value) &&
+  isRecord(value.modules) &&
+  Object.values(value.modules).every(
+    (stories) =>
+      Array.isArray(stories) &&
+      stories.every((story) => typeof story === 'string'),
+  );
+
+const isPreviewMeta = (value: unknown): value is PreviewMeta =>
+  isRecord(value) &&
+  isRecord(value.stories) &&
+  Object.values(value.stories).every(
+    (story) => isRecord(story) && typeof story.filePath === 'string',
+  );
+
+/** Parse a build artifact, failing loudly if it is not the shape we expect. */
+const readArtifact = <T>(
+  file: string,
+  isValid: (value: unknown) => value is T,
+): T => {
+  const parsed: unknown = JSON.parse(readFileSync(file, 'utf8'));
+  if (!isValid(parsed)) throw new Error(`Unexpected shape in ${file}`);
+  return parsed;
+};
+
 // --- main -----------------------------------------------------------------
 
 const changed = changedFiles();
@@ -168,38 +207,37 @@ if (!existsSync(depsPath) || !existsSync(metaPath)) {
   process.exit(process.exitCode ?? 0);
 }
 
-/** @type {{ modules: Record<string, string[]> }} */
-const deps = JSON.parse(readFileSync(depsPath, 'utf8'));
-/** @type {{ stories: Record<string, { filePath: string }> }} */
-const meta = JSON.parse(readFileSync(metaPath, 'utf8'));
+const deps = readArtifact(depsPath, isStoryDeps);
+const meta = readArtifact(metaPath, isPreviewMeta);
 
 // story file (repo-rel) -> story ids
-const idsByStoryFile = new Map();
+const idsByStoryFile = new Map<string, string[]>();
 for (const [id, story] of Object.entries(meta.stories)) {
   const file = `${PREVIEW_PREFIX}${story.filePath}`;
-  if (!idsByStoryFile.has(file)) idsByStoryFile.set(file, []);
-  idsByStoryFile.get(file).push(id);
+  const ids = idsByStoryFile.get(file) ?? [];
+  ids.push(id);
+  idsByStoryFile.set(file, ids);
 }
 
 // Packages that appear in the dependency graph at all — a change to any other
 // package cannot affect a snapshot.
-const graphPackages = new Set();
+const graphPackages = new Set<string>();
 for (const moduleId of Object.keys(deps.modules)) {
   const m = moduleId.match(/^packages\/([^/]+)\//);
   if (m) graphPackages.add(m[1]);
 }
 
 const CODE_EXT = /\.(tsx?|jsx?|mts|cts|mjs|cjs)$/;
-const affected = new Set();
+const affected = new Set<string>();
 let fullRun = false;
-const unmatched = [];
+const unmatched: string[] = [];
 
 for (const file of changed) {
   if (fullRun) break;
 
   // A changed story file → exactly its stories.
   if (idsByStoryFile.has(file)) {
-    for (const id of idsByStoryFile.get(file)) affected.add(id);
+    for (const id of idsByStoryFile.get(file) ?? []) affected.add(id);
     continue;
   }
 
