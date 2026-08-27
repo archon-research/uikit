@@ -293,3 +293,5 @@ export {
   type TransportHotkeySnapshot,
   type UseTransportHotkeysOptions,
 } from './playback/index.js';
+
+// [debug] temporary marker to exercise affected-package publishing; reverted.
