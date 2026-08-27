@@ -32,6 +32,8 @@ import { appendFileSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { lockfileImpact } from './lockfile-affected.ts';
+
 type Manifest = {
   name: string;
   private?: boolean;
@@ -234,6 +236,28 @@ for (const file of changedFiles) {
     publishEverything(
       `root package.json changed build-affecting fields: ${fields.join(', ')}`,
     );
+  }
+
+  if (file === 'package-lock.json') {
+    // Attributing the lockfile per package is involved enough to live on its
+    // own; `git show` returning null (an absent file) becomes '', which that
+    // module reads as added-or-removed and answers with `all`.
+    const impact = lockfileImpact(
+      git(['show', `${base}:package-lock.json`]) ?? '',
+      git(['show', 'HEAD:package-lock.json']) ?? '',
+    );
+    if (impact.kind === 'all') publishEverything(impact.reason);
+
+    for (const dir of impact.dirs) {
+      const name = byDir.get(dir);
+      if (name === undefined) {
+        publishEverything(
+          `the lockfile names workspace \`${dir}\`, which the root package.json does not list`,
+        );
+      }
+      changed.add(name);
+    }
+    continue;
   }
 
   publishEverything(`\`${file}\` is not owned by a workspace package`);

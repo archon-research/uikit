@@ -233,7 +233,9 @@ A small allowlist of repo-root paths attributes to no package at all, because th
 
 Deliberately *not* on that list: `.node-version` and `.npmrc`, which change how packages are built and installed.
 
-Everything else outside a workspace falls back to publishing everything, as does an uncomputable diff. Over-publishing is safe; missing a package is not.
+`package-lock.json` is attributed per package by `.github/scripts/lockfile-affected.ts`: it diffs the lockfile's `packages` map entry by entry, maps each changed key back to the workspace that owns it, and for a hoisted dependency walks the lockfile's own graph to find every workspace that can reach it. A change to the lockfile's root entry — root dependencies, `overrides`, `packageManager` — still publishes everything, since root devDependencies include `typescript`.
+
+Everything else outside a workspace falls back to publishing everything, as does an uncomputable diff or a lockfile whose shape the walk does not recognise. Over-publishing is safe; missing a package is not.
 
 Three things worth knowing:
 
