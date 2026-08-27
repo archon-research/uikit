@@ -79,18 +79,21 @@ const NON_AFFECTING_FILES = new Set([
 ]);
 const NON_AFFECTING_DIRS = ['.github/', 'docs/'];
 
-// The root manifest is mostly inert for publishing -- but its `overrides` and
-// its devDependencies (typescript lives there) reach into every package's build
-// output, so it is only ignorable when none of those fields moved.
-const BUILD_AFFECTING_ROOT_FIELDS = [
-  'dependencies',
-  'devDependencies',
-  'optionalDependencies',
-  'overrides',
-  'engines',
-  'packageManager',
-  'workspaces',
-] as const;
+// The root manifest's dependency fields are deliberately absent here. They do
+// reach into every package's build -- typescript is a root devDependency -- but
+// npm mirrors them into the lockfile's own root entry, so the lockfile analysis
+// already catches them, and catches `overrides` more precisely than a blanket
+// full publish would. Verified against every root-dependency commit in this
+// repo's history: each one moves the lockfile root entry too.
+//
+// That leaves the fields npm does *not* mirror. The npm 12 upgrade changed
+// `engines` and `packageManager` without touching the lockfile at all, so
+// nothing else would notice them.
+//
+// The redundancy relies on package.json and the lockfile travelling together. A
+// commit that edits one without the other is already broken -- `npm ci` fails on
+// the mismatch, three steps later in the same job.
+const BUILD_AFFECTING_ROOT_FIELDS = ['engines', 'packageManager'] as const;
 const DEP_FIELDS = [
   'dependencies',
   'peerDependencies',
@@ -98,7 +101,16 @@ const DEP_FIELDS = [
 ] as const;
 
 const git = (args: string[]): string | null => {
-  const result = spawnSync('git', args, { cwd: repoRoot, encoding: 'utf8' });
+  const result = spawnSync('git', args, {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    // package-lock.json is over a megabyte and spawnSync's default cap is 1 MB.
+    // Worse, exceeding it truncates stdout while still reporting status 0, so
+    // the `error` check below is what actually makes this safe -- without it a
+    // half-read lockfile comes back looking like a successful read.
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  if (result.error !== undefined) return null;
   return result.status === 0 ? result.stdout.trim() : null;
 };
 
