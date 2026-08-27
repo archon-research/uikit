@@ -66,9 +66,17 @@ jobs:
 
       - name: Resolve workspace package names
         run: |
+          workspaces="$(npm query ".workspace")"
+          # `npm publish` already refuses private workspaces and exits 0, but
+          # `npm pack` happily packs them, so without this filter their tarballs
+          # land in dist-pack/ and get uploaded as release assets.
+          private="$(printf '%s' "$workspaces" | jq -r '.[] | select(.private == true) | .name')"
+          if [ -n "$private" ]; then
+            echo "Skipping private workspace packages: $(printf '%s' "$private" | tr '\n' ' ')"
+          fi
           {
             echo 'WORKSPACE_PACKAGES<<EOF'
-            npm query ".workspace" | jq -r '.[].name'
+            printf '%s' "$workspaces" | jq -r '.[] | select(.private != true) | .name'
             echo EOF
           } >> "$GITHUB_ENV"
 
