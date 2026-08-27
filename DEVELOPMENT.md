@@ -223,6 +223,20 @@ When manually triggering the publish workflow from a non-main branch:
 
 This allows testing publish workflows and dev releases from feature branches.
 
+### Affected-only prerelease publishing
+
+A prerelease cut from a feature branch publishes only the packages that branch actually affects, instead of republishing byte-identical copies of everything else.
+
+`bump.yml` runs `.github/scripts/affected-packages.mjs`, which diffs the branch against its merge-base with `origin/main`, maps each changed file to the workspace that owns it, and expands downstream over the workspace dependency graph (`dependencies`, `peerDependencies` and `devDependencies`). The resulting list is passed to the publish workflow's `packages` input, and both workflows log which packages were skipped.
+
+It falls back to publishing everything whenever a change cannot be attributed to a single package -- root config, the lockfile, CI itself -- and whenever the diff cannot be computed. Over-publishing is safe; missing a package is not.
+
+Three things worth knowing:
+
+- **Only prerelease branches narrow the list.** Releases from `main` always publish the full set. To force a full publish from a branch, run the bump workflow with the `publish_all` input.
+- **Versions can diverge across packages on the `dev` dist-tag.** `semantic-release` still bumps every `package.json` to the same version, but only the affected packages are published, so npm can carry `design-system@0.9.0-my-branch.4` alongside `charting@0.9.0-my-branch.3`. That resolves correctly -- every internal range is `*` and no package bundles a sibling -- but `@dev` is no longer guaranteed to be one coherent set.
+- **Each package must declare the internal packages it uses.** The graph is built from the manifests, so an undeclared workspace dependency is an invisible edge, and its dependent can be skipped when it should have been republished.
+
 ### Local manual publishing (not recommended for production)
 
 For local testing only:

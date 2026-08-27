@@ -10,6 +10,12 @@ on:
         description: Existing release tag to publish (for example release-0.3.0-dev.1)
         required: true
         type: string
+      packages:
+        description: >-
+          Space-separated workspace package names to publish. Leave empty to
+          publish every non-private workspace package.
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -65,6 +71,8 @@ jobs:
         run: npm run prepare
 
       - name: Resolve workspace package names
+        env:
+          REQUESTED_PACKAGES: ${{ github.event.inputs.packages }}
         run: |
           workspaces="$(npm query ".workspace")"
           # `npm publish` already refuses private workspaces and exits 0, but
@@ -74,9 +82,37 @@ jobs:
           if [ -n "$private" ]; then
             echo "Skipping private workspace packages: $(printf '%s' "$private" | tr '\n' ' ')"
           fi
+          publishable="$(printf '%s' "$workspaces" | jq -r '.[] | select(.private != true) | .name' | sort)"
+
+          # No `packages` input means publish everything. That is the full
+          # release path, and the only behaviour available to the `release:
+          # created` trigger, which has no branch to compute an affected set
+          # from. bump.yml narrows the list for prerelease branches -- see
+          # .github/scripts/affected-packages.mjs.
+          requested="$(printf '%s' "$REQUESTED_PACKAGES" | tr ' ' '\n' | sed '/^$/d' | sort -u)"
+          if [ -z "$requested" ]; then
+            selected="$publishable"
+            echo "Publishing every non-private workspace package."
+          else
+            selected="$(comm -12 <(printf '%s\n' "$publishable") <(printf '%s\n' "$requested"))"
+            skipped="$(comm -23 <(printf '%s\n' "$publishable") <(printf '%s\n' "$requested"))"
+            unknown="$(comm -13 <(printf '%s\n' "$publishable") <(printf '%s\n' "$requested"))"
+            if [ -z "$selected" ]; then
+              echo "::error::No publishable workspace package matched the requested list."
+              exit 1
+            fi
+            echo "Publishing requested packages: $(printf '%s' "$selected" | tr '\n' ' ')"
+            if [ -n "$skipped" ]; then
+              echo "Skipping packages unaffected by this branch: $(printf '%s' "$skipped" | tr '\n' ' ')"
+            fi
+            if [ -n "$unknown" ]; then
+              echo "::warning::Requested names that are not publishable workspaces: $(printf '%s' "$unknown" | tr '\n' ' ')"
+            fi
+          fi
+
           {
             echo 'WORKSPACE_PACKAGES<<EOF'
-            printf '%s' "$workspaces" | jq -r '.[] | select(.private != true) | .name'
+            printf '%s\n' "$selected"
             echo EOF
           } >> "$GITHUB_ENV"
 

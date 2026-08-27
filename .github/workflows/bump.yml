@@ -2,6 +2,14 @@ name: bump
 
 on:
   workflow_dispatch:
+    inputs:
+      publish_all:
+        description: >-
+          Publish every workspace package, even from a prerelease branch.
+          Releases from the default branch always publish everything.
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   actions: write
@@ -25,6 +33,13 @@ jobs:
           node-version-file: .node-version
           cache: npm
 
+      - name: Resolve affected packages
+        id: affected
+        # Prereleases publish only what the branch touched; releases from the
+        # default branch always publish a coherent full set.
+        if: ${{ github.ref_name != github.event.repository.default_branch && !inputs.publish_all }}
+        run: node .github/scripts/affected-packages.mjs
+
       - name: Enable Corepack
         run: corepack enable npm
 
@@ -47,12 +62,22 @@ jobs:
         run: npm exec semantic-release
 
       - name: Trigger publish workflow
-        if: steps.release.outputs.release_version != ''
+        if: steps.release.outputs.release_version != '' && steps.affected.outputs.skip_publish != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WORKFLOW_REF: ${{ github.ref_name }}
+          RELEASE_VERSION: ${{ steps.release.outputs.release_version }}
+          # Empty when the affected step was skipped or fell back to the full
+          # set, which publish.yml reads as "publish everything".
+          AFFECTED_PACKAGES: ${{ steps.affected.outputs.packages }}
         run: |
-          gh workflow run publish.yml --ref "$WORKFLOW_REF" -f release_tag="release-${{ steps.release.outputs.release_version }}"
+          gh workflow run publish.yml --ref "$WORKFLOW_REF" \
+            -f release_tag="release-$RELEASE_VERSION" \
+            -f packages="$AFFECTED_PACKAGES"
+
+      - name: Nothing to publish
+        if: steps.release.outputs.release_version != '' && steps.affected.outputs.skip_publish == 'true'
+        run: echo "Every package this branch affects is private; publish workflow not triggered."
 
       - name: No release generated
         if: steps.release.outputs.release_version == ''
