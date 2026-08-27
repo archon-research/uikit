@@ -41,7 +41,9 @@ jobs:
         run: node .github/scripts/affected-packages.ts
 
       - name: Enable Corepack
-        run: corepack enable npm
+        run: |
+          corepack enable npm
+          echo "npm on PATH: $(command -v npm) ($(npm --version))"
 
       - name: Install dependencies
         run: npm ci
