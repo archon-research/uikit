@@ -1,6 +1,6 @@
 # @archon-research/oxfmt-config
 
-Shared Oxfmt (Biome formatter) configuration for consistent code formatting.
+Shared Oxfmt (Oxc formatter) configuration for consistent code formatting.
 
 ## Installation
 
