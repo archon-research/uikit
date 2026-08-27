@@ -10,11 +10,26 @@ const contentRoot = join(packageRoot, 'content');
 const claudeOutputRoot = join(packageRoot, 'claude-plugin');
 const copilotOutputRoot = join(packageRoot, 'copilot-plugin');
 
-function sortById(items) {
+interface SourceEntry {
+  id: string;
+  kind: 'skill' | 'agent';
+  sourceType: string;
+  upstream: string;
+  pinnedRevision: string;
+}
+
+interface SourcesFile {
+  sources: SourceEntry[];
+}
+
+function sortById<T extends { id: string }>(items: T[]): T[] {
   return [...items].sort((left, right) => left.id.localeCompare(right.id));
 }
 
-async function ensureFileEquals(leftPath, rightPath) {
+async function ensureFileEquals(
+  leftPath: string,
+  rightPath: string,
+): Promise<void> {
   const [left, right] = await Promise.all([
     readFile(leftPath, 'utf8'),
     readFile(rightPath, 'utf8'),
@@ -27,7 +42,7 @@ async function ensureFileEquals(leftPath, rightPath) {
 
 async function main() {
   const raw = await readFile(sourcesPath, 'utf8');
-  const parsed = JSON.parse(raw);
+  const parsed = JSON.parse(raw) as Partial<SourcesFile>;
   if (!Array.isArray(parsed.sources)) {
     throw new Error('sources.json must contain a "sources" array.');
   }
