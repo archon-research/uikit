@@ -123,6 +123,17 @@ The palette→roles map is read out of the stylesheet itself (each `colorPalette
 ruleset *is* the preset's role tokens in generated form), so palettes added to the preset — or
 defined in a consumer's own preset extension — are covered with no list to keep in sync.
 
+### Register the local uikit packages
+
+```bash
+./node_modules/.bin/uikit-cli register
+```
+
+Runs `npm link` in every local `@archon-research/*` package so they are available to link
+from. `link` and `unlink` do this themselves, so run it directly only to register the
+packages without touching a consumer. Pass `--uikit-root <path>` when the uikit checkout
+cannot be auto-discovered.
+
 ### Link uikit packages into a consumer repository
 
 From your consumer repository:

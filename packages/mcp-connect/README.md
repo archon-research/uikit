@@ -16,7 +16,7 @@ npm install @archon-research/mcp-connect @archon-research/webmcp @archon-researc
 
 ### `HarnessConnect`
 
-A chat-bubble icon carrying a status `Indicator`; clicking it opens a modal with copy-paste setup instructions for Claude Code and GitHub Copilot CLI (segmented control), rendering the relay URL, the durable connection token, and the per-harness `mcp add` command.
+A chat-bubble icon carrying a status `Indicator`; clicking it opens a modal with copy-paste setup instructions for Claude Code and GitHub Copilot CLI (segmented control), rendering the relay URL, the durable connection token, and the per-harness setup snippet (a `claude mcp add` command for Claude Code, the `.github/copilot/mcp.json` entry for Copilot CLI).
 
 It is fully prop-driven, so the host owns all connection state:
 
@@ -30,6 +30,8 @@ import { HarnessConnect } from '@archon-research/mcp-connect';
 />;
 ```
 
+`serverName` (default `uikit-preview`) names the MCP server in the generated add commands, and `defaultOpen` starts the modal open for static previews.
+
 The four `indicatorStatus` values map to:
 
 | status | meaning |
@@ -41,10 +43,13 @@ The four `indicatorStatus` values map to:
 
 ### `ConfirmToolCallDialog`
 
-A guarded write from a harness must be approved by the user. The confirmation state is owned by `useRelaySession` (from `@archon-research/webmcp`), which surfaces the active `PendingCallRecord` (as `pendingConfirmation`), a `pendingQueueLength`, and `approve` / `deny`; `ConfirmToolCallDialog` renders it (tool name, summary, arguments, a countdown to expiry, and a queue badge). Render the dialog at the app root so it works regardless of the connection modal.
+A guarded write from a harness must be approved by the user. The confirmation state is owned by `useRelaySession` (from `@archon-research/webmcp`), which surfaces the active `PendingCallPrompt` (as `pendingConfirmation`), a `pendingQueueLength`, and `approve` / `deny`; `ConfirmToolCallDialog` renders it (tool name, summary, arguments, a countdown to expiry, and a queue badge). The dialog takes the richer `PendingCallRecord` shape, so map the prompt onto it. Render the dialog at the app root so it works regardless of the connection modal.
 
 ```tsx
-import { ConfirmToolCallDialog } from '@archon-research/mcp-connect';
+import {
+  ConfirmToolCallDialog,
+  type PendingCallRecord,
+} from '@archon-research/mcp-connect';
 import { useRelaySession } from '@archon-research/webmcp';
 
 function ConfirmationSurface() {
@@ -52,9 +57,21 @@ function ConfirmationSurface() {
     relayBaseUrl,
     storageKey,
   });
+  const pendingCall: PendingCallRecord | null = pendingConfirmation
+    ? {
+        callId: pendingConfirmation.callId,
+        sessionId: '',
+        toolName: pendingConfirmation.toolName,
+        toolArgs: pendingConfirmation.argsPreview,
+        summary: pendingConfirmation.summary,
+        createdAt: pendingConfirmation.createdAt,
+        expiresAt: pendingConfirmation.expiresAt,
+        status: 'pending',
+      }
+    : null;
   return (
     <ConfirmToolCallDialog
-      pendingCall={pendingConfirmation}
+      pendingCall={pendingCall}
       queueLength={pendingQueueLength}
       onApprove={approve}
       onDeny={deny}
@@ -67,7 +84,7 @@ function ConfirmationSurface() {
 
 - `HarnessConnect` (+ `HarnessConnectProps`)
 - `ConfirmToolCallDialog` (+ `ConfirmToolCallDialogProps`)
-- Types: `HarnessIndicatorStatus`, `PendingCallRecord`, `PendingCallStatus`, `ConfirmationDecision`, `ConfirmationRequestEvent`, `ConfirmationExpiredEvent`
+- Types: `HarnessIndicatorStatus`, `PendingCallRecord`, `PendingCallStatus`
 
 The confirmation-queue hook that fed `ConfirmToolCallDialog` lives in `@archon-research/webmcp` as `useRelaySession` — this package intentionally exports only presentational components.
 
