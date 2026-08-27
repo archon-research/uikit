@@ -215,11 +215,11 @@ The publish workflow:
 
 ### Dev version publishing
 
-When manually triggering the publish workflow from a non-main branch:
+Running the bump workflow from a non-`main` branch produces a prerelease rather than a release:
 
-- Version is appended with `-dev${RUN_ID}` (e.g., `0.1.0-dev25002729424`)
-- npm dist-tag is set to `dev`
-- Release upload and finalization are skipped
+- `semantic-release` derives the prerelease identifier from the branch name, replacing every character outside `[A-Za-z0-9-]` with `-`. Branch `rohit/expandable-data-table` gives `0.9.0-rohit-expandable-data-table.1`, and each further bump from that branch increments the trailing counter.
+- `.github/scripts/resolve-release-metadata.sh` treats any version containing a `-` as a prerelease and sets the npm dist-tag to `dev`. Every prerelease branch shares that one `dev` tag, so `@dev` points at whichever branch published last.
+- Uploading release assets and marking the GitHub release non-draft are both skipped.
 
 This allows testing publish workflows and dev releases from feature branches.
 
