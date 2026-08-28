@@ -1,37 +1,28 @@
-import path from 'node:path';
-
 import type { CommandExecutor } from '../command-executor.js';
-import type { FileSystemOps } from '../fs-utils.js';
 import { shellEscape } from '../shell-utils.js';
 import { resolveCliBinary } from '../tool-binaries.js';
 
 /**
- * Lint command - forwards to oxlint with config detection
+ * Lint command - forwards to oxlint
+ *
+ * Deliberately does *not* inject `-c`, unlike `format`. oxfmt only
+ * auto-discovers the `.json` form of its config, so `format` has to point at
+ * `.oxfmtrc.ts` itself; oxlint resolves `oxlint.config.ts` per target file by
+ * walking up from it, so every package in a multi-target run gets its own
+ * config with no help. Injecting `-c ./oxlint.config.ts` would *replace* that
+ * per-package resolution with whatever config happens to sit in cwd — in the
+ * git-hook shape (cwd at the repo root, targets in several packages) that
+ * silently drops the packages' own rules.
  */
 export class LintCommand {
   private executor: CommandExecutor;
-  private fs: FileSystemOps;
 
-  constructor(executor: CommandExecutor, fs: FileSystemOps) {
+  constructor(executor: CommandExecutor) {
     this.executor = executor;
-    this.fs = fs;
   }
 
   execute(args: string[]): boolean {
     const modifiedArgs = [...args];
-
-    // oxlint discovers `oxlint.config.ts` on its own, but only relative to cwd.
-    // A caller whose cwd is not the directory holding the config — a git hook,
-    // which usually runs at the repo or workspace root — silently lints with
-    // oxlint's built-in defaults and passes clean. Pointing at the config
-    // explicitly mirrors what `format` already does for `.oxfmtrc.ts`.
-    if (!this.hasConfigFlag(modifiedArgs)) {
-      const configPath = path.join(process.cwd(), 'oxlint.config.ts');
-      if (this.fs.exists(configPath)) {
-        modifiedArgs.unshift('./oxlint.config.ts');
-        modifiedArgs.unshift('-c');
-      }
-    }
 
     // oxlint exits 0 on warnings. The shared presets set `correctness` and
     // `suspicious` to `warn`, so without this every violation they describe is
@@ -47,13 +38,6 @@ export class LintCommand {
     return this.executor.exec(`${oxlintBinary} ${escapedArgs}`.trim(), {
       cwd: process.cwd(),
     }).success;
-  }
-
-  private hasConfigFlag(args: string[]): boolean {
-    return args.some(
-      (arg) =>
-        arg === '-c' || arg === '--config' || arg.startsWith('--config='),
-    );
   }
 
   // Only the two flags that govern the *exit code* count here. `-W`/`--warn`

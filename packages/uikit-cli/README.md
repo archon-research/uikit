@@ -55,15 +55,16 @@ From any consumer workspace:
 The CLI runs uikit-cli-managed `oxlint` and `oxfmt` versions internally (resolved via its
 lockfile), so downstream workspaces do not need to declare those tool packages directly.
 
-Both commands fill in a config flag when you omit one and the file is present in the current
-directory — `oxlint.config.ts` for `lint`, `.oxfmtrc.ts` for `format`. Neither tool discovers
-those files reliably on its own (`oxfmt` only auto-discovers the `.json` form, and `oxlint`
-resolves relative to the current directory), so a run started from elsewhere — a git hook,
-typically, where the current directory is the repo root — would otherwise lint or format with
-built-in defaults and pass clean. Pass `-c` yourself to override.
+`format` fills in `-c ./.oxfmtrc.ts` when you omit a config flag and that file is in the
+current directory, because `oxfmt` only auto-discovers the `.json` form. `lint` deliberately
+does not do the same: `oxlint` resolves `oxlint.config.ts` per target file by walking up from
+it, so a run spanning several packages picks up each package's own config. Injecting `-c`
+would replace that with whichever config sits in the current directory, which in the git-hook
+shape — cwd at the repo root, targets in several packages — silently drops those packages'
+rules. Pass `-c` yourself when you do want one config to win.
 
-`lint` also applies `--max-warnings=0` by default, because `oxlint` exits 0 on warnings and
-the shared presets set the `correctness` and `suspicious` categories to `warn`. Pass your own
+`lint` applies `--max-warnings=0` by default, because `oxlint` exits 0 on warnings and the
+shared presets set the `correctness` and `suspicious` categories to `warn`. Pass your own
 `--max-warnings` or `--deny-warnings` to change that.
 
 If your consumer workspace prefers to run tooling directly, it can install and invoke

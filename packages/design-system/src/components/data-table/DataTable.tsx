@@ -1336,17 +1336,18 @@ export function DataTable<TData extends RowData>({
                 </tr>
               </tbody>
             ) : null}
-            {virtualItems.map((virtualItem) => {
-              const row = rows[virtualItem.index];
-              // The virtualizer's count comes from `rows`, so every virtual
-              // index resolves; the guard is what proves it to the compiler.
-              if (row === undefined) return null;
-              return renderBodyRow(
-                row,
+            {virtualItems.map((virtualItem) =>
+              renderBodyRow(
+                // The virtualizer's count comes from `rows`, so every virtual
+                // index resolves. Asserted rather than guarded: if the two ever
+                // did drift, skipping the row would render a table missing a
+                // line while the padding still accounts for it — a quietly
+                // wrong table is worse here than a loud failure.
+                rows[virtualItem.index] as Row<TData>,
                 virtualItem.index,
                 rowVirtualizer.measureElement,
-              );
-            })}
+              ),
+            )}
             {paddingBottom > 0 ? (
               <tbody aria-hidden="true">
                 <tr>

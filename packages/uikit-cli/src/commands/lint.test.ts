@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CommandExecutor, ExecResult } from '../command-executor.js';
-import type { FileSystemOps } from '../fs-utils.js';
 import { LintCommand } from './lint.js';
 
 function executorReturning(success: boolean): CommandExecutor {
@@ -30,42 +29,32 @@ function recordingExecutor(): {
   };
 }
 
-const noConfigFs = { exists: () => false } as unknown as FileSystemOps;
-const withConfigFs = { exists: () => true } as unknown as FileSystemOps;
-
 describe('LintCommand', () => {
   it('reports success when oxlint exits clean', () => {
-    expect(
-      new LintCommand(executorReturning(true), noConfigFs).execute(['.']),
-    ).toBe(true);
+    expect(new LintCommand(executorReturning(true)).execute(['.'])).toBe(true);
   });
 
   it('reports failure when oxlint finds violations', () => {
     // `cli.ts` maps this boolean onto the process exit code — a swallowed
     // failure here left the lint gate unable to fail CI.
-    expect(
-      new LintCommand(executorReturning(false), noConfigFs).execute(['.']),
-    ).toBe(false);
+    expect(new LintCommand(executorReturning(false)).execute(['.'])).toBe(
+      false,
+    );
   });
 
-  it('points oxlint at oxlint.config.ts when cwd holds one', () => {
-    // oxlint only auto-discovers the config relative to cwd, so a caller run
-    // from elsewhere (a git hook, typically) silently linted with defaults.
+  it('never injects a config flag', () => {
+    // oxlint resolves `oxlint.config.ts` per target file by walking up from it.
+    // Injecting `-c` would replace that with whatever config sits in cwd, so a
+    // run spanning several packages — the git-hook shape — would lint them all
+    // with one package's rules. Verified against oxlint 1.78: with `-c` the
+    // run exits 0 on a violation that it otherwise reports.
     const { executor, command } = recordingExecutor();
-    new LintCommand(executor, withConfigFs).execute(['src']);
-    expect(command()).toContain('-c ./oxlint.config.ts');
-  });
-
-  it('leaves an explicit config flag alone', () => {
-    const { executor, command } = recordingExecutor();
-    new LintCommand(executor, withConfigFs).execute(['-c', 'other.ts', 'src']);
-    expect(command()).not.toContain('./oxlint.config.ts');
-  });
-
-  it('omits the config flag when cwd has no oxlint.config.ts', () => {
-    const { executor, command } = recordingExecutor();
-    new LintCommand(executor, noConfigFs).execute(['src']);
-    expect(command()).not.toContain('-c ');
+    new LintCommand(executor).execute(['packages/a/src', 'packages/b/src']);
+    // Matched as a whole argument: the binary path itself contains "-c"
+    // (".../uikit-cli/..."), so a bare substring check passes vacuously.
+    expect(command()).not.toMatch(/\s-c\s/);
+    expect(command()).not.toContain('--config');
+    expect(command()).not.toContain('oxlint.config.ts');
   });
 
   it('fails the run on warnings by default', () => {
@@ -73,7 +62,7 @@ describe('LintCommand', () => {
     // exits 0 on warnings — so without this the presets reported violations
     // and passed anyway.
     const { executor, command } = recordingExecutor();
-    new LintCommand(executor, noConfigFs).execute(['src']);
+    new LintCommand(executor).execute(['src']);
     expect(command()).toContain('--max-warnings=0');
   });
 
@@ -81,7 +70,7 @@ describe('LintCommand', () => {
     'respects a caller-supplied %s',
     (flag) => {
       const { executor, command } = recordingExecutor();
-      new LintCommand(executor, noConfigFs).execute([flag, 'src']);
+      new LintCommand(executor).execute([flag, 'src']);
       expect(command()).not.toContain('--max-warnings=0');
     },
   );
@@ -90,7 +79,7 @@ describe('LintCommand', () => {
     // `-W`/`--warn` sets a rule's severity; it says nothing about the exit
     // code, so the default must still apply.
     const { executor, command } = recordingExecutor();
-    new LintCommand(executor, noConfigFs).execute(['-W', 'no-console', 'src']);
+    new LintCommand(executor).execute(['-W', 'no-console', 'src']);
     expect(command()).toContain('--max-warnings=0');
   });
 });

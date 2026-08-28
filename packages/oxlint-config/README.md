@@ -79,8 +79,8 @@ The rules are also exported on their own as `typeAwareRules`, for merging into
 
 ## Included presets
 
-- **base** - General linting rules
-- **react** - Additional rules for React projects, including Rules of Hooks
+- **base** - General linting rules, including `import/no-cycle`
+- **react** - `base` plus React rules, including Rules of Hooks
 - **design-system-boundaries** - React rules plus an error on direct primitive imports from `@ark-ui/react` and its subpaths
 - **type-aware** - React rules plus promise safety; requires `--type-aware` and `oxlint-tsgolint`
 
@@ -98,8 +98,8 @@ export default defineConfig({
 });
 ```
 
-Every preset declares a `rules` key (`base` ships an empty one) so this spread
-always type-checks.
+Every preset declares a `rules` key, so this spread always type-checks. `react`
+composes on `base` the same way, so a rule added to `base` reaches every preset.
 
 ### Changing a rule's severity
 

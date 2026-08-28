@@ -44,26 +44,27 @@ export function createSeededRng(seed: number): SeededRng {
   return {
     next,
     int,
-    pick: (items) => {
-      // `int` is bounded by `items.length - 1`, so the only way this misses is
-      // an empty list — which is the error the caller needs either way.
-      const picked = items[int(0, items.length - 1)];
-      if (picked === undefined) {
+    pick: <T>(items: readonly T[]): T => {
+      // Guard on length, not on the read being `undefined`: `T` may itself
+      // include `undefined`, and `pick([undefined, 1])` must return the element
+      // rather than report an empty list.
+      if (items.length === 0) {
         throw new Error('http-client-msw: cannot pick from an empty list');
       }
 
-      return picked;
+      return items[int(0, items.length - 1)] as T;
     },
-    shuffle: (items) => {
+    shuffle: <T>(items: readonly T[]): T[] => {
       const shuffled = [...items];
 
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = int(0, i);
-        // Both indices are in range by construction.
-        const a = shuffled[i];
-        const b = shuffled[j];
-        if (a === undefined || b === undefined) continue;
-        shuffled[i] = b;
+        // Both indices are in range by the loop bound, so the swap is
+        // unconditional — skipping it on an `undefined` *element* would let the
+        // result depend on the values while still consuming the draw above,
+        // which is exactly the reproducibility this generator exists to give.
+        const a = shuffled[i] as T;
+        shuffled[i] = shuffled[j] as T;
         shuffled[j] = a;
       }
 

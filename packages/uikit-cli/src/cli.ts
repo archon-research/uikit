@@ -210,7 +210,7 @@ try {
   // Lint and format forward the tool's verdict as the exit code — exiting 0
   // unconditionally left `--check` runs unable to gate CI.
   if (mode === 'lint') {
-    const lintCmd = new LintCommand(executor, fs);
+    const lintCmd = new LintCommand(executor);
     process.exit(lintCmd.execute(commandArgs) ? 0 : 1);
   }
 
