@@ -75,8 +75,8 @@ function IdentityView({ onSelect }: { onSelect: (id: string) => void }) {
 - `useToolRegistry` / `useToolRegistryRef` — read the full registry
 - `useContributeViewState` — contribute a partial view-state slice
 - `listTools` / `getViewState` — imperative helpers for non-React callers
-- `useRelayActivity` — `console.info` logger for `tool_activity` frames
-- Tool types (`ToolSpec`, `ToolHandler`, `ViewState`, ...) and the wire-protocol types shared with the relay (`@archon-research/mcp-connect` and the Python relay)
+- `useRelaySession` — drive the relay back-channel from the registry: mint/reuse a session, advertise the registered tools, run incoming `invoke`s, and gate any `mutation: true` tool behind a local confirmation
+- Tool types (`ToolSpec`, `ToolHandler`, `PendingCallPrompt`, `ViewState`, ...) and the wire-protocol types re-exported from [`@archon-research/mcp-relay`](../mcp-relay/README.md), the single source of truth shared with the Python relay
 
 ## Related
 

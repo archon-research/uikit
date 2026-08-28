@@ -19,6 +19,7 @@ packages/agent-marketplace/
   scripts/
     generate.ts
     refresh.ts
+    check.ts
   sources.json
   sources.lock.json
   claude-plugin/        # generated
@@ -39,6 +40,10 @@ npm run refresh --workspace @archon-research/agent-marketplace
 
 ```bash
 npm run refresh:dry-run --workspace @archon-research/agent-marketplace
+```
+
+```bash
+npm run check --workspace @archon-research/agent-marketplace
 ```
 
 ## Source Registry Model
@@ -66,6 +71,7 @@ npm run refresh --workspace @archon-research/agent-marketplace
 
 ## Validation Checklist
 
+- `npm run check --workspace @archon-research/agent-marketplace` (CI gate: generated plugin output matches `content/`)
 - `claude plugin validate .`
 - `claude plugin validate ./packages/agent-marketplace/claude-plugin`
 - `copilot plugin install ./packages/agent-marketplace/copilot-plugin`

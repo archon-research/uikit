@@ -15,7 +15,7 @@ Use the configuration presets in your `oxlint.config.ts`:
 ### Base configuration
 
 ```typescript
-import baseConfig from '@archon-research/oxlint-config';
+import baseConfig from '@archon-research/oxlint-config/base';
 import { defineConfig } from 'oxlint';
 
 export default defineConfig({
@@ -47,6 +47,6 @@ export default defineConfig({
 
 ## Included presets
 
-- **base** (default) - General linting rules
+- **base** - General linting rules
 - **react** - Additional rules for React projects
-- **design-system-boundaries** - React rules plus warnings for direct primitive imports from `@ark-ui/react/*`
+- **design-system-boundaries** - React rules plus warnings for direct primitive imports from `@ark-ui/react` and its subpaths

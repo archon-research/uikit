@@ -24,3 +24,17 @@ npm run preview:build
 ```
 
 The output is generated at `packages/uikit-preview/dist`.
+
+## Visual snapshot tests
+
+Ladle stories are screenshot-tested with Playwright. The committed snapshots are
+macOS/Chromium-specific, so regenerate them on macOS.
+
+From this package:
+
+```bash
+npm run snapshot:test           # compare against the committed snapshots
+npm run snapshot:update         # re-render only the snapshots a change affects
+npm run snapshot:update:all     # re-render every snapshot
+npm run snapshot:check-orphans  # flag snapshots with no matching story
+```

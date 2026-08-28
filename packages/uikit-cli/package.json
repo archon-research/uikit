@@ -18,7 +18,6 @@
     "uikit-cli": "./dist/cli.sh"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "dependencies": {
@@ -26,6 +25,7 @@
     "oxlint": "1.78.0"
   },
   "devDependencies": {
+    "@archon-research/oxfmt-config": "*",
     "@archon-research/tsconfig": "*",
     "@types/node": "24.13.3",
     "vitest": "^4.1.9"

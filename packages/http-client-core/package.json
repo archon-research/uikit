@@ -1,7 +1,6 @@
 {
   "name": "@archon-research/http-client-core",
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "type": "module",
@@ -35,6 +34,8 @@
     "openapi-typescript": "^7.13.0"
   },
   "devDependencies": {
+    "@archon-research/oxfmt-config": "*",
+    "@archon-research/tsconfig": "*",
     "@types/node": "24.13.3",
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0"

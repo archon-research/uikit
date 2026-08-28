@@ -1,8 +1,14 @@
 {
   "extends": "@archon-research/tsconfig/react",
+  "compilerOptions": {
+    // `scripts/` is node-flavoured (the theme-bootstrap emitter), so node's
+    // types have to resolve alongside the DOM ones the components need.
+    "types": ["node"]
+  },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
+    "scripts/**/*.ts",
     "panda.config.ts",
     "panda.shared.ts"
   ]

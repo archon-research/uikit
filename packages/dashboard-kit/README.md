@@ -128,12 +128,17 @@ and `areaChart`.
 ## Validation
 
 `validateDashboardSpec(candidate, { knownComponents })` runs a zod structural
-pass plus referential passes (unknown refs, orphaned widgets, resizable
-column-split without a height, an `agentWritable` key that isn't writable,
-optional unknown-component check). It never throws — an agent-submitted patch is
-untrusted input, so it returns `{ ok, issues }` and the renderer shows an
-annotated rejection rather than blanking. `DashboardRenderer` runs it by default;
+pass plus referential passes (unknown refs, orphaned widgets, a widget `id` that
+disagrees with its registry key, resizable column-split without a height, an
+`agentWritable` key that isn't writable, optional unknown-component check). It
+never throws — an agent-submitted patch is untrusted input, so it returns
+`{ ok, issues }` and the renderer shows an annotated rejection rather than
+blanking. `DashboardRenderer` runs it by default;
 pass `skipValidation` for a spec you author and trust.
+
+`collectAgentWritableKeys(spec)` is the other half of the `agentWritable`
+contract: it returns the set of keys the manifest actually permits an agent to
+write, so a host app's agent-facing tools can refuse anything outside it.
 
 ## Interaction
 

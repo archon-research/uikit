@@ -1,7 +1,6 @@
 {
   "name": "@archon-research/design-system",
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "type": "module",
@@ -39,7 +38,7 @@
     "./theme-bootstrap.js": "./dist/theme-bootstrap.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node scripts/emit-theme-bootstrap.mjs",
+    "build": "tsc -p tsconfig.build.json && node scripts/emit-theme-bootstrap.ts",
     "clean": "rm -rf dist",
     "prepare": "npm run build",
     "type:check": "tsc -p tsconfig.json --noEmit",
@@ -61,8 +60,11 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@archon-research/oxfmt-config": "*",
     "@archon-research/oxlint-config": "*",
+    "@archon-research/tsconfig": "*",
     "@testing-library/react": "^16.3.2",
+    "@types/node": "24.13.3",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
     "jsdom": "^30.0.0",

@@ -32,6 +32,8 @@ The core (`RelaySession`) owns:
 - `onHello` -> accepted/rejected logic.
 - `onInitialize` -> flips `harnessAttached`, returns `harness_status` frame.
 - `sweep` -> reverts `harnessAttached` on TTL expiry, returns frame or null.
+- `toSnapshot` / `RelaySession.fromSnapshot` -> persist and rehydrate the
+  durable state, so a host survives eviction/hibernation.
 
 ## Exports
 
@@ -39,8 +41,8 @@ The core (`RelaySession`) owns:
 // Wire types (MVP subset: connect + tool-activity)
 export type { ToolDefinition, HelloMessage, InvokeMessage, ... }
 
-// JWT helpers (async, Web Crypto)
-export { mintConnectionToken, sessionIdFromToken, parseBearer, ... }
+// Token helpers (JWT mint/verify via Web Crypto, plus pairing codes)
+export { mintConnectionToken, sessionIdFromToken, decodeConnectionToken, parseBearer, newPairingToken, ... }
 
 // State machine
 export { RelaySession, HARNESS_LIVENESS_TTL_MS, INVOKE_TIMEOUT_MS }

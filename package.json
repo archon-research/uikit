@@ -28,7 +28,7 @@
     "clean": "npm run clean --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "type:check": "npm run type:check --workspaces --if-present",
+    "type:check": "npm run type:check --workspaces --if-present && tsc -p .github/scripts/tsconfig.json --noEmit",
     "test": "npm run test --workspaces --if-present && npm run cf:test --workspace @archon-research/uikit-preview",
     "lint:fix": "npm run lint:fix --workspaces --if-present",
     "format": "npm run format --workspaces --if-present",

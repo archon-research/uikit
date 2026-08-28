@@ -215,13 +215,34 @@ The publish workflow:
 
 ### Dev version publishing
 
-When manually triggering the publish workflow from a non-main branch:
+Running the bump workflow from a non-`main` branch produces a prerelease rather than a release:
 
-- Version is appended with `-dev${RUN_ID}` (e.g., `0.1.0-dev25002729424`)
-- npm dist-tag is set to `dev`
-- Release upload and finalization are skipped
+- `semantic-release` derives the prerelease identifier from the branch name, replacing every character outside `[A-Za-z0-9-]` with `-`. Branch `rohit/expandable-data-table` gives `0.9.0-rohit-expandable-data-table.1`, and each further bump from that branch increments the trailing counter.
+- `.github/scripts/resolve-release-metadata.sh` treats any version containing a `-` as a prerelease and sets the npm dist-tag to `dev`. Every prerelease branch shares that one `dev` tag, so `@dev` points at whichever branch published last.
+- Uploading release assets and marking the GitHub release non-draft are both skipped.
 
 This allows testing publish workflows and dev releases from feature branches.
+
+### Affected-only prerelease publishing
+
+A prerelease cut from a feature branch publishes only the packages that branch actually affects, instead of republishing byte-identical copies of everything else.
+
+`bump.yml` runs `.github/scripts/affected-packages.ts`, which diffs the branch against its merge-base with `origin/main`, maps each changed file to the workspace that owns it, and expands downstream over the workspace dependency graph (`dependencies`, `peerDependencies` and `devDependencies`). The resulting list is passed to the publish workflow's `packages` input, and both workflows log which packages were skipped.
+
+A small allowlist of repo-root paths attributes to no package at all, because they cannot change what any package publishes: the root `README.md`, `LICENSE`, `DEVELOPMENT.md`, `docs/`, `.github/` (CI decides how a release runs, not what is inside a tarball), `.releaserc.json`, and the housekeeping dotfiles. Each package carries its own README, so the root one documents the repo rather than any artifact. The root `package.json` joins them unless `engines` or `packageManager` moved. Its dependency fields are not checked here on purpose: npm mirrors them into the lockfile, so the lockfile analysis below catches them — and catches `overrides` more precisely than a blanket full publish. `engines` and `packageManager` are the fields npm does *not* mirror, so nothing else would notice them.
+
+Deliberately *not* on that list: `.node-version` and `.npmrc`, which change how packages are built and installed.
+
+`package-lock.json` is attributed per package by `.github/scripts/lockfile-affected.ts`: it diffs the lockfile's `packages` map entry by entry, maps each changed key back to the workspace that owns it, and for a hoisted dependency walks the lockfile's own graph to find every workspace that can reach it. A change to the lockfile's root entry — root dependencies, `overrides`, `packageManager` — still publishes everything, since root devDependencies include `typescript`.
+
+Everything else outside a workspace falls back to publishing everything, as does an uncomputable diff or a lockfile whose shape the walk does not recognise. Over-publishing is safe; missing a package is not.
+
+Three things worth knowing:
+
+- **The base ref is overridable.** By default the diff is taken against `origin/main`, so it covers everything the branch has accumulated. For a stacked branch — or to scope a re-release to just the newest commits — pass `base_ref` to the bump workflow with the stack's immediate base or the previous release tag. Leaving it empty keeps the default.
+- **Only prerelease branches narrow the list.** Releases from `main` always publish the full set. To force a full publish from a branch, run the bump workflow with the `publish_all` input.
+- **Versions can diverge across packages on the `dev` dist-tag.** `semantic-release` still bumps every `package.json` to the same version, but only the affected packages are published, so npm can carry `design-system@0.9.0-my-branch.4` alongside `charting@0.9.0-my-branch.3`. That resolves correctly -- every internal range is `*` and no package bundles a sibling -- but `@dev` is no longer guaranteed to be one coherent set.
+- **Each package must declare the internal packages it uses.** The graph is built from the manifests, so an undeclared workspace dependency is an invisible edge, and its dependent can be skipped when it should have been republished.
 
 ### Local manual publishing (not recommended for production)
 

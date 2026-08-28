@@ -66,19 +66,40 @@ const DataTable = lazy(() =>
 // likewise: import('@archon-research/design-system/drawer')
 ```
 
-The package is marked `sideEffects: false`, so importing only what you use is fully
-tree-shakeable (a `Badge`-only import ships ~1 KB, not the Ark/TanStack engine).
+Every module except the theme bootstrap is marked side-effect-free
+(`"sideEffects": ["./dist/theme-bootstrap.js"]`), so importing only what you use is
+fully tree-shakeable (a `Badge`-only import ships ~1 KB, not the Ark/TanStack engine).
 
 ### Use design tokens
 
+This package **emits no CSS of its own** — it builds with `tsc`, ships no generated
+`styled-system`, and applies its recipes by stable Panda class names. The consumer
+generates the CSS. Two steps, both required: add the preset, *and* spread
+`designSystemStaticCssRecipes` into `staticCss`. Without the second, the preset
+registers the recipes but Panda generates no rules for them (nothing in your source
+calls a recipe function for it to extract), and every component renders unstyled.
+`staticCss` is a Panda ROOT-config key, so a preset cannot carry it.
+
 ```typescript
 import { defineConfig } from '@pandacss/dev';
-import designSystemPreset from '@archon-research/design-system/panda-preset';
+import { designSystemStaticCssRecipes } from '@archon-research/design-system';
+import { designSystemPreset } from '@archon-research/design-system/panda-preset';
 
 export default defineConfig({
   presets: [designSystemPreset],
+  staticCss: {
+    recipes: {
+      ...designSystemStaticCssRecipes,
+      // ...your own recipes with runtime-driven variants
+    },
+  },
 });
 ```
+
+The recipe definitions themselves are available from the root barrel and from the
+`@archon-research/design-system/recipes` subpath. See
+[PANDA_NOTES.md](./PANDA_NOTES.md) for this and the other Panda gotchas that bite
+consumers of the preset.
 
 ### Theming and the no-flash bootstrap
 
@@ -163,12 +184,11 @@ app instead of served separately:
 import '@archon-research/design-system/theme-bootstrap.js';
 ```
 
-This form is safe from tree-shaking: the package is otherwise marked
-`sideEffects: false`, and `dist/theme-bootstrap.js` is listed as the one
-exception, so bundlers keep it even though the import binds no name. Note that it
-runs when your entry bundle runs, not before the document's stylesheets — put it
-above every other import, and prefer option 1 or 2 if your entry bundle is
-deferred.
+This form is safe from tree-shaking: `dist/theme-bootstrap.js` is the sole entry in
+the package's `sideEffects` list, so bundlers keep it even though the import binds no
+name. Note that it runs when your entry bundle runs, not before the document's
+stylesheets — put it above every other import, and prefer option 1 or 2 if your entry
+bundle is deferred.
 
 Every form makes the same decision: a stored `light` / `dark` wins, `auto` (and no
 stored value) resolves against `prefers-color-scheme`, the pre-rename storage key

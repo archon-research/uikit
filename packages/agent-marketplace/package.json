@@ -10,6 +10,7 @@
     "refresh": "node --experimental-strip-types ./scripts/refresh.ts",
     "refresh:dry-run": "node --experimental-strip-types ./scripts/refresh.ts --dry-run",
     "clean": "rm -rf claude-plugin copilot-plugin",
+    "type:check": "tsc -p tsconfig.json --noEmit",
     "lint": "oxlint -c oxlint.config.ts scripts",
     "lint:fix": "oxlint -c oxlint.config.ts --fix scripts",
     "format": "oxfmt -c oxfmt.config.ts --write scripts",
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "@archon-research/oxfmt-config": "*",
+    "@archon-research/tsconfig": "*",
     "@types/node": "24.13.3",
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0"

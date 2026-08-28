@@ -1,7 +1,6 @@
 {
   "name": "@archon-research/oxlint-config",
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "type": "module",
@@ -36,6 +35,8 @@
     }
   },
   "devDependencies": {
+    "@archon-research/oxfmt-config": "*",
+    "@archon-research/tsconfig": "*",
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0"
   }

@@ -1,7 +1,6 @@
 {
   "name": "@archon-research/charting",
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "type": "module",
@@ -40,6 +39,7 @@
     }
   },
   "devDependencies": {
+    "@archon-research/oxfmt-config": "*",
     "@archon-research/oxlint-config": "*",
     "@archon-research/tsconfig": "*",
     "@testing-library/react": "^16.3.2",
