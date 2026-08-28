@@ -51,6 +51,8 @@ function parseArgs(argv: string[]): ParsedArgs {
 
   while (i < args.length) {
     const arg = args[i];
+    // Unreachable given the loop bound; narrows `arg` to `string`.
+    if (arg === undefined) break;
 
     if (arg === '--uikit-root' && i + 1 < args.length) {
       uikitRoot = args[i + 1];
@@ -208,7 +210,7 @@ try {
   // Lint and format forward the tool's verdict as the exit code — exiting 0
   // unconditionally left `--check` runs unable to gate CI.
   if (mode === 'lint') {
-    const lintCmd = new LintCommand(executor);
+    const lintCmd = new LintCommand(executor, fs);
     process.exit(lintCmd.execute(commandArgs) ? 0 : 1);
   }
 
