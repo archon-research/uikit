@@ -8,7 +8,8 @@
     "dist",
     "base.ts",
     "react.ts",
-    "design-system-boundaries.ts"
+    "design-system-boundaries.ts",
+    "type-aware.ts"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -32,6 +33,18 @@
     "./design-system-boundaries": {
       "types": "./dist/design-system-boundaries.d.ts",
       "default": "./dist/design-system-boundaries.js"
+    },
+    "./type-aware": {
+      "types": "./dist/type-aware.d.ts",
+      "default": "./dist/type-aware.js"
+    }
+  },
+  "peerDependencies": {
+    "oxlint-tsgolint": ">=7"
+  },
+  "peerDependenciesMeta": {
+    "oxlint-tsgolint": {
+      "optional": true
     }
   },
   "devDependencies": {
