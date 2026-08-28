@@ -1463,8 +1463,8 @@
         "Organisms",
         "Data table virtualized"
       ],
-      "locStart": 95,
-      "locEnd": 138,
+      "locStart": 98,
+      "locEnd": 141,
       "filePath": "src/stories/organisms/data-table-virtualized.stories.tsx",
       "namedExport": "FlashOnUpdate",
       "meta": {}
@@ -1475,8 +1475,8 @@
         "Organisms",
         "Data table virtualized"
       ],
-      "locStart": 140,
-      "locEnd": 184,
+      "locStart": 143,
+      "locEnd": 187,
       "filePath": "src/stories/organisms/data-table-virtualized.stories.tsx",
       "namedExport": "FlashOnUpdateTwoPhase",
       "meta": {}
@@ -1487,8 +1487,8 @@
         "Organisms",
         "Data table virtualized"
       ],
-      "locStart": 71,
-      "locEnd": 93,
+      "locStart": 74,
+      "locEnd": 96,
       "filePath": "src/stories/organisms/data-table-virtualized.stories.tsx",
       "namedExport": "VirtualizedWithFacetedFilters",
       "meta": {}
@@ -1787,8 +1787,8 @@
         "Organisms",
         "Filter primitives"
       ],
-      "locStart": 189,
-      "locEnd": 193,
+      "locStart": 193,
+      "locEnd": 197,
       "filePath": "src/stories/organisms/filter-primitives.stories.tsx",
       "namedExport": "FilterBar",
       "meta": {}
@@ -1907,8 +1907,8 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 142,
-      "locEnd": 194,
+      "locStart": 145,
+      "locEnd": 197,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "LiveVsReplay",
       "meta": {}
@@ -1919,8 +1919,8 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 210,
-      "locEnd": 259,
+      "locStart": 213,
+      "locEnd": 262,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "OrdinalCursor",
       "meta": {}
@@ -1931,8 +1931,8 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 266,
-      "locEnd": 303,
+      "locStart": 269,
+      "locEnd": 306,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "StatusInTrailing",
       "meta": {}
@@ -1943,8 +1943,8 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 318,
-      "locEnd": 361,
+      "locStart": 321,
+      "locEnd": 364,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "WithTransportHotkeys",
       "meta": {}
