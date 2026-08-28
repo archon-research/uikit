@@ -430,7 +430,7 @@ const RiskDetailDrawer = ({ allocation, onClose }: any) => {
 export const Default = () => {
   const [selectedAllocation, setSelectedAllocation] = useState<
     (typeof allocations)[number] | null
-  >(allocations[0]);
+  >(allocations[0] ?? null);
 
   return (
     <ThemeProvider>

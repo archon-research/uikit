@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { DashboardSpec } from './schema.js';
+import type { DashboardSpec, WidgetNode } from './schema.js';
 import { collectAgentWritableKeys, validateDashboardSpec } from './validate.js';
 
 /**
@@ -9,7 +9,11 @@ import { collectAgentWritableKeys, validateDashboardSpec } from './validate.js';
  * time. Pure logic only — nothing here renders a component (DOM-free, matching
  * the repo's node-environment test style).
  */
-function baseSpec(): DashboardSpec {
+// The `widgets.a` intersection records what the fixture guarantees: `widgets`
+// stays an open `Record` (tests add keys like `orphan` to it), while `a` is a
+// known `WidgetNode` rather than the `| undefined` that
+// `noUncheckedIndexedAccess` gives every other lookup.
+function baseSpec(): DashboardSpec & { widgets: { a: WidgetNode } } {
   return {
     version: 1,
     title: 'Sample',

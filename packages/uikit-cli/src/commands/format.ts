@@ -39,12 +39,9 @@ export class FormatCommand {
   }
 
   private hasConfigFlag(args: string[]): boolean {
-    for (let i = 0; i < args.length; i += 1) {
-      const arg = args[i];
-      if (arg === '-c' || arg === '--config' || arg.startsWith('--config=')) {
-        return true;
-      }
-    }
-    return false;
+    return args.some(
+      (arg) =>
+        arg === '-c' || arg === '--config' || arg.startsWith('--config='),
+    );
   }
 }

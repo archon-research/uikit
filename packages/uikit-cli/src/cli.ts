@@ -51,6 +51,8 @@ function parseArgs(argv: string[]): ParsedArgs {
 
   while (i < args.length) {
     const arg = args[i];
+    // Unreachable given the loop bound; narrows `arg` to `string`.
+    if (arg === undefined) break;
 
     if (arg === '--uikit-root' && i + 1 < args.length) {
       uikitRoot = args[i + 1];

@@ -18,7 +18,7 @@ import { css } from '../../../styled-system/css';
 
 type EventPayload = { message: string };
 
-const COMPONENTS = ['ingestion', 'worker.a', 'pipeline'];
+const COMPONENTS = ['ingestion', 'worker.a', 'pipeline'] as const;
 const TYPES = ['log', 'state-change', 'heartbeat'] as const;
 
 function buildReplayLog(count: number): PlaybackEvent<EventPayload>[] {
@@ -26,8 +26,10 @@ function buildReplayLog(count: number): PlaybackEvent<EventPayload>[] {
   return Array.from({ length: count }, (_, index) => ({
     seq: index,
     timestamp: start + index * 4_000,
-    component: COMPONENTS[index % COMPONENTS.length],
-    type: TYPES[index % TYPES.length],
+    // The modulo keeps these in range; `[0]` is a typed fallback because the
+    // tuples above are non-empty.
+    component: COMPONENTS[index % COMPONENTS.length] ?? COMPONENTS[0],
+    type: TYPES[index % TYPES.length] ?? TYPES[0],
     payload: { message: `event ${index + 1}` },
   }));
 }
@@ -95,8 +97,9 @@ function useFakeLiveSource(): LivePlaybackSource<EventPayload> {
       const event: PlaybackEvent<EventPayload> = {
         seq: seqRef.current++,
         timestamp: Date.now(),
-        component: COMPONENTS[seqRef.current % COMPONENTS.length],
-        type: TYPES[seqRef.current % TYPES.length],
+        component:
+          COMPONENTS[seqRef.current % COMPONENTS.length] ?? COMPONENTS[0],
+        type: TYPES[seqRef.current % TYPES.length] ?? TYPES[0],
         payload: { message: `event ${seqRef.current}` },
       };
       for (const listener of listenersRef.current) listener(event);

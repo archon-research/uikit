@@ -224,7 +224,7 @@ for (const [id, story] of Object.entries(meta.stories)) {
 const graphPackages = new Set<string>();
 for (const moduleId of Object.keys(deps.modules)) {
   const m = moduleId.match(/^packages\/([^/]+)\//);
-  if (m) graphPackages.add(m[1]);
+  if (m?.[1]) graphPackages.add(m[1]);
 }
 
 const CODE_EXT = /\.(tsx?|jsx?|mts|cts|mjs|cjs)$/;
@@ -247,6 +247,8 @@ for (const file of changed) {
     continue;
   }
   const [, pkgName, rest] = pkg;
+  // Both groups are non-optional in the pattern above, so a match carries them.
+  if (pkgName === undefined || rest === undefined) continue;
 
   if (pkgName === PREVIEW_PKG_NAME) {
     // uikit-preview: a non-story source/config change is broad (shared provider,
@@ -271,7 +273,7 @@ for (const file of changed) {
 
   // Consumed package: map a source file to its built module and look it up.
   const srcMatch = rest.match(/^src\/(.+)$/);
-  if (srcMatch && CODE_EXT.test(rest)) {
+  if (srcMatch?.[1] && CODE_EXT.test(rest)) {
     const distRel = srcMatch[1].replace(CODE_EXT, '.js');
     const distId = `packages/${pkgName}/dist/${distRel}`;
     const stories = deps.modules[distId];

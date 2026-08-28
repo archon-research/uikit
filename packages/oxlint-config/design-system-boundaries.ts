@@ -4,9 +4,13 @@ const designSystemBoundariesConfig = {
   ...reactConfig,
   rules: {
     ...reactConfig.rules,
-    // Warn consumers when they bypass design-system entrypoints.
+    // Fail consumers who bypass design-system entrypoints. This is `error`
+    // rather than `warn` because oxlint exits 0 on warnings unless the caller
+    // passes `--deny-warnings`/`--max-warnings`, which made the boundary
+    // decorative; raising `categories` consumer-side does not reach it either,
+    // since per-rule severity wins over category severity.
     'no-restricted-imports': [
-      'warn',
+      'error',
       {
         paths: [
           {

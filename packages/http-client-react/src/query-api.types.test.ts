@@ -108,9 +108,13 @@ export function typeAssertions(): void {
   // The assertion that matters: the options' `TData` is the *selected* type, so
   // this is what a component reads. Asserted through the real `useQuery` rather
   // than a stand-in, since matching its overload resolution is the point.
+  // This function never runs, so these two are type-level calls only — they
+  // borrow `useQuery`'s overload resolution rather than invoking a hook.
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   expectTypeOf(useQuery(selectedOptions).data).toEqualTypeOf<
     number | undefined
   >();
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   expectTypeOf(useQuery(listOptions).data).toEqualTypeOf<User[] | undefined>();
 
   // And the key's brand still carries the *fetched* type, not the selected one:

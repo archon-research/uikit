@@ -714,12 +714,10 @@ export function DataTable<TData extends RowData>({
 
   const virtualItems = virtualized ? rowVirtualizer.getVirtualItems() : [];
   const totalSize = virtualized ? rowVirtualizer.getTotalSize() : 0;
-  const paddingTop =
-    virtualized && virtualItems.length > 0 ? virtualItems[0].start : 0;
-  const paddingBottom =
-    virtualized && virtualItems.length > 0
-      ? totalSize - virtualItems[virtualItems.length - 1].end
-      : 0;
+  const paddingTop = virtualized ? (virtualItems[0]?.start ?? 0) : 0;
+  const paddingBottom = virtualized
+    ? totalSize - (virtualItems.at(-1)?.end ?? totalSize)
+    : 0;
 
   // `minWidth`/`maxHeight` are consumer-supplied runtime dimensions (any CSS
   // length), not styling decisions, so they stay inline styles; everything
@@ -1340,7 +1338,12 @@ export function DataTable<TData extends RowData>({
             ) : null}
             {virtualItems.map((virtualItem) =>
               renderBodyRow(
-                rows[virtualItem.index],
+                // The virtualizer's count comes from `rows`, so every virtual
+                // index resolves. Asserted rather than guarded: if the two ever
+                // did drift, skipping the row would render a table missing a
+                // line while the padding still accounts for it — a quietly
+                // wrong table is worse here than a loud failure.
+                rows[virtualItem.index] as Row<TData>,
                 virtualItem.index,
                 rowVirtualizer.measureElement,
               ),

@@ -285,7 +285,10 @@ for (const [name, { internalDeps }] of packages) {
 const affected = new Set<string>(changed);
 const queue = [...changed];
 for (let index = 0; index < queue.length; index += 1) {
-  for (const dependent of dependents.get(queue[index]) ?? []) {
+  const current = queue[index];
+  // In range by the loop bound; the guard is what narrows it.
+  if (current === undefined) continue;
+  for (const dependent of dependents.get(current) ?? []) {
     if (affected.has(dependent)) continue;
     affected.add(dependent);
     queue.push(dependent);

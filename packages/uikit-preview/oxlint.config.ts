@@ -1,27 +1,9 @@
-import reactConfig from '@archon-research/oxlint-config/react';
+import boundariesConfig from '@archon-research/oxlint-config/design-system-boundaries';
 
+// The ark-ui boundary was previously hand-copied here at `warn`, which is both
+// the preset's own content duplicated and a severity oxlint cannot fail on.
+// This is the preset's single real consumer, so it is also where the preset
+// gets exercised.
 export default {
-	...reactConfig,
-	rules: {
-		...reactConfig.rules,
-		'no-restricted-imports': [
-			'warn',
-			{
-				paths: [
-					{
-						name: '@ark-ui/react',
-						message:
-							'Import from @archon-research/design-system instead of @ark-ui/react.',
-					},
-				],
-				patterns: [
-					{
-						group: ['@ark-ui/react/*'],
-						message:
-							'Import from @archon-research/design-system instead of @ark-ui/react subpaths.',
-					},
-				],
-			},
-		],
-	},
+	...boundariesConfig,
 };

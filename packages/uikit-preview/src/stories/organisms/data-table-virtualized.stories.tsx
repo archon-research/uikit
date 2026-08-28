@@ -10,14 +10,17 @@ type Row = {
   value: number;
 };
 
-const CATEGORIES = ['Alpha', 'Beta', 'Gamma', 'Delta'];
-const REGIONS = ['North', 'South', 'East', 'West'];
+const CATEGORIES = ['Alpha', 'Beta', 'Gamma', 'Delta'] as const;
+const REGIONS = ['North', 'South', 'East', 'West'] as const;
 
 function buildRows(count: number): Row[] {
   return Array.from({ length: count }, (_, index) => {
-    const category = CATEGORIES[index % CATEGORIES.length];
+    // The modulo keeps these in range; `[0]` is a typed fallback because the
+    // tuples above are non-empty.
+    const category = CATEGORIES[index % CATEGORIES.length] ?? CATEGORIES[0];
     const region =
-      REGIONS[Math.floor(index / CATEGORIES.length) % REGIONS.length];
+      REGIONS[Math.floor(index / CATEGORIES.length) % REGIONS.length] ??
+      REGIONS[0];
 
     return {
       id: `row-${String(index + 1).padStart(4, '0')}`,

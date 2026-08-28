@@ -55,6 +55,18 @@ From any consumer workspace:
 The CLI runs uikit-cli-managed `oxlint` and `oxfmt` versions internally (resolved via its
 lockfile), so downstream workspaces do not need to declare those tool packages directly.
 
+`format` fills in `-c ./.oxfmtrc.ts` when you omit a config flag and that file is in the
+current directory, because `oxfmt` only auto-discovers the `.json` form. `lint` deliberately
+does not do the same: `oxlint` resolves `oxlint.config.ts` per target file by walking up from
+it, so a run spanning several packages picks up each package's own config. Injecting `-c`
+would replace that with whichever config sits in the current directory, which in the git-hook
+shape — cwd at the repo root, targets in several packages — silently drops those packages'
+rules. Pass `-c` yourself when you do want one config to win.
+
+`lint` applies `--max-warnings=0` by default, because `oxlint` exits 0 on warnings and the
+shared presets set the `correctness` and `suspicious` categories to `warn`. Pass your own
+`--max-warnings` or `--deny-warnings` to change that.
+
 If your consumer workspace prefers to run tooling directly, it can install and invoke
 `oxlint`/`oxfmt` itself. In that setup, `@archon-research/oxlint-config` and
 `@archon-research/oxfmt-config` remain reusable config packages, while `uikit-cli` remains an

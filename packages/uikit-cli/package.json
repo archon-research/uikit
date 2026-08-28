@@ -7,7 +7,7 @@
     "wrapper": "./scripts/create-wrapper.sh",
     "clean": "rm -rf dist",
     "type:check": "tsc -p tsconfig.json --noEmit",
-    "lint": "oxlint -c oxlint.config.ts src",
+    "lint": "oxlint -c oxlint.config.ts --max-warnings=0 src",
     "lint:fix": "oxlint -c oxlint.config.ts --fix src",
     "format": "oxfmt -c oxfmt.config.ts --write src",
     "format:check": "oxfmt -c oxfmt.config.ts --check src",

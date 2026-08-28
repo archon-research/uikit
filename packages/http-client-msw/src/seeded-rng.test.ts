@@ -71,6 +71,29 @@ describe('createSeededRng', () => {
     expect(shuffled).toEqual(createSeededRng(3).shuffle(items));
   });
 
+  it('picks an `undefined` element rather than reporting an empty list', () => {
+    // `T` may include `undefined`. Guarding on the read instead of on the
+    // length turned a legal pick into a spurious "empty list" throw.
+    expect(createSeededRng(5).pick([undefined])).toBeUndefined();
+  });
+
+  it('shuffles by position, not by value', () => {
+    // The swap must not be skipped for `undefined` elements: the draw is
+    // consumed either way, so skipping would make the ordering depend on the
+    // values and break the reproducibility this generator exists to provide.
+    const withHoles = [1, undefined, 3, undefined, 5, 6, 7, 8];
+    const positions = [1, 2, 3, 4, 5, 6, 7, 8];
+
+    const shuffledHoles = createSeededRng(3).shuffle(withHoles);
+    const shuffledPositions = createSeededRng(3).shuffle(positions);
+
+    // Same seed, same length → the same permutation of indices, whatever the
+    // elements are.
+    expect(shuffledHoles).toEqual(
+      shuffledPositions.map((p) => withHoles[p - 1]),
+    );
+  });
+
   it('gives the same sequence to a reset instance and a fresh one', () => {
     const reused = createSeededRng(11);
     void reused.next();
