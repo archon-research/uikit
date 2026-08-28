@@ -21,13 +21,17 @@ type Row = {
   amount: number;
 };
 
-const CATEGORIES = ['Alpha', 'Beta', 'Gamma', 'Delta'];
-const REGIONS = ['North', 'South', 'East', 'West'];
+const CATEGORIES = ['Alpha', 'Beta', 'Gamma', 'Delta'] as const;
+const REGIONS = ['North', 'South', 'East', 'West'] as const;
 
 const rows: Row[] = Array.from({ length: 120 }, (_, index) => ({
   id: `row-${String(index + 1).padStart(3, '0')}`,
-  category: CATEGORIES[index % CATEGORIES.length],
-  region: REGIONS[Math.floor(index / CATEGORIES.length) % REGIONS.length],
+  // The modulo keeps these in range; `[0]` is a typed fallback because the
+  // tuples above are non-empty.
+  category: CATEGORIES[index % CATEGORIES.length] ?? CATEGORIES[0],
+  region:
+    REGIONS[Math.floor(index / CATEGORIES.length) % REGIONS.length] ??
+    REGIONS[0],
   amount: Math.round((Math.sin(index * 1.3) + 1) * 5000) + 100,
 }));
 

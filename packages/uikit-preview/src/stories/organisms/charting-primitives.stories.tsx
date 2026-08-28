@@ -504,12 +504,12 @@ export const ReaderLayer = () => (
             labels={[
               {
                 label: 'Account',
-                value: SERIES[SERIES.length - 1].value,
+                value: SERIES.at(-1)?.value ?? 0,
                 color: 'chart.series.primary',
               },
               {
                 label: 'Benchmark',
-                value: SERIES_B[SERIES_B.length - 1].value,
+                value: SERIES_B.at(-1)?.value ?? 0,
                 color: 'chart.series.secondary',
               },
             ]}

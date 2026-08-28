@@ -219,6 +219,8 @@ const reachableFrom = (lock: Lockfile, startKey: string): Set<string> => {
 
   for (let index = 0; index < queue.length; index += 1) {
     const key = queue[index];
+    // In range by the loop bound; the guard is what narrows it.
+    if (key === undefined) continue;
     const entry = lock.entries.get(key);
     if (entry === undefined) continue;
 

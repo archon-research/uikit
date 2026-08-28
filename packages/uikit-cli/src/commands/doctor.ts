@@ -188,10 +188,14 @@ function splitLeafRulesets(css: string): LeafRuleset[] {
     // blank lines. Anchor on the `{` instead — a body offset added to the match
     // start would report a line too early by however many newlines precede the
     // selector.
+    const [whole, selector, body] = match;
+    // Both groups are non-optional in LEAF_RULESET, so a match always carries
+    // them; the guard is what tells the compiler that.
+    if (selector === undefined || body === undefined) continue;
     leaves.push({
-      selector: match[1].trim(),
-      body: match[2],
-      bodyIndex: (match.index ?? 0) + match[0].indexOf('{') + 1,
+      selector: selector.trim(),
+      body,
+      bodyIndex: (match.index ?? 0) + whole.indexOf('{') + 1,
     });
   }
   return leaves;
@@ -202,7 +206,8 @@ function collectRecipeStems(leaves: LeafRuleset[]): Set<string> {
   const stems = new Set<string>();
   for (const leaf of leaves) {
     for (const match of leaf.selector.matchAll(RECIPE_CLASS)) {
-      stems.add(match[1]);
+      const stem = match[1];
+      if (stem !== undefined) stems.add(stem);
     }
   }
   return stems;
@@ -267,13 +272,16 @@ function subjectRecipeStem(
     .split(/[\s>+~]+/)
     .filter(Boolean);
   for (let i = compounds.length - 1; i >= 0; i--) {
-    const recipeClasses = [...compounds[i].matchAll(RECIPE_CLASS)];
-    const last = recipeClasses.at(-1);
-    if (last) return last[1];
+    const compound = compounds[i];
+    if (compound === undefined) continue;
+    const recipeClasses = [...compound.matchAll(RECIPE_CLASS)];
+    const last = recipeClasses.at(-1)?.[1];
+    if (last !== undefined) return last;
     // A recipe's base rule (`.button { … }`) carries no suffix, so accept a bare
     // class only when the stylesheet proves elsewhere that it is a recipe.
-    for (const match of [...compounds[i].matchAll(BARE_CLASS)].reverse()) {
-      if (stems.has(match[1])) return match[1];
+    for (const match of [...compound.matchAll(BARE_CLASS)].reverse()) {
+      const bare = match[1];
+      if (bare !== undefined && stems.has(bare)) return bare;
     }
   }
   return null;
@@ -292,6 +300,7 @@ function readPaletteAssignment(
   const roles = new Set<string>();
   for (const match of body.matchAll(PALETTE_ROLE_ASSIGNMENT)) {
     const [, role, target] = match;
+    if (role === undefined || target === undefined) continue;
     if (!target.endsWith(`-${role}`)) continue;
     const name = target.slice(0, -(role.length + 1));
     palette ??= name;
@@ -336,6 +345,7 @@ function collectPaletteScopes(
       }
       for (const match of references) {
         const role = match[1];
+        if (role === undefined) continue;
         if (scope.references.has(role)) continue;
         scope.references.set(role, {
           selector,

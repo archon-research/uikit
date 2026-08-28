@@ -45,18 +45,26 @@ export function createSeededRng(seed: number): SeededRng {
     next,
     int,
     pick: (items) => {
-      if (items.length === 0) {
+      // `int` is bounded by `items.length - 1`, so the only way this misses is
+      // an empty list — which is the error the caller needs either way.
+      const picked = items[int(0, items.length - 1)];
+      if (picked === undefined) {
         throw new Error('http-client-msw: cannot pick from an empty list');
       }
 
-      return items[int(0, items.length - 1)];
+      return picked;
     },
     shuffle: (items) => {
       const shuffled = [...items];
 
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = int(0, i);
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        // Both indices are in range by construction.
+        const a = shuffled[i];
+        const b = shuffled[j];
+        if (a === undefined || b === undefined) continue;
+        shuffled[i] = b;
+        shuffled[j] = a;
       }
 
       return shuffled;

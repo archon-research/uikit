@@ -26,7 +26,11 @@ export function serializeFilterState(state: FilterState): string | null {
   if (keys.length === 0) return null;
   const ordered: FilterState['fields'] = {};
   for (const key of keys) {
-    ordered[key] = state.fields[key];
+    // `keys` comes from `state.fields`, so the lookup always hits; skipping a
+    // miss keeps the key out of the serialized form rather than writing
+    // `undefined` into it.
+    const value = state.fields[key];
+    if (value !== undefined) ordered[key] = value;
   }
   return JSON.stringify(ordered);
 }

@@ -714,12 +714,10 @@ export function DataTable<TData extends RowData>({
 
   const virtualItems = virtualized ? rowVirtualizer.getVirtualItems() : [];
   const totalSize = virtualized ? rowVirtualizer.getTotalSize() : 0;
-  const paddingTop =
-    virtualized && virtualItems.length > 0 ? virtualItems[0].start : 0;
-  const paddingBottom =
-    virtualized && virtualItems.length > 0
-      ? totalSize - virtualItems[virtualItems.length - 1].end
-      : 0;
+  const paddingTop = virtualized ? (virtualItems[0]?.start ?? 0) : 0;
+  const paddingBottom = virtualized
+    ? totalSize - (virtualItems.at(-1)?.end ?? totalSize)
+    : 0;
 
   // `minWidth`/`maxHeight` are consumer-supplied runtime dimensions (any CSS
   // length), not styling decisions, so they stay inline styles; everything
@@ -1338,13 +1336,17 @@ export function DataTable<TData extends RowData>({
                 </tr>
               </tbody>
             ) : null}
-            {virtualItems.map((virtualItem) =>
-              renderBodyRow(
-                rows[virtualItem.index],
+            {virtualItems.map((virtualItem) => {
+              const row = rows[virtualItem.index];
+              // The virtualizer's count comes from `rows`, so every virtual
+              // index resolves; the guard is what proves it to the compiler.
+              if (row === undefined) return null;
+              return renderBodyRow(
+                row,
                 virtualItem.index,
                 rowVirtualizer.measureElement,
-              ),
-            )}
+              );
+            })}
             {paddingBottom > 0 ? (
               <tbody aria-hidden="true">
                 <tr>

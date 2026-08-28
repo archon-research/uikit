@@ -204,7 +204,14 @@ export async function resolveEntryUrl(
     }
   }
 
-  const leaf = matches[matches.length - 1];
+  // `matchRoutes` always resolves at least the root route, so an empty list
+  // means the router was built wrong rather than that the URL missed.
+  const leaf = matches.at(-1);
+  if (!leaf) {
+    throw new Error(
+      `router-kit: matchRoutes returned no matches for ${router.latestLocation.href}`,
+    );
+  }
 
   return {
     url: router.latestLocation.href,

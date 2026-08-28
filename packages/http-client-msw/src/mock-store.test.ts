@@ -68,6 +68,7 @@ describe('createMockStore', () => {
     const [first] = store.list();
 
     expect(first).toBe(store.get('t1'));
+    if (!first) throw new Error('expected the seeded store to be non-empty');
     first.name = 'Mutated';
 
     expect(store.get('t1')?.name).toBe('Mutated');
