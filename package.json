@@ -54,7 +54,7 @@
     "conventional-changelog-writer": "^9.2.0"
   },
   "optionalDependencies": {
-    "@oxfmt/binding-linux-x64-gnu": "0.63.0",
-    "@oxlint/binding-linux-x64-gnu": "1.78.0"
+    "@oxfmt/binding-linux-x64-gnu": "0.64.0",
+    "@oxlint/binding-linux-x64-gnu": "1.79.0"
   }
 }
