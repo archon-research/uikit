@@ -41,7 +41,7 @@
     "@archon-research/oxfmt-config": "*",
     "@archon-research/oxlint-config": "*",
     "@archon-research/tsconfig": "*",
-    "@tanstack/react-router": "1.170.27",
+    "@tanstack/react-router": "1.170.32",
     "oxfmt": "0.62.0",
     "oxlint": "1.77.0",
     "vitest": "^4.1.9",
