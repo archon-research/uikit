@@ -393,14 +393,51 @@ Planned:
   in `@archon-research/design-system` as a hand-rolled inline-SVG micro
   primitive; if one lands here too, reconcile which package owns it before
   both ship.)
-- Move the curated re-exports to subpaths (for example
-  `@archon-research/charting/shape`, `/scale`, `/axis`, `/xychart`) covering the
-  supported set: `scale, shape, axis, grid, group, curve, tooltip, responsive,
-  text, legend, glyph, gradient, xychart`. Subpaths (not one flat barrel) avoid
-  name collisions across visx packages and keep the type-checker fast. The
-  tree-shaking half of this is already done — the package ships ESM with
-  `"sideEffects": false` — so what remains is the split itself; `package.json`
-  still declares a single `"."` export.
+
+### Subpath exports: three tiers, drawn where the cost is
+
+`package.json` declares `"."`, `"./core"`, `"./primitives"` and `"./xychart"`.
+The root barrel is the union of the other three and stays the supported default
+import; the subpaths exist so a consumer can place a chunk boundary without
+writing a wrapper module purely to have something to dynamic-import.
+
+An earlier revision of this file planned one subpath per re-exported visx
+package (`/shape`, `/scale`, `/axis`, ...). Measurement argued against it. What
+actually governs the cost is a single fact: `@visx/xychart` ships one barrel
+entry and publishes nothing below it, so importing ANY symbol from it costs
+~83 kB minified / ~29 kB gzipped — `DataContext` and `buildChartTheme` as much
+as `XYChart`. That is the only boundary in this package worth a subpath, and it
+yields three tiers rather than a dozen:
+
+| Subpath | Boundary | Bundled alone |
+| --- | --- | --- |
+| `./core` | imports no `@visx/*` at all | ~8 kB min / ~3.5 kB gzip |
+| `./primitives` | visx, but never `@visx/xychart` | ~145 kB min / ~47 kB gzip |
+| `./xychart` | `<XYChart>` and everything reading its `DataContext` | ~210 kB min / ~74 kB gzip |
+
+Two module splits were needed to make those tiers real, both of which moved code
+across the `@visx/xychart` line without changing any export:
+
+- `theme.ts` kept the tokens and gave up `buildChartTheme`/`chartTheme` to
+  `xychart-theme.ts`. Every mark in the package styles itself from the tokens,
+  so while they lived in the same module as a visx import, a themed legend cost
+  88 kB. It now costs 4.4 kB; the themed standalone axes went 94.5 kB to 51.2 kB
+  and `TimeRangeBrush` 125.7 kB to 66.7 kB, because none of them ever needed
+  `<XYChart>` — they only needed its neighbours' colors.
+- `crosshair.tsx` took `Crosshair` and `nearestStop` out of `cursor-layer.tsx`.
+  `Crosshair` is documented above as the crosshair analog of the themed
+  standalone axes — a mark for hand-composed charts — so co-locating it with
+  `ChartCursorLayer`'s `DataContext` import put it on the wrong side of the line.
+
+Finer splits were considered and rejected on the same evidence: one subpath per
+visx package buys nothing that tree-shaking does not already do inside a tier
+(the package is `"sideEffects": false` ESM), and splitting the `DataContext`
+marks apart from each other buys nothing at all, since they share one floor.
+
+`src/exports.test.ts` holds the invariants: the three subpaths are disjoint,
+their union is exactly the root barrel, no name the root barrel has published
+disappears from it, and `./core` reaches no `@visx/*` module while
+`./primitives` reaches no `@visx/xychart`.
 
 ### Governance: brush and zoom are now first-class dependencies
 
@@ -653,8 +690,14 @@ needed. Bespoke charts use the curated re-exports plus `chartTokens` directly.
   A future pass could offer a small `windowToSlice(data, domain, xAccessor)`
   helper in this package to standardize that instead of leaving it to every
   consumer.
-- The subpath-exports restructuring already `Planned` above (this pass kept
-  everything on the flat root barrel to match the existing package shape).
+- `interaction.tsx`, `cursor-layer.tsx`, `histogram.tsx`, `direct-labels.tsx`
+  and `candlestick.tsx` each pay the full `@visx/xychart` floor for a single
+  `DataContext` import, which also strands their pure helpers (`histogramBins`,
+  `sortDistribution`, `resolveLabelPositions`) behind it. There is no cheaper
+  import available — `@visx/xychart`'s `exports` map publishes only `"."`, so
+  deep-importing its context module is not an option — but if those helpers are
+  ever wanted on a data-prep path, splitting them into visx-free modules the way
+  `crosshair.tsx` was split is the move.
 
 ## Related
 

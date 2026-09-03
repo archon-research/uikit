@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { nearestStop } from './cursor-layer.js';
+import { nearestStop } from './crosshair.js';
 
 const stops = [0, 10, 20, 30, 40];
 

@@ -5,6 +5,40 @@ Token-aware charts for UIKit consumer applications, built as a thin layer over
 tokens); visx owns the rendering mechanics. See [DESIGN.md](./DESIGN.md) for the
 full contract.
 
+## Subpaths
+
+Everything is exported from the package root, and importing from the root stays
+supported. Three subpaths re-export the same names in dependency-cost tiers, so
+a consumer can put a chunk boundary between them without writing a wrapper
+module to dynamic-import through:
+
+| Import | Contains | Cost, bundled alone |
+| --- | --- | --- |
+| `@archon-research/charting/core` | Tokens, `ChartColor`, `ChartLegend`, `Swatch`, `ChartDataTable`, `Crosshair`, `nearestStop`, `ResponsiveChart`, `downsample` | ~8 kB min / ~3.5 kB gzip — no `@visx/*` at all |
+| `@archon-research/charting/primitives` | `scale*`, shapes, `curve*`, `Group`, the themed standalone axes, `TimeRangeBrush`, `ZoomPanOverlay` | ~145 kB min / ~47 kB gzip, tree-shaking down to the visx packages actually used (`@visx/axis` ~49 kB, `@visx/scale` ~50 kB, `@visx/zoom` ~34 kB, `@visx/brush` ~28 kB, `@visx/shape` ~14 kB) |
+| `@archon-research/charting/xychart` | `XYChart`, `chartTheme`, `buildChartTheme`, every `*Series`, and every mark that reads visx's `DataContext` | ~210 kB min / ~74 kB gzip |
+
+The tiers are drawn where the cost is: `@visx/xychart` publishes a single
+barrel entry and nothing below it, so importing ANY symbol from it —
+`DataContext` and `buildChartTheme` as much as `XYChart` — costs ~83 kB
+minified before tree-shaking has anything left to remove. `/xychart` is
+therefore the subpath worth loading lazily:
+
+```tsx
+const Chart = lazy(async () => {
+  const { XYChart, LineSeries, chartTheme } = await import(
+    '@archon-research/charting/xychart'
+  );
+  return { default: () => <XYChart theme={chartTheme}>{/* ... */}</XYChart> };
+});
+```
+
+while a legend, a "show data" table, the chart tokens or the downsamplers can
+sit in an eagerly-loaded chunk via `/core` for a few kB.
+
+Each name lives in exactly one subpath — the root barrel is their union, and
+`src/exports.test.ts` holds both halves of that invariant.
+
 ## Exports
 
 - `chartTheme` — a visx `XYChartTheme` (from `buildChartTheme`) wired to the
