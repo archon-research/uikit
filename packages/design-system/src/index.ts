@@ -55,7 +55,11 @@ export {
   type SkeletonColumnHint,
   type SkeletonColumnKind,
 } from './components/SkeletonRows.js';
-export { SkeletonStack } from './components/SkeletonStack.js';
+export {
+  SkeletonStack,
+  type SkeletonStackProps,
+} from './components/SkeletonStack.js';
+export { SKELETON_FILL_VAR } from './components/skeletonPulse.js';
 export {
   SurfaceMessage,
   SurfaceMessageRoot,
