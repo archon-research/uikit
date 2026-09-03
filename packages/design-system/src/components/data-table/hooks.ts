@@ -44,27 +44,31 @@ export function useDataTable<T extends RowData>(
   // downstream in `DataTable`, the virtualizer's item keys and measurement
   // cache) key off array indices instead of row identity — silently broken
   // once data is prepended or reordered. Warns once, dev-only.
-  // Refs are read-only during render, so the warn-once check runs in an
-  // effect (dev-only diagnostic) rather than inline in the hook body.
+  // Checked in an effect rather than in the render body: reading and writing
+  // the warn-once latch during render is a React Compiler violation, and a
+  // dev diagnostic has no reason to run before the commit.
   const missingRowIdWarned = React.useRef(false);
+  const hasRowCanExpand = config.getRowCanExpand != null;
+  const hasGetRowId = config.getRowId != null;
   React.useEffect(() => {
     if (
-      IS_DEV_WARNING_ENABLED &&
-      shouldWarnMissingGetRowId(
-        config.getRowCanExpand != null,
-        config.getRowId != null,
+      !IS_DEV_WARNING_ENABLED ||
+      !shouldWarnMissingGetRowId(
+        hasRowCanExpand,
+        hasGetRowId,
         missingRowIdWarned.current,
       )
     ) {
-      missingRowIdWarned.current = true;
-      console.warn(
-        '[uikit] `useDataTable` was given `getRowCanExpand` without `getRowId` ' +
-          "— row expansion state (and DataTable's virtualized row measurement) " +
-          'will key off array indices, which breaks when data is prepended or ' +
-          'reordered. Pass a stable `getRowId`.',
-      );
+      return;
     }
-  });
+    missingRowIdWarned.current = true;
+    console.warn(
+      '[uikit] `useDataTable` was given `getRowCanExpand` without `getRowId` ' +
+        "— row expansion state (and DataTable's virtualized row measurement) " +
+        'will key off array indices, which breaks when data is prepended or ' +
+        'reordered. Pass a stable `getRowId`.',
+    );
+  }, [hasRowCanExpand, hasGetRowId]);
 
   const [internalSorting, setInternalSorting] = React.useState<SortingState>(
     config.defaultSorting ?? [],

@@ -74,6 +74,12 @@ export function useIdentityPalette(
   // previously used literal NUL-byte delimiters, which made this file look
   // binary to `git diff`).
   const key = JSON.stringify([count, ids]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` encodes ids+count
-  return useMemo(() => identityPalette(ids, count), [key]);
+  // The memo body reads `count`/`ids` back OUT of `key` rather than closing
+  // over them, so `[key]` is a complete dependency list rather than a
+  // suppressed one — a lint suppression here also opts the whole hook out of
+  // React Compiler optimization.
+  return useMemo(() => {
+    const [memoCount, memoIds] = JSON.parse(key) as [number, string[]];
+    return identityPalette(memoIds, memoCount);
+  }, [key]);
 }
