@@ -1,6 +1,8 @@
 import { Splitter } from '@ark-ui/react/splitter';
 import { Fragment, type ReactNode } from 'react';
 
+import { deriveDefaultSizes } from './splitSizes.js';
+
 /**
  * One pane of a `SplitLayout`.
  */
@@ -48,22 +50,6 @@ const DEFAULT_MIN_SIZE = 10;
 
 const cx = (...classes: Array<string | false | null | undefined>): string =>
   classes.filter(Boolean).join(' ');
-
-/**
- * Renormalizes relative panel weights (`SplitLayoutPanel.size`, default `1`)
- * into percentages summing to 100 — the initial `defaultSize` Ark Splitter
- * seeds from. Pure and exported (but not re-exported from `index.ts`/the
- * package root) purely for `SplitLayout.test.ts` to exercise without
- * rendering. A non-positive or empty weight list falls back to an even
- * split across however many weights were given (guards against a `0`
- * total, e.g. every panel weighted `0`).
- */
-export function deriveDefaultSizes(weights: number[]): number[] {
-  if (weights.length === 0) return [];
-  const total = weights.reduce((sum, weight) => sum + weight, 0);
-  if (total <= 0) return weights.map(() => 100 / weights.length);
-  return weights.map((weight) => (weight / total) * 100);
-}
 
 /**
  * Generic N-way resizable-panel primitive over Ark Splitter — the same

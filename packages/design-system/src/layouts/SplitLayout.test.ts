@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { deriveDefaultSizes } from './SplitLayout.js';
+import { deriveDefaultSizes } from './splitSizes.js';
 
 // `deriveDefaultSizes` is the pure weight -> percent math behind
 // `SplitLayout`'s `SplitLayoutPanel.size` — no Ark Splitter/React rendering
