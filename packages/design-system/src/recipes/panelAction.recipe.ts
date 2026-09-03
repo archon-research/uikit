@@ -7,7 +7,7 @@ export const panelActionRecipe = defineRecipe({
     display: 'inline-flex',
     alignItems: 'center',
     gap: '1.5',
-    borderWidth: '1px',
+    borderWidth: 'hairline',
     borderStyle: 'solid',
     borderColor: 'border.subtle',
     borderRadius: 'md',

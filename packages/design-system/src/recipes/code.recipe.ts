@@ -15,7 +15,7 @@ export const codeRecipe = defineRecipe({
     textStyle: 'codeBlock',
     bg: 'surface.subtle',
     color: 'text.default',
-    borderWidth: '1px',
+    borderWidth: 'hairline',
     borderStyle: 'solid',
     borderColor: 'border.subtle',
   },

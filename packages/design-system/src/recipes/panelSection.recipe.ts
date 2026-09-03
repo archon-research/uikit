@@ -5,7 +5,7 @@ export const panelSectionRecipe = defineRecipe({
   description:
     'Reusable panel section block with border, surface, and spacing presets.',
   base: {
-    borderWidth: '1px',
+    borderWidth: 'hairline',
     borderStyle: 'solid',
     borderColor: 'border.subtle',
     borderRadius: 'md',
