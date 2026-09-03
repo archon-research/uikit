@@ -81,6 +81,10 @@ export function useValueFlash<T>(
 ): UseValueFlashResult {
   const previousRef = useRef<T>(value);
   const optionsRef = useRef(options);
+  // Synced in an effect, not in the render body: a render-time ref write is a
+  // React Compiler violation. Declared BEFORE the change effect below, so on
+  // any commit that carries both a new `value` and new callbacks React runs
+  // this one first and the change effect still reads the current options.
   useEffect(() => {
     optionsRef.current = options;
   });
@@ -157,14 +161,22 @@ export function FlashOnChange({
     parse,
   });
   const reducedMotion = usePrefersReducedMotion();
-  const [markerVisible, setMarkerVisible] = useState(false);
+  // The marker's visibility is DERIVED, not set from the effect: it is on for
+  // any flash the hold timer has not yet retired, and the effect's only job is
+  // to arm that timer. Written the other way round (`setMarkerVisible(true)`
+  // in the effect body) it is a cascading-render violation, and it also cost a
+  // second commit before the marker could paint.
+  const [expiredFlashId, setExpiredFlashId] = useState(0);
+  const markerVisible =
+    flashId !== 0 &&
+    tone != null &&
+    reducedMotion &&
+    expiredFlashId !== flashId;
 
   useEffect(() => {
     if (flashId === 0 || tone == null || !reducedMotion) return;
-    // oxlint-disable-next-line react/set-state-in-effect -- paired with the timer below, not a derivable value; see the PR description.
-    setMarkerVisible(true);
     const timer = setTimeout(
-      () => setMarkerVisible(false),
+      () => setExpiredFlashId(flashId),
       REDUCED_MOTION_MARKER_MS,
     );
     return () => clearTimeout(timer);
