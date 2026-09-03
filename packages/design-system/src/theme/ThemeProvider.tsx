@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
 
 import {
   isThemeMode,
@@ -6,6 +13,8 @@ import {
   writeStoredThemeMode,
 } from './theme-storage.js';
 import { ThemeContext, type ThemeMode } from './useTheme.js';
+
+const DARK_QUERY = '(prefers-color-scheme: dark)';
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
@@ -40,7 +49,7 @@ function readInitialThemeMode(): ThemeMode {
  * `ThemeProvider.test.ts` can assert the "explicit mode never consults the
  * stamp" half directly: under an explicit mode the seeded value is invisible in
  * the first render's `isDark` (the mode alone decides that) and by the time a
- * mode switch could reveal it the mount effect has already overwritten it from
+ * mode switch could reveal it the store below has already overwritten it from
  * `matchMedia`.
  */
 export function readSystemPrefersDark(mode: ThemeMode): boolean {
@@ -55,38 +64,87 @@ export function readSystemPrefersDark(mode: ThemeMode): boolean {
     }
   }
 
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return window.matchMedia(DARK_QUERY).matches;
+}
+
+/**
+ * The system colour-scheme preference, as an external store.
+ *
+ * It is one: a browser-owned value that changes on its own schedule, which is
+ * exactly what `useSyncExternalStore` subscribes React to. Modelling it that
+ * way — rather than as state seeded in a `useState` initializer and corrected
+ * from a mount effect — keeps the seeding described above intact while removing
+ * the mount-time `setState`.
+ *
+ * The two halves it has to reconcile:
+ *
+ * - The FIRST read must be `readSystemPrefersDark`, not a bare `matchMedia`
+ *   read, or the anti-flash seeding is gone: on a hydrated page the first
+ *   commit would reset `<html>` to whatever `matchMedia` says (light, when
+ *   there is no `matchMedia` answer worth having yet) instead of agreeing with
+ *   the stamp the user is already looking at. Hence the lazy `current`, which
+ *   makes the seed the store's initial snapshot rather than something layered
+ *   on top of it.
+ * - Every read AFTER the listener is attached must be the live `matchMedia`
+ *   answer. `subscribe` therefore re-reads on attach: the seed was resolved
+ *   before paint, and a preference that changed between then and mount would
+ *   otherwise go unnoticed until the next change event. React compares the
+ *   snapshot it rendered with the one it finds after subscribing and re-renders
+ *   on a difference, which is precisely what the old mount effect did by hand.
+ *
+ * One store per provider (held in `useState`, so it is created once): the seed
+ * depends on the provider's own initial `mode`, and a module-level singleton
+ * would hand a later provider — or the next test — a value seeded for someone
+ * else's document.
+ */
+function createSystemPreferenceStore(mode: ThemeMode): {
+  subscribe: (onStoreChange: () => void) => () => void;
+  getSnapshot: () => boolean;
+} {
+  let current: boolean | null = null;
+
+  return {
+    getSnapshot: () => {
+      current ??= readSystemPrefersDark(mode);
+      return current;
+    },
+    subscribe: (onStoreChange) => {
+      if (!isBrowser()) {
+        return () => {};
+      }
+
+      const media = window.matchMedia(DARK_QUERY);
+
+      const handleChange = (event: MediaQueryListEvent) => {
+        current = event.matches;
+        onStoreChange();
+      };
+
+      current = media.matches;
+
+      if (typeof media.addEventListener === 'function') {
+        media.addEventListener('change', handleChange);
+        return () => media.removeEventListener('change', handleChange);
+      }
+
+      media.addListener(handleChange);
+      return () => media.removeListener(handleChange);
+    },
+  };
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(readInitialThemeMode);
-  const [systemPrefersDark, setSystemPrefersDark] = useState(() =>
-    readSystemPrefersDark(mode),
+  const [systemPreference] = useState(() => createSystemPreferenceStore(mode));
+  // The same function serves as the server snapshot: it already answers `false`
+  // without a `window`, and on the client — including the hydration render —
+  // it answers with the bootstrap's stamp, which is the whole point.
+  const systemPrefersDark = useSyncExternalStore(
+    systemPreference.subscribe,
+    systemPreference.getSnapshot,
+    systemPreference.getSnapshot,
   );
   const isApplyingThemeRef = useRef(false);
-
-  useEffect(() => {
-    if (!isBrowser()) {
-      return;
-    }
-
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const handleChange = (event: MediaQueryListEvent) => {
-      setSystemPrefersDark(event.matches);
-    };
-
-    // oxlint-disable-next-line react/set-state-in-effect -- reconciles the pre-hydration guess against the live `matchMedia` read; see the PR description.
-    setSystemPrefersDark(media.matches);
-
-    if (typeof media.addEventListener === 'function') {
-      media.addEventListener('change', handleChange);
-      return () => media.removeEventListener('change', handleChange);
-    }
-
-    media.addListener(handleChange);
-    return () => media.removeListener(handleChange);
-  }, []);
 
   const isDark = mode === 'dark' || (mode === 'auto' && systemPrefersDark);
 
