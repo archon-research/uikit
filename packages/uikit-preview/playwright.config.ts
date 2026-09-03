@@ -28,7 +28,15 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run build && npm run snapshot:serve',
+    // Build the whole workspace, not just this package. Stories import
+    // `@archon-research/*` through each package's `exports`, which resolve to
+    // `dist/` — so rendering against a dependency that was not rebuilt shows
+    // its PREVIOUS component, which matches its PREVIOUS baseline and passes
+    // while asserting nothing. Root `npm run build` (`--workspaces
+    // --if-present`, dependency-ordered) includes this package's own build, so
+    // this is still a single pass. CI already builds before this step; the
+    // warm rebuild there costs seconds.
+    command: 'npm --prefix ../.. run build && npm run snapshot:serve',
     port,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

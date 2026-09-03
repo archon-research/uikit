@@ -4,9 +4,13 @@
 // force a full re-render.
 //
 // How it works:
-//   1. Build the preview once. The `story-deps.json` Vite plugin (vite.config.ts)
-//      emits a post-tree-shake map of every source module -> the story files
-//      whose chunk graph includes it. Tree-shaking is what gives per-component
+//   1. Build every workspace package once, preview last. Stories bundle each
+//      dependency's `dist/`, never its `src/`, so the dependency builds are what
+//      make the render reflect the edit under test rather than the previous one
+//      (see `runBuild`; `check-stale-deps.ts` enforces it). The
+//      `story-deps.json` Vite plugin (vite.config.ts) then emits a
+//      post-tree-shake map of every source module -> the story files whose
+//      chunk graph includes it. Tree-shaking is what gives per-component
 //      granularity through the shared design-system barrel.
 //   2. Diff the working tree (+ branch vs base) and map each changed file to the
 //      stories that depend on it.
@@ -75,14 +79,55 @@ const changedFiles = (): string[] => {
 const PORT = 61000;
 const HOST = '127.0.0.1';
 
+/**
+ * Build every workspace package, not just this one.
+ *
+ * The preview imports `@archon-research/*` through each package's `exports`,
+ * which resolve to `dist/` — Ladle bundles that compiled output and never sees
+ * the package's `src/`. Building only this package therefore re-rendered the
+ * PREVIOUS build of every dependency, which matched the PREVIOUS baseline: the
+ * run passed and rewrote nothing while the change was real.
+ *
+ * Root `npm run build` is `--workspaces --if-present` in the dependency order
+ * the root `workspaces` array encodes — the same command CI's visual-snapshots
+ * job runs before it renders. It includes this package's own build, so the
+ * whole update still does exactly one build of each package; warm, the extra
+ * dependency compilation costs a few seconds.
+ */
 const runBuild = () => {
-  console.log('› building preview to compute the affected-story graph…');
+  console.log('› building all workspace packages (dependencies + preview)…');
   const build = spawnSync('npm', ['run', 'build'], {
-    cwd: packageDir,
+    cwd: repoRoot,
     stdio: 'inherit',
   });
   if (build.status !== 0) process.exit(build.status ?? 1);
 };
+
+/**
+ * Prove the build above actually refreshed every package the stories render,
+ * so this script cannot silently regress to validating a stale bundle.
+ */
+const checkDepsAreFresh = () => {
+  const check = spawnSync('node', ['scripts/check-stale-deps.ts'], {
+    cwd: packageDir,
+    stdio: 'inherit',
+  });
+  if (check.status !== 0) process.exit(check.status ?? 1);
+};
+
+/** Is something already listening? A free port is required, never reused. */
+const portInUse = (port: number, host: string) =>
+  new Promise<boolean>((resolve) => {
+    const socket = net.connect(port, host);
+    socket.once('connect', () => {
+      socket.destroy();
+      resolve(true);
+    });
+    socket.once('error', () => {
+      socket.destroy();
+      resolve(false);
+    });
+  });
 
 const waitForPort = (port: number, host: string, timeoutMs: number) =>
   new Promise<void>((resolve, reject) => {
@@ -105,9 +150,9 @@ const waitForPort = (port: number, host: string, timeoutMs: number) =>
 
 /**
  * Serve the already-built preview and run Playwright against it. Because
- * playwright.config's webServer uses `reuseExistingServer` off-CI, an
- * already-listening port means Playwright skips its own `npm run build &&
- * serve` — so the whole update does exactly one build (the one above).
+ * playwright.config's webServer uses `reuseExistingServer` off-CI, the server
+ * started here means Playwright skips its own build-and-serve — so the whole
+ * update does exactly one build of each package (the one above).
  */
 const runPlaywright = async (storyIds: string[] | null) => {
   const env = { ...process.env };
@@ -123,10 +168,29 @@ const runPlaywright = async (storyIds: string[] | null) => {
     );
   }
 
+  // Nothing else may hold the port. `ladle preview` would fail to bind, and
+  // because playwright.config's `reuseExistingServer` is on off-CI, Playwright
+  // would then scrape whatever *is* listening — a leftover server, or another
+  // worktree's `snapshot:serve` — comparing this branch's baselines against a
+  // different checkout's pixels. Fail rather than render the wrong tree.
+  if (await portInUse(PORT, HOST)) {
+    console.error(
+      `Something is already listening on ${HOST}:${PORT}, which is where the\n` +
+        'preview under test has to be served from. Stop it and re-run:\n\n' +
+        `  lsof -nP -iTCP:${PORT} -sTCP:LISTEN\n`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   const server = spawn('npm', ['run', 'snapshot:serve'], {
     cwd: packageDir,
     detached: true,
-    stdio: 'ignore',
+    stdio: ['ignore', 'ignore', 'pipe'],
+  });
+  let serverError = '';
+  server.stderr?.on('data', (chunk: Buffer) => {
+    serverError += chunk.toString();
   });
   const killServer = () => {
     try {
@@ -142,7 +206,20 @@ const runPlaywright = async (storyIds: string[] | null) => {
   });
 
   try {
-    await waitForPort(PORT, HOST, 180_000);
+    // A server that dies (bad build, bind failure) would otherwise leave
+    // waitForPort spinning for its full timeout; surface its stderr instead.
+    await Promise.race([
+      waitForPort(PORT, HOST, 180_000),
+      new Promise<never>((_, reject) => {
+        server.once('exit', (code) => {
+          reject(
+            new Error(
+              `preview server exited (code ${code}) before serving ${HOST}:${PORT}\n${serverError}`,
+            ),
+          );
+        });
+      }),
+    ]);
     const result = spawnSync(
       'npx',
       ['playwright', 'test', '--update-snapshots'],
@@ -153,6 +230,9 @@ const runPlaywright = async (storyIds: string[] | null) => {
       },
     );
     process.exitCode = result.status ?? 1;
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
   } finally {
     killServer();
   }
@@ -196,6 +276,7 @@ if (changed.length === 0) {
 }
 
 runBuild();
+checkDepsAreFresh();
 
 const depsPath = path.join(packageDir, 'dist', 'story-deps.json');
 const metaPath = path.join(packageDir, 'dist', 'meta.json');
