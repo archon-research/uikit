@@ -10,6 +10,7 @@ import {
   animationTokens,
   bgColors,
   borderColors,
+  borderWidthTokens,
   categoricalColors,
   colorPaletteRoleTokens,
   colorSchemeGlobalCss,
@@ -76,6 +77,7 @@ export const designSystemPandaConfig = {
       keyframes: motionKeyframes,
       tokens: {
         animations: animationTokens,
+        borderWidths: borderWidthTokens,
         fontSizes: microFontSizes,
         zIndex: zIndexTokens,
       },

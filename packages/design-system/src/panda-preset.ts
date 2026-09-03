@@ -9,6 +9,7 @@ import {
   animationTokens,
   bgColors,
   borderColors,
+  borderWidthTokens,
   categoricalColors,
   colorPaletteRoleTokens,
   colorSchemeGlobalCss,
@@ -64,6 +65,7 @@ export const designSystemPreset = definePreset({
       keyframes: motionKeyframes,
       tokens: {
         animations: animationTokens,
+        borderWidths: borderWidthTokens,
         fontSizes: microFontSizes,
         zIndex: zIndexTokens,
       },
