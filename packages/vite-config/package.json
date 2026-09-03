@@ -1,0 +1,48 @@
+{
+  "name": "@archon-research/vite-config",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "files": [
+    "dist",
+    "react-compiler.ts"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build",
+    "type:check": "tsc -p tsconfig.json --noEmit",
+    "lint": "oxlint -c oxlint.config.ts --max-warnings=0 *.ts",
+    "lint:fix": "oxlint -c oxlint.config.ts --fix *.ts",
+    "format": "oxfmt -c oxfmt.config.ts --write *.ts",
+    "format:check": "oxfmt -c oxfmt.config.ts --check *.ts",
+    "test": "npm run build && vitest run"
+  },
+  "exports": {
+    "./react-compiler": {
+      "types": "./dist/react-compiler.d.ts",
+      "default": "./dist/react-compiler.js"
+    }
+  },
+  "peerDependencies": {
+    "@rolldown/plugin-babel": "^0.2.3",
+    "@vitejs/plugin-react": "^6.0.5",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "vite": "^8.0.0"
+  },
+  "devDependencies": {
+    "@archon-research/oxfmt-config": "*",
+    "@archon-research/oxlint-config": "*",
+    "@archon-research/tsconfig": "*",
+    "@babel/core": "7.29.0",
+    "@rolldown/plugin-babel": "0.2.3",
+    "@types/babel__core": "7.20.5",
+    "@vitejs/plugin-react": "6.0.5",
+    "babel-plugin-react-compiler": "1.0.0",
+    "oxfmt": "0.63.0",
+    "oxlint": "1.78.0",
+    "vite": "8.2.2",
+    "vitest": "^4.1.9"
+  }
+}
