@@ -18,7 +18,7 @@ export const surfaceMessageRecipe = defineSlotRecipe({
   base: {
     root: {
       borderRadius: 'lg',
-      borderWidth: '1px',
+      borderWidth: 'hairline',
       borderStyle: 'solid',
       borderColor: 'border.subtle',
       bg: 'surface.subtle',

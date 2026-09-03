@@ -52,7 +52,7 @@ export const rangeSliderRecipe = defineSlotRecipe({
       width: '4',
       height: '4',
       borderRadius: 'full',
-      borderWidth: '2px',
+      borderWidth: 'strong',
       borderStyle: 'solid',
       borderColor: 'interactive.accent',
       bg: 'surface.default',

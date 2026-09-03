@@ -28,7 +28,7 @@ export const themeToggleRecipe = defineSlotRecipe({
       flex: '1',
       minWidth: '0',
       gap: '1.5',
-      borderWidth: '0',
+      borderWidth: 'none',
       borderRadius: 'md',
       px: '2.5',
       py: '1.5',
@@ -62,7 +62,7 @@ export const themeToggleRecipe = defineSlotRecipe({
       justifyContent: 'center',
       w: '9',
       h: '9',
-      borderWidth: '1px',
+      borderWidth: 'hairline',
       borderStyle: 'solid',
       borderColor: 'border.subtle',
       borderRadius: 'md',
@@ -93,7 +93,7 @@ export const themeToggleRecipe = defineSlotRecipe({
           width: 'full',
           boxSizing: 'border-box',
           p: '1',
-          borderWidth: '1px',
+          borderWidth: 'hairline',
           borderStyle: 'solid',
           borderColor: 'border.subtle',
           borderRadius: 'lg',
@@ -114,7 +114,7 @@ export const themeToggleRecipe = defineSlotRecipe({
       chip: {},
       bare: {
         iconButton: {
-          borderWidth: '0',
+          borderWidth: 'none',
           borderColor: 'transparent',
           bg: 'transparent',
           // There is no `none` radii token; the literal 0 is what squares the button.

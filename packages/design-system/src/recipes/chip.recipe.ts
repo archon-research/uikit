@@ -18,7 +18,7 @@ export const chipRecipe = defineSlotRecipe({
       display: 'inline-flex',
       alignItems: 'center',
       borderRadius: 'full',
-      borderWidth: '1px',
+      borderWidth: 'hairline',
       borderStyle: 'solid',
       borderColor: 'transparent',
       fontWeight: 'medium',

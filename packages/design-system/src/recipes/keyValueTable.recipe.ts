@@ -29,10 +29,10 @@ export const keyValueTableRecipe = defineSlotRecipe({
       mb: '2',
     },
     row: {
-      borderBottomWidth: '1px',
+      borderBottomWidth: 'hairline',
       borderBottomStyle: 'solid',
       borderBottomColor: 'border.subtle',
-      _last: { borderBottomWidth: '0' },
+      _last: { borderBottomWidth: 'none' },
     },
     label: {
       textAlign: 'start',
