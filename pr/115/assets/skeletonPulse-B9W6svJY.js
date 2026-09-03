@@ -1,0 +1,1 @@
+const s=.85,e=`@keyframes skeletonPulse { 0%, 100% { opacity: ${.85}; } 50% { opacity: 0.45; } }`,o="skeletonPulse 1.5s ease-in-out infinite",E="--skeleton-fill",t=`var(${E}, var(--colors-border-subtle, #d4d4d4))`;export{t as S,o as a,e as b,s as c};
