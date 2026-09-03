@@ -697,6 +697,7 @@ export function DataTable<TData extends RowData>({
     derivedColumnHints,
   );
 
+  // oxlint-disable-next-line react/incompatible-library -- `@tanstack/react-virtual`'s returned object carries methods bound to its own internal mutable state; nothing in this file can make that memoizable.
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => (virtualized ? scrollContainerRef.current : null),

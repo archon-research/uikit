@@ -96,9 +96,12 @@ export function useRelaySession({
   const acceptedRef = useRef(false);
   // Invokes held awaiting a confirmation decision, keyed by call_id.
   const heldRef = useRef<Map<string, HeldInvoke>>(new Map());
-  // Always read the freshest registry accessor from the WS handler.
+  // Always read the freshest registry accessor from the WS handler. Synced
+  // in an effect, not during render: refs are read-only during render.
   const listToolsRef = useRef(registry.listTools);
-  listToolsRef.current = registry.listTools;
+  useEffect(() => {
+    listToolsRef.current = registry.listTools;
+  });
 
   const log = useCallback((line: string) => {
     setActivity((prev) =>
@@ -384,6 +387,7 @@ export function useRelaySession({
     if (acceptedRef.current) {
       advertiseTools();
     }
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `toolSignature` is intentionally a trigger-only dep (not read in the body): it's what makes this effect re-run when the registered tool set changes.
   }, [toolSignature, advertiseTools]);
 
   return {

@@ -3,7 +3,14 @@ import {
   type InteractionKey,
   type TimeRange,
 } from '@archon-research/charting';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactElement,
+  type RefObject,
+} from 'react';
 
 import type { InteractionContextValue } from './interaction.js';
 
@@ -47,12 +54,81 @@ export type ChartingInteraction = {
   interaction: InteractionContextValue;
   /**
    * Render ONCE inside a `SyncedChartGroup` / `DashboardInteractionProvider`.
-   * It renders nothing; it is the sole subscriber to the high-frequency
-   * charting context and republishes the mapped keys into the per-key store
-   * that {@link interaction} reads.
+   * It renders nothing observable; it is the sole subscriber to the
+   * high-frequency charting context and republishes the mapped keys into the
+   * per-key store that {@link interaction} reads.
    */
-  InteractionSync: () => null;
+  InteractionSync: () => ReactElement;
 };
+
+type ChartingInteractionSyncProps = {
+  keyMapRef: RefObject<InteractionKeyMap>;
+  writerRef: RefObject<(key: string, value: unknown) => void>;
+  publish: (key: string, value: unknown) => void;
+};
+
+/**
+ * Module-scope, not a closure created per `useChartingInteraction` call:
+ * hooks nested inside a `useMemo`/`useCallback` are ambiguous to the rules-of
+ * -hooks check (it can't tell they belong to a separate component render, not
+ * the enclosing hook's), so this needs to be a real, statically top-level
+ * component. Everything it needs comes in as props instead of a closure.
+ */
+function ChartingInteractionSync({
+  keyMapRef,
+  writerRef,
+  publish,
+}: ChartingInteractionSyncProps): null {
+  const chart = useDashboardInteraction();
+
+  // Every manifest alias that resolves to `highlightedKey` gets the
+  // charting value republished under it; likewise for the other keys.
+  const aliasesFor = useCallback(
+    (chartingKey: InteractionKey): string[] =>
+      Object.entries(keyMapRef.current)
+        .filter(([, target]) => target === chartingKey)
+        .map(([alias]) => alias),
+    [keyMapRef],
+  );
+
+  useEffect(() => {
+    for (const alias of aliasesFor('highlightedKey')) {
+      publish(alias, chart.highlightedKey ?? undefined);
+    }
+  }, [chart.highlightedKey, publish, aliasesFor]);
+  useEffect(() => {
+    for (const alias of aliasesFor('timeRange')) {
+      publish(alias, chart.timeRange ?? undefined);
+    }
+  }, [chart.timeRange, publish, aliasesFor]);
+  useEffect(() => {
+    for (const alias of aliasesFor('hoveredTimestamp')) {
+      publish(alias, chart.hoveredTimestamp ?? undefined);
+    }
+  }, [chart.hoveredTimestamp, publish, aliasesFor]);
+
+  // The write side, held in a ref so `interaction.write` stays
+  // identity-stable for every consumer.
+  useEffect(() => {
+    writerRef.current = (key: string, value: unknown) => {
+      switch (keyMapRef.current[key]) {
+        case 'highlightedKey':
+          chart.setHighlightedKey(value == null ? null : String(value));
+          return;
+        case 'timeRange':
+          chart.setTimeRange((value as TimeRange | null) ?? null);
+          return;
+        case 'hoveredTimestamp':
+          chart.setHoveredTimestamp(value == null ? null : Number(value));
+          return;
+        default:
+          return;
+      }
+    };
+  }, [chart, keyMapRef, writerRef]);
+
+  return null;
+}
 
 /**
  * Builds a charting-backed {@link InteractionContextValue}. Call it above a
@@ -67,8 +143,11 @@ export function useChartingInteraction(
   const writerRef = useRef<(key: string, value: unknown) => void>(() => {});
   // Which charting key each manifest key resolves to — a ref so `interaction`
   // stays identity-stable even if the caller passes an inline map object.
+  // Synced in an effect, not during render: refs are read-only during render.
   const keyMapRef = useRef(keyMap);
-  keyMapRef.current = keyMap;
+  useEffect(() => {
+    keyMapRef.current = keyMap;
+  });
 
   const read = useCallback((key: string) => valuesRef.current.get(key), []);
 
@@ -99,58 +178,17 @@ export function useChartingInteraction(
     [read, write, subscribe],
   );
 
-  // A stable component type, created once, so React never unmounts/remounts it
-  // (and its charting subscription) across the dashboard's renders.
-  const InteractionSync = useMemo(
-    () =>
-      function ChartingInteractionSync(): null {
-        const chart = useDashboardInteraction();
-
-        // Every manifest alias that resolves to `highlightedKey` gets the
-        // charting value republished under it; likewise for the other keys.
-        const aliasesFor = (chartingKey: InteractionKey): string[] =>
-          Object.entries(keyMapRef.current)
-            .filter(([, target]) => target === chartingKey)
-            .map(([alias]) => alias);
-
-        useEffect(() => {
-          for (const alias of aliasesFor('highlightedKey')) {
-            publish(alias, chart.highlightedKey ?? undefined);
-          }
-        }, [chart.highlightedKey]);
-        useEffect(() => {
-          for (const alias of aliasesFor('timeRange')) {
-            publish(alias, chart.timeRange ?? undefined);
-          }
-        }, [chart.timeRange]);
-        useEffect(() => {
-          for (const alias of aliasesFor('hoveredTimestamp')) {
-            publish(alias, chart.hoveredTimestamp ?? undefined);
-          }
-        }, [chart.hoveredTimestamp]);
-
-        // The write side, held in a ref so `interaction.write` stays
-        // identity-stable for every consumer.
-        useEffect(() => {
-          writerRef.current = (key: string, value: unknown) => {
-            switch (keyMapRef.current[key]) {
-              case 'highlightedKey':
-                chart.setHighlightedKey(value == null ? null : String(value));
-                return;
-              case 'timeRange':
-                chart.setTimeRange((value as TimeRange | null) ?? null);
-                return;
-              case 'hoveredTimestamp':
-                chart.setHoveredTimestamp(value == null ? null : Number(value));
-                return;
-              default:
-                return;
-            }
-          };
-        }, [chart]);
-
-        return null;
-      },
+  // A stable function identity, created once, so React never unmounts/
+  // remounts `ChartingInteractionSync` (and its charting subscription)
+  // across the dashboard's renders.
+  const InteractionSync = useCallback(
+    () => (
+      <ChartingInteractionSync
+        keyMapRef={keyMapRef}
+        writerRef={writerRef}
+        publish={publish}
+      />
+    ),
     [publish],
   );
 

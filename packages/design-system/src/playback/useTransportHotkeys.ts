@@ -126,11 +126,14 @@ export function useTransportHotkeys<TPayload = unknown>(
   { enabled = true, onAction }: UseTransportHotkeysOptions = {},
 ): void {
   // Keep the latest controller/callback in refs so the listener is installed
-  // exactly once and never churns as playback state ticks over.
+  // exactly once and never churns as playback state ticks over. Synced in an
+  // effect, not during render: refs are read-only during render.
   const playbackRef = useRef(playback);
-  playbackRef.current = playback;
   const onActionRef = useRef(onAction);
-  onActionRef.current = onAction;
+  useEffect(() => {
+    playbackRef.current = playback;
+    onActionRef.current = onAction;
+  });
 
   useEffect(() => {
     if (!enabled) return;

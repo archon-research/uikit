@@ -87,8 +87,12 @@ function ReplayDemo() {
 }
 
 function useFakeLiveSource(): LivePlaybackSource<EventPayload> {
-  const listenersRef = useRef(
-    new Set<(event: PlaybackEvent<EventPayload>) => void>(),
+  // A plain `Set` held in `useState` (never via its setter) rather than a
+  // ref: the subscribe callback below is created inside `useMemo`, which
+  // runs during render, and refs aren't safe to read there even from a
+  // nested closure that only runs later.
+  const [listeners] = useState(
+    () => new Set<(event: PlaybackEvent<EventPayload>) => void>(),
   );
   const seqRef = useRef(0);
 
@@ -102,19 +106,19 @@ function useFakeLiveSource(): LivePlaybackSource<EventPayload> {
         type: TYPES[seqRef.current % TYPES.length] ?? TYPES[0],
         payload: { message: `event ${seqRef.current}` },
       };
-      for (const listener of listenersRef.current) listener(event);
+      for (const listener of listeners) listener(event);
     }, 1500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [listeners]);
 
   return useMemo(
     () =>
       createLiveSource<EventPayload>((onEvent) => {
-        listenersRef.current.add(onEvent);
-        return () => listenersRef.current.delete(onEvent);
+        listeners.add(onEvent);
+        return () => listeners.delete(onEvent);
       }),
-    [],
+    [listeners],
   );
 }
 

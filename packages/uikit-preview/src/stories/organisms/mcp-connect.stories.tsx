@@ -24,7 +24,7 @@ import {
   useRelaySession,
   WebMCPProvider,
 } from '@archon-research/webmcp';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { css } from '../../../styled-system/css';
 
@@ -92,10 +92,10 @@ const ControlPreviewInner = () => {
   const [theme, setTheme] = useState<Theme>('light');
 
   // The Ladle story catalogue (id -> {name, levels}); fetched once for search.
-  const storiesRef = useRef<Stories>({});
+  const [stories, setStories] = useState<Stories>({});
 
   const titleOf = (id: string): string => {
-    const meta = storiesRef.current[id];
+    const meta = stories[id];
     return meta ? [...meta.levels, meta.name].join(' / ') : id;
   };
 
@@ -107,7 +107,7 @@ const ControlPreviewInner = () => {
     fetch(metaUrl)
       .then((r) => r.json())
       .then((m: { stories?: Stories }) => {
-        storiesRef.current = m.stories ?? {};
+        setStories(m.stories ?? {});
       })
       .catch(() => {
         console.warn('[mcp-connect demo] could not load the story catalogue');
@@ -134,7 +134,7 @@ const ControlPreviewInner = () => {
       },
       handler: ({ query }: { query: string }) => {
         const q = String(query ?? '').toLowerCase();
-        const matches = Object.entries(storiesRef.current)
+        const matches = Object.entries(stories)
           .filter(
             ([id, meta]) =>
               id.toLowerCase().includes(q) ||
@@ -155,7 +155,7 @@ const ControlPreviewInner = () => {
         'List every component story available in the preview. Returns story ids and titles; pass an id to ladle.selectComponent to display it.',
       schema: { type: 'object', properties: {} },
       handler: () => {
-        const components = Object.keys(storiesRef.current)
+        const components = Object.keys(stories)
           .sort()
           .map((id) => ({ id, title: titleOf(id) }));
         return { count: components.length, components };
@@ -181,7 +181,7 @@ const ControlPreviewInner = () => {
       },
       handler: ({ componentId }: { componentId: string }) => {
         const id = String(componentId ?? '');
-        if (!storiesRef.current[id]) {
+        if (!stories[id]) {
           return {
             error: `Unknown component id: ${id}. Use ladle.searchComponents first.`,
           };
