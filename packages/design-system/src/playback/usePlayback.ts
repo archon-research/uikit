@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { useIdentityChurnWarning } from '../hooks/useIdentityChurnWarning.js';
 import { createAppendOnlyBuffer } from './appendOnlyBuffer.js';
@@ -87,6 +94,25 @@ function sortEvents<T>(events: PlaybackEvent<T>[]): PlaybackEvent<T>[] {
 }
 
 /**
+ * The `events` value a live source is reset to. One shared snapshot rather than
+ * a fresh empty buffer's, because the contract on `events` is that identity
+ * changes exactly when the CONTENTS change — and two resets in a row are two
+ * empty lists. It is a real snapshot, not `[]`, so writing through it throws
+ * immediately after a reset just as it does after a flush.
+ */
+const EMPTY_LIVE_EVENTS = createAppendOnlyBuffer<never>().snapshot();
+
+/**
+ * `useLayoutEffect`, except on the server, where React warns that it does
+ * nothing — correctly, and harmlessly here: nothing subscribes to a live source
+ * during a server render, so there is no superseded flush for the layout timing
+ * to protect against. See the reset below for why the timing matters on the
+ * client.
+ */
+const useIsomorphicLayoutEffect =
+  typeof document === 'undefined' ? useEffect : useLayoutEffect;
+
+/**
  * Drives one virtual clock over a transport-agnostic `PlaybackSource`. The
  * consumer (a component rendering a display) only ever reads `events` /
  * `latestEvent` / `clock` / `status` — it never branches on `mode` itself,
@@ -143,11 +169,35 @@ export function usePlayback<TPayload = unknown>({
   // Reset the scrub position + status whenever the underlying log identity
   // changes (a new source object — e.g. switching which component's log is
   // being viewed).
-  useEffect(() => {
-    if (source.kind !== 'replay') return;
-    setReplayClock(bounds?.start ?? 0);
-    setReplayStatus(replayAutoplay ? 'playing' : 'paused');
-  }, [source, bounds, replayAutoplay]);
+  //
+  // Done DURING RENDER, via React's documented "adjusting state when a prop
+  // changes" pattern, rather than in an effect. React throws the in-progress
+  // render away and re-runs this function with the reset values before
+  // committing anything, so no commit ever carries a new log against the
+  // previous log's clock. An effect could only reset AFTER such a commit, and
+  // the effects that key on the clock (the `onEvent` walk below in
+  // particular) would have already run once against that mismatched pair.
+  const [replayResetKey, setReplayResetKey] = useState({
+    source,
+    bounds,
+    replayAutoplay,
+  });
+  // True only in the render pass that discovers the change: the reset below is
+  // queued but the local `replayClock`/`replayStatus` still hold the previous
+  // log's values, so anything downstream that reads them has to wait for the
+  // re-run rather than decide on a pair that will never be committed.
+  const replayResetPending =
+    replayResetKey.source !== source ||
+    replayResetKey.bounds !== bounds ||
+    replayResetKey.replayAutoplay !== replayAutoplay;
+
+  if (replayResetPending) {
+    setReplayResetKey({ source, bounds, replayAutoplay });
+    if (source.kind === 'replay') {
+      setReplayClock(bounds?.start ?? 0);
+      setReplayStatus(replayAutoplay ? 'playing' : 'paused');
+    }
+  }
 
   const rafRef = useRef<number | null>(null);
   const lastFrameRef = useRef<number | null>(null);
@@ -177,17 +227,24 @@ export function usePlayback<TPayload = unknown>({
     };
   }, [mode, replayStatus, bounds, speed]);
 
-  // Flip to 'complete' exactly once the clock reaches the end.
-  useEffect(() => {
-    if (
-      mode === 'replay' &&
-      bounds &&
-      replayClock >= bounds.end &&
-      replayStatus === 'playing'
-    ) {
-      setReplayStatus('complete');
-    }
-  }, [mode, bounds, replayClock, replayStatus]);
+  // Flip to 'complete' exactly once the clock reaches the end. Also a
+  // render-time adjustment, and it stays a STATE flip rather than becoming a
+  // derived `replayClock >= bounds.end` — completion is sticky in a way the
+  // clock is not. `seekTo` deliberately leaves a backward seek from the end
+  // paused; derived, that seek would silently resume playing.
+  //
+  // Self-terminating: the re-run this schedules sees `'complete'` and stops.
+  // Skipped while a reset is pending, so the end-of-log test is never applied
+  // to the previous log's clock.
+  if (
+    !replayResetPending &&
+    mode === 'replay' &&
+    bounds &&
+    replayClock >= bounds.end &&
+    replayStatus === 'playing'
+  ) {
+    setReplayStatus('complete');
+  }
 
   // Fire onEvent for newly-crossed events as the clock moves forward; rewind
   // the cursor on a backward seek so re-crossing forward fires again (mirrors
@@ -243,9 +300,8 @@ export function usePlayback<TPayload = unknown>({
   const liveEventsRef = useRef<AppendOnlyBuffer<PlaybackEvent<TPayload>>>(
     createAppendOnlyBuffer<PlaybackEvent<TPayload>>(),
   );
-  const [liveEvents, setLiveEvents] = useState<PlaybackEvent<TPayload>[]>(() =>
-    createAppendOnlyBuffer<PlaybackEvent<TPayload>>().snapshot(),
-  );
+  const [liveEvents, setLiveEvents] =
+    useState<PlaybackEvent<TPayload>[]>(EMPTY_LIVE_EVENTS);
   const [liveClock, setLiveClock] = useState<number>(() => Date.now());
   const [liveStatus, setLiveStatus] = useState<PlaybackStatus>(
     liveAutoplay ? 'connecting' : 'paused',
@@ -253,14 +309,59 @@ export function usePlayback<TPayload = unknown>({
   const livePlayingRef = useRef(liveAutoplay);
   const liveBufferRef = useRef<PlaybackEvent<TPayload>[]>([]);
 
-  useEffect(() => {
+  // Switching sources resets five things — two states, three refs — and the
+  // reset only holds together if NOTHING from the outgoing source can be
+  // observed between them. It is spread over three phases to keep that true,
+  // and each phase is where it is for a reason.
+  //
+  // RENDER: the two states. React re-runs this function with the reset values
+  // before committing, so no commit shows the new source carrying the previous
+  // source's events.
+  const [liveResetKey, setLiveResetKey] = useState({ source, liveAutoplay });
+
+  if (
+    liveResetKey.source !== source ||
+    liveResetKey.liveAutoplay !== liveAutoplay
+  ) {
+    setLiveResetKey({ source, liveAutoplay });
+    if (source.kind === 'live') {
+      setLiveEvents(EMPTY_LIVE_EVENTS);
+      setLiveStatus(liveAutoplay ? 'connecting' : 'paused');
+    }
+  }
+
+  // COMMIT, SYNCHRONOUSLY: the three refs.
+  //
+  // This has to be `useLayoutEffect`. Downgrading it to `useEffect` reopens a
+  // window and reintroduces a bug: the outgoing subscription stays live until
+  // its cleanup, which runs in the PASSIVE phase, and passive effects are
+  // flushed on a scheduler task that a `requestAnimationFrame` can beat. In
+  // that window the outgoing batcher can still flush. Once the state reset
+  // above has already committed, that flush has nothing left to erase it, so
+  // the previous source's events land in — and stay in — the new source's
+  // list. Resetting the refs in the layout phase closes the window: the refs
+  // are already swapped before anything outside React can run, which is what
+  // lets the subscription below recognise itself as superseded.
+  useIsomorphicLayoutEffect(() => {
     if (source.kind !== 'live') return;
     livePlayingRef.current = liveAutoplay;
     liveBufferRef.current = [];
-    const buffer = createAppendOnlyBuffer<PlaybackEvent<TPayload>>();
-    liveEventsRef.current = buffer;
-    setLiveEvents(buffer.snapshot());
-    setLiveStatus(liveAutoplay ? 'connecting' : 'paused');
+    liveEventsRef.current = createAppendOnlyBuffer<PlaybackEvent<TPayload>>();
+  }, [source, liveAutoplay]);
+
+  // PASSIVE: the subscription itself, which is the only part that may run late.
+  useEffect(() => {
+    if (source.kind !== 'live') return;
+
+    // The buffer the layout effect installed for THIS source. Captured rather
+    // than read through the ref at flush time, so that a callback belonging to
+    // a superseded subscription can tell: if the ref no longer points at the
+    // buffer this closure was built around, a newer source has taken over and
+    // whatever arrived here belongs to the old one. Dropping it is the whole
+    // guarantee — it is what the state reset used to provide by erasing the
+    // result afterwards, done before the fact instead.
+    const buffer = liveEventsRef.current;
+    const isCurrent = () => liveEventsRef.current === buffer;
 
     // A frame's worth of arriving events collapse into ONE in-place append +
     // ONE snapshot instead of one state commit per event — see rafBatch.ts.
@@ -268,8 +369,9 @@ export function usePlayback<TPayload = unknown>({
     // the state *commit* is the optimization, not the event contract a
     // consumer observes.
     const batcher = createRafBatcher<PlaybackEvent<TPayload>>((batch) => {
-      liveEventsRef.current.append(batch);
-      setLiveEvents(liveEventsRef.current.snapshot());
+      if (!isCurrent()) return;
+      buffer.append(batch);
+      setLiveEvents(buffer.snapshot());
       const last = batch[batch.length - 1];
       if (last) setLiveClock(last.timestamp);
       for (const event of batch) onEventRef.current?.(event);
@@ -279,6 +381,7 @@ export function usePlayback<TPayload = unknown>({
     });
 
     const unsubscribeEvents = source.subscribe((event) => {
+      if (!isCurrent()) return;
       if (!livePlayingRef.current) {
         liveBufferRef.current.push(event);
         return;
@@ -287,6 +390,7 @@ export function usePlayback<TPayload = unknown>({
     });
 
     const unsubscribeStatus = source.subscribeStatus?.((status) => {
+      if (!isCurrent()) return;
       if (status === 'connected') {
         setLiveStatus(livePlayingRef.current ? 'connected' : 'paused');
       } else if (status === 'connecting') {
