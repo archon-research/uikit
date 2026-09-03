@@ -17,6 +17,7 @@
     "snapshot:update": "node scripts/affected-stories.ts",
     "snapshot:update:all": "playwright test --update-snapshots",
     "snapshot:check-orphans": "node scripts/check-orphan-snapshots.ts",
+    "snapshot:check-stale": "node scripts/check-stale-deps.ts",
     "cf:test": "vitest run --config demo-relay/vitest.config.ts"
   },
   "dependencies": {

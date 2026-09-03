@@ -178,6 +178,13 @@ jobs:
       - name: Build packages
         run: npm run build
 
+      # Stories bundle each dependency's dist/, so rendering against a package
+      # that was not rebuilt shows its previous component — which matches its
+      # previous baseline and passes while asserting nothing. Prove the build
+      # above covered every rendered package before spending a render on it.
+      - name: Check rendered packages are built from current sources
+        run: npm run snapshot:check-stale --workspace @archon-research/uikit-preview
+
       - name: Install Playwright browser
         run: npx playwright install chromium
 
