@@ -2,6 +2,7 @@ import { type CSSProperties } from 'react';
 
 import { usePrefersReducedMotion } from '../hooks/useMediaQuery.js';
 import {
+  SKELETON_FILL,
   SKELETON_PULSE_ANIMATION,
   SKELETON_PULSE_KEYFRAMES,
   SKELETON_PULSE_PEAK_OPACITY,
@@ -62,8 +63,13 @@ type SkeletonRowsProps = {
   columnHints?: readonly SkeletonColumnHint[];
   /** Pulses each block to signal loading. Default true; suppressed under `prefers-reduced-motion`. */
   animate?: boolean;
-  /** Applied to each skeleton `<tr>`. */
+  /**
+   * Applied to each skeleton `<tr>`. To re-tone the blocks, set
+   * `--skeleton-fill` here (or on any ancestor) — they read it rather than
+   * hardcoding a colour (see `SKELETON_FILL_VAR`).
+   */
   className?: string;
+  /** Applied to each skeleton `<tr>`; `--skeleton-fill` set here also reaches the blocks. */
   style?: CSSProperties;
 };
 
@@ -86,7 +92,7 @@ const blockBaseStyle: CSSProperties = {
   width: 'max(60%, 100% - 32px)',
   marginInline: 'auto',
   borderRadius: 6,
-  background: 'var(--colors-surface-subtle, #f8f9fb)',
+  background: SKELETON_FILL,
   opacity: SKELETON_PULSE_PEAK_OPACITY,
 };
 
@@ -106,7 +112,7 @@ const hintedTrackStyle: CSSProperties = {
 
 const barStyle: CSSProperties = {
   borderRadius: 6,
-  background: 'var(--colors-surface-subtle, #f8f9fb)',
+  background: SKELETON_FILL,
   opacity: SKELETON_PULSE_PEAK_OPACITY,
 };
 
