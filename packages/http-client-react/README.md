@@ -58,6 +58,106 @@ export function App() {
 }
 ```
 
+`createQueryClient()` is a `QueryClient` with two defaults changed from
+react-query's, both because react-query's are tuned for a document-shaped app
+rather than a data-dense one:
+
+| Default | Value | Why |
+| --- | --- | --- |
+| `refetchOnWindowFocus` | `false` | Alt-tabbing back to a dashboard should not reload every panel. Freshness is `staleTime` and explicit invalidation, which the app controls. |
+| `retry` | status-aware | React-query retries every rejection three times, so a 422 costs three round trips to report a validation error the server decided on the first. |
+
+The retry policy, exactly:
+
+- **5xx** — retried. The request was well formed; the server was not well.
+- **408, 425, 429** — retried. Request timeout, TLS early-data refusal, and rate
+  limiting are all transient conditions rather than bad requests.
+- **every other 4xx** — not retried. A 401, a 404, a 422: repeating the request
+  unchanged produces the same answer more slowly.
+- **anything below 400** — not retried. A 304 on the error path is a caching
+  problem, not a flaky one.
+- **a rejection with no status at all** — retried. A dropped connection, a CORS
+  refusal, or a middleware that threw leaves no evidence except that the request
+  did not complete, and treating that as fatal makes one dropped socket a
+  visible error.
+
+Two retries, so with react-query's exponential `retryDelay` an error reaches the
+screen about three seconds after the first failure. Mutations are not retried at
+all — a `POST` that reached the server may have applied before the failure, and
+this package cannot tell which.
+
+Nothing else is set. `staleTime` most of all: how long a screen may show a stale
+number is a product decision, and a package-level guess would be wrong quietly.
+
+#### Changing the defaults
+
+`createQueryClient` takes react-query's own `QueryClientConfig` and every field
+of it wins. The merge is per-option, so replacing one default keeps the rest:
+
+```ts
+// Keeps `refetchOnWindowFocus: false`; replaces only the retry policy.
+const queryClient = createQueryClient({
+  defaultOptions: { queries: { retry: 5, staleTime: 30_000 } },
+});
+```
+
+To keep the status policy and change only the attempt count, or to drop one
+error out of it, compose the exported predicates rather than restating them:
+
+```ts
+import {
+  createQueryClient,
+  isRetryableError,
+  shouldRetryRequest,
+} from '@archon-research/http-client-react';
+
+createQueryClient({
+  defaultOptions: {
+    queries: {
+      // Same statuses, five attempts.
+      retry: (failureCount, error) => failureCount < 5 && isRetryableError(error),
+      // Or: the shipped policy, minus one application-specific error.
+      // retry: (count, error) =>
+      //   isSessionExpired(error) ? false : shouldRetryRequest(count, error),
+    },
+  },
+});
+```
+
+`isRetryableHttpStatus(status)` is exported too, for a predicate built from
+something other than an `HttpRequestError`.
+
+#### Reporting errors once, centrally
+
+Not shipped, deliberately: a `QueryCache.onError` that turns a failed query into
+a toast. The wiring is three lines, but the useful half of it is the sink — your
+notification system — and the `meta` field it reads has to be typed by
+augmenting react-query's `Register` interface, which is a *global* declaration
+an app can only make once. A package that made it would collide with the app's
+own. So this stays a recipe rather than an export:
+
+```ts
+// src/query-client.ts
+declare module '@tanstack/react-query' {
+  interface Register {
+    queryMeta: { errorMessage?: string };
+  }
+}
+
+export const queryClient = createQueryClient({
+  queryCache: new QueryCache({
+    onError: (error, query) => {
+      // Only queries that opted in by declaring the message.
+      const message = query.meta?.errorMessage;
+      if (message) toast.error(message, { description: error.message });
+    },
+  }),
+});
+```
+
+`meta` rides through on the per-call options: `api.queryOptions('get',
+'/positions', undefined, { meta: { errorMessage: 'Could not load positions' } })`.
+
 ### 3. Query in a component
 
 ```tsx
@@ -190,6 +290,56 @@ await api.invalidateTags(queryClient, ['positions']);
 `sanitizeQueryInit` and `buildQueryApiKey` are exported for anything that needs
 to derive a key outside an api instance.
 
+### Prefetching: pass `queryOptions`, never `queryKey`
+
+`api.queryKey(…)` targets an entry that already exists. `api.queryOptions(…)`
+*describes* one. Prefetching creates an entry, so it takes the options:
+
+```ts
+// Right: one argument, and it is the whole options object.
+await queryClient.prefetchQuery(
+  api.queryOptions(
+    'get',
+    '/positions/{id}',
+    { params: { path: { id } } },
+    { tags: ['position'], staleTime: 30_000 },
+  ),
+);
+```
+
+```ts
+// Wrong, and it typechecks, and it warms the cache, and it still costs you.
+await queryClient.prefetchQuery({
+  queryKey: api.queryKey('get', '/positions/{id}', { params: { path: { id } } }),
+  queryFn: () => fetch(`/api/positions/${id}`).then((r) => r.json()),
+});
+```
+
+The key is identical in both, so the entry lands where the component will look
+for it and the prefetch appears to work. What the second form drops is
+everything else the options carry:
+
+- **`staleTime`.** Absent, it falls back to react-query's `0`, so the entry is
+  stale the instant it is written. The component mounts, reads it, and refetches
+  immediately — you paid for the request and saved nothing. This is the failure
+  that looks most like success: data does appear, just after a second round
+  trip.
+- **The middleware chain.** A hand-written `queryFn` bypasses the api instance
+  entirely, so response validation, auth headers, and every other middleware do
+  not run. The cached data was never checked, and the component that reads it
+  cannot tell.
+- **`tags`.** Registration is a side effect of building the options, so an entry
+  prefetched around them belongs to no tag and `invalidateTags` skips it
+  silently — see [the registry's boundary](./DESIGN.md#the-registrys-boundary).
+- **The error type.** `api.queryOptions` rejects with `HttpRequestError`; a raw
+  `fetch` resolves a 404 into whatever `r.json()` makes of the error body, and
+  the entry caches that as *data*.
+
+The same rule holds for `fetchQuery` and `ensureQueryData`, and for a router
+loader that warms the cache before a route renders. If you find yourself writing
+a `queryFn` next to an `api.queryKey(…)` call, the options object you want
+already exists.
+
 One caveat on the last line: `invalidateTags` reaches only the endpoints some
 `api.queryOptions(…, { tags })` call has registered. An entry written straight
 through `setQueryData`, or restored by SSR/persisted-cache hydration, is cached
@@ -213,7 +363,10 @@ boundary](./DESIGN.md#the-registrys-boundary).
 | `HttpRequestError` / `isHttpRequestError` | The typed failure carrying `status` and the parsed error body |
 | `sanitizeQueryInit` / `buildQueryApiKey` / `canonicalizeQueryKeyValue` | The key-derivation primitives |
 | `composeMiddleware` | The middleware combinator, for composing chains outside an api |
-| `HttpProvider` / `createQueryClient` | `QueryClientProvider` wrapper and client factory |
+| `createQueryClient(config?)` | A `QueryClient` with dashboard defaults; `config` overrides per option |
+| `shouldRetryRequest(failureCount, error)` | The default retry predicate, for wrapping |
+| `isRetryableError(error)` / `isRetryableHttpStatus(status)` | The retry policy's two halves, for building a custom predicate |
+| `HttpProvider` | `QueryClientProvider` wrapper, defaulting to an internal client |
 | `createQueryOptions` | **Deprecated.** Hand-written key + fn shim; use `api.queryOptions` |
 
 ## Not in v1

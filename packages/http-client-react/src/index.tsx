@@ -1,9 +1,11 @@
 import {
   queryOptions,
-  QueryClient,
+  type QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query';
 import type { PropsWithChildren } from 'react';
+
+import { createQueryClient } from './query-client.js';
 
 export { createApiClient } from '@archon-research/http-client-core';
 export type {
@@ -47,6 +49,13 @@ export {
 export type { QueryApiKey, SanitizedQueryInit } from './query-key.js';
 
 export {
+  createQueryClient,
+  isRetryableError,
+  isRetryableHttpStatus,
+  shouldRetryRequest,
+} from './query-client.js';
+
+export {
   createZodResponseMiddleware,
   ZodResponseValidationError,
 } from './zod-response.js';
@@ -56,8 +65,12 @@ export type {
   ZodResponseMiddlewareOptions,
 } from './zod-response.js';
 
-export const createQueryClient = () => new QueryClient();
-
+/**
+ * The client `HttpProvider` falls back to when the app does not pass one. A
+ * single module-scoped instance, so every consumer of the fallback shares one
+ * cache — but prefer creating it in the app: the fallback cannot be reset
+ * between tests and cannot be reached for `setQueryData` before render.
+ */
 const defaultQueryClient = createQueryClient();
 
 export type HttpProviderProps = PropsWithChildren<{
