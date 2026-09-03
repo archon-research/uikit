@@ -131,7 +131,7 @@ export const CountdownActive = () => {
       dry_run: false,
     },
     summary: "Record urgent message: 'urgent write'",
-    createdAt: new Date(Date.now() - 90 * 1000).toISOString(),
+    createdAt: isoFromNow(-90),
     expiresAt: isoFromNow(30),
     status: 'pending',
   }));
