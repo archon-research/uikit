@@ -2,7 +2,6 @@
 import { Button } from '@archon-research/design-system';
 import { AlertTriangle, ChevronDown, ChevronRight, X } from 'lucide-react';
 import {
-  useCallback,
   useEffect,
   useReducer,
   useRef,
@@ -16,40 +15,58 @@ import type { PendingCallRecord } from './types.js';
 // Countdown hook
 // ---------------------------------------------------------------------------
 
-function useSecondsRemaining(expiresAt: string | null): number {
-  const calc = useCallback(() => {
-    if (!expiresAt) {
-      return 0;
-    }
-
-    const diff = Math.floor(
-      (new Date(expiresAt).getTime() - Date.now()) / 1000,
-    );
-    return Math.max(0, diff);
-  }, [expiresAt]);
-
-  const [secondsRemaining, setSecondsRemaining] = useState(calc);
+/**
+ * Seconds left before `expiresAt`, ticking once a second and clamped to the
+ * prompt's own window (`createdAt` -> `expiresAt`).
+ *
+ * The clock reading lives in state rather than being read during render:
+ * render has to be pure, and `Date.now()` is not. The interval owns it.
+ */
+function useSecondsRemaining(
+  createdAt: string | null,
+  expiresAt: string | null,
+): number {
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- can't derive during render (`calc` reads `Date.now()`); see the PR description.
-    setSecondsRemaining(calc());
-
     if (!expiresAt) {
       return;
     }
 
+    const deadline = new Date(expiresAt).getTime();
     const interval = setInterval(() => {
-      const next = calc();
-      setSecondsRemaining(next);
-      if (next <= 0) {
+      const reading = Date.now();
+      setNow(reading);
+      // Stop at the deadline: the value is clamped at zero from here on, so
+      // further ticks would only cost renders.
+      if (deadline - reading <= 0) {
         clearInterval(interval);
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [calc, expiresAt]);
+  }, [expiresAt]);
 
-  return secondsRemaining;
+  if (!expiresAt) {
+    return 0;
+  }
+
+  const deadline = new Date(expiresAt).getTime();
+  const remaining = Math.max(0, Math.floor((deadline - now) / 1000));
+
+  // `now` only advances while a prompt is live, so on the first render of a
+  // prompt raised after an idle spell it can be old - never newer than the
+  // truth, only older, which overstates the time left. The prompt's own window
+  // bounds that: the most this can then show is the full window, for the one
+  // second before the first tick, which is what a just-raised prompt has.
+  if (!createdAt) {
+    return remaining;
+  }
+  const windowSeconds = Math.max(
+    0,
+    Math.floor((deadline - new Date(createdAt).getTime()) / 1000),
+  );
+  return Math.min(remaining, windowSeconds);
 }
 
 // ---------------------------------------------------------------------------
@@ -86,7 +103,10 @@ export function ConfirmToolCallDialog({
   // Button does not forward ref; use a wrapper div for auto-focus
   const approveFocusRef = useRef<HTMLDivElement>(null);
 
-  const secondsRemaining = useSecondsRemaining(pendingCall?.expiresAt ?? null);
+  const secondsRemaining = useSecondsRemaining(
+    pendingCall?.createdAt ?? null,
+    pendingCall?.expiresAt ?? null,
+  );
 
   useEffect(() => {
     if (!isOpen) {
