@@ -54,13 +54,12 @@ const reactConfig = {
     // Deferred, with the reason and the current count. An unnamed rule and a
     // deliberately-deferred one must not look the same to a reader.
     //
-    // 3 findings, all resetting state an external system owns, where the
-    // compiler's remedy (remount on a `key`) is unavailable to a hook:
-    // `ThemeProvider`'s mount-time `matchMedia` read (the other half of the
-    // anti-flash seed), `usePlayback`'s live-buffer reset, and
-    // `mcp-connect`'s confirmation countdown. Each is fixed in a later layer;
-    // this flips to `error` once the last of them lands.
-    'react/set-state-in-effect': 'off',
+    // Enabled here rather than with the other 18: it had 3 findings, all
+    // resetting state an external system owns, and each is fixed in a layer
+    // below this one — `ThemeProvider`'s mount-time `matchMedia` read,
+    // `usePlayback`'s live-buffer reset, and `mcp-connect`'s confirmation
+    // countdown. With the last of them landed, this is the layer that earns it.
+    'react/set-state-in-effect': 'error',
     // Bailouts and dependency rules, deferred together: the suppressions are
     // what mask the other two, so removing them is the fix that unblocks all
     // three. Counts with disables stripped: `rule-suppression` 5,
