@@ -1,0 +1,1 @@
+import{d as t}from"./index-CpmKvQ9f.js";const o=5;function u(r,s){const n=Object.is(r.previous,s)?0:r.streak+1,e=n>=o&&!r.warned;return{previous:s,streak:n,warned:r.warned||e,shouldWarn:e}}function a(r,s){const n=t.useRef({previous:r,streak:0,warned:!1});t.useEffect(()=>{const e=u(n.current,r);n.current=e})}export{a as u};
