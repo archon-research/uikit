@@ -31,7 +31,7 @@ function useSecondsRemaining(expiresAt: string | null): number {
   const [secondsRemaining, setSecondsRemaining] = useState(calc);
 
   useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- can't derive during render: `calc` reads `Date.now()`, which render must stay pure of; this resyncs alongside the interval below, the actual external-timer subscription this effect owns.
+    // oxlint-disable-next-line react/set-state-in-effect -- can't derive during render (`calc` reads `Date.now()`); see the PR description.
     setSecondsRemaining(calc());
 
     if (!expiresAt) {
@@ -122,7 +122,7 @@ export function ConfirmToolCallDialog({
         approveFocusRef.current?.querySelector<HTMLButtonElement>('button');
       focusable?.focus();
     }
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `pendingCall?.callId` is intentionally a trigger-only dep (not read in the body): it's what re-focuses when the next queued call replaces this one while `isOpen` stays true throughout.
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `pendingCall?.callId` is a deliberate trigger-only dep; see the PR description.
   }, [isOpen, pendingCall?.callId]);
 
   if (!isOpen || !pendingCall) {

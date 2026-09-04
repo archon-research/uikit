@@ -387,7 +387,7 @@ export function useRelaySession({
     if (acceptedRef.current) {
       advertiseTools();
     }
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `toolSignature` is intentionally a trigger-only dep (not read in the body): it's what makes this effect re-run when the registered tool set changes.
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `toolSignature` is a deliberate trigger-only dep; see the PR description.
   }, [toolSignature, advertiseTools]);
 
   return {

@@ -169,7 +169,14 @@ export function WebMCPProvider({
     return merged;
   }, []);
 
-  const tools = useSyncExternalStore(subscribeTools, getToolsSnapshot);
+  // No effect ever runs during server rendering, so `toolsSnapshotRef` is
+  // still at its initial (empty) value then — safe to reuse `getToolsSnapshot`
+  // as the server snapshot too.
+  const tools = useSyncExternalStore(
+    subscribeTools,
+    getToolsSnapshot,
+    getToolsSnapshot,
+  );
 
   const value: ToolRegistryContextValue = {
     tools,

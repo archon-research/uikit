@@ -65,7 +65,15 @@ export function useRegisterTool<
   // through a ref, so handlers always see current state without re-registering.
   void deps;
   const specRef = useRef(spec);
-  specRef.current = spec;
+  // Synced in an effect, not during render: refs are read-only during
+  // render. Safe here because `stableSpec`'s getters below are read lazily
+  // (only when something actually accesses `.name`/`.handler`/etc, always
+  // after this effect has run, whether that's this hook's own registration
+  // effects or a harness invoking the tool later) — no cross-component
+  // ordering to worry about, unlike a ref read by a child's own effects.
+  useEffect(() => {
+    specRef.current = spec;
+  });
 
   // A stable spec object (per tool name) whose fields delegate to the latest
   // spec via specRef. Re-renders update specRef.current; this object identity

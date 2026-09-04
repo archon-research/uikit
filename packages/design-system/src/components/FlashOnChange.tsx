@@ -161,7 +161,7 @@ export function FlashOnChange({
 
   useEffect(() => {
     if (flashId === 0 || tone == null || !reducedMotion) return;
-    // oxlint-disable-next-line react/set-state-in-effect -- paired with the timer below (cleared on the next change): showing/hiding the marker IS the external-timer synchronization this effect owns, not a derivable value.
+    // oxlint-disable-next-line react/set-state-in-effect -- paired with the timer below, not a derivable value; see the PR description.
     setMarkerVisible(true);
     const timer = setTimeout(
       () => setMarkerVisible(false),

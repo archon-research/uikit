@@ -76,7 +76,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setSystemPrefersDark(event.matches);
     };
 
-    // oxlint-disable-next-line react/set-state-in-effect -- reconciles against the live `matchMedia` read now that we're in the browser (the initializer above can be a pre-hydration guess); paired with the subscription this effect exists to set up.
+    // oxlint-disable-next-line react/set-state-in-effect -- reconciles the pre-hydration guess against the live `matchMedia` read; see the PR description.
     setSystemPrefersDark(media.matches);
 
     if (typeof media.addEventListener === 'function') {

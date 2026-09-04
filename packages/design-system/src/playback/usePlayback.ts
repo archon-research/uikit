@@ -154,6 +154,17 @@ export function usePlayback<TPayload = unknown>({
   // being viewed). Adjusted during render, not in an effect: `bounds` is
   // already derived from `source` by this point, so there's nothing to wait
   // on — an effect would just add an extra commit + re-render.
+  //
+  // Deliberately keyed on `source` identity ALONE now, not `[source, bounds,
+  // replayAutoplay]` (the prior effect's dependency array): `bounds` derives
+  // from `source` via `sortedEvents`, so tracking it separately was inert.
+  // `replayAutoplay` was NOT inert — toggling the `autoplay` prop on an
+  // otherwise-stable source used to also reset the clock/status, which this
+  // no longer does. That was never the stated intent (see the comment above:
+  // "whenever the underlying log identity changes"), so this reads as a
+  // latent bug fix rather than a behavior this hook meant to guarantee — but
+  // flagging it explicitly here since it rode in on what was otherwise a
+  // pure lint-driven refactor.
   const [prevSource, setPrevSource] = useState(source);
   if (source !== prevSource) {
     setPrevSource(source);
@@ -253,9 +264,13 @@ export function usePlayback<TPayload = unknown>({
   // SAME array reference (still mutated in place, still O(batch) — see
   // above) — the wrapper's identity is what tells React a new snapshot
   // exists, since the inner array's own identity never changes on append.
-  const liveEventsRef = useRef<PlaybackEvent<TPayload>[]>([]);
+  // A shared local, not `liveEventsRef.current`: reading one ref's `.current`
+  // inside another ref's initializer is itself a render-phase ref access.
+  // Both refs keep this SAME array instance as their initial value instead.
+  const initialLiveEvents: PlaybackEvent<TPayload>[] = [];
+  const liveEventsRef = useRef(initialLiveEvents);
   const liveSnapshotRef = useRef<{ events: PlaybackEvent<TPayload>[] }>({
-    events: [],
+    events: initialLiveEvents,
   });
   const liveListenersRef = useRef(new Set<() => void>());
   const subscribeLiveEvents = useCallback((listener: () => void) => {
@@ -272,6 +287,10 @@ export function usePlayback<TPayload = unknown>({
   const liveSnapshot = useSyncExternalStore(
     subscribeLiveEvents,
     getLiveEventsSnapshot,
+    // No effect ever runs during server rendering, so `liveSnapshotRef` is
+    // still at its initial (empty) value then — safe to reuse the same
+    // getter as the server snapshot.
+    getLiveEventsSnapshot,
   );
   const [liveClock, setLiveClock] = useState<number>(() => Date.now());
   const [liveStatus, setLiveStatus] = useState<PlaybackStatus>(
@@ -286,7 +305,7 @@ export function usePlayback<TPayload = unknown>({
     liveBufferRef.current = [];
     liveEventsRef.current = [];
     notifyLiveEvents();
-    // oxlint-disable-next-line react/set-state-in-effect -- part of subscribing to the live source below, not a derivable value: this effect's whole job is synchronizing with that external system, and the reset belongs with the subscription it resets state for.
+    // oxlint-disable-next-line react/set-state-in-effect -- part of subscribing to the live source below, not a derivable value; see the PR description.
     setLiveStatus(liveAutoplay ? 'connecting' : 'paused');
 
     // A frame's worth of arriving events collapse into ONE in-place append +

@@ -62,7 +62,7 @@ export type ChartingInteraction = {
 };
 
 type ChartingInteractionSyncProps = {
-  keyMapRef: RefObject<InteractionKeyMap>;
+  keyMap: InteractionKeyMap;
   writerRef: RefObject<(key: string, value: unknown) => void>;
   publish: (key: string, value: unknown) => void;
 };
@@ -73,9 +73,15 @@ type ChartingInteractionSyncProps = {
  * -hooks check (it can't tell they belong to a separate component render, not
  * the enclosing hook's), so this needs to be a real, statically top-level
  * component. Everything it needs comes in as props instead of a closure.
+ *
+ * `keyMap` is a plain prop, not a ref synced from a parent effect: React
+ * flushes child effects before parent effects, so a ref updated by
+ * `useChartingInteraction`'s own effect would still hold the PREVIOUS
+ * `keyMap` when this component's effects below run in the commit where it
+ * actually changed. A prop is simply current already.
  */
 function ChartingInteractionSync({
-  keyMapRef,
+  keyMap,
   writerRef,
   publish,
 }: ChartingInteractionSyncProps): null {
@@ -85,10 +91,10 @@ function ChartingInteractionSync({
   // charting value republished under it; likewise for the other keys.
   const aliasesFor = useCallback(
     (chartingKey: InteractionKey): string[] =>
-      Object.entries(keyMapRef.current)
+      Object.entries(keyMap)
         .filter(([, target]) => target === chartingKey)
         .map(([alias]) => alias),
-    [keyMapRef],
+    [keyMap],
   );
 
   useEffect(() => {
@@ -111,7 +117,7 @@ function ChartingInteractionSync({
   // identity-stable for every consumer.
   useEffect(() => {
     writerRef.current = (key: string, value: unknown) => {
-      switch (keyMapRef.current[key]) {
+      switch (keyMap[key]) {
         case 'highlightedKey':
           chart.setHighlightedKey(value == null ? null : String(value));
           return;
@@ -125,7 +131,7 @@ function ChartingInteractionSync({
           return;
       }
     };
-  }, [chart, keyMapRef, writerRef]);
+  }, [chart, keyMap, writerRef]);
 
   return null;
 }
@@ -141,13 +147,6 @@ export function useChartingInteraction(
   const valuesRef = useRef(new Map<string, unknown>());
   const listenersRef = useRef(new Map<string, Set<() => void>>());
   const writerRef = useRef<(key: string, value: unknown) => void>(() => {});
-  // Which charting key each manifest key resolves to — a ref so `interaction`
-  // stays identity-stable even if the caller passes an inline map object.
-  // Synced in an effect, not during render: refs are read-only during render.
-  const keyMapRef = useRef(keyMap);
-  useEffect(() => {
-    keyMapRef.current = keyMap;
-  });
 
   const read = useCallback((key: string) => valuesRef.current.get(key), []);
 
@@ -178,18 +177,22 @@ export function useChartingInteraction(
     [read, write, subscribe],
   );
 
-  // A stable function identity, created once, so React never unmounts/
-  // remounts `ChartingInteractionSync` (and its charting subscription)
-  // across the dashboard's renders.
+  // A stable function identity, so React doesn't unmount/remount
+  // `ChartingInteractionSync` (and its charting subscription) across the
+  // dashboard's renders — as long as `keyMap` doesn't churn identity either.
+  // Pass a memoized `keyMap` (module-scoped, like the default, or your own
+  // `useMemo`); an inline object here remounts the subscription every render,
+  // the same discipline `usePlayback`'s `source` and `useDataTable`'s
+  // `columns` already require of their callers.
   const InteractionSync = useCallback(
     () => (
       <ChartingInteractionSync
-        keyMapRef={keyMapRef}
+        keyMap={keyMap}
         writerRef={writerRef}
         publish={publish}
       />
     ),
-    [publish],
+    [publish, keyMap],
   );
 
   return { interaction, InteractionSync };
