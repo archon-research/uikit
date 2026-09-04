@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@archon-research/design-system": "*",
-    "lucide-react": "1.33.0"
+    "lucide-react": "1.34.0"
   },
   "peerDependencies": {
     "react": "^19.0.0"
