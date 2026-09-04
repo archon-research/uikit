@@ -15,6 +15,7 @@
 
 import { ConfirmToolCallDialog } from '@archon-research/mcp-connect';
 import type { PendingCallRecord } from '@archon-research/mcp-connect';
+import { useState } from 'react';
 
 import { css } from '../../../styled-system/css';
 
@@ -116,9 +117,11 @@ export const QueuedCalls = () => {
 };
 
 export const CountdownActive = () => {
-  // Expires ~30 seconds from when the story is rendered, so the countdown
-  // bar is visibly non-full and ticking.
-  const call: PendingCallRecord = {
+  // Expires ~30 seconds from when the story first renders, so the countdown
+  // bar is visibly non-full and ticking. Computed once via a lazy `useState`
+  // initializer, not inline in the render body: `Date.now()` is impure, and
+  // recomputing it every render would keep resetting the countdown.
+  const [call] = useState<PendingCallRecord>(() => ({
     ...BASE_CALL,
     callId: 'call-0003',
     toolName: 'uikit-preview.demo.echo_write',
@@ -131,7 +134,7 @@ export const CountdownActive = () => {
     createdAt: new Date(Date.now() - 90 * 1000).toISOString(),
     expiresAt: isoFromNow(30),
     status: 'pending',
-  };
+  }));
 
   return (
     <div>

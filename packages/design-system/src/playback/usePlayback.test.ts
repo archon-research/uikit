@@ -1,6 +1,9 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { appendInPlace } from './usePlayback.js';
+import { createLiveSource, createReplaySource } from './types.js';
+import { appendInPlace, usePlayback } from './usePlayback.js';
 
 // `appendInPlace` is the mechanism behind `usePlayback`'s live master array:
 // batches append into ONE array held for the lifetime of the source, instead
@@ -38,5 +41,31 @@ describe('appendInPlace', () => {
     expect(target.length).toBe(200_000);
     expect(target[0]).toBe(0);
     expect(target[199_999]).toBe(199_999);
+  });
+});
+
+// `useSyncExternalStore` throws during server rendering unless given a third
+// (`getServerSnapshot`) argument — `renderToStaticMarkup` doesn't need a
+// DOM/RTL harness, so it can exercise that without one, matching how
+// `Panel.test.ts` covers its own server-render case.
+describe('usePlayback SSR', () => {
+  function ReplayProbe() {
+    const playback = usePlayback({ source: createReplaySource([]) });
+    return createElement('div', null, playback.events.length);
+  }
+
+  function LiveProbe() {
+    const playback = usePlayback({ source: createLiveSource(() => () => {}) });
+    return createElement('div', null, playback.events.length);
+  }
+
+  it('renders a replay source on the server without throwing', () => {
+    expect(() =>
+      renderToStaticMarkup(createElement(ReplayProbe)),
+    ).not.toThrow();
+  });
+
+  it('renders a live source on the server without throwing', () => {
+    expect(() => renderToStaticMarkup(createElement(LiveProbe))).not.toThrow();
   });
 });

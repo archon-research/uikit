@@ -18,7 +18,7 @@ import {
   useContext,
   useEffect,
   useRef,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from 'react';
 
@@ -107,9 +107,22 @@ export function WebMCPProvider({
   // Stable refs so the context value object is referentially stable.
   const toolMapRef = useRef<Map<string, ToolSpec>>(new Map());
   const viewStateRef = useRef<Map<string, ViewState>>(new Map());
-  // Counter used to re-render consumers when the registry changes.
-  const [, setVersion] = useState(0);
-  const bump = useCallback(() => setVersion((v) => v + 1), []);
+  // `tools` is exposed to render via `useSyncExternalStore` — refs aren't
+  // safe to read during render, so `toolMapRef` itself never is; `bump`
+  // recomputes a snapshot array and notifies subscribers instead.
+  const toolsSnapshotRef = useRef<ToolSpec[]>([]);
+  const listenersRef = useRef(new Set<() => void>());
+  const subscribeTools = useCallback((listener: () => void) => {
+    listenersRef.current.add(listener);
+    return () => {
+      listenersRef.current.delete(listener);
+    };
+  }, []);
+  const getToolsSnapshot = useCallback(() => toolsSnapshotRef.current, []);
+  const bump = useCallback(() => {
+    toolsSnapshotRef.current = Array.from(toolMapRef.current.values());
+    for (const listener of listenersRef.current) listener();
+  }, []);
 
   // Initialize the document.modelContext polyfill on mount.
   useEffect(() => {
@@ -156,8 +169,14 @@ export function WebMCPProvider({
     return merged;
   }, []);
 
-  // Rebuild snapshot every time the registry changes so consumers can subscribe.
-  const tools = Array.from(toolMapRef.current.values());
+  // No effect ever runs during server rendering, so `toolsSnapshotRef` is
+  // still at its initial (empty) value then — safe to reuse `getToolsSnapshot`
+  // as the server snapshot too.
+  const tools = useSyncExternalStore(
+    subscribeTools,
+    getToolsSnapshot,
+    getToolsSnapshot,
+  );
 
   const value: ToolRegistryContextValue = {
     tools,

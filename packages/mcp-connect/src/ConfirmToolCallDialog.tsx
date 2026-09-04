@@ -31,6 +31,7 @@ function useSecondsRemaining(expiresAt: string | null): number {
   const [secondsRemaining, setSecondsRemaining] = useState(calc);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- can't derive during render (`calc` reads `Date.now()`); see the PR description.
     setSecondsRemaining(calc());
 
     if (!expiresAt) {
@@ -121,6 +122,7 @@ export function ConfirmToolCallDialog({
         approveFocusRef.current?.querySelector<HTMLButtonElement>('button');
       focusable?.focus();
     }
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `pendingCall?.callId` is a deliberate trigger-only dep; see the PR description.
   }, [isOpen, pendingCall?.callId]);
 
   if (!isOpen || !pendingCall) {

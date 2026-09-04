@@ -48,8 +48,8 @@
     "@archon-research/tsconfig": "*",
     "@types/node": "24.13.3",
     "msw": "2.15.0",
-    "oxfmt": "0.62.0",
-    "oxlint": "1.77.0",
+    "oxfmt": "0.64.0",
+    "oxlint": "1.79.0",
     "vitest": "^4.1.9"
   }
 }

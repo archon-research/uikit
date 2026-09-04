@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { IS_DEV_WARNING_ENABLED } from './devWarning.js';
 
@@ -47,15 +47,21 @@ export function useIdentityChurnWarning(value: unknown, label: string): void {
     streak: 0,
     warned: false,
   });
-  const step = stepChurnWarning(state.current, value);
-  state.current = step;
 
-  if (IS_DEV_WARNING_ENABLED && step.shouldWarn) {
-    console.warn(
-      `[uikit] \`${label}\` changed identity on ${step.streak} consecutive ` +
-        `renders. Passing a fresh object each render re-syncs the hook every ` +
-        `render and can cause a render loop — memoize it (useMemo/useCallback) ` +
-        `or define it at module scope.`,
-    );
-  }
+  // Refs are read-only during render, so the streak is tracked in an effect
+  // (dev-only diagnostic; a render's worth of lag before it can warn doesn't
+  // matter) rather than inline in the hook body.
+  useEffect(() => {
+    const step = stepChurnWarning(state.current, value);
+    state.current = step;
+
+    if (IS_DEV_WARNING_ENABLED && step.shouldWarn) {
+      console.warn(
+        `[uikit] \`${label}\` changed identity on ${step.streak} consecutive ` +
+          `renders. Passing a fresh object each render re-syncs the hook every ` +
+          `render and can cause a render loop — memoize it (useMemo/useCallback) ` +
+          `or define it at module scope.`,
+      );
+    }
+  });
 }

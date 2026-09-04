@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 
 import { useIdentityChurnWarning } from '../hooks/useIdentityChurnWarning.js';
 import { createRafBatcher } from './rafBatch.js';
@@ -111,9 +118,12 @@ export function usePlayback<TPayload = unknown>({
 
   // Keep the latest onEvent in a ref so effects don't need to re-run (and
   // live sources don't need to re-subscribe) whenever the caller passes a new
-  // inline callback.
+  // inline callback. Synced in an effect, not during render: refs are
+  // read-only during render and mutating one there is unsound.
   const onEventRef = useRef(onEvent);
-  onEventRef.current = onEvent;
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  });
 
   // ---- Replay --------------------------------------------------------
 
@@ -141,12 +151,28 @@ export function usePlayback<TPayload = unknown>({
 
   // Reset the scrub position + status whenever the underlying log identity
   // changes (a new source object — e.g. switching which component's log is
-  // being viewed).
-  useEffect(() => {
-    if (source.kind !== 'replay') return;
-    setReplayClock(bounds?.start ?? 0);
-    setReplayStatus(replayAutoplay ? 'playing' : 'paused');
-  }, [source, bounds, replayAutoplay]);
+  // being viewed). Adjusted during render, not in an effect: `bounds` is
+  // already derived from `source` by this point, so there's nothing to wait
+  // on — an effect would just add an extra commit + re-render.
+  //
+  // Deliberately keyed on `source` identity ALONE now, not `[source, bounds,
+  // replayAutoplay]` (the prior effect's dependency array): `bounds` derives
+  // from `source` via `sortedEvents`, so tracking it separately was inert.
+  // `replayAutoplay` was NOT inert — toggling the `autoplay` prop on an
+  // otherwise-stable source used to also reset the clock/status, which this
+  // no longer does. That was never the stated intent (see the comment above:
+  // "whenever the underlying log identity changes"), so this reads as a
+  // latent bug fix rather than a behavior this hook meant to guarantee — but
+  // flagging it explicitly here since it rode in on what was otherwise a
+  // pure lint-driven refactor.
+  const [prevSource, setPrevSource] = useState(source);
+  if (source !== prevSource) {
+    setPrevSource(source);
+    if (source.kind === 'replay') {
+      setReplayClock(bounds?.start ?? 0);
+      setReplayStatus(replayAutoplay ? 'playing' : 'paused');
+    }
+  }
 
   const rafRef = useRef<number | null>(null);
   const lastFrameRef = useRef<number | null>(null);
@@ -176,17 +202,17 @@ export function usePlayback<TPayload = unknown>({
     };
   }, [mode, replayStatus, bounds, speed]);
 
-  // Flip to 'complete' exactly once the clock reaches the end.
-  useEffect(() => {
-    if (
-      mode === 'replay' &&
-      bounds &&
-      replayClock >= bounds.end &&
-      replayStatus === 'playing'
-    ) {
-      setReplayStatus('complete');
-    }
-  }, [mode, bounds, replayClock, replayStatus]);
+  // Flip to 'complete' exactly once the clock reaches the end. Adjusted
+  // during render, not in an effect: everything needed is already computed
+  // by this point, so there's nothing to wait on.
+  if (
+    mode === 'replay' &&
+    bounds &&
+    replayClock >= bounds.end &&
+    replayStatus === 'playing'
+  ) {
+    setReplayStatus('complete');
+  }
 
   // Fire onEvent for newly-crossed events as the clock moves forward; rewind
   // the cursor on a backward seek so re-crossing forward fires again (mirrors
@@ -229,8 +255,43 @@ export function usePlayback<TPayload = unknown>({
   // `UsePlaybackResult`: stable identity across appends, a fresh (empty)
   // array only when the source identity resets — consumers derive from
   // `events.length`, never from the array identity.
-  const liveEventsRef = useRef<PlaybackEvent<TPayload>[]>([]);
-  const [, setLiveVersion] = useState(0);
+  //
+  // Exposed to render via `useSyncExternalStore`, React's sanctioned escape
+  // hatch for reading a mutable value that lives outside React state: render
+  // never touches `liveEventsRef.current` directly (refs aren't safe to read
+  // during render), it reads `getLiveEventsSnapshot()`'s result instead. The
+  // snapshot is a fresh WRAPPER object per notify (cheap, O(1)) around the
+  // SAME array reference (still mutated in place, still O(batch) — see
+  // above) — the wrapper's identity is what tells React a new snapshot
+  // exists, since the inner array's own identity never changes on append.
+  // A shared local, not `liveEventsRef.current`: reading one ref's `.current`
+  // inside another ref's initializer is itself a render-phase ref access.
+  // Both refs keep this SAME array instance as their initial value instead.
+  const initialLiveEvents: PlaybackEvent<TPayload>[] = [];
+  const liveEventsRef = useRef(initialLiveEvents);
+  const liveSnapshotRef = useRef<{ events: PlaybackEvent<TPayload>[] }>({
+    events: initialLiveEvents,
+  });
+  const liveListenersRef = useRef(new Set<() => void>());
+  const subscribeLiveEvents = useCallback((listener: () => void) => {
+    liveListenersRef.current.add(listener);
+    return () => {
+      liveListenersRef.current.delete(listener);
+    };
+  }, []);
+  const getLiveEventsSnapshot = useCallback(() => liveSnapshotRef.current, []);
+  const notifyLiveEvents = useCallback(() => {
+    liveSnapshotRef.current = { events: liveEventsRef.current };
+    for (const listener of liveListenersRef.current) listener();
+  }, []);
+  const liveSnapshot = useSyncExternalStore(
+    subscribeLiveEvents,
+    getLiveEventsSnapshot,
+    // No effect ever runs during server rendering, so `liveSnapshotRef` is
+    // still at its initial (empty) value then — safe to reuse the same
+    // getter as the server snapshot.
+    getLiveEventsSnapshot,
+  );
   const [liveClock, setLiveClock] = useState<number>(() => Date.now());
   const [liveStatus, setLiveStatus] = useState<PlaybackStatus>(
     liveAutoplay ? 'connecting' : 'paused',
@@ -243,11 +304,12 @@ export function usePlayback<TPayload = unknown>({
     livePlayingRef.current = liveAutoplay;
     liveBufferRef.current = [];
     liveEventsRef.current = [];
-    setLiveVersion((version) => version + 1);
+    notifyLiveEvents();
+    // oxlint-disable-next-line react/set-state-in-effect -- part of subscribing to the live source below, not a derivable value; see the PR description.
     setLiveStatus(liveAutoplay ? 'connecting' : 'paused');
 
     // A frame's worth of arriving events collapse into ONE in-place append +
-    // version bump instead of one state commit per event — see rafBatch.ts.
+    // notify instead of one state commit per event — see rafBatch.ts.
     // `onEvent` still fires per event, in arrival order, on flush: batching
     // the state *commit* is the optimization, not the event contract a
     // consumer observes. (`appendInPlace`, not `push(...batch)`: the initial
@@ -255,7 +317,7 @@ export function usePlayback<TPayload = unknown>({
     // count — see its doc.)
     const batcher = createRafBatcher<PlaybackEvent<TPayload>>((batch) => {
       appendInPlace(liveEventsRef.current, batch);
-      setLiveVersion((version) => version + 1);
+      notifyLiveEvents();
       const last = batch[batch.length - 1];
       if (last) setLiveClock(last.timestamp);
       for (const event of batch) onEventRef.current?.(event);
@@ -287,7 +349,7 @@ export function usePlayback<TPayload = unknown>({
       unsubscribeStatus?.();
       batcher.dispose();
     };
-  }, [source, liveAutoplay]);
+  }, [source, liveAutoplay, notifyLiveEvents]);
 
   // ---- Shared controls --------------------------------------------------
 
@@ -307,12 +369,12 @@ export function usePlayback<TPayload = unknown>({
       // re-copy, and a long pause can buffer a backlog past the engine's max
       // argument count.
       appendInPlace(liveEventsRef.current, buffered);
-      setLiveVersion((version) => version + 1);
+      notifyLiveEvents();
       const last = buffered[buffered.length - 1];
       if (last) setLiveClock(last.timestamp);
       buffered.forEach((event) => onEventRef.current?.(event));
     }
-  }, [mode]);
+  }, [mode, notifyLiveEvents]);
 
   const pause = useCallback(() => {
     if (mode === 'replay') {
@@ -382,10 +444,7 @@ export function usePlayback<TPayload = unknown>({
     };
   }
 
-  // Reading the ref during render is sound here: every mutation site above
-  // pairs its append with a `setLiveVersion` bump, so a render always follows
-  // a mutation and re-reads the array at its new length.
-  const liveEvents = liveEventsRef.current;
+  const liveEvents = liveSnapshot.events;
   return {
     mode,
     status: liveStatus,

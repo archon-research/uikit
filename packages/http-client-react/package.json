@@ -38,8 +38,8 @@
     "@tanstack/react-query": "5.102.2",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
-    "oxfmt": "0.63.0",
-    "oxlint": "1.78.0",
+    "oxfmt": "0.64.0",
+    "oxlint": "1.79.0",
     "vitest": "^4.1.9"
   }
 }

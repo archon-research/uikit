@@ -81,7 +81,9 @@ export function useValueFlash<T>(
 ): UseValueFlashResult {
   const previousRef = useRef<T>(value);
   const optionsRef = useRef(options);
-  optionsRef.current = options;
+  useEffect(() => {
+    optionsRef.current = options;
+  });
   const [state, setState] = useState<UseValueFlashResult>({
     tone: null,
     direction: 'none',
@@ -159,6 +161,7 @@ export function FlashOnChange({
 
   useEffect(() => {
     if (flashId === 0 || tone == null || !reducedMotion) return;
+    // oxlint-disable-next-line react/set-state-in-effect -- paired with the timer below, not a derivable value; see the PR description.
     setMarkerVisible(true);
     const timer = setTimeout(
       () => setMarkerVisible(false),

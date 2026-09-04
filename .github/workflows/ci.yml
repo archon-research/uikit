@@ -134,6 +134,11 @@ jobs:
       - name: Build http-client-core
         run: npm run build --workspace packages/http-client-core
 
+      # dashboard-kit's charting-interaction.test.ts imports @archon-research/charting,
+      # whose exports also resolve to dist/, so it needs the same treatment.
+      - name: Build charting
+        run: npm run build --workspace packages/charting
+
       - name: Run all vitest specs (relay core unit + Worker/DO integration)
         run: npm test
 

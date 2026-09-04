@@ -144,13 +144,10 @@ export function DashboardInteractionProvider({
     highlightedKey: null,
     hiddenKeys: EMPTY_HIDDEN_KEYS,
   });
-  const listenersRef = useRef<Map<InteractionKey, Set<() => void>> | null>(
-    null,
-  );
-  if (!listenersRef.current) listenersRef.current = new Map();
+  const listenersRef = useRef<Map<InteractionKey, Set<() => void>>>(new Map());
 
   const notify = useCallback((key: InteractionKey) => {
-    for (const listener of listenersRef.current?.get(key) ?? []) listener();
+    for (const listener of listenersRef.current.get(key) ?? []) listener();
   }, []);
 
   // Stable forever: closes over refs only, never over `timeRange` /
@@ -159,7 +156,7 @@ export function DashboardInteractionProvider({
   // re-rendering its consumers when this provider re-renders for an
   // unrelated field (see the type's doc comment).
   const subscribe = useCallback((key: InteractionKey, onChange: () => void) => {
-    const listeners = listenersRef.current!;
+    const listeners = listenersRef.current;
     let set = listeners.get(key);
     if (!set) {
       set = new Set();
