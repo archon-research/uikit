@@ -45,13 +45,14 @@
   "devDependencies": {
     "@semantic-release/exec": "7.1.0",
     "@semantic-release/git": "11.0.1",
-    "conventional-changelog-conventionalcommits": "10.3.0",
+    "conventional-changelog-conventionalcommits": "10.4.0",
+    "conventional-changelog-writer": "9.2.1",
     "lefthook": "2.1.10",
     "semantic-release": "25.0.9",
     "typescript": "7.0.2"
   },
   "overrides": {
-    "conventional-changelog-writer": "^9.2.0"
+    "conventional-changelog-writer": "$conventional-changelog-writer"
   },
   "optionalDependencies": {
     "@oxfmt/binding-linux-x64-gnu": "0.63.0",
