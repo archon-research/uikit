@@ -2,11 +2,13 @@
  * @vitest-environment jsdom
  *
  * Pins the live-source identity contract documented on `events` in
- * `UsePlaybackResult`: the accumulated buffer grows IN PLACE, so its identity
- * is stable across flushes and changes only when the source identity resets.
- * That contract is the reason the buffer is not rebuilt per flush, and it is
- * invisible to a pure-function test — it is a property of what the hook hands
- * back across successive commits.
+ * `UsePlaybackResult`: each flush hands back a fresh immutable snapshot over a
+ * buffer that grew IN PLACE, so identity tracks the contents while the append
+ * stays O(batch). That contract is invisible to a pure-function test — it is a
+ * property of what the hook hands back across successive commits.
+ *
+ * The consumer-facing consequence (memoized derivations invalidate correctly)
+ * is pinned separately in `usePlayback.memo.test.ts`.
  */
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -78,7 +80,7 @@ describe('usePlayback (live source)', () => {
     expect(result.current.clock).toBe(event(2).timestamp);
   });
 
-  it('keeps ONE array identity across flushes while it grows', () => {
+  it('hands back a fresh identity per flush, leaving older snapshots frozen', () => {
     const { source, emit } = makeLiveSource();
     const { result } = renderHook(() => usePlayback({ source }));
 
@@ -93,8 +95,26 @@ describe('usePlayback (live source)', () => {
     });
     flushBatcher();
 
-    expect(result.current.events).toBe(afterFirstFlush);
+    expect(result.current.events).not.toBe(afterFirstFlush);
     expect(result.current.events.map((e) => e.seq)).toEqual([1, 2]);
+    // The earlier snapshot is pinned to the prefix it was taken over, even
+    // though the buffer underneath it grew — so a render holding it can't tear.
+    expect(afterFirstFlush.map((e) => e.seq)).toEqual([1]);
+  });
+
+  it('hands back a read-only snapshot', () => {
+    const { source, emit } = makeLiveSource();
+    const { result } = renderHook(() => usePlayback({ source }));
+
+    act(() => {
+      emit(event(1));
+    });
+    flushBatcher();
+
+    // Writing through the snapshot would corrupt (or, via `length`, truncate)
+    // the shared buffer, so it throws instead.
+    expect(() => result.current.events.push(event(2))).toThrow(TypeError);
+    expect(result.current.events.map((e) => e.seq)).toEqual([1]);
   });
 
   it('hands back a fresh, empty array when the source identity resets', () => {
@@ -175,6 +195,9 @@ describe('usePlayback (live source)', () => {
 
     expect(nextHandler.mock.calls.map(([e]) => e.seq)).toEqual([2]);
     expect(onEvent).toHaveBeenCalledTimes(1);
-    expect(result.current.events).toBe(beforeRerender);
+    // Not re-subscribed: the buffer ACCUMULATED across the re-render rather
+    // than resetting to just the post-re-render event.
+    expect(beforeRerender.map((e) => e.seq)).toEqual([1]);
+    expect(result.current.events.map((e) => e.seq)).toEqual([1, 2]);
   });
 });
