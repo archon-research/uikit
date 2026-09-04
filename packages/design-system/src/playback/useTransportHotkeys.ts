@@ -127,7 +127,10 @@ export function useTransportHotkeys<TPayload = unknown>(
 ): void {
   // Keep the latest controller/callback in refs so the listener is installed
   // exactly once and never churns as playback state ticks over. Synced in an
-  // effect, not during render: refs are read-only during render.
+  // effect rather than in the render body (a render-time ref write is a React
+  // Compiler violation): `keydown` is a discrete event, and React flushes
+  // pending passive effects before dispatching one, so the handler below never
+  // observes a stale controller.
   const playbackRef = useRef(playback);
   const onActionRef = useRef(onAction);
   useEffect(() => {
