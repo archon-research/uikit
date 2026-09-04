@@ -1,7 +1,12 @@
+# `.node-version` is listed in more than one group on purpose: it selects the
+# runtime every suite executes on, so a bump changes what lint and the test job
+# actually run against even though no source file changes alongside it. Without
+# it here, a runtime-only change matches no group and every suite skips.
 lint:
   - packages/**
   - package.json
   - package-lock.json
+  - .node-version
   - .github/workflows/ci.yml
   - .github/changed-files.yml
 
@@ -17,10 +22,11 @@ demo_relay:
   - .github/workflows/deploy-relay.yml
   - .github/changed-files.yml
 
-# Packages with vitest specs that the `demo_relay` group does not already cover.
-# `npm test` runs every workspace's suite, so a change confined to one of these
-# still has to trigger the test job.
+# Packages with vitest specs that the `demo_relay` group does not already cover,
+# plus the runtime they execute on. `npm test` runs every workspace's suite, so a
+# change confined to one of these still has to trigger the test job.
 vitest:
+  - .node-version
   - packages/design-system/**
   - packages/charting/**
   - packages/dashboard-kit/**
