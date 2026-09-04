@@ -177,22 +177,21 @@ export function usePlayback<TPayload = unknown>({
   // previous log's clock. An effect could only reset AFTER such a commit, and
   // the effects that key on the clock (the `onEvent` walk below in
   // particular) would have already run once against that mismatched pair.
-  const [replayResetKey, setReplayResetKey] = useState({
-    source,
-    bounds,
-    replayAutoplay,
-  });
+  // Deliberately keyed on `source` identity ALONE, not `[source, bounds,
+  // replayAutoplay]` (the prior effect's dependency array): `bounds` derives
+  // from `source` via `sortedEvents`, so tracking it separately was inert, and
+  // toggling the `autoplay` prop on an otherwise-stable source must not yank
+  // the scrub position back to the start — #106 removed exactly that coupling
+  // as a latent bug, and this render-time rewrite keeps its narrowing.
+  const [replayResetKey, setReplayResetKey] = useState(source);
   // True only in the render pass that discovers the change: the reset below is
   // queued but the local `replayClock`/`replayStatus` still hold the previous
   // log's values, so anything downstream that reads them has to wait for the
   // re-run rather than decide on a pair that will never be committed.
-  const replayResetPending =
-    replayResetKey.source !== source ||
-    replayResetKey.bounds !== bounds ||
-    replayResetKey.replayAutoplay !== replayAutoplay;
+  const replayResetPending = replayResetKey !== source;
 
   if (replayResetPending) {
-    setReplayResetKey({ source, bounds, replayAutoplay });
+    setReplayResetKey(source);
     if (source.kind === 'replay') {
       setReplayClock(bounds?.start ?? 0);
       setReplayStatus(replayAutoplay ? 'playing' : 'paused');
@@ -405,6 +404,7 @@ export function usePlayback<TPayload = unknown>({
       unsubscribeStatus?.();
       batcher.dispose();
     };
+    // oxlint-disable-next-line react/exhaustive-deps -- `liveAutoplay` is a deliberate trigger-only dep: the layout effect above swaps the buffers on the same key, so this subscription must be rebuilt in lockstep or its flushes would all be dropped as superseded.
   }, [source, liveAutoplay]);
 
   // ---- Shared controls --------------------------------------------------
