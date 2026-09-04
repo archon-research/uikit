@@ -71,9 +71,12 @@ export type UsePlaybackResult<TPayload = unknown> = {
    * extra care — as is the equivalent dependency the React Compiler infers on
    * your behalf, which is the case a consumer cannot opt out of.
    *
-   * It is read-only. Mutating it in place (`push`, `sort`, `reverse`) throws a
-   * `TypeError`; copy first (`[...events].sort(...)`). For the same reason it
-   * is not directly `structuredClone`able — clone a copy.
+   * Treat it as read-only in both modes, but only the live snapshot enforces
+   * that: mutating a live `events` in place (`push`, `sort`, `reverse`)
+   * throws a `TypeError`, and for the same reason it is not directly
+   * `structuredClone`able — copy first (`[...events].sort(...)`). A replay
+   * `events` is a plain array that nothing stops you from mutating; doing so
+   * corrupts a memoized value other consumers share.
    */
   events: PlaybackEvent<TPayload>[];
   latestEvent: PlaybackEvent<TPayload> | null;
@@ -249,9 +252,22 @@ export function usePlayback<TPayload = unknown>({
   // the cursor on a backward seek so re-crossing forward fires again (mirrors
   // how a media player re-fires timeupdate-driven callbacks after a rewind).
   const lastEmittedIndexRef = useRef(-1);
+  // The cursor is per-log state like the clock, but it lives in a ref, so the
+  // render-time reset above cannot touch it (refs are off-limits during
+  // render). Reset it in the layout phase — before the passive walk below can
+  // run against the new log — mirroring how the live path resets its refs. A
+  // cursor parked deep in the previous log would otherwise read past a
+  // shorter log's end (a TypeError in the rewind loop) or silently skip a
+  // longer log's earliest events.
+  useIsomorphicLayoutEffect(() => {
+    lastEmittedIndexRef.current = -1;
+  }, [source]);
   useEffect(() => {
     if (mode !== 'replay') return;
-    let index = lastEmittedIndexRef.current;
+    // Clamped defensively: the layout reset above keeps the cursor in range
+    // across source switches, but an out-of-range cursor must degrade to a
+    // rewind, never to reading past the end.
+    let index = Math.min(lastEmittedIndexRef.current, sortedEvents.length - 1);
     while (
       index + 1 < sortedEvents.length &&
       sortedEvents[index + 1]!.timestamp <= replayClock
