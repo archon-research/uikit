@@ -11,7 +11,7 @@ export const segmentedControlRecipe = defineSlotRecipe({
       borderColor: 'border.subtle',
       borderRadius: 'sm',
       borderStyle: 'solid',
-      borderWidth: '1px',
+      borderWidth: 'hairline',
       display: 'inline-flex',
       gap: '0.5',
       p: '0.5',

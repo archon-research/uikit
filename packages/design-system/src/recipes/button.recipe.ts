@@ -29,7 +29,7 @@ export const buttonRecipe = defineRecipe({
     alignItems: 'center',
     gap: '1.5',
     borderRadius: 'md',
-    borderWidth: '1px',
+    borderWidth: 'hairline',
     borderStyle: 'solid',
     transitionDuration: 'fast',
     transitionProperty: 'background-color, color, border-color, box-shadow',

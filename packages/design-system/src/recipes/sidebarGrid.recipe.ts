@@ -20,7 +20,7 @@ const besideAt = (breakpoint: 'sm' | 'md' | 'lg' | 'xl') => ({
       alignSelf: 'start',
       maxHeight: 'calc(100vh - var(--sidebar-sticky-top, 0px))',
       overflowY: 'auto',
-      borderRightWidth: '1px',
+      borderRightWidth: 'hairline',
       borderRightStyle: 'solid',
       borderRightColor: 'border.subtle',
       pr: '4',

@@ -12,7 +12,7 @@ export const switchRecipe = defineSlotRecipe({
       width: '9',
       height: '5',
       borderRadius: 'full',
-      borderWidth: '1px',
+      borderWidth: 'hairline',
       borderStyle: 'solid',
       borderColor: 'border.default',
       bg: 'surface.subtle',

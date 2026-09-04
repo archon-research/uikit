@@ -38,7 +38,7 @@ export const inputRecipe = defineSlotRecipe({
     control: {
       width: 'full',
       minWidth: '0',
-      borderWidth: '1px',
+      borderWidth: 'hairline',
       borderStyle: 'solid',
       borderColor: 'border.subtle',
       borderRadius: 'md',

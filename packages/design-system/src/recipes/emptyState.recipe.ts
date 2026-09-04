@@ -18,7 +18,7 @@ export const emptyStateRecipe = defineSlotRecipe({
       justifyItems: 'center',
       textAlign: 'center',
       borderRadius: 'md',
-      borderWidth: '1px',
+      borderWidth: 'hairline',
       borderStyle: 'solid',
       borderColor: 'border.subtle',
       bg: 'surface.subtle',

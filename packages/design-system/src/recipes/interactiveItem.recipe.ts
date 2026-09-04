@@ -11,7 +11,7 @@ export const interactiveItemRecipe = defineRecipe({
     gap: '2',
     textAlign: 'left',
     borderRadius: 'md',
-    borderWidth: '1px',
+    borderWidth: 'hairline',
     borderStyle: 'solid',
     borderColor: 'transparent',
     bg: 'transparent',
