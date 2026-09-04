@@ -1403,8 +1403,8 @@
         "Organisms",
         "Confirm tool call dialog"
       ],
-      "locStart": 118,
-      "locEnd": 152,
+      "locStart": 119,
+      "locEnd": 155,
       "filePath": "src/stories/organisms/confirm-tool-call-dialog.stories.tsx",
       "namedExport": "CountdownActive",
       "meta": {}
@@ -1415,8 +1415,8 @@
         "Organisms",
         "Confirm tool call dialog"
       ],
-      "locStart": 154,
-      "locEnd": 169,
+      "locStart": 157,
+      "locEnd": 172,
       "filePath": "src/stories/organisms/confirm-tool-call-dialog.stories.tsx",
       "namedExport": "NoPendingCall",
       "meta": {}
@@ -1427,8 +1427,8 @@
         "Organisms",
         "Confirm tool call dialog"
       ],
-      "locStart": 87,
-      "locEnd": 116,
+      "locStart": 88,
+      "locEnd": 117,
       "filePath": "src/stories/organisms/confirm-tool-call-dialog.stories.tsx",
       "namedExport": "QueuedCalls",
       "meta": {}
@@ -1439,8 +1439,8 @@
         "Organisms",
         "Confirm tool call dialog"
       ],
-      "locStart": 70,
-      "locEnd": 85,
+      "locStart": 71,
+      "locEnd": 86,
       "filePath": "src/stories/organisms/confirm-tool-call-dialog.stories.tsx",
       "namedExport": "SinglePending",
       "meta": {}
@@ -1907,8 +1907,8 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 145,
-      "locEnd": 197,
+      "locStart": 149,
+      "locEnd": 201,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "LiveVsReplay",
       "meta": {}
@@ -1919,8 +1919,8 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 213,
-      "locEnd": 262,
+      "locStart": 217,
+      "locEnd": 266,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "OrdinalCursor",
       "meta": {}
@@ -1931,8 +1931,8 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 269,
-      "locEnd": 306,
+      "locStart": 273,
+      "locEnd": 310,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "StatusInTrailing",
       "meta": {}
@@ -1943,8 +1943,8 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 321,
-      "locEnd": 364,
+      "locStart": 325,
+      "locEnd": 368,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "WithTransportHotkeys",
       "meta": {}
