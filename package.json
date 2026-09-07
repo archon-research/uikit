@@ -47,7 +47,7 @@
     "@semantic-release/git": "11.0.1",
     "conventional-changelog-conventionalcommits": "10.4.0",
     "conventional-changelog-writer": "9.2.1",
-    "lefthook": "2.1.10",
+    "lefthook": "2.1.12",
     "semantic-release": "25.0.9",
     "typescript": "7.0.2"
   },
