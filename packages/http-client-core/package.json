@@ -28,7 +28,7 @@
   "dependencies": {
     "openapi-fetch": "0.17.0",
     "openapi-typescript-helpers": "0.1.0",
-    "zod": "4.4.3"
+    "zod": "4.5.4"
   },
   "peerDependencies": {
     "openapi-typescript": "^7.13.0"

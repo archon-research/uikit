@@ -35,8 +35,8 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "@tanstack/react-table": "9.1.2",
-    "zod": "4.4.3"
+    "@tanstack/react-table": "9.2.4",
+    "zod": "4.5.4"
   },
   "devDependencies": {
     "@archon-research/charting": "*",
