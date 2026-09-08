@@ -317,7 +317,7 @@ export const dataTableRecipe = defineSlotRecipe({
       borderColor: 'border.subtle',
       borderRadius: 'sm',
       _focusVisible: {
-        outlineWidth: '2px',
+        outlineWidth: 'strong',
         outlineStyle: 'solid',
         outlineColor: 'border.strong',
         outlineOffset: '1px',
@@ -347,7 +347,7 @@ export const dataTableRecipe = defineSlotRecipe({
       // Match the focus-ring convention used by select/themeToggle so sortable
       // headers aren't the one interactive element with only the UA ring.
       _focusVisible: {
-        outlineWidth: '2px',
+        outlineWidth: 'strong',
         outlineStyle: 'solid',
         outlineColor: 'border.strong',
         outlineOffset: '1px',
@@ -363,7 +363,7 @@ export const dataTableRecipe = defineSlotRecipe({
       // instead of leaving only the UA outline. Inset so it stays inside the
       // table's own border.
       _focusVisible: {
-        outlineWidth: '2px',
+        outlineWidth: 'strong',
         outlineStyle: 'solid',
         outlineColor: 'border.strong',
         outlineOffset: '-2px',

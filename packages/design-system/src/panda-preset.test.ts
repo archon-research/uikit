@@ -10,13 +10,19 @@ import { borderWidthTokens } from './tokens/sharedThemeTokens.js';
 
 const borderWidthNames = Object.keys(borderWidthTokens);
 
-/** Any `border*Width` style property — deliberately NOT `outlineWidth`. */
-const BORDER_WIDTH_PROPERTY = /^border[A-Za-z]*Width$/;
+/**
+ * Any `border*Width` or `outline*Width` style property. Panda resolves both
+ * against the `borderWidths` token category (see `focusRingWidth` and the
+ * `outlineWidth` utility in `@pandacss/preset-base`), so a raw `outlineWidth`
+ * px literal is exactly as untracked as a raw `borderWidth` one.
+ */
+const BORDER_WIDTH_PROPERTY = /^(?:border|outline)[A-Za-z]*Width$/;
 
 /**
- * Every `border*Width` value anywhere in a recipe, however deep — variants,
- * compound variants, slots and nested selectors are all just plain objects, so
- * one walk covers the lot without having to model Panda's recipe shape.
+ * Every `border*Width`/`outline*Width` value anywhere in a recipe, however
+ * deep — variants, compound variants, slots and nested selectors are all just
+ * plain objects, so one walk covers the lot without having to model Panda's
+ * recipe shape.
  */
 function collectBorderWidthValues(node: unknown): string[] {
   if (Array.isArray(node)) return node.flatMap(collectBorderWidthValues);

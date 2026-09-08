@@ -53,7 +53,7 @@ export const searchInputRecipe = defineSlotRecipe({
       },
       _focusVisible: {
         borderColor: 'border.strong',
-        outlineWidth: '2px',
+        outlineWidth: 'strong',
         outlineStyle: 'solid',
         outlineColor: 'border.strong',
         outlineOffset: '1px',

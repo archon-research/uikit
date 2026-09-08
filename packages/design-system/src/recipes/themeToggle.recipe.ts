@@ -76,7 +76,7 @@ export const themeToggleRecipe = defineSlotRecipe({
         color: 'text.default',
       },
       _focusVisible: {
-        outlineWidth: '2px',
+        outlineWidth: 'strong',
         outlineStyle: 'solid',
         outlineColor: 'border.strong',
         outlineOffset: '1px',

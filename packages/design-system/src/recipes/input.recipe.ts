@@ -59,7 +59,7 @@ export const inputRecipe = defineSlotRecipe({
       },
       _focusVisible: {
         borderColor: 'border.strong',
-        outlineWidth: '2px',
+        outlineWidth: 'strong',
         outlineStyle: 'solid',
         outlineColor: 'border.strong',
         outlineOffset: '1px',
