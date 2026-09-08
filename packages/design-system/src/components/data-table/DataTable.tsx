@@ -623,9 +623,8 @@ export function DataTable<TData extends RowData>({
   // virtualizer's item keys and row-measurement cache (see `getItemKey`
   // below) key off array indices instead of row identity — silently broken
   // once data is prepended or reordered. Warns once, dev-only.
-  // Checked in an effect, not in the render body: reading and writing the
-  // warn-once latch during render is the same `react/refs` violation the
-  // matching latch in `useDataTable` was moved out of.
+  // Steps in an effect for the same reason as the matching latch in
+  // `useDataTable`: a ref is not readable or writable during render.
   const missingRowIdForVirtualizationWarned = useRef(false);
   const hasGetRowId = table.options.getRowId != null;
   useEffect(() => {

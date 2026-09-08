@@ -44,9 +44,8 @@ export function useDataTable<T extends RowData>(
   // downstream in `DataTable`, the virtualizer's item keys and measurement
   // cache) key off array indices instead of row identity — silently broken
   // once data is prepended or reordered. Warns once, dev-only.
-  // Checked in an effect rather than in the render body: reading and writing
-  // the warn-once latch during render is a React Compiler violation, and a
-  // dev diagnostic has no reason to run before the commit.
+  // The warn-once latch steps in an effect: a ref is not readable or writable
+  // during render, and a dev diagnostic has no reason to run before the commit.
   const missingRowIdWarned = React.useRef(false);
   const hasRowCanExpand = config.getRowCanExpand != null;
   const hasGetRowId = config.getRowId != null;

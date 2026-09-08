@@ -81,10 +81,9 @@ export function useValueFlash<T>(
 ): UseValueFlashResult {
   const previousRef = useRef<T>(value);
   const optionsRef = useRef(options);
-  // Synced in an effect, not in the render body: a render-time ref write is a
-  // React Compiler violation. Declared BEFORE the change effect below, so on
-  // any commit that carries both a new `value` and new callbacks React runs
-  // this one first and the change effect still reads the current options.
+  // Declared BEFORE the change effect below: on a commit carrying both a new
+  // `value` and new callbacks, React's in-order flush means the change effect
+  // still reads the current options.
   useEffect(() => {
     optionsRef.current = options;
   });
@@ -161,26 +160,25 @@ export function FlashOnChange({
     parse,
   });
   const reducedMotion = usePrefersReducedMotion();
-  // The marker's visibility is DERIVED, not set from the effect: it is on for
-  // any flash the hold timer has not yet retired, and the effect's only job is
-  // to arm that timer. Written the other way round (`setMarkerVisible(true)`
-  // in the effect body) it is a cascading-render violation, and it also cost a
-  // second commit before the marker could paint.
+  // Marker visibility is derived: on for any flash the hold timer has not yet
+  // retired. The effect below only arms that timer. (`tone != null` already
+  // implies `flashId !== 0` — `useValueFlash` only ever sets a tone together
+  // with an incremented id.)
   const [expiredFlashId, setExpiredFlashId] = useState(0);
   const markerVisible =
-    flashId !== 0 &&
-    tone != null &&
-    reducedMotion &&
-    expiredFlashId !== flashId;
+    tone != null && reducedMotion && expiredFlashId !== flashId;
 
   useEffect(() => {
-    if (flashId === 0 || tone == null || !reducedMotion) return;
+    // Gated on the derived value, so the timer arms only when there is a
+    // marker up to retire — not on every unrelated `tone`/`reducedMotion`
+    // change once the flash has already expired.
+    if (!markerVisible || direction === 'none') return;
     const timer = setTimeout(
       () => setExpiredFlashId(flashId),
       REDUCED_MOTION_MARKER_MS,
     );
     return () => clearTimeout(timer);
-  }, [flashId, tone, reducedMotion]);
+  }, [flashId, markerVisible, direction]);
 
   const content = children ?? value;
 
@@ -201,7 +199,7 @@ export function FlashOnChange({
         <span>{content}</span>
       )}
       {/* Reduced-motion: a discrete marker on a matching timer. */}
-      {reducedMotion && markerVisible && direction !== 'none' ? (
+      {markerVisible && direction !== 'none' ? (
         <span
           aria-hidden="true"
           data-part="marker"
