@@ -12,9 +12,8 @@ import { appendInPlace, usePlayback } from './usePlayback.js';
 // than the engine's maximum argument count — the case `target.push(...items)`
 // would throw RangeError on, which matters because a live source's initial
 // catch-up fan-in arrives as one batch sized by the whole backlog. (The hook
-// itself is a thin wiring of this into a ref + version-counter state; this
-// package has no RTL/jsdom harness to exercise it via `renderHook`, matching
-// how `stepChurnWarning` is tested for `useIdentityChurnWarning`.)
+// wires this into a ref exposed via `useSyncExternalStore`; the behaviour it
+// hands back across successive commits is covered by `usePlayback.live.test.ts`.)
 
 describe('appendInPlace', () => {
   it('appends in order without changing the target identity', () => {

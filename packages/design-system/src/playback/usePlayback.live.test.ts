@@ -145,6 +145,10 @@ describe('usePlayback (live source)', () => {
       result.current.play();
     });
     expect(result.current.events.map((e) => e.seq)).toEqual([1, 2]);
+    // This source reports no transport status, so `connected` is the right
+    // answer for it. NOTE: `play()` sets it unconditionally, which is wrong
+    // for a source that last reported `error` or `connecting` — a live-path
+    // bug tracked separately, deliberately not pinned by this suite.
     expect(result.current.status).toBe('connected');
   });
 
