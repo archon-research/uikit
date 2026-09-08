@@ -14,41 +14,64 @@ const reactConfig = {
     // `import/max-dependencies`.
     'react/rules-of-hooks': 'error',
     'react/jsx-no-target-blank': 'error',
-    // --- React Compiler rules: NOT enabled here yet -------------------------
+    // --- React Compiler rules ------------------------------------------
     //
-    // The umbrella `react/react-compiler` rule no longer exists (naming it in
-    // a config fails with "Rule 'react-compiler' not found in plugin 'react'").
-    // As of oxlint 1.79.0 it is split into one rule per compiler diagnostic,
-    // matching eslint-plugin-react-hooks v6, all under the `react` plugin:
+    // The umbrella `react/react-compiler` rule no longer exists — naming it
+    // fails config parsing outright with "Rule 'react-compiler' not found in
+    // plugin 'react'". As of oxlint 1.79.0 it is split into one rule per
+    // compiler diagnostic, matching eslint-plugin-react-hooks v6.
     //
-    //   capitalized-calls, error-boundaries, exhaustive-effect-dependencies,
-    //   globals, hooks, immutability, incompatible-library, invariant,
-    //   memo-dependencies, no-clone-element, no-deriving-state-in-effects,
-    //   no-react-children, preserve-manual-memoization, purity, refs,
-    //   rule-suppression, set-state-in-effect, set-state-in-render,
-    //   static-components, syntax, todo, unsupported-syntax, use-memo,
-    //   void-use-memo
+    // Enabled one by one rather than by raising `nursery`, which would pull in
+    // far more than these.
     //
-    // When they go on, they go on at `warn`, not `error`. Running the full set
-    // over `design-system` leaves four findings that are judgement calls with a
-    // behavioural cost, not tooling limits:
+    // MEASURING THESE IS TRAPPED IN TWO WAYS, both of which produce a
+    // convincing false zero:
+    //   1. `rule-suppression` and `incompatible-library` are BAILOUTS — when
+    //      either fires the compiler stops analysing that whole function, so
+    //      every other violation inside it goes unreported. Setting the bailout
+    //      rule to `off` does NOT recover them; only removing the suppression
+    //      does. Counts are lower bounds.
+    //   2. Inline `oxlint-disable` comments hide findings. Measure with them
+    //      stripped as well as in place, and treat the worse number as real.
+    'react/capitalized-calls': 'error',
+    'react/error-boundaries': 'error',
+    'react/globals': 'error',
+    'react/hooks': 'error',
+    'react/immutability': 'error',
+    'react/invariant': 'error',
+    'react/no-clone-element': 'error',
+    'react/no-deriving-state-in-effects': 'error',
+    'react/no-react-children': 'error',
+    'react/preserve-manual-memoization': 'error',
+    'react/purity': 'error',
+    'react/refs': 'error',
+    'react/set-state-in-render': 'error',
+    'react/static-components': 'error',
+    'react/syntax': 'error',
+    'react/unsupported-syntax': 'error',
+    'react/use-memo': 'error',
+    'react/void-use-memo': 'error',
+    // Deferred, with the reason and the current count. An unnamed rule and a
+    // deliberately-deferred one must not look the same to a reader.
     //
-    //   - `set-state-in-effect` x2 (`usePlayback`'s live subscribe reset,
-    //     `ThemeProvider`'s mount-time `matchMedia` read). Both reset state an
-    //     external system owns; the compiler's remedy (remount on a `key`) is
-    //     not available to a hook, and deriving instead changes observable
-    //     behaviour.
-    //   - `incompatible-library` (`@tanstack/react-virtual`'s return is not
-    //     memoizable).
-    //   - `rule-suppression` (an `exhaustive-deps` suppression on a deliberate
-    //     identity re-anchor).
-    //
-    // Two things worth knowing before measuring with these:
-    //   1. A `rule-suppression` or `incompatible-library` finding is a BAILOUT
-    //      — the compiler stops analysing that whole function, so any other
-    //      violation inside it goes unreported. Counts are lower bounds.
-    //   2. Inline `oxlint-disable` comments hide findings from the count, so
-    //      measure with and without them.
+    // 3 findings, all resetting state an external system owns, where the
+    // compiler's remedy (remount on a `key`) is unavailable to a hook:
+    // `ThemeProvider`'s mount-time `matchMedia` read (the other half of the
+    // anti-flash seed), `usePlayback`'s live-buffer reset, and
+    // `mcp-connect`'s confirmation countdown. Each is fixed in a later layer;
+    // this flips to `error` once the last of them lands.
+    'react/set-state-in-effect': 'off',
+    // Bailouts and dependency rules, deferred together: the suppressions are
+    // what mask the other two, so removing them is the fix that unblocks all
+    // three. Counts with disables stripped: `rule-suppression` 5,
+    // `exhaustive-effect-dependencies` 5, `memo-dependencies` 1, `todo` 5,
+    // `incompatible-library` 1 (@tanstack/react-virtual's return is not
+    // memoizable — a library fact, not repo debt).
+    'react/rule-suppression': 'off',
+    'react/exhaustive-effect-dependencies': 'off',
+    'react/memo-dependencies': 'off',
+    'react/todo': 'off',
+    'react/incompatible-library': 'off',
   },
 };
 
