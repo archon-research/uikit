@@ -1,12 +1,13 @@
+import { act, cleanup, renderHook } from '@testing-library/react';
 /**
  * @vitest-environment jsdom
  *
  * `resolveHotkeyAction` (tested next door) decides WHICH action a keystroke
- * maps to. This suite covers the other half: that the single `keydown`
- * listener always dispatches against the LATEST controller, even though it is
- * installed once and never re-bound as playback state ticks over.
+ * maps to. This suite covers the two things the pure resolver cannot: that the
+ * single `keydown` listener reads through to the latest controller without
+ * being re-bound, and that a matched key is `preventDefault`ed.
  */
-import { act, cleanup, renderHook } from '@testing-library/react';
+import { useLayoutEffect } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { UsePlaybackResult } from './usePlayback.js';
@@ -32,12 +33,30 @@ function makeController(
   };
 }
 
-function pressKey(key: string): void {
-  act(() => {
-    window.dispatchEvent(
-      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
-    );
+function pressKey(key: string): KeyboardEvent {
+  const event = new KeyboardEvent('keydown', {
+    key,
+    bubbles: true,
+    cancelable: true,
   });
+  act(() => {
+    window.dispatchEvent(event);
+  });
+  return event;
+}
+
+/**
+ * Fires a `keydown` from inside the COMMIT phase, i.e. after the render it
+ * belongs to has committed but before any passive effect for that commit has
+ * run. That is the window a real browser keydown can land in — the hook's
+ * listener is on `window`, so an event whose target is outside the React root
+ * never enters React's dispatch and nothing forces a passive flush first.
+ */
+function useCommitPhaseKeypress(key: string | null): void {
+  useLayoutEffect(() => {
+    if (key == null) return;
+    window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+  }, [key]);
 }
 
 describe('useTransportHotkeys', () => {
@@ -51,7 +70,7 @@ describe('useTransportHotkeys', () => {
     expect(controller.play).toHaveBeenCalledTimes(1);
   });
 
-  it('dispatches against the LATEST controller after a re-render', () => {
+  it('reads through to the latest controller without re-binding the listener', () => {
     const first = makeController();
     const { rerender } = renderHook(
       ({ playback }) => useTransportHotkeys(playback),
@@ -68,7 +87,7 @@ describe('useTransportHotkeys', () => {
     expect(second.play).toHaveBeenCalledTimes(1);
   });
 
-  it('reports the action to the LATEST onAction after a re-render', () => {
+  it('reads through to the latest onAction without re-binding the listener', () => {
     const controller = makeController();
     const first = vi.fn();
     const { rerender } = renderHook(
@@ -82,6 +101,47 @@ describe('useTransportHotkeys', () => {
     pressKey(' ');
     expect(first).not.toHaveBeenCalled();
     expect(second).toHaveBeenCalledWith({ kind: 'play' });
+  });
+
+  it('sees the controller from the commit a keystroke lands in', () => {
+    const first = makeController();
+    const second = makeController();
+    const { rerender } = renderHook(
+      ({
+        playback,
+        fireKey,
+      }: {
+        playback: UsePlaybackResult;
+        fireKey: string | null;
+      }) => {
+        useTransportHotkeys(playback);
+        useCommitPhaseKeypress(fireKey);
+      },
+      { initialProps: { playback: first, fireKey: null as string | null } },
+    );
+
+    rerender({ playback: second, fireKey: ' ' });
+
+    // Fails if the refs are synced in a PASSIVE effect: that effect has not
+    // run yet at the moment this keydown is dispatched.
+    expect(first.play).not.toHaveBeenCalled();
+    expect(second.play).toHaveBeenCalledTimes(1);
+  });
+
+  it('preventDefaults a matched key and leaves an unmatched one alone', () => {
+    const controller = makeController();
+    const { rerender } = renderHook(
+      ({ enabled }) => useTransportHotkeys(controller, { enabled }),
+      { initialProps: { enabled: true } },
+    );
+
+    // Space scrolls the page by default — swallowing it is the whole reason
+    // the operator can hold a dashboard still while toggling playback.
+    expect(pressKey(' ').defaultPrevented).toBe(true);
+    expect(pressKey('x').defaultPrevented).toBe(false);
+
+    rerender({ enabled: false });
+    expect(pressKey(' ').defaultPrevented).toBe(false);
   });
 
   it('stops listening once disabled, and again once unmounted', () => {

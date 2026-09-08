@@ -11,7 +11,7 @@
  * `PlaybackBar` reads from.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 
 import type { PlaybackMode, UsePlaybackResult } from './usePlayback.js';
 
@@ -117,6 +117,13 @@ export type UseTransportHotkeysOptions = {
 };
 
 /**
+ * `useLayoutEffect`, except on the server, where it has nothing to do and React
+ * warns about it. The listener this feeds only exists in the browser.
+ */
+const useIsomorphicLayoutEffect =
+  typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
+/**
  * Binds the transport hotkeys to a `usePlayback` result. Generic over the
  * controller's payload type, same as `usePlayback` itself — this has no
  * opinion on what's flowing through the log, only on play/pause/step/speed.
@@ -126,14 +133,14 @@ export function useTransportHotkeys<TPayload = unknown>(
   { enabled = true, onAction }: UseTransportHotkeysOptions = {},
 ): void {
   // Keep the latest controller/callback in refs so the listener is installed
-  // exactly once and never churns as playback state ticks over. Synced in an
-  // effect rather than in the render body (a render-time ref write is a React
-  // Compiler violation): `keydown` is a discrete event, and React flushes
-  // pending passive effects before dispatching one, so the handler below never
-  // observes a stale controller.
+  // exactly once and never churns as playback state ticks over. Synced in a
+  // LAYOUT effect, not a passive one: the reader is a raw `window` listener,
+  // so a keydown whose target is outside the React root never enters React's
+  // dispatch and nothing forces a passive flush first. Layout effects run
+  // synchronously inside commit, before the browser can dispatch anything.
   const playbackRef = useRef(playback);
   const onActionRef = useRef(onAction);
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     playbackRef.current = playback;
     onActionRef.current = onAction;
   });
