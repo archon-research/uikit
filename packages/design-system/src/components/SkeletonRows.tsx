@@ -66,10 +66,18 @@ type SkeletonRowsProps = {
   /**
    * Applied to each skeleton `<tr>`. To re-tone the blocks, set
    * `--skeleton-fill` here (or on any ancestor) — they read it rather than
-   * hardcoding a colour (see `SKELETON_FILL_VAR`).
+   * hardcoding a colour (see `SKELETON_FILL_VAR`). A `background` here paints
+   * the row only; it cannot re-tone the blocks, whose own inline fill outranks
+   * any class.
    */
   className?: string;
-  /** Applied to each skeleton `<tr>`; `--skeleton-fill` set here also reaches the blocks. */
+  /**
+   * Applied to each skeleton `<tr>`; `--skeleton-fill` set here also reaches
+   * the blocks. Note this is not a normal style prop for `background`: each
+   * block paints its own inline fill on top, so a `background` set here shows
+   * around the blocks and nowhere else. `--skeleton-fill` is the supported
+   * channel for re-toning the blocks themselves.
+   */
   style?: CSSProperties;
 };
 

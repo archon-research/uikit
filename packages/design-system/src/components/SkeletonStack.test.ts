@@ -9,13 +9,21 @@
  * custom-property registry), so the chain is resolved here against the design
  * system's own token definitions, imported rather than transcribed. Only the
  * raw neutral ramp is spelled out, and that comes from Panda's preset.
+ *
+ * Separation from the ground is then *computed*, not asserted as string
+ * inequality: the blocks carry an `opacity`, so what a browser paints is the
+ * fill composited toward its ground, and two different hexes can still land a
+ * hair apart. See {@link MIN_FILL_CONTRAST}.
  */
 import { cleanup, render } from '@testing-library/react';
 import { createElement, type CSSProperties } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { borderColors, surfaceColors } from '../tokens/sharedThemeTokens.js';
-import { SKELETON_FILL_VAR } from './skeletonPulse.js';
+import {
+  SKELETON_FILL_VAR,
+  SKELETON_PULSE_PEAK_OPACITY,
+} from './skeletonPulse.js';
 import { SkeletonStack, type SkeletonStackProps } from './SkeletonStack.js';
 
 type Theme = 'base' | '_dark';
@@ -67,35 +75,156 @@ function tokenHex(token: SemanticToken, theme: Theme): string {
   return paletteHex(token.value[theme]);
 }
 
+type Resolution = {
+  /** Properties a consumer declared, which win over any fallback. */
+  overrides?: Record<string, string>;
+  /**
+   * Resolve as if the preset emitted nothing, so every read falls through to
+   * its fallback — a consumer who never installed the design-system preset, or
+   * who set Panda's `prefix` (which renames every generated variable, so every
+   * `var(--colors-*)` in this package misses).
+   */
+  withoutPreset?: boolean;
+};
+
 /**
  * Resolves a declared CSS value the way a browser's cascade would: a `var()`
  * whose property is declared takes that property's value for the theme, an
- * undeclared one falls through to its fallback, and a literal passes through.
+ * undeclared one falls through to its fallback, `light-dark()` picks the limb
+ * matching the theme's `color-scheme`, and a literal passes through.
  */
 function resolveCssValue(
   value: string,
   theme: Theme,
-  overrides: Record<string, string> = {},
+  { overrides = {}, withoutPreset = false }: Resolution = {},
 ): string {
-  const call = /^var\(\s*(--[\w-]+)\s*(?:,\s*([\s\S]+))?\)$/.exec(value.trim());
-  if (!call) return value.trim();
+  const trimmed = value.trim();
+  const recurse = (next: string) =>
+    resolveCssValue(next, theme, { overrides, withoutPreset });
+
+  // `light-dark(<light>, <dark>)` — the last-resort tier of `SKELETON_FILL`.
+  // Split on the top-level comma so a limb may itself be a function call.
+  const lightDark = /^light-dark\(([\s\S]+)\)$/.exec(trimmed);
+  if (lightDark) {
+    const limbs = splitTopLevel(lightDark[1] ?? '');
+    if (limbs.length !== 2) {
+      throw new Error(`Malformed light-dark(): ${trimmed}`);
+    }
+    return recurse(limbs[theme === '_dark' ? 1 : 0] ?? '');
+  }
+
+  const call = /^var\(\s*(--[\w-]+)\s*(?:,\s*([\s\S]+))?\)$/.exec(trimmed);
+  if (!call) return trimmed;
 
   const property = call[1] ?? '';
   const fallback = call[2];
 
   const override = overrides[property];
-  if (override !== undefined) {
-    return resolveCssValue(override, theme, overrides);
-  }
+  if (override !== undefined) return recurse(override);
 
-  const declared = DECLARED_PROPERTIES[property];
+  const declared = withoutPreset ? undefined : DECLARED_PROPERTIES[property];
   if (declared) return tokenHex(declared, theme);
 
   if (fallback === undefined) {
     throw new Error(`No fallback for undeclared property: ${property}`);
   }
-  return resolveCssValue(fallback, theme, overrides);
+  return recurse(fallback);
 }
+
+/** Splits on commas that aren't inside parentheses. */
+function splitTopLevel(args: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let start = 0;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const char = args[index];
+    if (char === '(') depth += 1;
+    else if (char === ')') depth -= 1;
+    else if (char === ',' && depth === 0) {
+      parts.push(args.slice(start, index));
+      start = index + 1;
+    }
+  }
+  parts.push(args.slice(start));
+  return parts.map((part) => part.trim());
+}
+
+// ─── WCAG-style contrast, computed rather than eyeballed ─────────────────────
+// Local implementations on purpose: the package ships no colour math, and
+// three formulas do not justify a dependency.
+
+type Rgb = readonly [number, number, number];
+
+/** `#rgb` / `#rrggbb` -> 0–255 channels. */
+function hexChannels(hex: string): Rgb {
+  const body = hex.replace('#', '');
+  const full =
+    body.length === 3 ? [...body].map((char) => char + char).join('') : body;
+  if (!/^[0-9a-f]{6}$/i.test(full)) {
+    throw new Error(`Not a plain hex colour: ${hex}`);
+  }
+  const channel = (at: number) => parseInt(full.slice(at, at + 2), 16);
+  return [channel(0), channel(2), channel(4)];
+}
+
+/** WCAG relative luminance. */
+function relativeLuminance(rgb: Rgb): number {
+  const linear = (channel: number) => {
+    const unit = channel / 255;
+    return unit <= 0.03928 ? unit / 12.92 : ((unit + 0.055) / 1.055) ** 2.4;
+  };
+  return (
+    0.2126 * linear(rgb[0]) + 0.7152 * linear(rgb[1]) + 0.0722 * linear(rgb[2])
+  );
+}
+
+/** WCAG contrast ratio: 1 for identical colours, 21 for black on white. */
+function contrastRatio(a: Rgb, b: Rgb): number {
+  const one = relativeLuminance(a);
+  const other = relativeLuminance(b);
+  return (Math.max(one, other) + 0.05) / (Math.min(one, other) + 0.05);
+}
+
+/**
+ * `foreground` painted over `background` at `alpha` — what a browser actually
+ * puts on screen, since every skeleton block carries an `opacity`.
+ */
+function compositeOver(foreground: Rgb, background: Rgb, alpha: number): Rgb {
+  const blend = (over: number, under: number) =>
+    over * alpha + under * (1 - alpha);
+  return [
+    blend(foreground[0], background[0]),
+    blend(foreground[1], background[1]),
+    blend(foreground[2], background[2]),
+  ];
+}
+
+/** Every ground a consumer can build from the system's own elevation ramp. */
+const SURFACE_STEPS = {
+  canvas: surfaceColors.canvas,
+  default: surfaceColors.default,
+  subtle: surfaceColors.subtle,
+};
+
+/**
+ * Contrast floor for a skeleton block against its ground, composited at the
+ * block's resting opacity.
+ *
+ * A REGRESSION RATCHET, NOT AN ACCESSIBILITY CLAIM. None of these ratios meets
+ * a WCAG text threshold and none needs to — the blocks carry no content. The
+ * floor sits just under the worst ratio the current fill actually achieves
+ * (light `surface.subtle`, 1.295:1; the best is dark `surface.canvas` at
+ * 1.686:1), so a future re-tone that quietly moves the fill *toward* a surface
+ * fails here instead of shipping a near-invisible placeholder. Raise it if the
+ * fill improves; do not lower it to make a change pass.
+ *
+ * Measured at {@link SKELETON_PULSE_PEAK_OPACITY} because that is both the
+ * resting opacity and the brightest the pulse ever gets — the trough (0.45)
+ * necessarily reads closer to the ground (~1.14:1 in the same worst pairing)
+ * and is a property of the animation, not of the fill this floor guards.
+ */
+const MIN_FILL_CONTRAST = 1.25;
 
 /** What Panda compiles `bg: 'surface.subtle'` down to. */
 const SURFACE_SUBTLE_GROUND = 'var(--colors-surface-subtle)';
@@ -141,17 +270,26 @@ describe('SkeletonStack item fill', () => {
     }
   });
 
-  it('differs from every surface step, so no ground can swallow it', () => {
+  // Supersedes a plain `!==` against each surface, which passed at 1.001:1 and
+  // took no account of the `opacity` every block carries — the two things that
+  // made the old assertion unable to see a near-invisible placeholder.
+  it('clears the contrast floor against every surface step, composited at rest opacity', () => {
     const fill = fillOnGround(SURFACE_SUBTLE_GROUND);
 
     for (const theme of THEMES) {
-      const resolved = resolveCssValue(fill, theme);
-      for (const surface of [
-        surfaceColors.canvas,
-        surfaceColors.default,
-        surfaceColors.subtle,
-      ]) {
-        expect(resolved).not.toBe(tokenHex(surface, theme));
+      const painted = hexChannels(resolveCssValue(fill, theme));
+
+      for (const [name, surface] of Object.entries(SURFACE_STEPS)) {
+        const ground = hexChannels(tokenHex(surface, theme));
+        const ratio = contrastRatio(
+          compositeOver(painted, ground, SKELETON_PULSE_PEAK_OPACITY),
+          ground,
+        );
+
+        expect(
+          ratio,
+          `${theme} / surface.${name}: ${ratio.toFixed(3)}:1`,
+        ).toBeGreaterThanOrEqual(MIN_FILL_CONTRAST);
       }
     }
   });
@@ -173,8 +311,37 @@ describe('SkeletonStack item fill', () => {
     const fill = fillOnGround(SURFACE_SUBTLE_GROUND);
 
     expect(
-      resolveCssValue(fill, 'base', { [SKELETON_FILL_VAR]: '#ff00ff' }),
+      resolveCssValue(fill, 'base', {
+        overrides: { [SKELETON_FILL_VAR]: '#ff00ff' },
+      }),
     ).toBe('#ff00ff');
+  });
+
+  // The regression: the last-resort tier was a bare `#d4d4d4`, so a consumer
+  // without the preset (or with a Panda `prefix`, which renames the token
+  // variable and makes the middle tier miss) got a light-grey block on a dark
+  // surface — 9.7:1 against `surface.canvas`, a glaring slab rather than a
+  // placeholder. `light-dark()` follows the consumer's `color-scheme` instead.
+  it('falls back to a theme-aware colour when the preset tokens are absent', () => {
+    const fill = fillOnGround(SURFACE_SUBTLE_GROUND);
+    const withoutPreset = true;
+
+    expect(resolveCssValue(fill, 'base', { withoutPreset })).toBe('#d4d4d4');
+    expect(resolveCssValue(fill, '_dark', { withoutPreset })).toBe('#404040');
+  });
+
+  // The last-resort tier is not a second opinion on the palette: it is the
+  // `border.subtle` pair spelled literally, for elements the token never
+  // reached. If the token moves and the literal doesn't, the two consumers see
+  // different skeletons.
+  it('spells the last-resort fallback as the border.subtle values themselves', () => {
+    const fill = fillOnGround(SURFACE_SUBTLE_GROUND);
+
+    for (const theme of THEMES) {
+      expect(resolveCssValue(fill, theme, { withoutPreset: true })).toBe(
+        tokenHex(borderColors.subtle, theme),
+      );
+    }
   });
 
   it('takes a --skeleton-fill from the style prop onto the wrapper the items inherit from', () => {
