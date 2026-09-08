@@ -129,20 +129,74 @@ const portInUse = (port: number, host: string) =>
     });
   });
 
-const waitForPort = (port: number, host: string, timeoutMs: number) =>
+/**
+ * Nothing else may hold the port. `ladle preview` would fail to bind, and
+ * because playwright.config's `reuseExistingServer` is on off-CI, Playwright
+ * would then scrape whatever *is* listening — a leftover server, or another
+ * worktree's `snapshot:serve` — comparing this branch's baselines against a
+ * different checkout's pixels. Fail rather than render the wrong tree.
+ *
+ * Checked before `runBuild`, not at render time: it is a hard precondition
+ * that costs one `connect()`, and behind the build the same failure arrived
+ * only after a full 15-package compile had already been spent on it.
+ */
+const ensurePortIsFree = async () => {
+  if (!(await portInUse(PORT, HOST))) return;
+  console.error(
+    `Something is already listening on ${HOST}:${PORT}, which is where the\n` +
+      'preview under test has to be served from. Stop it and re-run:\n\n' +
+      `  lsof -nP -iTCP:${PORT} -sTCP:LISTEN\n`,
+  );
+  process.exit(1);
+};
+
+/**
+ * Poll until the server binds, or `signal` aborts, or the deadline passes.
+ *
+ * The `signal` is not optional politeness: this races against the child's own
+ * exit, and losing a `Promise.race` does not stop the loser. Without it, a
+ * server that died at t=2s printed its error immediately and then held the
+ * event loop open with a ref'd 300ms timer until the full timeout — the
+ * caller saw the failure at once and then watched an idle process for another
+ * three minutes before it exited.
+ */
+const waitForPort = (
+  port: number,
+  host: string,
+  timeoutMs: number,
+  signal: AbortSignal,
+) =>
   new Promise<void>((resolve, reject) => {
     const deadline = Date.now() + timeoutMs;
+    let timer: NodeJS.Timeout | undefined;
+    let socket: net.Socket | undefined;
+
+    const stop = () => {
+      clearTimeout(timer);
+      socket?.destroy();
+    };
+    signal.addEventListener(
+      'abort',
+      () => {
+        stop();
+        reject(new Error('aborted'));
+      },
+      { once: true },
+    );
+
     const attempt = () => {
-      const socket = net.connect(port, host);
+      if (signal.aborted) return;
+      socket = net.connect(port, host);
       socket.once('connect', () => {
-        socket.destroy();
+        stop();
         resolve();
       });
       socket.once('error', () => {
-        socket.destroy();
+        socket?.destroy();
+        if (signal.aborted) return;
         if (Date.now() > deadline)
           reject(new Error(`preview server never came up on ${host}:${port}`));
-        else setTimeout(attempt, 300);
+        else timer = setTimeout(attempt, 300);
       });
     };
     attempt();
@@ -168,30 +222,29 @@ const runPlaywright = async (storyIds: string[] | null) => {
     );
   }
 
-  // Nothing else may hold the port. `ladle preview` would fail to bind, and
-  // because playwright.config's `reuseExistingServer` is on off-CI, Playwright
-  // would then scrape whatever *is* listening — a leftover server, or another
-  // worktree's `snapshot:serve` — comparing this branch's baselines against a
-  // different checkout's pixels. Fail rather than render the wrong tree.
-  if (await portInUse(PORT, HOST)) {
-    console.error(
-      `Something is already listening on ${HOST}:${PORT}, which is where the\n` +
-        'preview under test has to be served from. Stop it and re-run:\n\n' +
-        `  lsof -nP -iTCP:${PORT} -sTCP:LISTEN\n`,
-    );
-    process.exitCode = 1;
-    return;
-  }
-
   const server = spawn('npm', ['run', 'snapshot:serve'], {
     cwd: packageDir,
     detached: true,
-    stdio: ['ignore', 'ignore', 'pipe'],
+    // Capture BOTH streams: Vite (and so `ladle preview`) routes most of its
+    // diagnostics — the "port is already in use" line, build-load failures —
+    // through its own logger on stdout, so stderr alone reported a bare exit
+    // code with an empty tail on exactly the failures this is here to explain.
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
-  let serverError = '';
-  server.stderr?.on('data', (chunk: Buffer) => {
-    serverError += chunk.toString();
-  });
+  let serverOutput = '';
+  for (const stream of [server.stdout, server.stderr]) {
+    stream?.on('data', (chunk: Buffer) => {
+      serverOutput += chunk.toString();
+    });
+    // `killServer` signals the process GROUP. If teardown misses a grandchild
+    // that inherited the pipe (npm exiting first and leaving ladle/vite
+    // reparented is the ordinary case on SIGTERM), a ref'd read handle would
+    // hold this process open after Playwright is done. Unref keeps the
+    // diagnostic without letting it pin us. Child stdio pipes are Sockets at
+    // runtime but typed as bare Readable, hence the capability check.
+    if (stream && 'unref' in stream && typeof stream.unref === 'function')
+      stream.unref();
+  }
   const killServer = () => {
     try {
       if (server.pid) process.kill(-server.pid, 'SIGTERM');
@@ -205,18 +258,26 @@ const runPlaywright = async (storyIds: string[] | null) => {
     process.exit(130);
   });
 
+  // Cancels the poll below the moment the race is decided, whichever way.
+  const settled = new AbortController();
   try {
     // A server that dies (bad build, bind failure) would otherwise leave
-    // waitForPort spinning for its full timeout; surface its stderr instead.
+    // waitForPort spinning for its full timeout; surface its output instead.
     await Promise.race([
-      waitForPort(PORT, HOST, 180_000),
+      waitForPort(PORT, HOST, 180_000, settled.signal),
       new Promise<never>((_, reject) => {
         server.once('exit', (code) => {
-          reject(
-            new Error(
-              `preview server exited (code ${code}) before serving ${HOST}:${PORT}\n${serverError}`,
-            ),
-          );
+          // Let the pipes deliver whatever is still buffered before reading
+          // them, but never wait on them: with a detached group a surviving
+          // grandchild can hold the write end open indefinitely, and 'close'
+          // would then never fire at all.
+          setTimeout(() => {
+            reject(
+              new Error(
+                `preview server exited (code ${code}) before serving ${HOST}:${PORT}\n${serverOutput}`,
+              ),
+            );
+          }, 100).unref();
         });
       }),
     ]);
@@ -234,6 +295,7 @@ const runPlaywright = async (storyIds: string[] | null) => {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;
   } finally {
+    settled.abort();
     killServer();
   }
 };
@@ -275,6 +337,7 @@ if (changed.length === 0) {
   process.exit(0);
 }
 
+await ensurePortIsFree();
 runBuild();
 checkDepsAreFresh();
 
