@@ -410,7 +410,15 @@ for (const file of changed) {
   // any story (e.g. a DataTable recipe tweak repaints the table embedded in the
   // filter-primitives story) while mapping to zero modules in story-deps, which
   // the per-module lookup below would silently skip. Attribute conservatively.
-  if (/^src\/(recipes\/|panda-preset\.)/.test(rest)) {
+  // The set is `uikit-preview/panda.config.ts`'s own `dependencies` list, not a
+  // guess: `src/tokens/` and `src/staticCss.ts` are Panda inputs too.
+  // `sharedThemeTokens.ts` is not re-exported from the tokens barrel and
+  // `staticCss.ts` is tree-shaken out of every story chunk, so neither appears
+  // in story-deps at all — both fell through to `unmatched` and updated ZERO
+  // baselines for a change that repaints every story. (`panda.shared.ts` is
+  // safe only by accident: it sits at the package root, misses `^src/`, and
+  // hits the catch-all `fullRun` at the bottom of the loop.)
+  if (/^src\/(recipes\/|tokens\/|panda-preset\.|staticCss\.)/.test(rest)) {
     fullRun = true;
     continue;
   }
