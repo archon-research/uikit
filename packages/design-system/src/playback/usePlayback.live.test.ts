@@ -14,26 +14,45 @@ import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createLiveSource } from './types.js';
-import type { PlaybackEvent } from './types.js';
+import type { PlaybackEvent, PlaybackSourceStatus } from './types.js';
 import { usePlayback } from './usePlayback.js';
 
 type Emit = (event: PlaybackEvent<string>) => void;
 
-/** A live source whose `emit` is driven by the test rather than a transport. */
+/**
+ * A live source whose `emit` / `setStatus` are driven by the test rather than a
+ * transport. `subscribeCount` is how a test tells a re-render apart from a
+ * re-SUBSCRIBE — the latter resets the accumulated buffer.
+ */
 function makeLiveSource(): {
   source: ReturnType<typeof createLiveSource<string>>;
   emit: Emit;
+  setStatus: (status: PlaybackSourceStatus) => void;
+  subscribeCount: () => number;
 } {
   const listeners = new Set<(event: PlaybackEvent<string>) => void>();
-  const source = createLiveSource<string>((onEvent) => {
-    listeners.add(onEvent);
-    return () => listeners.delete(onEvent);
-  });
+  const statusListeners = new Set<(status: PlaybackSourceStatus) => void>();
+  let subscribeCount = 0;
+  const source = createLiveSource<string>(
+    (onEvent) => {
+      subscribeCount += 1;
+      listeners.add(onEvent);
+      return () => listeners.delete(onEvent);
+    },
+    (onStatus) => {
+      statusListeners.add(onStatus);
+      return () => statusListeners.delete(onStatus);
+    },
+  );
   return {
     source,
     emit: (event) => {
       for (const listener of listeners) listener(event);
     },
+    setStatus: (status) => {
+      for (const listener of statusListeners) listener(status);
+    },
+    subscribeCount: () => subscribeCount,
   };
 }
 
@@ -137,12 +156,133 @@ describe('usePlayback (live source)', () => {
     expect(result.current.events).not.toBe(firstEvents);
     expect(result.current.events).toEqual([]);
     expect(result.current.latestEvent).toBeNull();
+    // The clock is re-baselined with the rest of the per-source reset. Leaving
+    // it on the removed stream's last event would hand back the documented
+    // "empty list" alongside a timestamp from a stream that is gone.
+    expect(result.current.clock).not.toBe(event(1).timestamp);
+    expect(result.current.clock).toBe(Date.now());
 
     act(() => {
       second.emit(event(9));
     });
     flushBatcher();
     expect(result.current.events.map((e) => e.seq)).toEqual([9]);
+  });
+
+  it('keeps the buffer when only autoplay changes', () => {
+    const { source, emit, subscribeCount } = makeLiveSource();
+    const { result, rerender } = renderHook(
+      ({ autoplay }) => usePlayback({ source, autoplay }),
+      { initialProps: { autoplay: true } },
+    );
+
+    act(() => {
+      emit(event(1));
+    });
+    flushBatcher();
+    expect(result.current.events.map((e) => e.seq)).toEqual([1]);
+    expect(subscribeCount()).toBe(1);
+
+    // `autoplay` is INITIAL intent, per-source; play()/pause() own the
+    // transport afterwards. Toggling it on a stable source must not wipe the
+    // accumulated feed or rebuild the subscription underneath it.
+    rerender({ autoplay: false });
+
+    expect(result.current.events.map((e) => e.seq)).toEqual([1]);
+    expect(subscribeCount()).toBe(1);
+
+    act(() => {
+      emit(event(2));
+    });
+    flushBatcher();
+    expect(result.current.events.map((e) => e.seq)).toEqual([1, 2]);
+  });
+
+  it('flushes the pending frame on pause, keeping arrival order across a play', () => {
+    const { source, emit } = makeLiveSource();
+    const onEvent = vi.fn();
+    const { result } = renderHook(() => usePlayback({ source, onEvent }));
+
+    // Two events arrive and sit in the rAF batcher: a frame has NOT run yet.
+    act(() => {
+      emit(event(1));
+      emit(event(2));
+    });
+
+    // Pause inside that same frame. A third event arrives while paused, so it
+    // goes to the pause backlog instead of the batcher...
+    act(() => {
+      result.current.pause();
+    });
+    act(() => {
+      emit(event(3));
+    });
+    // ...and play() drains that backlog synchronously. If pause left the
+    // batcher's frame pending, the OLDER pair lands after the newer event:
+    // events out of order, `clock` travelling backwards, `onEvent` out of
+    // order.
+    act(() => {
+      result.current.play();
+    });
+    flushBatcher();
+
+    expect(result.current.events.map((e) => e.seq)).toEqual([1, 2, 3]);
+    expect(onEvent.mock.calls.map(([e]) => e.seq)).toEqual([1, 2, 3]);
+    expect(result.current.clock).toBe(event(3).timestamp);
+  });
+
+  it('keeps an error status through play and pause', () => {
+    const { source, setStatus } = makeLiveSource();
+    const { result } = renderHook(() => usePlayback({ source }));
+
+    act(() => {
+      setStatus('error');
+    });
+    expect(result.current.status).toBe('error');
+
+    // A dead transport stays dead: pressing the transport controls must not
+    // paint over it with 'connected'/'paused'.
+    act(() => {
+      result.current.play();
+    });
+    expect(result.current.status).toBe('error');
+
+    act(() => {
+      result.current.pause();
+    });
+    expect(result.current.status).toBe('error');
+  });
+
+  it('surfaces a completed live stream instead of staying connected forever', () => {
+    const { source, emit, setStatus } = makeLiveSource();
+    const { result } = renderHook(() => usePlayback({ source }));
+
+    act(() => {
+      emit(event(1));
+    });
+    flushBatcher();
+    expect(result.current.status).toBe('connected');
+
+    act(() => {
+      setStatus('complete');
+    });
+    expect(result.current.status).toBe('complete');
+
+    // Terminal in the same way replay completion is terminal.
+    act(() => {
+      result.current.play();
+    });
+    expect(result.current.status).toBe('complete');
+  });
+
+  it('surfaces an idle source status', () => {
+    const { source, setStatus } = makeLiveSource();
+    const { result } = renderHook(() => usePlayback({ source }));
+
+    act(() => {
+      setStatus('idle');
+    });
+    expect(result.current.status).toBe('idle');
   });
 
   it('buffers while paused and releases the backlog on play, in order', () => {

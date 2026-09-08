@@ -7,10 +7,12 @@ import {
   useState,
 } from 'react';
 
+import { IS_DEV_WARNING_ENABLED } from '../hooks/devWarning.js';
 import { useIdentityChurnWarning } from '../hooks/useIdentityChurnWarning.js';
 import { createAppendOnlyBuffer } from './appendOnlyBuffer.js';
 import type { AppendOnlyBuffer } from './appendOnlyBuffer.js';
 import { createRafBatcher } from './rafBatch.js';
+import type { RafBatcher } from './rafBatch.js';
 import type { PlaybackBounds, PlaybackEvent, PlaybackSource } from './types.js';
 
 export type PlaybackMode = 'live' | 'replay';
@@ -42,6 +44,12 @@ export type UsePlaybackOptions<TPayload = unknown> = {
    * Start playing immediately. Defaults to `false` for replay (start paused,
    * scrubbed to the first event — the operator presses play) and `true` for
    * live (a monitor should start following the feed as soon as it mounts).
+   *
+   * INITIAL intent, applied per source: it is read when the hook mounts and
+   * whenever `source` identity changes, and `play()`/`pause()` own the
+   * transport from then on. Toggling it on an otherwise-stable source is
+   * deliberately inert — it neither starts nor stops playback, and in
+   * particular does not disturb a live source's accumulated `events`.
    */
   autoplay?: boolean;
 };
@@ -52,8 +60,8 @@ export type UsePlaybackResult<TPayload = unknown> = {
   /**
    * Virtual clock, epoch ms. Replay: the scrub position, advanced by the
    * wall-clock delta * `speed` each frame while playing. Live: the
-   * timestamp of the latest surfaced event (or the hook's mount time before
-   * the first one arrives).
+   * timestamp of the latest surfaced event, or — before the first one arrives
+   * on this source — the moment the hook mounted or last switched `source`.
    */
   clock: number;
   /** Replay-only time bounds (first/last event timestamp); `null` for live sources. */
@@ -104,6 +112,19 @@ function sortEvents<T>(events: PlaybackEvent<T>[]): PlaybackEvent<T>[] {
  * immediately after a reset just as it does after a flush.
  */
 const EMPTY_LIVE_EVENTS = createAppendOnlyBuffer<never>().snapshot();
+
+/**
+ * Live statuses the transport CONTROLS must not paint over. Both are terminal
+ * reports from the source itself — the stream is dead (`'error'`) or has ended
+ * (`'complete'`) — and neither stops being true because the operator pressed a
+ * button, so `play`/`pause` preserve them exactly as the replay branch
+ * preserves its own `'complete'`. Without this, a dead transport reads back as
+ * `'connected'` the moment anyone hits play, which is precisely the state an
+ * operator is watching the indicator to rule out.
+ */
+function isTerminalLiveStatus(status: PlaybackStatus): boolean {
+  return status === 'error' || status === 'complete';
+}
 
 /**
  * `useLayoutEffect`, except on the server, where React warns that it does
@@ -323,29 +344,56 @@ export function usePlayback<TPayload = unknown>({
   );
   const livePlayingRef = useRef(liveAutoplay);
   const liveBufferRef = useRef<PlaybackEvent<TPayload>[]>([]);
+  // The source the live clock is currently baselined to, so the reset below can
+  // tell a real SWAP from its own first run (where the `useState` initializer
+  // above already took the mount baseline) and skip a redundant commit.
+  const liveClockSourceRef = useRef<PlaybackSource<TPayload>>(source);
+  // The batcher belonging to the live subscription in this commit, so `pause`
+  // can flush it. Installed by the subscribe effect and cleared by its
+  // cleanup — never read during render.
+  const liveBatcherRef = useRef<RafBatcher<PlaybackEvent<TPayload>> | null>(
+    null,
+  );
+  // `liveAutoplay` as of the latest commit, readable from the LAYOUT phase. The
+  // reset below needs the current prop value without taking it as a dependency
+  // (see there for why it is keyed on `source` alone), and the passive
+  // `onEventRef` idiom above would be one phase too late: layout effects run
+  // before any passive effect, so the reset would read the value the PREVIOUS
+  // commit left behind. Synced in a layout effect declared ahead of the reset
+  // instead — React flushes a component's layout effects in declaration order,
+  // so this one has already run when the reset reads it, within the same
+  // commit.
+  const liveAutoplayRef = useRef(liveAutoplay);
+  useIsomorphicLayoutEffect(() => {
+    liveAutoplayRef.current = liveAutoplay;
+  });
 
-  // Switching sources resets five things — two states, three refs — and the
+  // Switching sources resets six things — three states, three refs — and the
   // reset only holds together if NOTHING from the outgoing source can be
   // observed between them. It is spread over three phases to keep that true,
   // and each phase is where it is for a reason.
   //
-  // RENDER: the two states. React re-runs this function with the reset values
-  // before committing, so no commit shows the new source carrying the previous
-  // source's events.
-  const [liveResetKey, setLiveResetKey] = useState({ source, liveAutoplay });
+  // Keyed on `source` identity ALONE, in every phase. Toggling the `autoplay`
+  // prop on an otherwise-stable live source used to be part of this key, which
+  // meant a flip discarded the entire accumulated feed and resubscribed the
+  // transport. `autoplay` is INITIAL intent — `play`/`pause` own the transport
+  // from then on — so it applies per-source and nothing else. The replay half
+  // above narrowed the identical coupling for the identical reason.
+  //
+  // RENDER: the two states that have a value to reset to without asking the
+  // clock. React re-runs this function with the reset values before committing,
+  // so no commit shows the new source carrying the previous source's events.
+  const [liveResetKey, setLiveResetKey] = useState(source);
 
-  if (
-    liveResetKey.source !== source ||
-    liveResetKey.liveAutoplay !== liveAutoplay
-  ) {
-    setLiveResetKey({ source, liveAutoplay });
+  if (liveResetKey !== source) {
+    setLiveResetKey(source);
     if (source.kind === 'live') {
       setLiveEvents(EMPTY_LIVE_EVENTS);
       setLiveStatus(liveAutoplay ? 'connecting' : 'paused');
     }
   }
 
-  // COMMIT, SYNCHRONOUSLY: the three refs.
+  // COMMIT, SYNCHRONOUSLY: the three refs, plus the clock.
   //
   // This has to be `useLayoutEffect`. Downgrading it to `useEffect` reopens a
   // window and reintroduces a bug: the outgoing subscription stays live until
@@ -357,12 +405,26 @@ export function usePlayback<TPayload = unknown>({
   // list. Resetting the refs in the layout phase closes the window: the refs
   // are already swapped before anything outside React can run, which is what
   // lets the subscription below recognise itself as superseded.
+  //
+  // The clock rides along here rather than with the two states above because
+  // re-baselining it means reading `Date.now()`, which a render must not do.
+  // This is the right phase for it regardless: `clock` is read only by the
+  // hook's return value, never by an effect, and React flushes a layout
+  // effect's state update synchronously before paint — so the one commit that
+  // carries the stale clock is neither painted nor observable to any effect.
+  // Left un-reset, a swap returns `events: []` alongside a timestamp from the
+  // stream that was just removed, breaking the documented contract that a live
+  // clock reads mount time until the first event arrives.
   useIsomorphicLayoutEffect(() => {
     if (source.kind !== 'live') return;
-    livePlayingRef.current = liveAutoplay;
+    livePlayingRef.current = liveAutoplayRef.current;
     liveBufferRef.current = [];
     liveEventsRef.current = createAppendOnlyBuffer<PlaybackEvent<TPayload>>();
-  }, [source, liveAutoplay]);
+    if (liveClockSourceRef.current !== source) {
+      liveClockSourceRef.current = source;
+      setLiveClock(Date.now());
+    }
+  }, [source]);
 
   // PASSIVE: the subscription itself, which is the only part that may run late.
   useEffect(() => {
@@ -394,6 +456,11 @@ export function usePlayback<TPayload = unknown>({
         current === 'connecting' ? 'connected' : current,
       );
     });
+    // Published for `pause`, which has to be able to flush a frame that is
+    // already holding events. Cleanup nulls this before the next run installs
+    // its own (React tears an effect down before setting it back up), so the
+    // ref only ever names the batcher of the current subscription.
+    liveBatcherRef.current = batcher;
 
     const unsubscribeEvents = source.subscribe((event) => {
       if (!isCurrent()) return;
@@ -404,24 +471,54 @@ export function usePlayback<TPayload = unknown>({
       batcher.push(event);
     });
 
+    // Exhaustive over `PlaybackSourceStatus`, deliberately: an if/else chain
+    // here handled three of its five members and dropped `'complete'` and
+    // `'idle'` on the floor, so a live stream that reported itself finished
+    // displayed as `'connected'` forever. Only the two "still working on it"
+    // statuses are gated on whether we're playing — a paused viewer is a local
+    // decision that outranks the transport's `connected`/`connecting`, whereas
+    // `error`/`complete`/`idle` are facts about the stream that a local pause
+    // does not change.
     const unsubscribeStatus = source.subscribeStatus?.((status) => {
       if (!isCurrent()) return;
-      if (status === 'connected') {
-        setLiveStatus(livePlayingRef.current ? 'connected' : 'paused');
-      } else if (status === 'connecting') {
-        setLiveStatus(livePlayingRef.current ? 'connecting' : 'paused');
-      } else if (status === 'error') {
-        setLiveStatus('error');
+      switch (status) {
+        case 'connected':
+          setLiveStatus(livePlayingRef.current ? 'connected' : 'paused');
+          break;
+        case 'connecting':
+          setLiveStatus(livePlayingRef.current ? 'connecting' : 'paused');
+          break;
+        case 'error':
+          setLiveStatus('error');
+          break;
+        case 'complete':
+          setLiveStatus('complete');
+          break;
+        case 'idle':
+          setLiveStatus('idle');
+          break;
+        default: {
+          // Never-guard: a sixth `PlaybackSourceStatus` member fails the type
+          // check right here instead of being silently ignored at runtime.
+          const unhandled: never = status;
+          if (IS_DEV_WARNING_ENABLED) {
+            console.warn(
+              `[uikit] usePlayback: unhandled live source status ` +
+                `\`${String(unhandled)}\`; leaving \`status\` unchanged.`,
+            );
+          }
+          break;
+        }
       }
     });
 
     return () => {
       unsubscribeEvents();
       unsubscribeStatus?.();
+      liveBatcherRef.current = null;
       batcher.dispose();
     };
-    // oxlint-disable-next-line react/exhaustive-deps -- `liveAutoplay` is a deliberate trigger-only dep: the layout effect above swaps the buffers on the same key, so this subscription must be rebuilt in lockstep or its flushes would all be dropped as superseded.
-  }, [source, liveAutoplay]);
+  }, [source]);
 
   // ---- Shared controls --------------------------------------------------
 
@@ -433,7 +530,9 @@ export function usePlayback<TPayload = unknown>({
       return;
     }
     livePlayingRef.current = true;
-    setLiveStatus('connected');
+    setLiveStatus((current) =>
+      isTerminalLiveStatus(current) ? current : 'connected',
+    );
     if (liveBufferRef.current.length > 0) {
       const buffered = liveBufferRef.current;
       liveBufferRef.current = [];
@@ -455,8 +554,17 @@ export function usePlayback<TPayload = unknown>({
       );
       return;
     }
+    // Flush FIRST, while we are still playing. The batcher can be holding up to
+    // a frame of events that have already arrived, and they belong ahead of
+    // anything the pause backlog collects next. Left pending, that frame fires
+    // after the next `play()` has already drained the backlog synchronously —
+    // appending OLDER events after newer ones, walking `clock` backwards and
+    // handing `onEvent` events out of arrival order.
+    liveBatcherRef.current?.flush();
     livePlayingRef.current = false;
-    setLiveStatus('paused');
+    setLiveStatus((current) =>
+      isTerminalLiveStatus(current) ? current : 'paused',
+    );
   }, [mode]);
 
   const setSpeed = useCallback(
