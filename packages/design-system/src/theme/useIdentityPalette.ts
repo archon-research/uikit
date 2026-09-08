@@ -55,6 +55,20 @@ export function identityPalette(
 }
 
 /**
+ * Re-anchors an array's identity on a key that encodes its contents, so the
+ * result changes identity exactly when the contents do.
+ *
+ * The suppression is unavoidable — depending on `array` itself is what the
+ * re-anchor exists to avoid — so it lives here, alone, rather than on a memo
+ * that does real work: a suppression bails the WHOLE enclosing hook out of
+ * React Compiler optimization, and this hook has nothing else in it to lose.
+ */
+function useStableArray<T>(array: T[], key: string): T[] {
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- `key` IS the content of `array`; see above.
+  return useMemo(() => array, [key]);
+}
+
+/**
  * Stable per-id identity colors. Returns a map of id → `var(--colors-identity-N)`.
  * The result is memoized on the id set, so it's safe to derive series colors
  * from it on every render.
@@ -74,12 +88,10 @@ export function useIdentityPalette(
   // previously used literal NUL-byte delimiters, which made this file look
   // binary to `git diff`).
   const key = JSON.stringify([count, ids]);
-  // The memo body reads `count`/`ids` back OUT of `key` rather than closing
-  // over them, so `[key]` is a complete dependency list rather than a
-  // suppressed one — a lint suppression here also opts the whole hook out of
-  // React Compiler optimization.
-  return useMemo(() => {
-    const [memoCount, memoIds] = JSON.parse(key) as [number, string[]];
-    return identityPalette(memoIds, memoCount);
-  }, [key]);
+  // `count` stays a real number rather than being read back out of `key`: the
+  // round trip is not information-preserving (`JSON.stringify(Infinity)` is
+  // `"null"`, and `Math.min(null, 8)` is 0, which maps every id to
+  // `var(--colors-identity-NaN)`), and it would cost a `JSON.parse` per miss.
+  const stableIds = useStableArray(ids, key);
+  return useMemo(() => identityPalette(stableIds, count), [stableIds, count]);
 }
