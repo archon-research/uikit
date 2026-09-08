@@ -28,17 +28,22 @@ export default defineConfig({
     },
   ],
   webServer: {
-    // Build the whole workspace, not just this package. Stories import
-    // `@archon-research/*` through each package's `exports`, which resolve to
-    // `dist/` — so rendering against a dependency that was not rebuilt shows
-    // its PREVIOUS component, which matches its PREVIOUS baseline and passes
-    // while asserting nothing. Root `npm run build` (`--workspaces
-    // --if-present`, dependency-ordered) includes this package's own build, so
-    // this is still a single pass. CI already builds before this step; the
-    // warm rebuild there costs seconds.
-    command: 'npm --prefix ../.. run build && npm run snapshot:serve',
+    // Build the whole workspace: stories bundle each dependency's `dist/`, so a
+    // package that was not rebuilt renders its previous component. See PR #115.
+    // CI already ran the root build (and `snapshot:check-stale` over it), and
+    // `reuseExistingServer` is false there — so building here too would compile
+    // all 15 packages a second time and throw the checked artifacts away.
+    command: process.env.CI
+      ? 'npm run snapshot:serve'
+      : 'npm --prefix ../.. run build && npm run snapshot:serve',
     port,
     reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
+    // Off CI this has to cover a cold 15-package root build (15 `tsc -p`, Panda
+    // codegen + cssgen, a full Ladle/Vite production build) before anything
+    // binds; 180s was the ceiling for the old preview-only build and does not
+    // stretch that far. On CI the command only serves an already-built dist, so
+    // it keeps the tighter budget rather than turning a hung server into a
+    // ten-minute wait.
+    timeout: process.env.CI ? 120_000 : 600_000,
   },
 })
