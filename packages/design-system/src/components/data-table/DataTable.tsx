@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -622,15 +623,22 @@ export function DataTable<TData extends RowData>({
   // virtualizer's item keys and row-measurement cache (see `getItemKey`
   // below) key off array indices instead of row identity — silently broken
   // once data is prepended or reordered. Warns once, dev-only.
+  // Checked in an effect, not in the render body: reading and writing the
+  // warn-once latch during render is the same `react/refs` violation the
+  // matching latch in `useDataTable` was moved out of.
   const missingRowIdForVirtualizationWarned = useRef(false);
-  if (
-    IS_DEV_WARNING_ENABLED &&
-    shouldWarnMissingGetRowId(
-      virtualized,
-      table.options.getRowId != null,
-      missingRowIdForVirtualizationWarned.current,
-    )
-  ) {
+  const hasGetRowId = table.options.getRowId != null;
+  useEffect(() => {
+    if (
+      !IS_DEV_WARNING_ENABLED ||
+      !shouldWarnMissingGetRowId(
+        virtualized,
+        hasGetRowId,
+        missingRowIdForVirtualizationWarned.current,
+      )
+    ) {
+      return;
+    }
     missingRowIdForVirtualizationWarned.current = true;
     console.warn(
       "[uikit] `DataTable` is `virtualized` without the table's `getRowId` " +
@@ -638,7 +646,7 @@ export function DataTable<TData extends RowData>({
         'will key off array indices, which breaks when data is prepended or ' +
         'reordered. Pass `getRowId` to `useDataTable`.',
     );
-  }
+  }, [virtualized, hasGetRowId]);
 
   // Column resizing/pinning read straight off the `table` instance's own
   // options/state rather than a parallel `DataTable` prop — the consumer
