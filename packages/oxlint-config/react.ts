@@ -71,6 +71,19 @@ const reactConfig = {
     'react/memo-dependencies': 'off',
     'react/todo': 'off',
     'react/incompatible-library': 'off',
+
+    // --- react-perf: deliberately NOT enabled --------------------------------
+    //
+    // Measured in a consumer before this preset existed: `react-perf/*`
+    // reported 106 findings, nearly all `className={css({...})}` and
+    // JSX-passed-as-a-prop — i.e. precisely the hand-memoization the React
+    // Compiler exists to remove. Enabling it would fight the compiler rules
+    // above, telling authors to memoize by hand what the compiler already
+    // memoizes for them.
+    //
+    // Recorded here rather than in a ticket so it is not re-proposed after
+    // someone reads a blog post. If the compiler is ever turned OFF for a
+    // consumer, this trade-off changes and is worth revisiting then.
   },
 };
 
