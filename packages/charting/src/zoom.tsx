@@ -32,6 +32,24 @@ export type ZoomPanOverlayProps = {
   children?: ReactNode;
 };
 
+/**
+ * Zooms the x axis only, leaving `scaleY` at exactly 1.
+ *
+ * Not a preference — a requirement of pinning `scaleYMin`/`scaleYMax` to 1.
+ * visx's default wheel handler scales both axes, and its constraint check is
+ * all-or-nothing: a matrix that violates EITHER bound is discarded whole and
+ * the previous one kept. A default wheel event therefore proposes
+ * `scaleY: 1.1`, fails the y bound, and silently drops the x zoom with it,
+ * leaving the transform untouched — the overlay pans but never zooms. Only the
+ * y bound can be pinned this way, because the y transform is what has to stay
+ * out of the way: this overlay derives a horizontal domain window, it does not
+ * transform the chart's SVG.
+ */
+const horizontalWheelDelta = (event: { deltaY: number }) => ({
+  scaleX: -event.deltaY > 0 ? 1.1 : 0.9,
+  scaleY: 1,
+});
+
 function ZoomDomainEffect({
   zoom,
   fullScale,
@@ -69,7 +87,8 @@ function ZoomDomainEffect({
  * consumer re-renders `<XYChart>` with that window (for example as an
  * explicit `xScale.domain`, or by slicing the data array).
  *
- * Wheel to zoom (around the cursor), drag to pan, double-click to reset.
+ * Wheel to zoom horizontally (around the cursor), drag to pan, double-click
+ * to reset.
  */
 export function ZoomPanOverlay({
   width,
@@ -92,6 +111,7 @@ export function ZoomPanOverlay({
       scaleXMax={maxScale}
       scaleYMin={1}
       scaleYMax={1}
+      wheelDelta={horizontalWheelDelta}
     >
       {(zoom) => (
         <div style={{ position: 'relative', width, height }}>
