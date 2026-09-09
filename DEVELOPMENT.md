@@ -297,6 +297,13 @@ npm publish --workspaces --registry https://registry.npmjs.org
 ### Tooling config packages
 
 - `@archon-research/tsconfig` exports shared TS config presets
-- `@archon-research/oxlint-config` exports `base` and `react` lint presets
+- `@archon-research/oxlint-config` exports five lint presets, each a separate entry point:
+  - `base` — general rules, including `import/no-cycle`
+  - `react` — `base` plus React rules, including Rules of Hooks and the React Compiler rules
+  - `react-strict` — `react` plus `no-explicit-any` and `only-export-components`; opt-in, aimed at
+    applications rather than libraries, and not adopted by any package here
+  - `design-system-boundaries` — `react` plus an error on direct primitive imports from
+    `@ark-ui/react`
+  - `type-aware` — `react` plus promise safety; needs `--type-aware` and `oxlint-tsgolint`
 - `@archon-research/oxfmt-config` exports a shared formatter preset
 - `@archon-research/vite-config` exports a `react-compiler` Vite preset
