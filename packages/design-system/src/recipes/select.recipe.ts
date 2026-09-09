@@ -24,7 +24,7 @@ export const selectRecipe = defineSlotRecipe({
       width: 'full',
       minWidth: '0',
       h: '9',
-      borderWidth: '1px',
+      borderWidth: 'hairline',
       borderStyle: 'solid',
       borderColor: 'border.subtle',
       borderRadius: 'md',
@@ -46,7 +46,7 @@ export const selectRecipe = defineSlotRecipe({
       },
       _focusVisible: {
         borderColor: 'border.strong',
-        outlineWidth: '2px',
+        outlineWidth: 'strong',
         outlineStyle: 'solid',
         outlineColor: 'border.strong',
         outlineOffset: '1px',

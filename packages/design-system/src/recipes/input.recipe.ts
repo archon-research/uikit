@@ -38,7 +38,7 @@ export const inputRecipe = defineSlotRecipe({
     control: {
       width: 'full',
       minWidth: '0',
-      borderWidth: '1px',
+      borderWidth: 'hairline',
       borderStyle: 'solid',
       borderColor: 'border.subtle',
       borderRadius: 'md',
@@ -59,7 +59,7 @@ export const inputRecipe = defineSlotRecipe({
       },
       _focusVisible: {
         borderColor: 'border.strong',
-        outlineWidth: '2px',
+        outlineWidth: 'strong',
         outlineStyle: 'solid',
         outlineColor: 'border.strong',
         outlineOffset: '1px',

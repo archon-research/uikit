@@ -14,7 +14,7 @@ export const statTileRecipe = defineSlotRecipe({
       display: 'grid',
       gap: '1',
       p: '3',
-      borderWidth: '1px',
+      borderWidth: 'hairline',
       borderStyle: 'solid',
       borderColor: 'border.subtle',
       borderRadius: 'md',
@@ -114,16 +114,16 @@ export const statTileRecipe = defineSlotRecipe({
     accent: {
       none: {},
       neutral: {
-        root: { borderLeftWidth: '3px', borderLeftColor: 'border.strong' },
+        root: { borderLeftWidth: 'accent', borderLeftColor: 'border.strong' },
       },
       success: {
-        root: { borderLeftWidth: '3px', borderLeftColor: 'text.success' },
+        root: { borderLeftWidth: 'accent', borderLeftColor: 'text.success' },
       },
       warning: {
-        root: { borderLeftWidth: '3px', borderLeftColor: 'text.warning' },
+        root: { borderLeftWidth: 'accent', borderLeftColor: 'text.warning' },
       },
       critical: {
-        root: { borderLeftWidth: '3px', borderLeftColor: 'text.critical' },
+        root: { borderLeftWidth: 'accent', borderLeftColor: 'text.critical' },
       },
     },
   },

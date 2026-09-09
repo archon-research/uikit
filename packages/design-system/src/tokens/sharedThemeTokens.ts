@@ -156,6 +156,36 @@ export const zIndexTokens = {
 };
 
 /**
+ * Border-width scale. Panda ships no `borderWidths` tokens at all, so a
+ * consumer running `strictTokens` has to spell every border as an arbitrary
+ * `[value]` — a downstream audit counted 12 such hairline escape hatches, all
+ * of them `1px`.
+ *
+ * Four steps, each earned by usage in this package's recipes rather than
+ * invented to round out a ramp: `hairline` is the overwhelming default (45
+ * sites), `strong` is the heavier control edge (the `rangeSlider` thumb) and
+ * the width every focus ring in this package already draws at, `accent` is the
+ * tone rail `panel` and `statTile` draw down their leading edge (8 sites), and
+ * `none` is the explicit removal those same recipes already spell out.
+ *
+ * `strong` covers focus rings too: Panda resolves `outlineWidth` (and its
+ * `ringWidth` shorthand) against `borderWidths`, so this scale is what a
+ * consumer's `outlineWidth` has to draw from as well.
+ *
+ * `hairline` and `strong` reuse the {@link borderColors} names on purpose, so a
+ * hairline divider reads as `borderWidth: 'hairline'` +
+ * `borderColor: 'border.hairline'`. The names avoid `thin`/`medium`/`thick`
+ * because those are CSS-wide `border-width` keywords: a token that failed to
+ * register would render as a plausible width instead of failing loudly.
+ */
+export const borderWidthTokens = {
+  none: { value: '0' },
+  hairline: { value: '1px' },
+  strong: { value: '2px' },
+  accent: { value: '3px' },
+};
+
+/**
  * Dark-aware elevation shadows. A single black rgba shadow is invisible on a
  * near-black dark panel, so the `_dark` variants pair a stronger drop shadow
  * with an inset top highlight to read as a raised edge. `elevation` is the

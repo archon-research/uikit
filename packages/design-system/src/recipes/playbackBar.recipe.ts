@@ -33,7 +33,7 @@ export const playbackBarRecipe = defineSlotRecipe({
       alignItems: 'center',
       gap: '3',
       p: '2',
-      borderWidth: '1px',
+      borderWidth: 'hairline',
       borderStyle: 'solid',
       borderColor: 'border.subtle',
       borderRadius: 'md',

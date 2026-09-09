@@ -23,7 +23,7 @@ export const badgeRecipe = defineRecipe({
     display: 'inline-flex',
     alignItems: 'center',
     borderRadius: 'md',
-    borderWidth: '1px',
+    borderWidth: 'hairline',
     borderStyle: 'solid',
     borderColor: 'transparent',
     fontWeight: 'semibold',
