@@ -153,15 +153,23 @@ function reachableSpecifiers(entry: string): Set<string> {
       }
       // `./x.js` in source resolves to `./x.ts` or `./x.tsx` on disk.
       const base = resolve(dirname(file), spec.replace(/\.js$/, ''));
-      for (const ext of ['.ts', '.tsx']) {
-        try {
-          readFileSync(base + ext, 'utf8');
-          visit(base + ext);
-          break;
-        } catch {
-          // try the next extension
-        }
+      const resolved = ['.ts', '.tsx']
+        .map((extension) => base + extension)
+        .find((candidate) => existsSync(candidate));
+      // Swallowing this would shrink the graph instead of failing: a module
+      // moved behind a directory index, or renamed to an extension not tried
+      // here, stops being traversed while the bundler still resolves it — and
+      // the boundary assertions below then pass on whatever is left, up to and
+      // including nothing at all. A traversal that cannot follow an edge has
+      // stopped answering the question it was asked.
+      if (resolved === undefined) {
+        throw new Error(
+          `${file} imports '${spec}', which resolves to no .ts or .tsx file. ` +
+            'Teach this resolver the new layout — the boundary assertions ' +
+            'below are only as complete as the graph it walks.',
+        );
       }
+      visit(resolved);
     }
   };
 
