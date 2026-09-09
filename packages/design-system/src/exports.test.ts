@@ -1,3 +1,7 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import * as ark from './ark.js';
@@ -13,10 +17,11 @@ import * as splitLayout from './layouts/SplitLayout.js';
 import * as recipes from './recipes/index.js';
 
 /**
- * Every module behind a `package.json` subpath export, keyed by the subpath a
- * consumer writes. A subpath is a second door onto code the root barrel already
- * exports — never a different or smaller API — so the invariant worth holding is
- * that each one is a subset of the root.
+ * Every subpath export that is a second door onto code the root barrel already
+ * exports — never a different or smaller API — so the invariant worth holding
+ * is that each one is a subset of the root. Keyed by the subpath a consumer
+ * writes, and checked against `package.json` below, so this list cannot drift
+ * from what is actually published.
  */
 const SUBPATH_MODULES: Record<string, object> = {
   './ark': ark,
@@ -32,10 +37,16 @@ const SUBPATH_MODULES: Record<string, object> = {
 };
 
 /**
- * Every value the root barrel exported before the Ark pass-throughs moved into
- * `ark.ts` and the component subpaths were added. The root barrel is public
- * API: it may grow, but nothing here may disappear from it without a major
- * version.
+ * The root barrel's complete published surface, asserted in BOTH directions:
+ * nothing here may disappear without a major version, and nothing may appear
+ * at the root without being written down here first.
+ *
+ * The second direction is the one that needs a reason. The package's surface is
+ * an offering, kept small on purpose — so a name arriving by accident (an
+ * `export *` widened one module, a helper made public to unblock one call site)
+ * is a regression even though nobody loses anything by it. Making the census
+ * exact turns every addition into a line in this list, which is a decision
+ * somebody has to make on purpose and a reviewer can see.
  */
 const PUBLISHED_ROOT_EXPORTS = [
   'AsyncStateRenderer',
@@ -228,9 +239,78 @@ describe('subpath exports', () => {
     expect(Object.keys(root)).toEqual(expect.arrayContaining(Object.keys(ark)));
   });
 
-  it('never drops a name the root barrel already published', () => {
-    expect(Object.keys(root)).toEqual(
-      expect.arrayContaining(PUBLISHED_ROOT_EXPORTS),
+  it('publishes exactly the documented root surface, no more and no less', () => {
+    expect(Object.keys(root).sort()).toEqual(
+      [...PUBLISHED_ROOT_EXPORTS].sort(),
     );
   });
+});
+
+/**
+ * Subpaths that deliberately publish something the root barrel does not, so
+ * they are exempt from the subset invariant above but not from the
+ * "`package.json` and this file agree" one below.
+ */
+const STANDALONE_SUBPATHS: Record<string, string> = {
+  // Build-time Panda config, not runtime code: it must stay off the root
+  // barrel so importing a component never drags the preset into an app bundle.
+  './panda-preset': './dist/panda-preset.js',
+  // Emitted by `scripts/emit-theme-bootstrap.ts` from the built module rather
+  // than compiled from a source file of its own, for consumers under a
+  // `script-src 'self'` CSP that cannot inline `THEME_BOOTSTRAP_SCRIPT`.
+  './theme-bootstrap.js': './dist/theme-bootstrap.js',
+};
+
+const SRC_DIR = dirname(fileURLToPath(import.meta.url));
+
+const packageJson = JSON.parse(
+  readFileSync(resolve(SRC_DIR, '..', 'package.json'), 'utf8'),
+) as {
+  exports: Record<string, string | { types: string; default: string }>;
+  sideEffects: string[];
+};
+
+/** `./dist/a/b.js` — a build output — mapped back to the module it compiles from. */
+function sourceModuleFor(distPath: string): string | undefined {
+  const stem = distPath.replace(/^\.\/dist\//, '').replace(/\.js$/, '');
+  return ['.ts', '.tsx']
+    .map((extension) => resolve(SRC_DIR, stem + extension))
+    .find((candidate) => existsSync(candidate));
+}
+
+/**
+ * `package.json` is the only part of the export surface a consumer's install
+ * actually resolves through, and nothing else in this repo type-checks it: a
+ * subpath added to the manifest but never imported here, or a target path
+ * mistyped, fails first in a consumer's node_modules. These close that gap.
+ */
+describe('package.json exports', () => {
+  it('declares exactly the subpaths this file accounts for', () => {
+    expect(Object.keys(packageJson.exports).sort()).toEqual(
+      [
+        '.',
+        ...Object.keys(SUBPATH_MODULES),
+        ...Object.keys(STANDALONE_SUBPATHS),
+      ].sort(),
+    );
+  });
+
+  it.each(Object.entries(packageJson.exports))(
+    '%s resolves to a module that exists',
+    (subpath, target) => {
+      if (typeof target === 'string') {
+        // Only the generated bootstrap script is a bare target, and it has no
+        // source module to resolve — the emit script writes it straight to
+        // `dist`, which is also why it is the package's lone `sideEffects` entry.
+        expect(target).toBe(STANDALONE_SUBPATHS[subpath]);
+        expect(packageJson.sideEffects).toContain(target);
+        return;
+      }
+      // A `types` path that has drifted from `default` is invisible to every
+      // other check here: the runtime import keeps working and only the
+      // consumer's editor goes quiet.
+      expect(target.types).toBe(target.default.replace(/\.js$/, '.d.ts'));
+      expect(sourceModuleFor(target.default)).toBeDefined();
+    },
+  );
 });
