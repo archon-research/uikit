@@ -24,6 +24,10 @@ export type ReactCompilerOptions = {
    * Extra module ids kept away from the Babel pass, merged after
    * {@link DEFAULT_EXCLUDE} rather than replacing it. Generated trees are the
    * usual candidates — anything with no components in it is pure cost.
+   *
+   * Prefer a `RegExp` over a glob string, for the reason
+   * {@link DEFAULT_EXCLUDE} gives: a glob is dot-blind in one of the two
+   * matchers that compile it.
    */
   exclude?: readonly IdPattern[];
   /**
@@ -38,14 +42,38 @@ export type ReactCompilerOptions = {
  * Trees excluded from the Babel pass by default.
  *
  * Babel is the one part of a Vite 8 pipeline that is not Oxc, so it is the one
- * part worth not running. `styled-system` is Panda's generated output, which
- * every design-system consumer has and which holds no components at all.
- * `node_modules` is already outside `@rolldown/plugin-babel`'s own default
- * `exclude`, but the rolldown id filter is a cheaper pre-test that runs first.
+ * part worth not running. Nothing upstream narrows it: the compiler preset
+ * ships only a `code` filter, and that filter is
+ * `/forwardRef|memo|\b(?:[A-Z]|use[A-Z0-9])/` — near enough every module with a
+ * capital letter in it, generated output very much included.
+ *
+ * `node_modules` is also `@rolldown/plugin-babel`'s own default `exclude`.
+ * Restating it keeps this preset's exclusion self-contained rather than
+ * dependent on that default staying what it is.
+ *
+ * `styled-system` is Panda's generated output, which every design-system
+ * consumer has — style objects, token maps and type declarations, with no
+ * components in them. Its `jsx` subtree is the exception and is carved back
+ * IN: under `jsxFramework: 'react'`, which this repo's own shared Panda config
+ * sets, Panda generates real `forwardRef` components there. Excluding those
+ * would skip the compiler on genuine components, and `exclude` below only ever
+ * adds, so no consumer could undo it. A default that is wrong under a
+ * supported Panda setting is worse than a default that compiles twenty extra
+ * generated files.
+ *
+ * Written as regular expressions rather than glob strings on purpose. A string
+ * pattern is compiled by two matchers that disagree: rolldown's own id filter,
+ * where a leading-dot path segment matches, and `@rolldown/plugin-babel`'s
+ * `picomatch(pattern)`, where it does not — picomatch defaults to
+ * `dot: false`, so a project under `.cache/` or `.pnpm/` falls out of a
+ * `styled-system` glob. Only rolldown's matcher is authoritative for the
+ * wiring below, so a glob is not wrong here today; it is right by way of which
+ * of the two gates happens to decide, which is a plugin internal. A `RegExp`
+ * is `pattern.test(id)` on both sides and has no such blind spot.
  */
 export const DEFAULT_EXCLUDE: readonly IdPattern[] = [
-  '**/node_modules/**',
-  '**/styled-system/**',
+  /[/\\]node_modules[/\\]/,
+  /[/\\]styled-system[/\\](?!jsx[/\\])/,
 ];
 
 /**

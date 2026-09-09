@@ -46,13 +46,36 @@ that is not Oxc, so this preset adds the `id` filter the preset omits.
 | `exclude` | `[]` | Extra module ids kept out of the Babel pass, merged after the defaults rather than replacing them |
 | `compiler` | `undefined` | Options forwarded to `babel-plugin-react-compiler` |
 
-Excluded by default: `**/node_modules/**` and `**/styled-system/**` — Panda's
-generated output, which every design-system consumer has and which contains no
-components. Add your own generated trees:
+Excluded by default:
+
+| Pattern | Why |
+| --- | --- |
+| `/[/\\]node_modules[/\\]/` | Dependencies ship compiled; also `@rolldown/plugin-babel`'s own default, restated so this preset does not depend on that default staying put |
+| `/[/\\]styled-system[/\\](?!jsx[/\\])/` | Panda's generated output — style objects, token maps, type declarations — which every design-system consumer has and which holds no components |
+
+The `jsx` carve-out is deliberate. Under `jsxFramework: 'react'` Panda generates
+real `forwardRef` components into `styled-system/jsx/`, and this repo's own
+shared Panda config sets exactly that. Since `exclude` only ever adds, a
+blanket `styled-system` exclusion would skip the compiler on genuine components
+with nothing a consumer could do about it — so the default is narrowed to the
+part of the tree that is component-free under every Panda setting, rather than
+made overridable.
+
+Add your own generated trees:
 
 ```typescript
-reactCompiler({ exclude: ['**/src/generated/**'] });
+reactCompiler({ exclude: [/[/\\]src[/\\]generated[/\\]/] });
 ```
+
+Regular expressions rather than globs, and the defaults are regexes for the
+same reason: a string pattern is compiled by two different matchers.
+`@rolldown/plugin-babel` compiles one copy with a bare `picomatch(pattern)`,
+which defaults to `dot: false`, so a project living under `.cache/` or `.pnpm/`
+drops out of a `**` glob entirely. rolldown's own id filter has no such blind
+spot and is the one that decides for this wiring, which is why a glob is not
+wrong here today — but it is right by way of which of the two gates happens to
+be authoritative, and that is a plugin internal. A `RegExp` is
+`pattern.test(id)` on both sides.
 
 Leave `compiler` unset on React 19.2 and later. The compiler then emits calls
 into `react/compiler-runtime`, which those versions ship; only an older React
@@ -69,11 +92,23 @@ vite build --minify false
 grep -rc 'react/compiler-runtime' dist/assets/*.js
 ```
 
-This package's own test asserts exactly that, against a real build.
+This package's own tests assert exactly that, against real builds — including
+that the excluded trees really do come out untouched.
 
 ## Linting for it
 
-The compiler's own static analysis is available as the `react/react-compiler`
-oxlint rule. It is not enabled by
-[`@archon-research/oxlint-config`](../oxlint-config/README.md); a consumer that
-wants the build and the lint to agree turns it on itself.
+The compiler's own static analysis is available as oxlint rules, and the `react`
+preset in [`@archon-research/oxlint-config`](../oxlint-config/README.md) enables
+18 of them. A consumer on that preset gets the build and the lint agreeing
+without configuring anything.
+
+They are named one at a time — `react/hooks`, `react/purity`,
+`react/immutability`, `react/preserve-manual-memoization` and the rest — because
+the umbrella `react/react-compiler` rule no longer exists. oxlint 1.79.0 split it
+into one rule per compiler diagnostic, matching `eslint-plugin-react-hooks` v6,
+and naming the old umbrella is now a hard config-parse failure:
+`Rule 'react-compiler' not found in plugin 'react'`.
+
+Six further split rules are deferred to `off` in that preset, each with its
+reason and current finding count recorded beside it in
+[`react.ts`](../oxlint-config/react.ts).
