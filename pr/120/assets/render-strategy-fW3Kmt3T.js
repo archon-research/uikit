@@ -1,0 +1,1 @@
+import{g as r,f as t}from"./runtime-DvdCCd1I.js";var[a,n]=t({name:"RenderStrategyContext",hookName:"useRenderStrategyContext",providerName:"<RenderStrategyPropsProvider />"}),s=e=>r()(e,["lazyMount","unmountOnExit","hideMode"]);export{a as R,s,n as u};
