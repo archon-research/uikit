@@ -6,6 +6,7 @@
   "include": [
     "base.ts",
     "react.ts",
+    "react-strict.ts",
     "design-system-boundaries.ts",
     "type-aware.ts",
     "presets.test.ts",
