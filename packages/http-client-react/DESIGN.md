@@ -117,6 +117,11 @@ something that is not an HTTP error, so `status` is reachable only after
 `isHttpRequestError(error)`. The guard matches on `name` rather than `instanceof`
 so it survives a consumer ending up with two copies of the package.
 
+`createZodResponseMiddleware`'s rejection is the one of those with a guard of its
+own, `isZodResponseValidationError`, because the retry policy has to tell it from
+a transport failure — it is the only statusless rejection this package raises
+after the request completed.
+
 The guard takes **no body type parameter**. A check on `name` cannot say
 anything about the body's shape, so a parameter would only have let a call site
 name a type and get it back unchecked. It derives the body type from what the
@@ -237,6 +242,15 @@ panels the user was reading, triggered by an action that expressed no intent to
 reload. Freshness belongs to `staleTime` and to explicit invalidation, both of
 which the app already controls.
 
+The consequence is that **the app owns error recovery**: a mounted query that has
+exhausted its retries makes no further attempt on its own while the tab stays
+open and the connection stays up, and react-query keeps serving the last
+successful `data` beside `status: 'error'` — so a session that expired under an
+open dashboard reads as current numbers rather than as an empty panel.
+`refetchOnReconnect` and `refetchOnMount` are left at react-query's defaults, so
+a dropped connection returning or a remount still refetches; in between, showing
+the error and offering a refetch is the app's job, not this package's.
+
 **A status-aware `retry`.** The default retries every rejection three times. The
 policy here splits on what the status *says*: a 5xx is a well-formed request
 meeting an unwell server, so ask again; 408, 425, and 429 name transient
@@ -246,10 +260,19 @@ repeating it unchanged buys nothing but latency. Below 400 is not retried
 either: a 304 on the error path is a caching bug.
 
 A rejection carrying no status is retried. That covers a dropped connection, a
-CORS refusal, and a middleware that threw, and it is the deliberately optimistic
-branch — the alternative, treating an unrecognised rejection as fatal, turns one
-dropped socket into an error state. The cost of being wrong is two extra
-requests; the cost of the other default is a screen that fails on a blip.
+CORS refusal, an abort, and a middleware that threw, and it is the deliberately
+optimistic branch — the alternative, treating an unrecognised rejection as fatal,
+turns one dropped socket into an error state. The cost of being wrong is two
+extra requests; the cost of the other default is a screen that fails on a blip.
+
+One statusless rejection is exempt, and it is this package's own.
+`ZodResponseValidationError` has no status because `createZodResponseMiddleware`
+rejects *after* a 2xx arrived and parsed: the request completed, and the body the
+server sent will not have changed by the next attempt. Retrying it costs two more
+round trips to reach the same mismatch three seconds later — precisely the cost
+the status policy above exists to avoid on a 422. `isZodResponseValidationError`
+is what the predicate narrows with, on `name` rather than `instanceof`, for the
+same duplicate-copy reason as `isHttpRequestError`.
 
 Two retries rather than react-query's three, so that with the default
 exponential `retryDelay` an error surfaces in about three seconds instead of

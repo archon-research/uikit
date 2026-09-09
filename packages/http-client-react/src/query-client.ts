@@ -1,6 +1,7 @@
 import { QueryClient, type QueryClientConfig } from '@tanstack/react-query';
 
 import { isHttpRequestError } from './errors.js';
+import { isZodResponseValidationError } from './zod-response.js';
 
 /**
  * The 4xx statuses that describe a *transient* condition rather than a bad
@@ -38,17 +39,30 @@ export function isRetryableHttpStatus(status: number): boolean {
 /**
  * Whether a rejected query or mutation is worth retrying.
  *
- * A rejection that is not an `HttpRequestError` never reached a status:
- * it is a DNS failure, a dropped connection, a CORS refusal, or a middleware
- * that threw. Those are retried, because the only evidence available says the
- * request did not complete. The alternative — treating an unrecognised
- * rejection as fatal — would make a single dropped socket a visible error.
+ * A rejection carrying no status is retried by default: a DNS failure, a
+ * dropped connection, a CORS refusal, an abort, or a middleware that threw
+ * leaves no evidence beyond the request not completing, and treating an
+ * unrecognised rejection as fatal would make a single dropped socket a visible
+ * error.
+ *
+ * `ZodResponseValidationError` is the exception, and the reason this is not a
+ * bare `isHttpRequestError` check. It carries no status because
+ * `createZodResponseMiddleware` rejects *after* a 2xx arrived and parsed — the
+ * request completed, and the body it returned does not match the schema. That
+ * verdict is a property of the deployed server, so asking again produces the
+ * same mismatch two round trips later: exactly the cost this module's `retry`
+ * exists to avoid on a 422.
+ *
+ * Both checks narrow on `name` rather than `instanceof`, so they still hold
+ * when a consumer's module graph contains two copies of this package.
  *
  * Exported so a consumer can keep this status policy while changing the
  * attempt count: `retry: (count, error) => count < 5 && isRetryableError(error)`.
  */
 export function isRetryableError(error: unknown): boolean {
-  return isHttpRequestError(error) ? isRetryableHttpStatus(error.status) : true;
+  if (isHttpRequestError(error)) return isRetryableHttpStatus(error.status);
+
+  return !isZodResponseValidationError(error);
 }
 
 /**

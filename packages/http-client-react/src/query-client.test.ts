@@ -8,6 +8,7 @@ import {
   isRetryableHttpStatus,
   shouldRetryRequest,
 } from './query-client.js';
+import { ZodResponseValidationError } from './zod-response.js';
 
 /** An `HttpRequestError` as `createQueryApi` would build it for `status`. */
 function httpError(status: number): HttpRequestError {
@@ -16,6 +17,16 @@ function httpError(status: number): HttpRequestError {
     path: '/users',
     body: undefined,
     response: new Response(null, { status }),
+  });
+}
+
+/** A `ZodResponseValidationError` as the zod middleware would build it. */
+function validationError(): ZodResponseValidationError {
+  return new ZodResponseValidationError({
+    method: 'get',
+    path: '/users/{id}',
+    schemaName: 'User',
+    issues: [{ path: 'name', message: 'expected string, received undefined' }],
   });
 }
 
@@ -67,6 +78,20 @@ describe('isRetryableError', () => {
     const foreign = Object.assign(new Error('HTTP 404'), {
       name: 'HttpRequestError',
       status: 404,
+    });
+
+    expect(isRetryableError(foreign)).toBe(false);
+  });
+
+  it('does not retry a body that failed response validation', () => {
+    // The one rejection without a status that still means the request
+    // completed: the middleware rejects after a 2xx arrived and parsed.
+    expect(isRetryableError(validationError())).toBe(false);
+  });
+
+  it('narrows the validation error on `name` too', () => {
+    const foreign = Object.assign(new Error('User validation failed'), {
+      name: 'ZodResponseValidationError',
     });
 
     expect(isRetryableError(foreign)).toBe(false);
@@ -132,5 +157,57 @@ describe('createQueryClient', () => {
 
   it('is a real QueryClient', () => {
     expect(createQueryClient()).toBeInstanceOf(QueryClient);
+  });
+});
+
+describe('the retry policy a real client applies', () => {
+  /**
+   * How many times a query rejecting with `error` is attempted under the
+   * package defaults. Only `retryDelay` is overridden — `retry` is the default
+   * under test — so the exponential backoff does not make the spec wait out
+   * the three seconds a real screen would.
+   */
+  async function countAttempts(error: unknown): Promise<number> {
+    let attempts = 0;
+
+    await createQueryClient({ defaultOptions: { queries: { retryDelay: 0 } } })
+      .fetchQuery({
+        queryKey: ['attempts'],
+        queryFn: () => {
+          attempts += 1;
+          return Promise.reject(error);
+        },
+      })
+      .catch(() => undefined);
+
+    return attempts;
+  }
+
+  it('asks once when the response body drifted', async () => {
+    // Before the validation carve-out this was 3, and with the default
+    // backoff the error reached the screen three seconds late.
+    await expect(countAttempts(validationError())).resolves.toBe(1);
+  });
+
+  it('asks once on a client fault', async () => {
+    await expect(countAttempts(httpError(422))).resolves.toBe(1);
+  });
+
+  // The rest of the statusless branch is unchanged: no status and no verdict
+  // from the server means the only reading available is that the request did
+  // not complete.
+  it.for([
+    ['a dropped connection', new TypeError('Failed to fetch')],
+    ['an abort', new DOMException('The operation was aborted.', 'AbortError')],
+    [
+      'a middleware that threw',
+      new Error('http-client-react: middleware called next() more than once'),
+    ],
+  ] as const)('still retries %s twice', async ([, error]) => {
+    await expect(countAttempts(error)).resolves.toBe(3);
+  });
+
+  it('retries a server fault twice', async () => {
+    await expect(countAttempts(httpError(503))).resolves.toBe(3);
   });
 });

@@ -77,14 +77,23 @@ The retry policy, exactly:
 - **anything below 400** — not retried. A 304 on the error path is a caching
   problem, not a flaky one.
 - **a rejection with no status at all** — retried. A dropped connection, a CORS
-  refusal, or a middleware that threw leaves no evidence except that the request
-  did not complete, and treating that as fatal makes one dropped socket a
-  visible error.
+  refusal, an abort, or a middleware that threw leaves no evidence except that
+  the request did not complete, and treating that as fatal makes one dropped
+  socket a visible error.
+- **a `ZodResponseValidationError`** — not retried, the one exception to the line
+  above. `createZodResponseMiddleware` rejects after a 2xx arrived and parsed, so
+  the request *did* complete and the body will be the same on the next attempt.
 
 Two retries, so with react-query's exponential `retryDelay` an error reaches the
 screen about three seconds after the first failure. Mutations are not retried at
 all — a `POST` that reached the server may have applied before the failure, and
 this package cannot tell which.
+
+With focus refetching off, **the app owns error recovery**. A query that has
+exhausted its retries will not try again on its own while the tab stays open and
+the connection stays up, and react-query keeps serving the last successful `data`
+next to `status: 'error'` — so an expired session reads as current numbers unless
+the screen says otherwise. Render the error and offer a refetch.
 
 Nothing else is set. `staleTime` most of all: how long a screen may show a stale
 number is a product decision, and a package-level guess would be wrong quietly.
@@ -360,6 +369,7 @@ boundary](./DESIGN.md#the-registrys-boundary).
 | `api.invalidateTags(queryClient, tags)` | Invalidates every query under the given tags |
 | `api.taggedEndpoints(tag)` | The `${method} ${path}` tokens registered under a tag |
 | `createZodResponseMiddleware(options)` | Validates responses against the OpenAPI document |
+| `ZodResponseValidationError` / `isZodResponseValidationError` | The validation failure that middleware raises, and its guard |
 | `HttpRequestError` / `isHttpRequestError` | The typed failure carrying `status` and the parsed error body |
 | `sanitizeQueryInit` / `buildQueryApiKey` / `canonicalizeQueryKeyValue` | The key-derivation primitives |
 | `composeMiddleware` | The middleware combinator, for composing chains outside an api |

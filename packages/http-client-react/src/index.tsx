@@ -57,6 +57,7 @@ export {
 
 export {
   createZodResponseMiddleware,
+  isZodResponseValidationError,
   ZodResponseValidationError,
 } from './zod-response.js';
 export type {
