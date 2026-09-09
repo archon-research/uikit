@@ -44,7 +44,10 @@ export const noExplicitAnyRules = {
  *
  * `allowConstantExport` matches what the upstream plugin's `vite` preset sets
  * and costs nothing. It is not a rescue: measured across this repo it moves the
- * count by 3 (see the note on the default export).
+ * count from 79 to 76, and all three it forgives are literal constants —
+ * `charting`'s `DEFAULT_BIN_COUNT` and `FALLBACK_CHART_WIDTH`, and
+ * `design-system`'s `DEFAULT_RANGE_PRESET`. See the note on the default export
+ * for what the remaining 76 are.
  */
 export const fastRefreshRules = {
   'react/only-export-components': ['error', { allowConstantExport: true }],
@@ -62,39 +65,63 @@ export const reactStrictRules = {
  * consumer takes by default.
  *
  * THIS REPO DOES NOT PASS THIS PRESET, AND NO PACKAGE HERE ADOPTS IT.
- * Measured across all 16 linted workspaces on the tree that added this file,
- * and again with every `oxlint-disable` directive stripped so nothing could be
- * masked (the two measurements agreed):
+ * Measured across all 16 linted workspaces, twice: once as the repo stands,
+ * and once over a copy with every `oxlint-disable` and `eslint-disable`
+ * directive stripped, so nothing could be masked.
  *
- * | rule                           | violations in this repo             |
- * | ------------------------------ | ----------------------------------- |
- * | `typescript/no-explicit-any`   | 0, via one line-scoped suppression  |
- * | `react/only-export-components` | 76                                  |
+ * | rule                           | as it stands | disables stripped |
+ * | ------------------------------ | ------------ | ----------------- |
+ * | `typescript/no-explicit-any`   | 0            | 2                 |
+ * | `react/only-export-components` | 76           | 76                |
  *
  * Those numbers are the point of this doc comment, not a footnote to it. A
  * preset that reads as coverage it does not have is the exact defect this
- * package has already had to fix once.
+ * package has already had to fix once — which is also why the two columns are
+ * reported separately rather than collapsed into one reassuring figure.
  *
- * The first row started at 4: two lazy prop annotations in a preview story,
- * fixed properly, and the two in `http-client-react`'s `QueryApiPaths`, which
- * are suppressed on their single line with the reasoning recorded there. So
- * this repo would pass the `no-explicit-any` half today — but it does not
- * *enable* it, and a clean measurement is not adoption.
+ * Row 1 started at 4: two lazy prop annotations in a preview story, fixed
+ * properly, and the two on a single line of `http-client-react`'s
+ * `src/query-api.ts` — `QueryApiPaths`'s generic constraint — suppressed there
+ * with the reasoning recorded alongside. That suppression is the whole
+ * difference between the two columns, so the honest reading of row 1 is "2,
+ * both understood, both silenced deliberately", not "0". Either way this repo
+ * does not *enable* the rule, and a clean measurement is not adoption.
  *
- * WHY THE SECOND NUMBER IS SO LARGE, AND WHY IT IS NOT A BACKLOG.
+ * Row 2 is identical in both columns because nothing in this repo suppresses
+ * it: every disable directive in a linted source names some other rule.
+ *
+ * WHY ROW 2 IS SO LARGE, AND WHY IT IS NOT A BACKLOG.
  * Every one of the 76 is a library-authoring pattern, not a latent app bug.
- * Grouped by the form of the flagged export (counts approximate, since a
- * multi-line signature is awkward to bucket): roughly half are exported hooks
- * sitting next to the provider that backs them — all 20 of `charting`'s
- * `interaction.tsx`, plus `design-system`'s `FilterProvider` — about a dozen
- * are unexported compound-component parts (`Popover`, `Drawer`), around nine
- * are re-export specifiers in a package's barrel entrypoint, and the remainder
- * are helpers co-located with the component they serve. Satisfying the
- * rule here would mean splitting hooks away from their context and breaking up
- * public entrypoints to buy Fast-Refresh behaviour in a package that has no
- * Fast Refresh. That is why this ships as an opt-in entrypoint rather than
- * being added to `react`, and why the recommendation is that a *consumer app*
- * adopt it and this repo not.
+ * The rule splits them itself, by which side of the file it asks you to move:
+ * 63 are a non-component export in a file that also exports a component, and
+ * 13 are a component in a file that exports no component at all.
+ *
+ * The 63 are, exactly:
+ *
+ *   - 26 exported hooks in a file that also exports the component they pair
+ *     with. 23 read a context declared in that same file — 16 in `charting`'s
+ *     `interaction.tsx`, 6 in `design-system`'s `FilterProvider`, 1 in
+ *     `webmcp`'s `provider.tsx`. The other 3 sit beside the component built on
+ *     them: 2 in `charting`'s `responsive.tsx`, 1 in `design-system`'s
+ *     `FlashOnChange`.
+ *   - 24 helpers and constants co-located with the component they serve —
+ *     `clamp`, `heatStep`, `meterPercent`, `flashClass`, `DEFAULT_REGISTRY`
+ *     and the like — spread thinly across 15 files, never more than 4 in one.
+ *   - 13 value re-export specifiers in a single file, `http-client-react`'s
+ *     `src/index.tsx`. That barrel is flagged only because it also exports
+ *     `HttpProvider`: the one component the package ships is what makes its
+ *     entrypoint a mixed-export module. Type-only re-exports are not flagged,
+ *     which is why the count is 13 and not the whole export list.
+ *
+ * The 13 are all compound components — 6 parts of `Popover` and 6 of `Drawer`,
+ * each assembled into an exported namespace object the rule does not read as a
+ * component export, plus `dashboard-kit`'s internal `ChartingInteractionSync`.
+ *
+ * Satisfying the rule here would mean splitting hooks away from their context,
+ * breaking up compound components, and un-mixing a public entrypoint — to buy
+ * Fast-Refresh behaviour in packages that have no Fast Refresh. That is why
+ * this ships as an opt-in entrypoint rather than being added to `react`, and
+ * why the recommendation is that a *consumer app* adopt it and this repo not.
  *
  * ```ts
  * import reactStrictConfig from '@archon-research/oxlint-config/react-strict';

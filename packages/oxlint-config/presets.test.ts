@@ -122,6 +122,38 @@ describe('preset smoke tests', () => {
     expect(severityOf(base['react/only-export-components'])).not.toBe('deny');
   });
 
+  it('rejects a misspelled severity rather than silently dropping the rule', () => {
+    // The presets are plain object literals, so `severity` infers as `string`
+    // and a typo like `'eror'` type-checks. The reason that is not worth a
+    // local severity type is this: oxlint refuses to load the config at all
+    // ("Failed to parse rule severity, expected one of ..."), for both the
+    // scalar and the `[severity, options]` form. The typo cannot reach a
+    // consumer as a quietly disabled rule — it fails their lint run outright,
+    // and it fails the smoke tests above, which go through the same parser.
+    const configPath = path.join(tmpDir, 'misspelled-severity.config.ts');
+    fs.writeFileSync(
+      configPath,
+      `export default {\n  plugins: ['typescript'],\n  rules: { 'typescript/no-explicit-any': 'eror' },\n};\n`,
+    );
+
+    let stdout = '';
+    expect(() => {
+      try {
+        execFileSync(oxlintBinary, ['-c', configPath, '--print-config'], {
+          cwd: tmpDir,
+          encoding: 'utf8',
+          stdio: 'pipe',
+        });
+      } catch (error) {
+        stdout = String((error as { stdout?: string }).stdout ?? '');
+        throw error;
+      }
+    }).toThrow();
+
+    // Asserted so the test cannot pass for some unrelated non-zero exit.
+    expect(stdout).toContain('Failed to parse rule severity');
+  });
+
   it('design-system-boundaries denies the ark-ui import, not warns', () => {
     // At `warn` this rule cannot fail a run: oxlint exits 0 on warnings unless
     // the caller opts in, so the boundary was decorative.
