@@ -224,6 +224,17 @@ describe('subpath exports', () => {
   it.each(Object.entries(SUBPATH_MODULES))(
     '%s exports only names the root barrel also exports',
     (_subpath, mod) => {
+      // A subset check is satisfied vacuously by a module that exports
+      // nothing, so a subpath whose module went empty — the component moved
+      // out, an `export` keyword dropped — would keep reading as a passing
+      // "subset of the root" while the published subpath resolves to nothing.
+      // The charting package never needs this: its three barrels partition
+      // that package and their union is asserted equal to its root, so an
+      // emptied barrel fails that equality. These subpaths are deliberate
+      // subsets of a much larger root instead, so there is no union to compare
+      // against and the non-emptiness has to be asserted on its own.
+      expect(Object.keys(mod).length).toBeGreaterThan(0);
+
       const rootNames = new Set(Object.keys(root));
       const missingFromRoot = Object.keys(mod).filter(
         (name) => !rootNames.has(name),
