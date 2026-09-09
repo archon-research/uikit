@@ -344,10 +344,15 @@ export function usePlayback<TPayload = unknown>({
   );
   const livePlayingRef = useRef(liveAutoplay);
   const liveBufferRef = useRef<PlaybackEvent<TPayload>[]>([]);
-  // The source the live clock is currently baselined to, so the reset below can
-  // tell a real SWAP from its own first run (where the `useState` initializer
-  // above already took the mount baseline) and skip a redundant commit.
-  const liveClockSourceRef = useRef<PlaybackSource<TPayload>>(source);
+  // The live source the clock is currently baselined to, or `null` when none is
+  // selected. The reset below reads it to tell a real SWAP from its own first
+  // run (where the `useState` initializer above already took the mount
+  // baseline) and skip a redundant commit. Cleared on the way to a replay
+  // source rather than left naming the live source that was just dropped — see
+  // the reset for what that cost.
+  const liveClockSourceRef = useRef<PlaybackSource<TPayload> | null>(
+    source.kind === 'live' ? source : null,
+  );
   // The batcher belonging to the live subscription in this commit, so `pause`
   // can flush it. Installed by the subscribe effect and cleared by its
   // cleanup — never read during render.
@@ -380,17 +385,33 @@ export function usePlayback<TPayload = unknown>({
   // from then on — so it applies per-source and nothing else. The replay half
   // above narrowed the identical coupling for the identical reason.
   //
+  // Runs for EVERY source change, in every phase, including a swap to a REPLAY
+  // source. Everything here is state belonging to the live source GOING AWAY,
+  // so letting go of it cannot depend on what arrives next — the replay half's
+  // cursor reset above is unconditional for exactly that reason. Gating the
+  // live side on `source.kind === 'live'` instead broke two things a swap to a
+  // replay log has no business breaking, both traced back to the outgoing
+  // source's own bookkeeping surviving the swap: the subscription below still
+  // recognised itself as current, so a flush that beat its teardown published
+  // an event under a log that never asked for it; and the clock's baseline
+  // pointer still named the live source, so live A -> replay -> live A read as
+  // "no swap happened" and left A's last timestamp standing beside an empty
+  // `events`. See usePlayback.swap.test.ts.
+  //
   // RENDER: the two states that have a value to reset to without asking the
   // clock. React re-runs this function with the reset values before committing,
   // so no commit shows the new source carrying the previous source's events.
+  // A replay commit never reads either one, but resetting them there too is not
+  // merely tidy: `liveEvents` is a snapshot over the whole accumulated backing
+  // array, and a monitor that has been running for hours before the operator
+  // opens a replay would otherwise pin every event of it for as long as the
+  // replay stays selected.
   const [liveResetKey, setLiveResetKey] = useState(source);
 
   if (liveResetKey !== source) {
     setLiveResetKey(source);
-    if (source.kind === 'live') {
-      setLiveEvents(EMPTY_LIVE_EVENTS);
-      setLiveStatus(liveAutoplay ? 'connecting' : 'paused');
-    }
+    setLiveEvents(EMPTY_LIVE_EVENTS);
+    setLiveStatus(liveAutoplay ? 'connecting' : 'paused');
   }
 
   // COMMIT, SYNCHRONOUSLY: the three refs, plus the clock.
@@ -415,11 +436,20 @@ export function usePlayback<TPayload = unknown>({
   // Left un-reset, a swap returns `events: []` alongside a timestamp from the
   // stream that was just removed, breaking the documented contract that a live
   // clock reads mount time until the first event arrives.
+  //
+  // A replay source has no clock of ours to baseline, so it clears the pointer
+  // instead of setting it. Clearing is the load-bearing half: the pointer's
+  // whole job is to answer "is the clock already baselined to THIS source", and
+  // one left naming a source that is no longer selected answers yes when the
+  // operator comes back to it.
   useIsomorphicLayoutEffect(() => {
-    if (source.kind !== 'live') return;
     livePlayingRef.current = liveAutoplayRef.current;
     liveBufferRef.current = [];
     liveEventsRef.current = createAppendOnlyBuffer<PlaybackEvent<TPayload>>();
+    if (source.kind !== 'live') {
+      liveClockSourceRef.current = null;
+      return;
+    }
     if (liveClockSourceRef.current !== source) {
       liveClockSourceRef.current = source;
       setLiveClock(Date.now());
