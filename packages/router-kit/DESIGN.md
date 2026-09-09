@@ -291,13 +291,27 @@ works. The option is accepted, it typechecks, it survives into
 `router.options`, the devtools show it, and no warning fires — the router's one
 preload warning is about a preload that *failed*, which requires a preload to
 have started. An app can carry `defaultPreload: 'intent'` for its entire life
-and never once preload a route. The same holds for the usual companion setting:
-`defaultPreloadStaleTime: 0` — which hands freshness to the loader's own cache
-instead of the router's 30-second default for preloaded matches — is equally
-inert, because it only ever applies to a preload that happened.
+and never once preload a route.
 
 Checking is cheap and worth doing once: if `<Link` and `useLinkProps` both find
 nothing in the app, `defaultPreload` is dead configuration.
+
+**The usual companion setting does not share the precondition.**
+`defaultPreloadStaleTime` — which hands freshness to the loader's own cache
+instead of the router's 30-second default for preloaded matches — is read in
+router-core's loader task on the `preload || match.preload` branch, and *every*
+`router.preloadRoute` call takes it: `preloadRoute` passes `preload: true`
+straight into the lane. That includes the imperative call the next section
+recommends, so the two options come apart exactly where it matters. Measured on
+`@tanstack/react-router` 1.170.32, with a router that renders no `<Link>` at
+all, two `preloadRoute` calls for the same route run the loader **once** at the
+router's default and **twice** at `defaultPreloadStaleTime: 0`.
+
+So its precondition is only that something preloads — not that a `<Link>` does.
+It is inert in an app that preloads nothing at all, which is where an app with
+no links starts; it stops being inert the moment that app adopts the workaround
+below, and the 30-second default it overrides is then a real behaviour worth
+choosing deliberately.
 
 ### What to do when the precondition does not hold
 
