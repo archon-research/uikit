@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -22,9 +22,17 @@ import * as xychart from './xychart.js';
  */
 
 /**
- * Every value the root barrel exported before it was split into subpaths.
- * The root barrel is public API: it may grow, but nothing here may disappear
- * from it without a major version.
+ * The root barrel's complete published surface, asserted in BOTH directions:
+ * nothing here may disappear without a major version, and nothing may appear
+ * at the root without being written down here first.
+ *
+ * The second direction is the one that needs a reason. This package's surface
+ * is a curated slice of visx, kept small on purpose — so a name arriving by
+ * accident (an `export *` widened one of the three subpath barrels, an internal
+ * helper made public to unblock one call site) is a regression even though
+ * nobody loses anything by it. Making the census exact turns every addition
+ * into a line in this list, which is a decision somebody has to make on purpose
+ * and a reviewer can see.
  */
 const PUBLISHED_ROOT_EXPORTS = [
   'AnimatedAreaSeries',
@@ -175,9 +183,49 @@ describe('subpath barrels', () => {
     expect(union).toEqual(names(root));
   });
 
-  it('never drop a name the root barrel already published', () => {
-    expect(names(root)).toEqual(expect.arrayContaining(PUBLISHED_ROOT_EXPORTS));
+  it('publish exactly the documented root surface, no more and no less', () => {
+    expect(names(root)).toEqual([...PUBLISHED_ROOT_EXPORTS].sort());
   });
+});
+
+const packageJson = JSON.parse(
+  readFileSync(resolve(SRC_DIR, '..', 'package.json'), 'utf8'),
+) as { exports: Record<string, { types: string; default: string }> };
+
+/** `./dist/x.js` — a build output — mapped back to the module it compiles from. */
+function sourceModuleFor(distPath: string): string | undefined {
+  const stem = distPath.replace(/^\.\/dist\//, '').replace(/\.js$/, '');
+  return ['.ts', '.tsx']
+    .map((extension) => resolve(SRC_DIR, stem + extension))
+    .find((candidate) => existsSync(candidate));
+}
+
+/**
+ * `package.json` is the only part of the export surface a consumer's install
+ * actually resolves through, and nothing else in this repo type-checks it: a
+ * subpath added to the manifest but never imported here, or a target path
+ * mistyped, fails first in a consumer's node_modules. These close that gap.
+ */
+describe('package.json exports', () => {
+  it('declares exactly the root barrel and the three subpaths', () => {
+    expect(Object.keys(packageJson.exports).sort()).toEqual([
+      '.',
+      './core',
+      './primitives',
+      './xychart',
+    ]);
+  });
+
+  it.each(Object.entries(packageJson.exports))(
+    '%s resolves to a module that exists',
+    (_subpath, target) => {
+      // A `types` path that has drifted from `default` is invisible to every
+      // other check here: the runtime import keeps working and only the
+      // consumer's editor goes quiet.
+      expect(target.types).toBe(target.default.replace(/\.js$/, '.d.ts'));
+      expect(sourceModuleFor(target.default)).toBeDefined();
+    },
+  );
 });
 
 describe('subpath dependency boundaries', () => {
