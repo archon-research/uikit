@@ -1,7 +1,7 @@
 import { Splitter } from '@ark-ui/react/splitter';
 import { Fragment, type ReactNode } from 'react';
 
-import { deriveDefaultSizes } from './splitSizes.js';
+import { deriveDefaultSizes, resolveControlledSize } from './splitSizes.js';
 
 /**
  * One pane of a `SplitLayout`.
@@ -39,7 +39,8 @@ export type SplitLayoutProps = {
    * Controlled panel sizes (percent, one per panel, same order as
    * `panels`). Uncontrolled by default — omit this and `onResize`/
    * `onResizeEnd` to let Ark Splitter own the size internally, seeded from
-   * each panel's `size` weight.
+   * each panel's `size` weight. An empty array describes no panel and so
+   * counts as omitted, not as a control taking over.
    */
   size?: number[];
   onResize?: (details: { size: number[] }) => void;
@@ -74,6 +75,7 @@ export function SplitLayout({
   onResize,
   onResizeEnd,
 }: SplitLayoutProps) {
+  const controlledSize = resolveControlledSize(size);
   const defaultSize = deriveDefaultSizes(
     panels.map((panel) => panel.size ?? 1),
   );
@@ -88,8 +90,8 @@ export function SplitLayout({
     <Splitter.Root
       orientation={orientation}
       panels={arkPanels}
-      size={size}
-      defaultSize={size ? undefined : defaultSize}
+      size={controlledSize}
+      defaultSize={controlledSize ? undefined : defaultSize}
       onResize={onResize}
       onResizeEnd={onResizeEnd}
       className={cx('splitLayout__root', className)}
