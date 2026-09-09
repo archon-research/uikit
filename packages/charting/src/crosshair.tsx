@@ -17,13 +17,29 @@ export function clamp(value: number, min: number, max: number): number {
 }
 
 /**
- * The `stop` in `stops` closest to `value` (nearest by absolute difference,
- * ties resolve to the lower stop). `stops` must be sorted ascending. Returns
- * `NaN` for an empty array. Exported for unit testing.
+ * The `stop` in `stops` closest to `value` — nearest by absolute difference,
+ * ties resolving to the lower stop — or `undefined` when `stops` is empty.
+ *
+ * `stops` must be sorted ascending. The search is a binary one, so an unsorted
+ * array yields an arbitrary element rather than the nearest; this is the same
+ * precondition `ChartCursorLayer` documents on its `stops` prop, and the two
+ * are meant to be fed the same array.
+ *
+ * The empty case is `undefined` rather than `NaN` deliberately. `NaN` is
+ * `number`-typed, so it type-checks its way into arithmetic and into scale and
+ * SVG coordinates, where it is caught by luck if at all — `@visx/scale`
+ * happens to map a non-finite input to `undefined`, which is the only reason
+ * an empty `stops` does not currently paint `x1="NaN"`. `undefined` makes the
+ * "no stops, no answer" case one the caller has to handle, and matches how the
+ * rest of the package reports having nothing to say (`histogramBins` returns
+ * `[]`, `CursorSeries.valueAt` returns `null`).
  */
-export function nearestStop(stops: number[], value: number): number {
+export function nearestStop(
+  stops: number[],
+  value: number,
+): number | undefined {
   const n = stops.length;
-  if (n === 0) return NaN;
+  if (n === 0) return undefined;
   if (value <= stops[0]!) return stops[0]!;
   if (value >= stops[n - 1]!) return stops[n - 1]!;
 

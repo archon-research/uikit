@@ -5,8 +5,8 @@ import { nearestStop } from './crosshair.js';
 const stops = [0, 10, 20, 30, 40];
 
 describe('nearestStop', () => {
-  it('returns NaN for an empty stop list', () => {
-    expect(nearestStop([], 5)).toBeNaN();
+  it('returns undefined for an empty stop list', () => {
+    expect(nearestStop([], 5)).toBeUndefined();
   });
 
   it('clamps to the first stop below the domain', () => {

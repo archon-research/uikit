@@ -148,7 +148,7 @@ export function ChartCursorLayer({
     if (stops.length === 0) return null;
     if (typeof xScale.invert === 'function') {
       const domainX = xScale.invert(svgX);
-      return snap ? nearestStop(stops, domainX) : domainX;
+      return snap ? (nearestStop(stops, domainX) ?? null) : domainX;
     }
     let best = stops[0]!;
     let bestDistance = Infinity;
@@ -164,15 +164,20 @@ export function ChartCursorLayer({
     return best;
   };
 
-  const indexOfActive =
-    activeX == null
-      ? -1
-      : stops.indexOf(snap ? nearestStop(stops, activeX) : activeX);
+  // The drawable cursor. When snapping, the stored value is already a stop;
+  // this guards against a controlled value that is not one, and against there
+  // being no stops to snap to at all, which `nearestStop` reports as
+  // `undefined` — the same "nothing to draw" as a null cursor.
+  const drawX =
+    activeX == null ? undefined : snap ? nearestStop(stops, activeX) : activeX;
+
+  const indexOfActive = drawX === undefined ? -1 : stops.indexOf(drawX);
+
+  const defaultStop =
+    defaultCursor == null ? undefined : nearestStop(stops, defaultCursor);
 
   const defaultIndex =
-    defaultCursor != null && stops.length > 0
-      ? stops.indexOf(nearestStop(stops, defaultCursor))
-      : 0;
+    defaultStop === undefined ? 0 : stops.indexOf(defaultStop);
 
   const moveBy = (delta: number) => {
     if (stops.length === 0) return;
@@ -209,15 +214,10 @@ export function ChartCursorLayer({
     }
   };
 
-  // Resolve the drawable cursor. When snapping, the stored value is already a
-  // stop; guard against a controlled value that is not a stop.
-  const drawX =
-    activeX == null ? null : snap ? nearestStop(stops, activeX) : activeX;
-
-  const cx = drawX == null ? null : xScale(drawX);
+  const cx = drawX === undefined ? undefined : xScale(drawX);
 
   const points: CursorPoint[] =
-    drawX == null || cx === undefined
+    drawX === undefined || cx === undefined
       ? []
       : series.flatMap((entry, index) => {
           const value = entry.valueAt(drawX);
@@ -272,7 +272,7 @@ export function ChartCursorLayer({
         }}
       />
 
-      {cx !== undefined && cx !== null ? (
+      {cx !== undefined ? (
         <>
           <Crosshair x={cx} top={top} height={innerHeight} />
           {points.map((point) => (
