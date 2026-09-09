@@ -56,7 +56,7 @@ export {
 // a visx theme means importing visx; the tokens it is built FROM are in
 // `/core`.
 export { buildChartTheme, chartTheme } from './xychart-theme.js';
-export type { ChartThemeConfig } from './xychart-theme.js';
+export type { ChartTheme, ChartThemeConfig } from './xychart-theme.js';
 
 // Reference lines / threshold + confidence bands.
 export { ReferenceBand } from './reference-band.js';

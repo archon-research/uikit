@@ -4,7 +4,10 @@
  * `theme.ts`'s tokens. Split from `theme.ts` because it imports
  * `@visx/xychart` — see that module's header for why that boundary matters.
  */
-import { buildChartTheme as visxBuildChartTheme } from '@visx/xychart';
+import {
+  buildChartTheme as visxBuildChartTheme,
+  type XYChartTheme,
+} from '@visx/xychart';
 
 import { resolveChartColor, type ChartColor } from './chart-color.js';
 import {
@@ -20,6 +23,18 @@ import {
  * restated (`@visx/xychart` does not export `ThemeConfig`).
  */
 type VisxThemeConfig = Parameters<typeof visxBuildChartTheme>[0];
+
+/**
+ * What `<XYChart theme>` takes: visx's own `XYChartTheme`, given a name here.
+ *
+ * The name is the point. Without it, `buildChartTheme` and `chartTheme` infer
+ * their type, and `tsc` writes `import('@visx/xychart').XYChartTheme` into this
+ * package's public `.d.ts` — putting a `@visx/*` specifier in the surface a
+ * consumer's editor resolves, which is exactly what the curated re-exports in
+ * `xychart.ts` exist to avoid. Aliasing it keeps `@visx/xychart` an
+ * implementation detail of this package on the type side too.
+ */
+export type ChartTheme = XYChartTheme;
 type VisxTextStyles = NonNullable<VisxThemeConfig['svgLabelBig']>;
 type VisxLineStyles = NonNullable<VisxThemeConfig['xAxisLineStyles']>;
 
@@ -114,7 +129,7 @@ function resolveLineStyles(
  * });
  * ```
  */
-export function buildChartTheme(config: ChartThemeConfig) {
+export function buildChartTheme(config: ChartThemeConfig): ChartTheme {
   return visxBuildChartTheme({
     ...config,
     backgroundColor: resolveChartColor(config.backgroundColor),
@@ -131,7 +146,7 @@ export function buildChartTheme(config: ChartThemeConfig) {
 }
 
 /** Token-driven theme for `<XYChart theme={chartTheme}>`. */
-export const chartTheme = buildChartTheme({
+export const chartTheme: ChartTheme = buildChartTheme({
   backgroundColor: 'transparent',
   colors: [...chartTokens.series],
   gridColor: chartTokens.grid,
