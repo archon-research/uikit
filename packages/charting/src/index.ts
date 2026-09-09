@@ -6,9 +6,9 @@
  * module, and they are derived from the dependency graph rather than from
  * taste:
  *
- * - `./core` — no `@visx/*` import at all (~6 kB minified): tokens, colors,
- *   legend, data-table fallback, crosshair line, responsive sizing,
- *   downsampling.
+ * - `./core` — no `@visx/*` import at all (~8 kB minified / ~3.5 kB gzipped):
+ *   tokens, colors, legend, data-table fallback, crosshair line, responsive
+ *   sizing, downsampling.
  * - `./primitives` — visx, but not `@visx/xychart` (~14-50 kB minified per
  *   visx package actually used): scales, shapes, curves, themed standalone
  *   axes, brush, zoom.
@@ -18,7 +18,7 @@
  *   lazily.
  *
  * Each name lives in exactly one of the three, so this file is a plain union
- * and `charting-exports.test.ts` holds that invariant.
+ * and `exports.test.ts` holds that invariant.
  */
 export * from './core.js';
 export * from './primitives.js';

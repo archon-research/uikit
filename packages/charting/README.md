@@ -15,7 +15,7 @@ module to dynamic-import through:
 | Import | Contains | Cost, bundled alone |
 | --- | --- | --- |
 | `@archon-research/charting/core` | Tokens, `ChartColor`, `ChartLegend`, `Swatch`, `ChartDataTable`, `Crosshair`, `nearestStop`, `ResponsiveChart`, `downsample` | ~8 kB min / ~3.5 kB gzip — no `@visx/*` at all |
-| `@archon-research/charting/primitives` | `scale*`, shapes, `curve*`, `Group`, the themed standalone axes, `TimeRangeBrush`, `ZoomPanOverlay` | ~145 kB min / ~47 kB gzip, tree-shaking down to the visx packages actually used (`@visx/axis` ~49 kB, `@visx/scale` ~50 kB, `@visx/zoom` ~34 kB, `@visx/brush` ~28 kB, `@visx/shape` ~14 kB) |
+| `@archon-research/charting/primitives` | `scale*`, shapes, `curve*`, `Group`, the themed standalone axes, `TimeRangeBrush`, `ZoomPanOverlay` | ~145 kB min / ~47 kB gzip, tree-shaking down to the visx packages actually used (`@visx/axis` ~49 kB, `@visx/scale` + `@visx/curve` + `@visx/group` ~50 kB, `@visx/zoom` ~34 kB, `@visx/brush` ~28 kB, `@visx/shape` ~14 kB — each measured on its own, so they sum to more than the tier: `@visx/axis`, `@visx/brush` and `@visx/shape` all depend on `@visx/scale`, and through it on the d3 modules in `@visx/vendor`, which the tier pays for once) |
 | `@archon-research/charting/xychart` | `XYChart`, `chartTheme`, `buildChartTheme`, every `*Series`, and every mark that reads visx's `DataContext` | ~210 kB min / ~74 kB gzip |
 
 The tiers are drawn where the cost is: `@visx/xychart` publishes a single

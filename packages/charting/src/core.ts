@@ -6,10 +6,10 @@
  * single barrel entry, so ANY import from it — `XYChart`, but equally
  * `DataContext` or `buildChartTheme` — costs ~83 kB minified / ~29 kB gzipped
  * before tree-shaking has anything left to remove. Everything re-exported here
- * bundles to ~6 kB minified in total, so a consumer can put the chart tokens, a
- * legend, a data-table fallback or the downsamplers in an eagerly-loaded chunk
- * and still keep visx entirely behind a dynamic `import()` of
- * `@archon-research/charting/xychart` (or `/primitives`).
+ * bundles to ~8 kB minified / ~3.5 kB gzipped in total, so a consumer can put
+ * the chart tokens, a legend, a data-table fallback or the downsamplers in an
+ * eagerly-loaded chunk and still keep visx entirely behind a dynamic
+ * `import()` of `@archon-research/charting/xychart` (or `/primitives`).
  *
  * Everything here is also re-exported from the root barrel; this subpath is
  * about which chunk the code lands in, not about which names exist.

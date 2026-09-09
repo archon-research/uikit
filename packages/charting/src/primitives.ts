@@ -8,8 +8,11 @@
  * axes, and the brush/zoom overlays. Measured cost is the union of the visx
  * packages actually used — `@visx/axis` ~49 kB, `@visx/scale` + `@visx/curve` +
  * `@visx/group` ~50 kB, `@visx/zoom` ~34 kB, `@visx/brush` ~28 kB, `@visx/shape`
- * ~14 kB minified — all well under, and independent of, the ~83 kB
- * `@visx/xychart` floor that `/xychart` carries. Within one import the package
+ * ~14 kB minified. A union, not a sum: those figures are each measured alone,
+ * and axis/brush/shape all reach `@visx/scale` and its d3 vendor modules, which
+ * the tier pays for once (~145 kB together, against ~175 kB added up). All of
+ * it is well under, and independent of, the ~83 kB `@visx/xychart` floor that
+ * `/xychart` carries. Within one import the package
  * is `"sideEffects": false` ESM, so a bundler tree-shakes down to the visx
  * packages a call site really touches; the subpath is what keeps `<XYChart>`
  * out of the chunk entirely.
