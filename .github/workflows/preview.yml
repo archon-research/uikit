@@ -52,8 +52,13 @@ jobs:
     needs: resolve-preview-context
     if: needs.resolve-preview-context.outputs.should_run == 'true'
     runs-on: ubuntu-latest
+    # Scoped per PR (or per main) rather than one repo-wide group: GitHub only
+    # keeps one job queued per concurrency group, so a single shared group
+    # across every PR causes unrelated PRs to cancel each other out of the
+    # queue. Cross-PR pushes to gh-pages can still race, but the publish
+    # script retries against a fresh fetch on conflict, so that's safe.
     concurrency:
-      group: gh-pages-branch-mutations
+      group: gh-pages-preview-${{ needs.resolve-preview-context.outputs.publish_pr_number && format('pr-{0}', needs.resolve-preview-context.outputs.publish_pr_number) || 'main' }}
       cancel-in-progress: false
     steps:
 
@@ -118,11 +123,14 @@ jobs:
           fi
 
   cleanup:
-    # Run for all closed PRs (merged or not) — concurrency group prevents races with build-and-deploy
+    # Run for all closed PRs (merged or not). Same group as this PR's
+    # build-and-deploy so the two can't race each other, but distinct from
+    # other PRs' groups so a burst of closes (e.g. merging a stack) doesn't
+    # cancel each other's cleanup out of the queue.
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     concurrency:
-      group: gh-pages-branch-mutations
+      group: gh-pages-preview-pr-${{ github.event.pull_request.number }}
       cancel-in-progress: false
     steps:
       - name: Checkout code

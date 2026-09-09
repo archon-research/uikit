@@ -3,35 +3,57 @@ set -euo pipefail
 
 PR_NUMBER="${PR_NUMBER:?PR_NUMBER is required}"
 TARGET_DIR="pr/${PR_NUMBER}"
-WORKTREE_DIR="$(mktemp -d)"
-trap 'git worktree remove "$WORKTREE_DIR" --force >/dev/null 2>&1 || true' EXIT
 
-git config user.name "github-actions[bot]"
-git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/gh-pages.sh
+source "${SCRIPT_DIR}/lib/gh-pages.sh"
 
-if ! git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
-  echo "gh-pages branch does not exist, nothing to clean"
-  exit 0
-fi
+gh_pages_configure_identity
 
-git fetch origin gh-pages
-git worktree add "$WORKTREE_DIR" origin/gh-pages
-cd "$WORKTREE_DIR"
-git checkout -B gh-pages
+WORKTREE_DIR=""
+trap '[[ -n "$WORKTREE_DIR" ]] && git worktree remove "$WORKTREE_DIR" --force >/dev/null 2>&1 || true' EXIT
 
-if [[ ! -d "$TARGET_DIR" ]]; then
-  echo "No preview folder for this PR"
-  exit 0
-fi
+attempt=1
+while true; do
+  WORKTREE_DIR="$(mktemp -d)"
 
-rm -rf "$TARGET_DIR"
-git add -A
+  if ! gh_pages_checkout "$WORKTREE_DIR" require-existing; then
+    echo "gh-pages branch does not exist, nothing to clean"
+    rm -rf "$WORKTREE_DIR"
+    WORKTREE_DIR=""
+    exit 0
+  fi
 
-if git diff --cached --quiet; then
-  echo "No changes after cleanup"
-  exit 0
-fi
+  if [[ ! -d "$WORKTREE_DIR/$TARGET_DIR" ]]; then
+    echo "No preview folder for this PR"
+    git worktree remove "$WORKTREE_DIR" --force >/dev/null 2>&1 || true
+    WORKTREE_DIR=""
+    exit 0
+  fi
 
-git commit -m "chore(preview): remove PR #${PR_NUMBER} preview"
-# Use an explicit refspec so this can only update gh-pages.
-git push origin HEAD:gh-pages
+  rm -rf "${WORKTREE_DIR:?}/${TARGET_DIR}"
+
+  result="$(gh_pages_commit_and_push "$WORKTREE_DIR" "chore(preview): remove PR #${PR_NUMBER} preview")"
+  git worktree remove "$WORKTREE_DIR" --force >/dev/null 2>&1 || true
+  WORKTREE_DIR=""
+
+  case "$result" in
+    pushed)
+      echo "Removed PR #${PR_NUMBER} preview from gh-pages"
+      break
+      ;;
+    no-changes)
+      echo "No changes after cleanup"
+      break
+      ;;
+    conflict)
+      if (( attempt >= GH_PAGES_MAX_ATTEMPTS )); then
+        echo "gh-pages kept moving; failed to clean up after ${attempt} attempts" >&2
+        exit 1
+      fi
+      echo "gh-pages moved during cleanup, rebuilding and retrying" >&2
+      gh_pages_backoff "$attempt"
+      attempt=$(( attempt + 1 ))
+      ;;
+  esac
+done
