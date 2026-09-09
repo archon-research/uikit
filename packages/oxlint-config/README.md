@@ -8,12 +8,14 @@ Shared Oxlint configuration presets for consistent code quality across projects.
 npm install --save-dev @archon-research/oxlint-config oxlint
 ```
 
-**Requires oxlint 1.79.0 or later.** The `react` preset enables the React
-Compiler rules, which oxlint split out of the old umbrella `react/react-compiler`
-rule in 1.79.0 — 17 of the 19 this preset names do not exist in 1.78.0. Loading
-the preset on an older oxlint fails during config parsing with
-`Rule ... not found in plugin 'react'`, not at lint time, so the whole run
-aborts rather than silently skipping the rules.
+**Requires oxlint 1.79.0 or later.** The `react` preset names the React Compiler
+rules that oxlint split out of the old umbrella `react/react-compiler` rule in
+1.79.0 — 24 of them: 19 at `error`, plus 5 held at `off`. 22 of those 24 do not
+exist in 1.78.0; only `react/no-clone-element` and `react/no-react-children`
+predate the split. The 5 held at `off` are not a free pass — an unrecognised
+name is rejected whatever it is set to. Loading the preset on an older oxlint
+fails during config parsing with `Rule ... not found in plugin 'react'`, not at
+lint time, so the whole run aborts rather than silently skipping the rules.
 
 ## Usage
 
