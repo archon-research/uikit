@@ -122,18 +122,28 @@ describe('preset smoke tests', () => {
     expect(severityOf(base['react/only-export-components'])).not.toBe('deny');
   });
 
-  it('rejects a misspelled severity rather than silently dropping the rule', () => {
-    // The presets are plain object literals, so `severity` infers as `string`
-    // and a typo like `'eror'` type-checks. The reason that is not worth a
-    // local severity type is this: oxlint refuses to load the config at all
-    // ("Failed to parse rule severity, expected one of ..."), for both the
-    // scalar and the `[severity, options]` form. The typo cannot reach a
-    // consumer as a quietly disabled rule — it fails their lint run outright,
-    // and it fails the smoke tests above, which go through the same parser.
-    const configPath = path.join(tmpDir, 'misspelled-severity.config.ts');
+  // The presets are plain object literals, so `severity` infers as `string` and
+  // a typo like `'eror'` type-checks. The reason that is not worth a local
+  // severity type is that oxlint refuses to load the config at all, so the typo
+  // cannot reach a consumer as a quietly disabled rule — it fails their lint run
+  // outright, and it fails the smoke tests above, which go through the same
+  // parser.
+  //
+  // Both accepted shapes are covered rather than asserted in prose, since this
+  // file's whole point is that a claim about the effective config belongs in a
+  // test. The valid-array control matters too: without it, the array case could
+  // pass because oxlint rejected the SHAPE rather than the severity.
+  it.each([
+    ['scalar', `'eror'`],
+    ['[severity, options]', `['eror', { ignoreRestArgs: true }]`],
+  ])('rejects a misspelled severity in the %s form', (_label, entry) => {
+    const configPath = path.join(
+      tmpDir,
+      `misspelled-severity-${_label.replace(/\W+/g, '-')}.config.ts`,
+    );
     fs.writeFileSync(
       configPath,
-      `export default {\n  plugins: ['typescript'],\n  rules: { 'typescript/no-explicit-any': 'eror' },\n};\n`,
+      `export default {\n  plugins: ['typescript'],\n  rules: { 'typescript/no-explicit-any': ${entry} },\n};\n`,
     );
 
     let stdout = '';
@@ -152,6 +162,25 @@ describe('preset smoke tests', () => {
 
     // Asserted so the test cannot pass for some unrelated non-zero exit.
     expect(stdout).toContain('Failed to parse rule severity');
+  });
+
+  it('accepts the same array entry with a valid severity', () => {
+    // Control for the case above: proves the rejection is about the severity,
+    // not about the `[severity, options]` shape being unsupported.
+    const configPath = path.join(tmpDir, 'valid-severity-array.config.ts');
+    fs.writeFileSync(
+      configPath,
+      `export default {\n  plugins: ['typescript'],\n  rules: { 'typescript/no-explicit-any': ['error', { ignoreRestArgs: true }] },\n};\n`,
+    );
+
+    const stdout = execFileSync(
+      oxlintBinary,
+      ['-c', configPath, '--print-config'],
+      { cwd: tmpDir, encoding: 'utf8', stdio: 'pipe' },
+    );
+    expect(
+      severityOf(JSON.parse(stdout).rules['typescript/no-explicit-any']),
+    ).toBe('deny');
   });
 
   it('design-system-boundaries denies the ark-ui import, not warns', () => {
