@@ -306,10 +306,101 @@ describe('usePlayback (live source)', () => {
     });
     expect(result.current.events.map((e) => e.seq)).toEqual([1, 2]);
     // This source reports no transport status, so `connected` is the right
-    // answer for it. NOTE: `play()` sets it unconditionally, which is wrong
-    // for a source that last reported `error` or `connecting` — a live-path
-    // bug tracked separately, deliberately not pinned by this suite.
+    // answer for it — inferred from the backlog it just surfaced, which is the
+    // only evidence of a connection such a source ever gives. A source that
+    // DOES report one resumes on that report instead; see the three tests
+    // above.
     expect(result.current.status).toBe('connected');
+  });
+
+  it("resumes on the transport's own status instead of inventing one", () => {
+    // The bug this pins outlived one report (#108) and was raised again on
+    // #114: `play()` wrote `'connected'` over anything non-terminal, so a
+    // source that had only ever said `'connecting'` came back from a pause
+    // claiming a connection it never had — and the real report was gone,
+    // because the pause had overwritten it too. Nothing here ever reaches
+    // `'connected'`; the transport never says so.
+    const { source, setStatus } = makeLiveSource();
+    const { result } = renderHook(() => usePlayback({ source }));
+
+    act(() => {
+      setStatus('connecting');
+    });
+    expect(result.current.status).toBe('connecting');
+
+    act(() => {
+      result.current.pause();
+    });
+    expect(result.current.status).toBe('paused');
+
+    act(() => {
+      result.current.play();
+    });
+    expect(result.current.status).toBe('connecting');
+
+    // ...and the transport is still the one deciding when that changes.
+    act(() => {
+      setStatus('connected');
+    });
+    expect(result.current.status).toBe('connected');
+  });
+
+  it('leaves a non-connecting stream reading as itself through the controls', () => {
+    // `'idle'` is the other status `play()` used to erase. Like `'error'` and
+    // `'complete'` it is a fact about the STREAM, so — unlike
+    // `'connecting'`/`'connected'` — a local pause has nothing more specific to
+    // say and does not paint over it either.
+    const { source, setStatus } = makeLiveSource();
+    const { result } = renderHook(() => usePlayback({ source }));
+
+    act(() => {
+      setStatus('idle');
+    });
+
+    act(() => {
+      result.current.pause();
+    });
+    expect(result.current.status).toBe('idle');
+
+    act(() => {
+      result.current.play();
+    });
+    expect(result.current.status).toBe('idle');
+  });
+
+  it('does not restore a status across a source swap', () => {
+    // Holding the transport report so `play()` can restore it means the report
+    // now outlives a pause — but it must not outlive the SOURCE. Both halves of
+    // the status reset with everything else the outgoing source owned, so a
+    // resume on the incoming one cannot resurrect what the outgoing one said.
+    const first = makeLiveSource();
+    const second = makeLiveSource();
+    const { result, rerender } = renderHook(
+      ({ source }) => usePlayback({ source }),
+      { initialProps: { source: first.source } },
+    );
+
+    act(() => {
+      first.setStatus('error');
+    });
+    expect(result.current.status).toBe('error');
+
+    rerender({ source: second.source });
+    expect(result.current.status).toBe('connecting');
+
+    act(() => {
+      result.current.pause();
+    });
+    act(() => {
+      result.current.play();
+    });
+    expect(result.current.status).toBe('connecting');
+
+    // The dropped source has no say either — it is not subscribed any more.
+    act(() => {
+      first.setStatus('complete');
+    });
+    expect(result.current.status).toBe('connecting');
   });
 
   it('reports each event to onEvent exactly once, in arrival order', () => {

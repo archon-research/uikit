@@ -7,13 +7,17 @@ import {
   useState,
 } from 'react';
 
-import { IS_DEV_WARNING_ENABLED } from '../hooks/devWarning.js';
 import { useIdentityChurnWarning } from '../hooks/useIdentityChurnWarning.js';
 import { createAppendOnlyBuffer } from './appendOnlyBuffer.js';
 import type { AppendOnlyBuffer } from './appendOnlyBuffer.js';
 import { createRafBatcher } from './rafBatch.js';
 import type { RafBatcher } from './rafBatch.js';
-import type { PlaybackBounds, PlaybackEvent, PlaybackSource } from './types.js';
+import type {
+  PlaybackBounds,
+  PlaybackEvent,
+  PlaybackSource,
+  PlaybackSourceStatus,
+} from './types.js';
 
 export type PlaybackMode = 'live' | 'replay';
 
@@ -114,16 +118,39 @@ function sortEvents<T>(events: PlaybackEvent<T>[]): PlaybackEvent<T>[] {
 const EMPTY_LIVE_EVENTS = createAppendOnlyBuffer<never>().snapshot();
 
 /**
- * Live statuses the transport CONTROLS must not paint over. Both are terminal
- * reports from the source itself — the stream is dead (`'error'`) or has ended
- * (`'complete'`) — and neither stops being true because the operator pressed a
- * button, so `play`/`pause` preserve them exactly as the replay branch
- * preserves its own `'complete'`. Without this, a dead transport reads back as
- * `'connected'` the moment anyone hits play, which is precisely the state an
- * operator is watching the indicator to rule out.
+ * The live `status` a consumer sees, from the two independent facts that
+ * produce it: what the TRANSPORT last reported, and whether the operator has
+ * playback running.
+ *
+ * Derived rather than stored, because the stored version could not stop
+ * inventing statuses. `play()` used to write `'connected'` over anything
+ * non-terminal, so a source that had only ever reported `'connecting'` — or
+ * `'idle'` — read back as a live connection after any pause/resume, with the
+ * transport's own report gone for good. Keeping the transport report as the
+ * state and computing the display from it means a status can only ever be
+ * REPORTED, never manufactured: `play()` restores whatever the transport
+ * actually last said, because that value was never overwritten in the first
+ * place. (First raised on #108, then again on #114.)
+ *
+ * Which fact wins is per status, and matches what the operator needs to read
+ * off the indicator:
+ *
+ * - `'connecting'` / `'connected'` — the transport is working on it, so a local
+ *   pause is the more specific thing to say, and the transport report is held
+ *   for the resume.
+ * - `'error'` / `'complete'` / `'idle'` — facts about the STREAM that pressing
+ *   a button does not change. A dead transport that reads `'connected'`, or
+ *   `'paused'`, is precisely the state an operator watches the indicator to
+ *   rule out.
  */
-function isTerminalLiveStatus(status: PlaybackStatus): boolean {
-  return status === 'error' || status === 'complete';
+function deriveLiveStatus(
+  transport: PlaybackSourceStatus,
+  playing: boolean,
+): PlaybackStatus {
+  if (transport === 'connecting' || transport === 'connected') {
+    return playing ? transport : 'paused';
+  }
+  return transport;
 }
 
 /**
@@ -339,9 +366,18 @@ export function usePlayback<TPayload = unknown>({
   const [liveEvents, setLiveEvents] =
     useState<PlaybackEvent<TPayload>[]>(EMPTY_LIVE_EVENTS);
   const [liveClock, setLiveClock] = useState<number>(() => Date.now());
-  const [liveStatus, setLiveStatus] = useState<PlaybackStatus>(
-    liveAutoplay ? 'connecting' : 'paused',
-  );
+  // The two halves `status` is derived from (see `deriveLiveStatus`). The
+  // transport half starts at `'connecting'` whether or not we autoplay,
+  // because the subscription goes up either way — a paused viewer is still
+  // connected to the feed, it just isn't surfacing what arrives.
+  const [liveTransportStatus, setLiveTransportStatus] =
+    useState<PlaybackSourceStatus>('connecting');
+  const [livePlaying, setLivePlaying] = useState(liveAutoplay);
+  // `livePlaying`, readable SYNCHRONOUSLY. A transport callback can fire
+  // between `play()`/`pause()` and the commit that follows, and it has to route
+  // the event on the intent as of right now, not as of the last render — so the
+  // arrival path reads the ref while the render path reads the state. Every
+  // site that changes one changes the other.
   const livePlayingRef = useRef(liveAutoplay);
   const liveBufferRef = useRef<PlaybackEvent<TPayload>[]>([]);
   // The live source the clock is currently baselined to, or `null` when none is
@@ -411,7 +447,16 @@ export function usePlayback<TPayload = unknown>({
   if (liveResetKey !== source) {
     setLiveResetKey(source);
     setLiveEvents(EMPTY_LIVE_EVENTS);
-    setLiveStatus(liveAutoplay ? 'connecting' : 'paused');
+    // Both halves of the status, in the RENDER phase, for the reason the whole
+    // reset is spread the way it is: a transport report belongs to the source
+    // that made it, and `play()` now restores the last one. Held in a ref and
+    // cleared in the layout phase instead, the one commit between the swap and
+    // the layout effect would render the incoming source beside the outgoing
+    // one's report — and a resume in that window would restore it. Reset here,
+    // React re-runs this function with both values before committing anything,
+    // so no report can outlive the source that made it.
+    setLiveTransportStatus('connecting');
+    setLivePlaying(liveAutoplay);
   }
 
   // COMMIT, SYNCHRONOUSLY: the three refs, plus the clock.
@@ -482,7 +527,11 @@ export function usePlayback<TPayload = unknown>({
       const last = batch[batch.length - 1];
       if (last) setLiveClock(last.timestamp);
       for (const event of batch) onEventRef.current?.(event);
-      setLiveStatus((current) =>
+      // Events arriving IS a connection, and it is the only evidence a source
+      // that doesn't implement `subscribeStatus` ever gives us. Narrowed to a
+      // promotion out of `'connecting'` so it cannot talk over a source that
+      // reported itself errored, complete or idle.
+      setLiveTransportStatus((current) =>
         current === 'connecting' ? 'connected' : current,
       );
     });
@@ -501,45 +550,18 @@ export function usePlayback<TPayload = unknown>({
       batcher.push(event);
     });
 
-    // Exhaustive over `PlaybackSourceStatus`, deliberately: an if/else chain
-    // here handled three of its five members and dropped `'complete'` and
-    // `'idle'` on the floor, so a live stream that reported itself finished
-    // displayed as `'connected'` forever. Only the two "still working on it"
-    // statuses are gated on whether we're playing — a paused viewer is a local
-    // decision that outranks the transport's `connected`/`connecting`, whereas
-    // `error`/`complete`/`idle` are facts about the stream that a local pause
-    // does not change.
+    // Recorded VERBATIM, every member of `PlaybackSourceStatus`. This used to
+    // be a switch that folded in whether we were playing, and folding lost
+    // information: a `'connecting'` report arriving while paused was stored as
+    // `'paused'`, so nothing was left to resume to and `play()` guessed
+    // `'connected'`. Deciding that at render time instead (`deriveLiveStatus`)
+    // keeps the report intact — which is also why an unhandled sixth member no
+    // longer needs a runtime warning here: nothing is dropped on the floor, and
+    // `deriveLiveStatus` fails the type check if a new member is added without
+    // a display for it.
     const unsubscribeStatus = source.subscribeStatus?.((status) => {
       if (!isCurrent()) return;
-      switch (status) {
-        case 'connected':
-          setLiveStatus(livePlayingRef.current ? 'connected' : 'paused');
-          break;
-        case 'connecting':
-          setLiveStatus(livePlayingRef.current ? 'connecting' : 'paused');
-          break;
-        case 'error':
-          setLiveStatus('error');
-          break;
-        case 'complete':
-          setLiveStatus('complete');
-          break;
-        case 'idle':
-          setLiveStatus('idle');
-          break;
-        default: {
-          // Never-guard: a sixth `PlaybackSourceStatus` member fails the type
-          // check right here instead of being silently ignored at runtime.
-          const unhandled: never = status;
-          if (IS_DEV_WARNING_ENABLED) {
-            console.warn(
-              `[uikit] usePlayback: unhandled live source status ` +
-                `\`${String(unhandled)}\`; leaving \`status\` unchanged.`,
-            );
-          }
-          break;
-        }
-      }
+      setLiveTransportStatus(status);
     });
 
     return () => {
@@ -560,9 +582,11 @@ export function usePlayback<TPayload = unknown>({
       return;
     }
     livePlayingRef.current = true;
-    setLiveStatus((current) =>
-      isTerminalLiveStatus(current) ? current : 'connected',
-    );
+    // Resuming says one thing and one thing only: playback is running again.
+    // What the TRANSPORT is doing is not ours to assert — `deriveLiveStatus`
+    // reads the last report back out, so a source still `'connecting'` resumes
+    // as `'connecting'` and a dead one stays dead.
+    setLivePlaying(true);
     if (liveBufferRef.current.length > 0) {
       const buffered = liveBufferRef.current;
       liveBufferRef.current = [];
@@ -574,6 +598,13 @@ export function usePlayback<TPayload = unknown>({
       const last = buffered[buffered.length - 1];
       if (last) setLiveClock(last.timestamp);
       buffered.forEach((event) => onEventRef.current?.(event));
+      // Draining a backlog surfaces events, which is the same evidence of a
+      // connection the flush above infers from — and the same narrow promotion.
+      // It is all a source without `subscribeStatus` ever gives us: everything
+      // it delivered arrived while paused, so no flush was there to see it.
+      setLiveTransportStatus((current) =>
+        current === 'connecting' ? 'connected' : current,
+      );
     }
   }, [mode]);
 
@@ -592,9 +623,7 @@ export function usePlayback<TPayload = unknown>({
     // handing `onEvent` events out of arrival order.
     liveBatcherRef.current?.flush();
     livePlayingRef.current = false;
-    setLiveStatus((current) =>
-      isTerminalLiveStatus(current) ? current : 'paused',
-    );
+    setLivePlaying(false);
   }, [mode]);
 
   const setSpeed = useCallback(
@@ -661,7 +690,7 @@ export function usePlayback<TPayload = unknown>({
   // flight.
   return {
     mode,
-    status: liveStatus,
+    status: deriveLiveStatus(liveTransportStatus, livePlaying),
     clock: liveClock,
     bounds: null,
     speed: 1,
