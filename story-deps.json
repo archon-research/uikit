@@ -325,6 +325,9 @@
       "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
       "packages/uikit-preview/src/stories/templates/split-layout.stories.tsx"
     ],
+    "packages/design-system/dist/playback/appendOnlyBuffer.js": [
+      "packages/uikit-preview/src/stories/organisms/playback-bar.stories.tsx"
+    ],
     "packages/design-system/dist/playback/rafBatch.js": [
       "packages/uikit-preview/src/stories/organisms/playback-bar.stories.tsx"
     ],

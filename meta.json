@@ -1073,6 +1073,18 @@
       "namedExport": "Dense",
       "meta": {}
     },
+    "molecules--skeleton-stack--on-card-surfaces": {
+      "name": "On card surfaces",
+      "levels": [
+        "Molecules",
+        "Skeleton stack"
+      ],
+      "locStart": 69,
+      "locEnd": 80,
+      "filePath": "src/stories/molecules/skeleton-stack.stories.tsx",
+      "namedExport": "OnCardSurfaces",
+      "meta": {}
+    },
     "molecules--skeleton-stack--static": {
       "name": "Static",
       "levels": [
