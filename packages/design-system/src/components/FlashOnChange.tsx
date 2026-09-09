@@ -81,6 +81,9 @@ export function useValueFlash<T>(
 ): UseValueFlashResult {
   const previousRef = useRef<T>(value);
   const optionsRef = useRef(options);
+  // Declared BEFORE the change effect below: on a commit carrying both a new
+  // `value` and new callbacks, React's in-order flush means the change effect
+  // still reads the current options.
   useEffect(() => {
     optionsRef.current = options;
   });
@@ -157,18 +160,25 @@ export function FlashOnChange({
     parse,
   });
   const reducedMotion = usePrefersReducedMotion();
-  const [markerVisible, setMarkerVisible] = useState(false);
+  // Marker visibility is derived: on for any flash the hold timer has not yet
+  // retired. The effect below only arms that timer. (`tone != null` already
+  // implies `flashId !== 0` — `useValueFlash` only ever sets a tone together
+  // with an incremented id.)
+  const [expiredFlashId, setExpiredFlashId] = useState(0);
+  const markerVisible =
+    tone != null && reducedMotion && expiredFlashId !== flashId;
 
   useEffect(() => {
-    if (flashId === 0 || tone == null || !reducedMotion) return;
-    // oxlint-disable-next-line react/set-state-in-effect -- paired with the timer below, not a derivable value; see the PR description.
-    setMarkerVisible(true);
+    // Gated on the derived value, so the timer arms only when there is a
+    // marker up to retire — not on every unrelated `tone`/`reducedMotion`
+    // change once the flash has already expired.
+    if (!markerVisible || direction === 'none') return;
     const timer = setTimeout(
-      () => setMarkerVisible(false),
+      () => setExpiredFlashId(flashId),
       REDUCED_MOTION_MARKER_MS,
     );
     return () => clearTimeout(timer);
-  }, [flashId, tone, reducedMotion]);
+  }, [flashId, markerVisible, direction]);
 
   const content = children ?? value;
 
@@ -189,7 +199,7 @@ export function FlashOnChange({
         <span>{content}</span>
       )}
       {/* Reduced-motion: a discrete marker on a matching timer. */}
-      {reducedMotion && markerVisible && direction !== 'none' ? (
+      {markerVisible && direction !== 'none' ? (
         <span
           aria-hidden="true"
           data-part="marker"
