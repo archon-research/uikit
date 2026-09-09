@@ -255,6 +255,24 @@ describe('subpath exports', () => {
       [...PUBLISHED_ROOT_EXPORTS].sort(),
     );
   });
+
+  it('binds every name it publishes to an actual value', () => {
+    // The census above compares names, and a name outlives its binding: a
+    // static `export { X } from './x.js'` keeps X in `Object.keys(root)` after
+    // `x.ts` stops exporting it, with `undefined` behind the name. So the half
+    // of this file meant to notice a disappearance is itself satisfiable by a
+    // root barrel that hands consumers nothing.
+    //
+    // `tsc` does reject the dangling re-export (TS2459), but that is a
+    // different guarantee than the one this file advertises, and it only holds
+    // while the root reads the name from the module that dropped it. Leaving
+    // the hole open on the grounds that a neighbouring tool happens to cover
+    // it is how a test comes to assert less than it claims.
+    const unbound = Object.entries(root)
+      .filter(([, value]) => value === undefined)
+      .map(([name]) => name);
+    expect(unbound).toEqual([]);
+  });
 });
 
 /**

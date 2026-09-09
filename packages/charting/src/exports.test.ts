@@ -194,6 +194,24 @@ describe('subpath barrels', () => {
   it('publish exactly the documented root surface, no more and no less', () => {
     expect(names(root)).toEqual([...PUBLISHED_ROOT_EXPORTS].sort());
   });
+
+  it('bind every name they publish to an actual value', () => {
+    // The three tests above compare names, and a name outlives its binding:
+    // the subpath barrels re-export by name, so a static
+    // `export { nearestStop } from './crosshair.js'` keeps `nearestStop` in
+    // `core.ts`'s namespace after `crosshair.tsx` stops exporting it — with
+    // `undefined` behind the name, forwarded through the root's `export *`.
+    // The partition, the union and the census all still pass on that.
+    //
+    // `tsc` does reject the dangling re-export, but that is a different
+    // guarantee than the one this file advertises. Checked on the root because
+    // it is the union of the three: a name unbound in any subpath arrives here
+    // unbound.
+    const unbound = Object.entries(root)
+      .filter(([, value]) => value === undefined)
+      .map(([name]) => name);
+    expect(unbound).toEqual([]);
+  });
 });
 
 const packageJson = JSON.parse(
