@@ -2,6 +2,7 @@ import { type CSSProperties } from 'react';
 
 import { usePrefersReducedMotion } from '../hooks/useMediaQuery.js';
 import {
+  SKELETON_FILL,
   SKELETON_PULSE_ANIMATION,
   SKELETON_PULSE_KEYFRAMES,
   SKELETON_PULSE_PEAK_OPACITY,
@@ -62,8 +63,21 @@ type SkeletonRowsProps = {
   columnHints?: readonly SkeletonColumnHint[];
   /** Pulses each block to signal loading. Default true; suppressed under `prefers-reduced-motion`. */
   animate?: boolean;
-  /** Applied to each skeleton `<tr>`. */
+  /**
+   * Applied to each skeleton `<tr>`. To re-tone the blocks, set
+   * `--skeleton-fill` here (or on any ancestor) — they read it rather than
+   * hardcoding a colour (see `SKELETON_FILL_VAR`). A `background` here paints
+   * the row only; it cannot re-tone the blocks, whose own inline fill outranks
+   * any class.
+   */
   className?: string;
+  /**
+   * Applied to each skeleton `<tr>`; `--skeleton-fill` set here also reaches
+   * the blocks. Note this is not a normal style prop for `background`: each
+   * block paints its own inline fill on top, so a `background` set here shows
+   * around the blocks and nowhere else. `--skeleton-fill` is the supported
+   * channel for re-toning the blocks themselves.
+   */
   style?: CSSProperties;
 };
 
@@ -86,7 +100,7 @@ const blockBaseStyle: CSSProperties = {
   width: 'max(60%, 100% - 32px)',
   marginInline: 'auto',
   borderRadius: 6,
-  background: 'var(--colors-surface-subtle, #f8f9fb)',
+  background: SKELETON_FILL,
   opacity: SKELETON_PULSE_PEAK_OPACITY,
 };
 
@@ -106,7 +120,7 @@ const hintedTrackStyle: CSSProperties = {
 
 const barStyle: CSSProperties = {
   borderRadius: 6,
-  background: 'var(--colors-surface-subtle, #f8f9fb)',
+  background: SKELETON_FILL,
   opacity: SKELETON_PULSE_PEAK_OPACITY,
 };
 

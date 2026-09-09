@@ -2,17 +2,31 @@ import { type CSSProperties } from 'react';
 
 import { usePrefersReducedMotion } from '../hooks/useMediaQuery.js';
 import {
+  SKELETON_FILL,
   SKELETON_PULSE_ANIMATION,
   SKELETON_PULSE_KEYFRAMES,
   SKELETON_PULSE_PEAK_OPACITY,
 } from './skeletonPulse.js';
 
-type SkeletonStackProps = {
+export type SkeletonStackProps = {
   count?: number;
   itemHeight?: number;
   /** Pulses each item to signal loading. Default true; suppressed under `prefers-reduced-motion`. */
   animate?: boolean;
+  /**
+   * Applied to the wrapper. To re-tone the items, set `--skeleton-fill` here —
+   * it inherits down to them, and they read it rather than hardcoding a colour
+   * (see `SKELETON_FILL_VAR`). A `background` here paints the wrapper only; it
+   * cannot re-tone the items, whose own inline fill outranks any class.
+   */
   className?: string;
+  /**
+   * Applied to the wrapper; `--skeleton-fill` set here also reaches the items.
+   * Note this is not a normal style prop for `background`: each item paints its
+   * own inline fill on top, so a `background` set here shows through the gaps
+   * between items and nowhere else. `--skeleton-fill` is the supported channel
+   * for re-toning the items themselves.
+   */
   style?: CSSProperties;
 };
 
@@ -23,7 +37,7 @@ const wrapperStyle: CSSProperties = {
 
 const itemBaseStyle: CSSProperties = {
   borderRadius: 8,
-  background: 'var(--colors-surface-subtle, #f8f9fb)',
+  background: SKELETON_FILL,
   opacity: SKELETON_PULSE_PEAK_OPACITY,
 };
 
