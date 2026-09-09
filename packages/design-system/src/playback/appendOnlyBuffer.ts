@@ -30,9 +30,10 @@
  * indexing, `length`, iteration, spread, `map`/`filter`/`slice` and
  * `JSON.stringify` all behave exactly as they would on a plain array. Two
  * deliberate differences: writing through it (`push`, `sort`, `reverse`,
- * `events[0] = x`) throws a `TypeError` in strict mode rather than corrupting
- * the shared backing array, and it cannot be `structuredClone`d or
- * `postMessage`d directly (clone a copy: `structuredClone([...events])`).
+ * `events[0] = x`, and reflectively `Object.freeze`/`seal`/`setPrototypeOf`)
+ * throws a `TypeError` in strict mode rather than corrupting the shared
+ * backing array, and it cannot be `structuredClone`d or `postMessage`d
+ * directly (clone a copy: `structuredClone([...events])`).
  *
  * ---
  *
@@ -140,6 +141,27 @@ function createPrefixView<T>(backing: T[], length: number): T[] {
     set: () => false,
     defineProperty: () => false,
     deleteProperty: () => false,
+    // The two REFLECTIVE mutations, which reach past the property traps above
+    // and change the target object itself. Both must be refused for the same
+    // reason, and `preventExtensions` is the dangerous one: without it,
+    // `Object.freeze(events)` — the reflex of a consumer hardening what the
+    // docs call an immutable snapshot — makes the SHARED backing array
+    // permanently non-extensible. The freeze still throws (its later
+    // `defineProperty` calls are refused), so it reads as rejected, but the
+    // damage is already done and the next live append dies with
+    // `TypeError: Cannot add property N, object is not extensible`: one
+    // defensive freeze silently kills the feed. Refusing here makes the whole
+    // operation a clean no-op that throws, leaving the backing array untouched.
+    // `seal` and `Reflect.preventExtensions` go through the same trap.
+    //
+    // The remaining traps are deliberately left to the target. `getPrototypeOf`
+    // and `isExtensible` cannot mutate, and both must report the target's real
+    // answer anyway or the proxy invariant check throws — forwarding is the
+    // only legal behaviour. `apply` and `construct` exist only for callable
+    // targets; an array is neither callable nor a constructor, so they can
+    // never fire.
+    preventExtensions: () => false,
+    setPrototypeOf: () => false,
   });
 }
 

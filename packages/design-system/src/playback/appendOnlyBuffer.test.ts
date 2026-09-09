@@ -108,6 +108,49 @@ describe('createAppendOnlyBuffer', () => {
     expect(buffer.snapshot()).toEqual([1, 2]);
   });
 
+  it('refuses a reflective freeze/seal instead of poisoning the feed', () => {
+    // The failure this pins is quiet and fatal: `Object.freeze` on a snapshot
+    // used to reach the SHARED backing array. The freeze itself threw, so it
+    // looked rejected, but the array was left permanently non-extensible and
+    // the very next live append died with "Cannot add property N, object is
+    // not extensible" — a consumer hardening what the docs call an immutable
+    // value would have killed the feed. Both must throw AND leave the feed
+    // able to grow.
+    for (const harden of [
+      Object.freeze,
+      Object.seal,
+      Object.preventExtensions,
+    ]) {
+      const buffer = createAppendOnlyBuffer<number>();
+      buffer.append([1, 2]);
+      const snapshot = buffer.snapshot();
+
+      expect(() => harden(snapshot)).toThrow(TypeError);
+      expect(Reflect.preventExtensions(snapshot)).toBe(false);
+
+      buffer.append([3]);
+      expect(buffer.snapshot()).toEqual([1, 2, 3]);
+      // ...and the pinned view is still the prefix it was taken over.
+      expect(snapshot).toEqual([1, 2]);
+    }
+  });
+
+  it('refuses a reflective prototype swap', () => {
+    // The other trap that reaches the target rather than a property on it:
+    // re-pointing the prototype would strip `map`/`filter`/`slice` from every
+    // past and future snapshot over the same backing array at once.
+    const buffer = createAppendOnlyBuffer<number>();
+    buffer.append([1, 2]);
+    const snapshot = buffer.snapshot();
+
+    expect(() => Object.setPrototypeOf(snapshot, null)).toThrow(TypeError);
+    expect(Reflect.setPrototypeOf(snapshot, null)).toBe(false);
+
+    buffer.append([3]);
+    expect(Object.getPrototypeOf(buffer.snapshot())).toBe(Array.prototype);
+    expect(buffer.snapshot().map((n) => n * 2)).toEqual([2, 4, 6]);
+  });
+
   it('takes a snapshot in constant time regardless of how much is buffered', () => {
     // The whole point of the design: no per-flush copy. A copy-based snapshot
     // of 500k entries would allocate 500k slots here; this must not.
