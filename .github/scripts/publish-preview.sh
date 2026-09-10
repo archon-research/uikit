@@ -23,8 +23,6 @@ if [[ "$EVENT_NAME" == "pull_request" ]]; then
   COMMIT_MSG="chore(preview): update PR #${PR_NUMBER} for ${SHA}"
 fi
 
-gh_pages_configure_identity
-
 WORKTREE_DIR=""
 trap '[[ -n "$WORKTREE_DIR" ]] && git worktree remove "$WORKTREE_DIR" --force >/dev/null 2>&1 || true' EXIT
 
@@ -76,6 +74,10 @@ while true; do
       echo "gh-pages moved during publish, rebuilding and retrying" >&2
       gh_pages_backoff "$attempt"
       attempt=$(( attempt + 1 ))
+      ;;
+    *)
+      echo "gh_pages_commit_and_push returned unexpected value: '${result}'" >&2
+      exit 1
       ;;
   esac
 done

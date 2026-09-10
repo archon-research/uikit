@@ -8,8 +8,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/gh-pages.sh
 source "${SCRIPT_DIR}/lib/gh-pages.sh"
 
-gh_pages_configure_identity
-
 WORKTREE_DIR=""
 trap '[[ -n "$WORKTREE_DIR" ]] && git worktree remove "$WORKTREE_DIR" --force >/dev/null 2>&1 || true' EXIT
 
@@ -54,6 +52,10 @@ while true; do
       echo "gh-pages moved during cleanup, rebuilding and retrying" >&2
       gh_pages_backoff "$attempt"
       attempt=$(( attempt + 1 ))
+      ;;
+    *)
+      echo "gh_pages_commit_and_push returned unexpected value: '${result}'" >&2
+      exit 1
       ;;
   esac
 done
