@@ -3,6 +3,7 @@ import { Button } from '@archon-research/design-system';
 import { AlertTriangle, ChevronDown, ChevronRight, X } from 'lucide-react';
 import {
   useEffect,
+  useMemo,
   useReducer,
   useRef,
   useState,
@@ -186,10 +187,16 @@ function ConfirmToolCallCard({
 
   const rawSecondsRemaining = useSecondsRemaining(pendingCall.expiresAt);
 
-  const totalTimeout = Math.round(
-    (new Date(pendingCall.expiresAt).getTime() -
-      new Date(pendingCall.createdAt).getTime()) /
-      1000,
+  // Derived from props that are fixed for this card's keyed lifetime, so it is
+  // computed once rather than on each of the ~120 countdown renders.
+  const totalTimeout = useMemo(
+    () =>
+      Math.round(
+        (new Date(pendingCall.expiresAt).getTime() -
+          new Date(pendingCall.createdAt).getTime()) /
+          1000,
+      ),
+    [pendingCall.expiresAt, pendingCall.createdAt],
   );
 
   // Both stamps are minted by the relay; `now` is this browser's clock. A
@@ -215,7 +222,14 @@ function ConfirmToolCallCard({
     transition: 'width 1s linear',
   };
 
-  const argsJson = JSON.stringify(pendingCall.toolArgs, null, 2);
+  // The countdown re-renders this card once a second, and `toolArgs` is
+  // exactly the large payload a confirmation dialog exists for. Pretty-print it
+  // when the details are actually open, and only once per payload - not ~120
+  // times into a collapsed section that never renders the string.
+  const argsJson = useMemo(
+    () => (detailsOpen ? JSON.stringify(pendingCall.toolArgs, null, 2) : null),
+    [detailsOpen, pendingCall.toolArgs],
+  );
 
   return (
     <div style={cardStyle}>
@@ -268,7 +282,7 @@ function ConfirmToolCallCard({
           <span>Show details</span>
         </button>
 
-        {detailsOpen ? <pre style={argsPreStyle}>{argsJson}</pre> : null}
+        {argsJson !== null ? <pre style={argsPreStyle}>{argsJson}</pre> : null}
       </div>
 
       {/* Footer */}
