@@ -50,6 +50,10 @@
       "path": "skills/panda-css/SKILL.md"
     },
     {
+      "id": "perf-harvest",
+      "path": "skills/perf-harvest/SKILL.md"
+    },
+    {
       "id": "web-design",
       "path": "skills/web-design/SKILL.md"
     }

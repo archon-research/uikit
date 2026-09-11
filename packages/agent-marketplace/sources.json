@@ -133,6 +133,17 @@
       ]
     },
     {
+      "id": "perf-harvest",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "upstream": "packages/agent-marketplace/content/skills/perf-harvest/SKILL.md",
+      "pinnedRevision": "local-v1",
+      "normalizationNotes": [
+        "Authored for this repository.",
+        "Grounded in the @archon-research/playwright-perf harness and the bundle-budget / request-recorder pieces it composes with."
+      ]
+    },
+    {
       "id": "ui-coder",
       "kind": "agent",
       "sourceType": "local-authored",
