@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type RefObject,
 } from 'react';
 
 import type { PendingCallRecord } from './types.js';
@@ -88,8 +87,6 @@ export function ConfirmToolCallDialog({
   onDeny,
 }: ConfirmToolCallDialogProps) {
   const isOpen = pendingCall !== null;
-  // Button does not forward ref; use a wrapper div for auto-focus
-  const approveFocusRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -117,16 +114,6 @@ export function ConfirmToolCallDialog({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isOpen, onDeny]);
-
-  // Focus the approve button wrapper when the dialog opens
-  useEffect(() => {
-    if (isOpen) {
-      const focusable =
-        approveFocusRef.current?.querySelector<HTMLButtonElement>('button');
-      focusable?.focus();
-    }
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `pendingCall?.callId` is a deliberate trigger-only dep; see the PR description.
-  }, [isOpen, pendingCall?.callId]);
 
   if (!isOpen || !pendingCall) {
     return null;
@@ -159,7 +146,6 @@ export function ConfirmToolCallDialog({
         key={pendingCall.callId}
         pendingCall={pendingCall}
         queueLength={queueLength}
-        approveFocusRef={approveFocusRef}
         onApprove={onApprove}
         onDeny={onDeny}
       />
@@ -170,7 +156,6 @@ export function ConfirmToolCallDialog({
 type ConfirmToolCallCardProps = {
   pendingCall: PendingCallRecord;
   queueLength: number;
-  approveFocusRef: RefObject<HTMLDivElement | null>;
   onApprove: () => void;
   onDeny: () => void;
 };
@@ -179,7 +164,6 @@ type ConfirmToolCallCardProps = {
 function ConfirmToolCallCard({
   pendingCall,
   queueLength,
-  approveFocusRef,
   onApprove,
   onDeny,
 }: ConfirmToolCallCardProps) {
@@ -187,6 +171,18 @@ function ConfirmToolCallCard({
     (prev: boolean) => !prev,
     false,
   );
+
+  // `Button` does not forward a ref, so focus goes through a wrapper div.
+  // Mounting is the "new prompt" event - the card is keyed on `callId` - so
+  // this fires exactly when the dialog opens and on every prompt after it,
+  // which is what the parent used to express as a trigger-only dependency.
+  const approveFocusRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    approveFocusRef.current
+      ?.querySelector<HTMLButtonElement>('button')
+      ?.focus();
+  }, []);
 
   const rawSecondsRemaining = useSecondsRemaining(pendingCall.expiresAt);
 

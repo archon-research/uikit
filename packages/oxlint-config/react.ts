@@ -62,10 +62,15 @@ const reactConfig = {
     //
     // Bailouts and dependency rules, deferred together: the suppressions are
     // what mask the other two, so removing them is the fix that unblocks all
-    // three. Counts with disables stripped: `rule-suppression` 5,
-    // `exhaustive-effect-dependencies` 5, `memo-dependencies` 1, `todo` 5,
-    // `incompatible-library` 1 (@tanstack/react-virtual's return is not
-    // memoizable — a library fact, not repo debt).
+    // three. Counts below are each rule's worse number across the two runs the
+    // note above prescribes, measured over every package that consumes this
+    // preset: `rule-suppression` 5 — all of them from the disables-in-place
+    // run, since stripping a suppression is what removes the finding, and all
+    // of them suppressions of `react-hooks/*` rules, which is the only kind
+    // this rule sees; `exhaustive-effect-dependencies` 3, `memo-dependencies`
+    // 2, `todo` 5, `incompatible-library` 1 (@tanstack/react-virtual's return
+    // is not memoizable — a library fact, not repo debt). All but the first
+    // are from the disables-stripped run.
     'react/rule-suppression': 'off',
     'react/exhaustive-effect-dependencies': 'off',
     'react/memo-dependencies': 'off',
