@@ -60,6 +60,18 @@ export const chartTokens = {
   surface: 'var(--colors-surface-default, #ffffff)',
   label: 'var(--colors-text-muted, #667085)',
   /**
+   * Always-dark tooltip fill, paired with {@link chartTokens.tooltipText}.
+   * These are the design system's own tooltip pairing (`overlay.tooltip` +
+   * `text.inverse`), not a surface step: a readout card floating over a plot
+   * has to stay legible against both themes AND against whatever series colour
+   * it lands on. `SyncedTooltip` styles its card from these; a hand-rolled
+   * tooltip (a `ChartCursorLayer` render prop) should use them too rather than
+   * inventing a second card colour.
+   */
+  tooltipSurface: 'var(--colors-overlay-tooltip, #262626)',
+  /** Theme-invariant light text for {@link chartTokens.tooltipSurface}. */
+  tooltipText: 'var(--colors-text-inverse, #fafafa)',
+  /**
    * Alpha-tinted semantic fill for a one-sided threshold breach (the region
    * past a reference line). A `color-mix` tint of the same `critical` token
    * used elsewhere, not a distinct color family — see `ReferenceBand` in
