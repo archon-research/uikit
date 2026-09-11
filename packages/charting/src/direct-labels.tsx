@@ -2,6 +2,7 @@ import { DataContext } from '@visx/xychart';
 import { useContext } from 'react';
 
 import { resolveChartColor, type ChartColor } from './chart-color.js';
+import { clamp } from './crosshair.js';
 
 export type DirectLabelItem = {
   /** Stable identity; defaults to `label`. */
@@ -30,11 +31,6 @@ type XYChartDataContext = {
   innerHeight?: number;
   margin?: { top: number; left: number; right: number; bottom: number };
 };
-
-/** Clamp `value` into the closed `[min, max]` interval. */
-function clamp(value: number, min: number, max: number): number {
-  return value < min ? min : value > max ? max : value;
-}
 
 /**
  * Pure collision-resolution for stacked labels. Given each label's ideal `y`,

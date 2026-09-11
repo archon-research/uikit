@@ -11,7 +11,11 @@ import type { ComponentPropsWithoutRef } from 'react';
 
 import { chartTokens } from './theme.js';
 
-/** Clamp `value` into the closed `[min, max]` interval. Internal to the package. */
+/**
+ * Clamp `value` into the closed `[min, max]` interval. Internal to the
+ * package, and its only copy: `cursor-layer.tsx`, `direct-labels.tsx` and
+ * `histogram.tsx` all clamp through this one.
+ */
 export function clamp(value: number, min: number, max: number): number {
   return value < min ? min : value > max ? max : value;
 }
