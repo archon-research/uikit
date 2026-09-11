@@ -1,5 +1,11 @@
-import { QueryCache, QueryClient } from '@tanstack/react-query';
-import { describe, expect, it } from 'vitest';
+import {
+  environmentManager,
+  QueryCache,
+  QueryClient,
+  type QueryClientConfig,
+  QueryObserver,
+} from '@tanstack/react-query';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { HttpRequestError } from './errors.js';
 import {
@@ -135,6 +141,35 @@ describe('createQueryClient', () => {
     expect(queries?.refetchOnWindowFocus).toBe(false);
   });
 
+  it('does not read a present-but-undefined key as an override', () => {
+    // How conditional config is ordinarily written. A raw spread would copy
+    // `retry: undefined` over the predicate, and react-query resolves that as
+    // `retry ?? 3` — the retry-everything default this module exists to
+    // replace, reinstated by a branch that meant to change nothing.
+    const alwaysFail = false as boolean;
+
+    const queries = createQueryClient({
+      defaultOptions: {
+        queries: {
+          retry: alwaysFail ? false : undefined,
+          refetchOnWindowFocus: undefined,
+        },
+      },
+    }).getDefaultOptions().queries;
+
+    expect(queries?.retry).toBe(shouldRetryRequest);
+    expect(queries?.refetchOnWindowFocus).toBe(false);
+  });
+
+  it('keeps the defined keys of a partly-undefined override', () => {
+    const queries = createQueryClient({
+      defaultOptions: { queries: { retry: undefined, staleTime: 30_000 } },
+    }).getDefaultOptions().queries;
+
+    expect(queries?.retry).toBe(shouldRetryRequest);
+    expect(queries?.staleTime).toBe(30_000);
+  });
+
   it('passes the rest of QueryClientConfig through untouched', () => {
     const queryCache = new QueryCache();
 
@@ -209,5 +244,72 @@ describe('the retry policy a real client applies', () => {
 
   it('retries a server fault twice', async () => {
     await expect(countAttempts(httpError(503))).resolves.toBe(3);
+  });
+});
+
+describe('the retry policy a mounted query applies', () => {
+  // `fetchQuery` rewrites an `undefined` retry to `false`, so `countAttempts`
+  // above reads 1 whether the predicate is installed or missing — it cannot
+  // see a retry default that went away. A subscribed observer is the
+  // `useQuery` path, where react-query falls back to `retry ?? 3` instead, and
+  // the only place a lost predicate costs visible round trips.
+  const serverByDefault = environmentManager.isServer();
+
+  // That fallback is `?? 0` on the server, and these specs run under `node`.
+  beforeAll(() => environmentManager.setIsServer(() => false));
+  afterAll(() => environmentManager.setIsServer(() => serverByDefault));
+
+  /** How many times a *mounted* query rejecting with `error` is attempted. */
+  async function countMountedAttempts(
+    config: QueryClientConfig,
+    error: unknown,
+  ): Promise<number> {
+    let attempts = 0;
+
+    const observer = new QueryObserver(createQueryClient(config), {
+      queryKey: ['mounted-attempts'],
+      queryFn: () => {
+        attempts += 1;
+        return Promise.reject(error);
+      },
+      retryDelay: 0,
+    });
+
+    await new Promise<void>((resolve) => {
+      const unsubscribe = observer.subscribe((result) => {
+        if (result.status === 'error') {
+          unsubscribe();
+          resolve();
+        }
+      });
+    });
+
+    return attempts;
+  }
+
+  it('asks once on a client fault', async () => {
+    await expect(countMountedAttempts({}, httpError(422))).resolves.toBe(1);
+  });
+
+  it('asks once when an override names `retry` as undefined', async () => {
+    // The shape a conditional override is ordinarily written in. Before the
+    // merge dropped undefined-valued keys this was 4 — react-query's own
+    // `retry ?? 3`, reinstated by a branch that meant to change nothing.
+    const alwaysFail = false as boolean;
+
+    await expect(
+      countMountedAttempts(
+        {
+          defaultOptions: {
+            queries: { retry: alwaysFail ? false : undefined },
+          },
+        },
+        httpError(422),
+      ),
+    ).resolves.toBe(1);
+  });
+
+  it('retries a server fault twice', async () => {
+    await expect(countMountedAttempts({}, httpError(503))).resolves.toBe(3);
   });
 });

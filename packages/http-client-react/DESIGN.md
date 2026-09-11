@@ -306,12 +306,27 @@ option deep: a caller's `defaultOptions.queries.retry` replaces the default of
 that name and leaves `refetchOnWindowFocus` standing. Anything outside
 `defaultOptions` — `queryCache`, `mutationCache` — passes straight through.
 
+The `queries` merge drops the caller's explicitly-`undefined` keys first, and
+that step is the difference between a sound override and a silent one. A spread
+cannot tell an absent key from one present with the value `undefined`, and the
+second shape is how conditional config is ordinarily written:
+`{ retry: cond ? false : undefined }`. Spread raw, the else-branch copies
+`retry: undefined` over the predicate, react-query resolves it as `retry ?? 3`,
+and a mounted query asks four times where it should ask once — reinstating the
+retry-everything default this whole section exists to replace. Nothing looks
+wrong from outside, either: `refetchOnWindowFocus: false` survives the same
+spread, so the client still reads as configured. Dropping the key instead is
+lossless, because react-query resolves each of these options with `?? <default>`
+or an `=== undefined` check, so absent and `undefined` already mean the same
+thing to it — there is no option where "present but undefined" says something an
+explicit value could not say more plainly.
+
 For the middle case, where the status policy is right but the shape around it is
 not, the policy is exported in three pieces: `shouldRetryRequest` (the
 react-query-shaped predicate, for wrapping), `isRetryableError` (the error
-policy, for changing the attempt count), and `isRetryableHttpStatus` (the status
-policy alone). A consumer composes rather than restates, so a change to the
-status table reaches them.
+policy, for changing how many times a request is repeated), and
+`isRetryableHttpStatus` (the status policy alone). A consumer composes rather
+than restates, so a change to the status table reaches them.
 
 ## Type-level guarantees
 

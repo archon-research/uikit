@@ -65,7 +65,7 @@ rather than a data-dense one:
 | Default | Value | Why |
 | --- | --- | --- |
 | `refetchOnWindowFocus` | `false` | Alt-tabbing back to a dashboard should not reload every panel. Freshness is `staleTime` and explicit invalidation, which the app controls. |
-| `retry` | status-aware | React-query retries every rejection three times, so a 422 costs three round trips to report a validation error the server decided on the first. |
+| `retry` | status-aware | React-query retries every rejection three times, so a 422 costs four round trips to report a validation error the server decided on the first. |
 
 The retry policy, exactly:
 
@@ -110,8 +110,21 @@ const queryClient = createQueryClient({
 });
 ```
 
-To keep the status policy and change only the attempt count, or to drop one
-error out of it, compose the exported predicates rather than restating them:
+A `queries` key present with the value `undefined` is **not** an override — it
+is dropped before the merge, and the default stands. So the else-branch of a
+conditional override leaves the shipped policy in place rather than reverting it
+to react-query's `retry ?? 3`:
+
+```ts
+// `retry` is the package predicate whenever `cond` is false.
+createQueryClient({
+  defaultOptions: { queries: { retry: cond ? false : undefined } },
+});
+```
+
+To keep the status policy and change only how many times it asks again, or to
+drop one error out of it, compose the exported predicates rather than restating
+them:
 
 ```ts
 import {
@@ -123,7 +136,8 @@ import {
 createQueryClient({
   defaultOptions: {
     queries: {
-      // Same statuses, five attempts.
+      // Same statuses, five retries — six attempts. `failureCount` is the
+      // number of failures *before* this attempt, so it is 0 on the first.
       retry: (failureCount, error) => failureCount < 5 && isRetryableError(error),
       // Or: the shipped policy, minus one application-specific error.
       // retry: (count, error) =>

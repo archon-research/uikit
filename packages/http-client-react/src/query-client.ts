@@ -56,8 +56,9 @@ export function isRetryableHttpStatus(status: number): boolean {
  * Both checks narrow on `name` rather than `instanceof`, so they still hold
  * when a consumer's module graph contains two copies of this package.
  *
- * Exported so a consumer can keep this status policy while changing the
- * attempt count: `retry: (count, error) => count < 5 && isRetryableError(error)`.
+ * Exported so a consumer can keep this status policy while changing how many
+ * times it asks again: `retry: (count, error) => count < 5 &&
+ * isRetryableError(error)` is five retries, so six attempts.
  */
 export function isRetryableError(error: unknown): boolean {
   if (isHttpRequestError(error)) return isRetryableHttpStatus(error.status);
@@ -85,6 +86,39 @@ export function shouldRetryRequest(
   return failureCount < DEFAULT_MAX_RETRIES && isRetryableError(error);
 }
 
+/** The `queries` half of react-query's `DefaultOptions`, with no `undefined`. */
+type DefaultQueryOptions = NonNullable<
+  NonNullable<QueryClientConfig['defaultOptions']>['queries']
+>;
+
+/**
+ * `queries` with its explicitly-`undefined` keys dropped, so that spreading it
+ * over the defaults cannot replace one with nothing.
+ *
+ * A spread does not distinguish an absent key from one present with the value
+ * `undefined`, and the second shape is ordinary in conditional config:
+ * `{ retry: cond ? false : undefined }`. Spread raw, that copies
+ * `retry: undefined` over {@link shouldRetryRequest}, react-query reads it as
+ * `retry ?? 3`, and the policy silently becomes retry-everything — while
+ * `refetchOnWindowFocus: false` survives the same spread, so the client still
+ * looks configured.
+ *
+ * Dropping the key instead is lossless: react-query resolves every one of these
+ * options with `?? <default>` or an `=== undefined` check, so a key that is
+ * absent and a key that is `undefined` already mean the same thing to it. There
+ * is no option for which "present but undefined" says something an explicit
+ * value could not say more clearly.
+ */
+function definedQueryOptions(
+  queries: DefaultQueryOptions | undefined,
+): Partial<DefaultQueryOptions> {
+  if (!queries) return {};
+
+  return Object.fromEntries(
+    Object.entries(queries).filter(([, value]) => value !== undefined),
+  ) as Partial<DefaultQueryOptions>;
+}
+
 /**
  * A `QueryClient` with defaults suited to a data-dense application, in place of
  * react-query's, which are tuned for a document-shaped app:
@@ -93,7 +127,7 @@ export function shouldRetryRequest(
  *   not reload every panel under the cursor. Freshness is the business of
  *   `staleTime` and explicit invalidation, both of which the app controls.
  * - **A status-aware `retry`** — see {@link shouldRetryRequest}. React-query
- *   retries every rejection three times, so a 422 costs three round trips to
+ *   retries every rejection three times, so a 422 costs four round trips to
  *   report a validation error the server already decided on the first.
  *
  * Mutations are deliberately left un-retried — react-query's default, and the
@@ -114,6 +148,11 @@ export function shouldRetryRequest(
  *   defaultOptions: { queries: { retry: 5 } },
  * });
  * ```
+ *
+ * A `queries` key present with the value `undefined` is *not* an override: it
+ * is dropped before the merge, so the else-branch of
+ * `retry: cond ? false : undefined` leaves the shipped policy standing rather
+ * than reverting it to react-query's `retry ?? 3`.
  */
 export function createQueryClient(config: QueryClientConfig = {}): QueryClient {
   const { defaultOptions, ...rest } = config;
@@ -125,9 +164,9 @@ export function createQueryClient(config: QueryClientConfig = {}): QueryClient {
       queries: {
         refetchOnWindowFocus: false,
         retry: shouldRetryRequest,
-        // Spread last: a caller's `queries` option replaces the default of the
-        // same name and leaves the rest standing.
-        ...defaultOptions?.queries,
+        // Spread last: each `queries` option the caller actually gave a value
+        // replaces the default of the same name and leaves the rest standing.
+        ...definedQueryOptions(defaultOptions?.queries),
       },
     },
   });
