@@ -266,6 +266,88 @@ optional-`undefined`.** `redirectTo` stays a real discriminant, but a spec can
 read `.replace` or `.routeId` without narrowing first — which is most of what an
 assertion wants to do.
 
+## `defaultPreload` is a link feature, and nothing says so
+
+Not this package's option, recorded here because it is the kind of failure the
+rest of this document is organized around: configuration that reads as coverage
+while doing nothing.
+
+**The precondition: `defaultPreload` has an effect only where the navigation
+control is a `<Link>` — or a custom element built from `useLinkProps` whose
+props are spread onto a rendered DOM node. If an app navigates through
+`useNavigate`, `router.navigate`, or a `<button onClick>`, the option preloads
+nothing, at any value.**
+
+That is not a caveat about edge cases; it is the whole implementation.
+`router.options.defaultPreload` is read in exactly one place in
+`@tanstack/react-router` — inside `useLinkProps` — and each mode hangs off
+something only a rendered link has: `'intent'` off the `onMouseEnter`,
+`onFocus`, and `onTouchStart` handlers the hook returns, `'viewport'` off an
+`IntersectionObserver` on the link's own ref, `'render'` off an effect in the
+link component. No link, no call site.
+
+The reason it deserves writing down is that every signal available says it
+works. The option is accepted, it typechecks, it survives into
+`router.options`, the devtools show it, and no warning fires — the router's one
+preload warning is about a preload that *failed*, which requires a preload to
+have started. An app can carry `defaultPreload: 'intent'` for its entire life
+and never once preload a route.
+
+Checking is cheap and worth doing once: if `<Link` and `useLinkProps` both find
+nothing in the app, `defaultPreload` is dead configuration.
+
+**The usual companion setting does not share the precondition.**
+`defaultPreloadStaleTime` — which hands freshness to the loader's own cache
+instead of the router's 30-second default for preloaded matches — is read in
+router-core's loader task on the `preload || match.preload` branch, and *every*
+`router.preloadRoute` call takes it: `preloadRoute` passes `preload: true`
+straight into the lane. That includes the imperative call the next section
+recommends, so the two options come apart exactly where it matters. Measured on
+`@tanstack/react-router` 1.170.32, with a router that renders no `<Link>` at
+all, two `preloadRoute` calls for the same route run the loader **once** at the
+router's default and **twice** at `defaultPreloadStaleTime: 0`.
+
+So its precondition is only that something preloads — not that a `<Link>` does.
+It is inert in an app that preloads nothing at all, which is where an app with
+no links starts; it stops being inert the moment that app adopts the workaround
+below, and the 30-second default it overrides is then a real behaviour worth
+choosing deliberately.
+
+### What to do when the precondition does not hold
+
+Call the imperative API on the event the control already handles.
+`router.preloadRoute` is what `useLinkProps` calls; reaching it directly is
+supported, not a workaround:
+
+```tsx
+const router = useRouter();
+
+const preloadView = (view: ViewId) => {
+  // Rejects if the route's loader throws. `<Link>` swallows that with a console
+  // warning rather than letting it escape, and an imperative call has to do the
+  // same — an un-caught one surfaces as an unhandled rejection on hover.
+  router
+    .preloadRoute({ to: '/views/$view', params: { view } })
+    .catch(() => {});
+};
+
+<button
+  onMouseEnter={() => preloadView(view)}
+  onFocus={() => preloadView(view)}
+  onClick={() => navigate({ to: '/views/$view', params: { view } })}
+>
+  {label}
+</button>;
+```
+
+Pairing `onFocus` with `onMouseEnter` is the part worth copying rather than the
+preload itself: it is what `'intent'` does on a link, and it is what makes the
+behaviour reachable from the keyboard instead of being a mouse-only
+optimization.
+
+Leaving `defaultPreload` set alongside this is harmless and honest — it covers
+any `<Link>` the app grows later. Setting it *instead* of this is the failure.
+
 ## Deliberately out of v1
 
 ### Loader and query glue

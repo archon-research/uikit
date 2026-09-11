@@ -117,6 +117,11 @@ something that is not an HTTP error, so `status` is reachable only after
 `isHttpRequestError(error)`. The guard matches on `name` rather than `instanceof`
 so it survives a consumer ending up with two copies of the package.
 
+`createZodResponseMiddleware`'s rejection is the one of those with a guard of its
+own, `isZodResponseValidationError`, because the retry policy has to tell it from
+a transport failure — it is the only statusless rejection this package raises
+after the request completed.
+
 The guard takes **no body type parameter**. A check on `name` cannot say
 anything about the body's shape, so a parameter would only have let a call site
 name a type and get it back unchecked. It derives the body type from what the
@@ -194,7 +199,8 @@ ever described:
 - `queryClient.setQueryData(api.queryKey('get', '/positions'), …)` — a key
   without options, written directly;
 - `prefetchQuery`/`fetchQuery` against `api.queryKey(…)` rather than against
-  `api.queryOptions(…)`;
+  `api.queryOptions(…)` — which drops more than the tag, and is written up in
+  full in [the README](./README.md#prefetching-pass-queryoptions-never-querykey);
 - SSR or persisted-cache **hydration**, which restores entries before any render
   has run.
 
@@ -223,6 +229,104 @@ The registry is deliberately not fixed by scanning the cache for `[method, path]
 pairs: that would make a tag's membership depend on what happens to be cached at
 the moment of invalidation, which is a worse contract than one that is empty
 until declared.
+
+## QueryClient defaults
+
+`createQueryClient` exists because react-query's defaults are tuned for a
+document-shaped app and this package's consumers are not building one. Two are
+changed; the deliberate part is how few.
+
+**`refetchOnWindowFocus: false`.** The default is `true`, which means returning
+to a tab reissues every active query. On a dashboard that is a visible reload of
+panels the user was reading, triggered by an action that expressed no intent to
+reload. Freshness belongs to `staleTime` and to explicit invalidation, both of
+which the app already controls.
+
+The consequence is that **the app owns error recovery**: a mounted query that has
+exhausted its retries makes no further attempt on its own while the tab stays
+open and the connection stays up, and react-query keeps serving the last
+successful `data` beside `status: 'error'` — so a session that expired under an
+open dashboard reads as current numbers rather than as an empty panel.
+`refetchOnReconnect` and `refetchOnMount` are left at react-query's defaults, so
+a dropped connection returning or a remount still refetches; in between, showing
+the error and offering a refetch is the app's job, not this package's.
+
+**A status-aware `retry`.** The default retries every rejection three times. The
+policy here splits on what the status *says*: a 5xx is a well-formed request
+meeting an unwell server, so ask again; 408, 425, and 429 name transient
+conditions — a server-side request timeout, a TLS early-data refusal, rate
+limiting — so ask again; every other 4xx says the request itself is wrong, and
+repeating it unchanged buys nothing but latency. Below 400 is not retried
+either: a 304 on the error path is a caching bug.
+
+A rejection carrying no status is retried. That covers a dropped connection, a
+CORS refusal, an abort, and a middleware that threw, and it is the deliberately
+optimistic branch — the alternative, treating an unrecognised rejection as fatal,
+turns one dropped socket into an error state. The cost of being wrong is two
+extra requests; the cost of the other default is a screen that fails on a blip.
+
+One statusless rejection is exempt, and it is this package's own.
+`ZodResponseValidationError` has no status because `createZodResponseMiddleware`
+rejects *after* a 2xx arrived and parsed: the request completed, and the body the
+server sent will not have changed by the next attempt. Retrying it costs two more
+round trips to reach the same mismatch three seconds later — precisely the cost
+the status policy above exists to avoid on a 422. `isZodResponseValidationError`
+is what the predicate narrows with, on `name` rather than `instanceof`, for the
+same duplicate-copy reason as `isHttpRequestError`.
+
+Two retries rather than react-query's three, so that with the default
+exponential `retryDelay` an error surfaces in about three seconds instead of
+seven. A panel sitting pending over a fault that will not clear is worse than an
+error state that arrives promptly.
+
+**Mutations get nothing.** react-query already does not retry them, and it is
+right: a `POST` that failed after reaching the server may have applied, and
+nothing at this layer can distinguish that from one that did not.
+
+### What is not in the defaults
+
+**`staleTime`.** How long a screen may show a stale number is a product
+decision. A package-level value would be wrong silently, in whichever direction
+it was wrong.
+
+**A `QueryCache.onError` driven by per-query `meta`.** Every consumer wants one,
+which is an argument for shipping it, and the two reasons not to are both
+concrete. The half with the value in it is the sink — the app's toast or logger
+— which this package has no business owning. And typing the `meta` it reads
+requires augmenting react-query's `Register` interface, a global declaration
+that can be made exactly once in a module graph; making it here would collide
+with the app's own augmentation and leave the consumer worse off than if the
+package had stayed out of it. The README carries it as a recipe instead.
+
+### Overriding
+
+The retry policy has to be replaceable without giving up the rest, so
+`createQueryClient` takes react-query's own `QueryClientConfig` and merges it one
+option deep: a caller's `defaultOptions.queries.retry` replaces the default of
+that name and leaves `refetchOnWindowFocus` standing. Anything outside
+`defaultOptions` — `queryCache`, `mutationCache` — passes straight through.
+
+The `queries` merge drops the caller's explicitly-`undefined` keys first, and
+that step is the difference between a sound override and a silent one. A spread
+cannot tell an absent key from one present with the value `undefined`, and the
+second shape is how conditional config is ordinarily written:
+`{ retry: cond ? false : undefined }`. Spread raw, the else-branch copies
+`retry: undefined` over the predicate, react-query resolves it as `retry ?? 3`,
+and a mounted query asks four times where it should ask once — reinstating the
+retry-everything default this whole section exists to replace. Nothing looks
+wrong from outside, either: `refetchOnWindowFocus: false` survives the same
+spread, so the client still reads as configured. Dropping the key instead is
+lossless, because react-query resolves each of these options with `?? <default>`
+or an `=== undefined` check, so absent and `undefined` already mean the same
+thing to it — there is no option where "present but undefined" says something an
+explicit value could not say more plainly.
+
+For the middle case, where the status policy is right but the shape around it is
+not, the policy is exported in three pieces: `shouldRetryRequest` (the
+react-query-shaped predicate, for wrapping), `isRetryableError` (the error
+policy, for changing how many times a request is repeated), and
+`isRetryableHttpStatus` (the status policy alone). A consumer composes rather
+than restates, so a change to the status table reaches them.
 
 ## Type-level guarantees
 

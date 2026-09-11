@@ -43,6 +43,20 @@ export class ZodResponseValidationError extends Error {
 }
 
 /**
+ * Narrows a caught value to {@link ZodResponseValidationError}.
+ *
+ * Matches on `name` rather than `instanceof` for the same reason
+ * `isHttpRequestError` does: a consumer can end up with two copies of this
+ * package in its module graph, and an error thrown by one is not `instanceof`
+ * the class the other closed over.
+ */
+export function isZodResponseValidationError(
+  value: unknown,
+): value is ZodResponseValidationError {
+  return value instanceof Error && value.name === 'ZodResponseValidationError';
+}
+
+/**
  * How to find the component schema for an operation: either a lookup table
  * keyed `${method} ${path}` (`'get /users/{id}'`), or a function for specs
  * whose naming is derivable.
