@@ -1,5 +1,12 @@
 {
   "extends": "@archon-research/tsconfig/react",
+  "compilerOptions": {
+    // `src/exports.test.ts` reads this directory's own source files to assert
+    // that the `/core` and `/primitives` subpaths import no `@visx/xychart`.
+    // Only that test is node-flavoured; nothing shipped in `dist` imports a
+    // node builtin, and `tsconfig.build.json` excludes tests entirely.
+    "types": ["node"]
+  },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx"

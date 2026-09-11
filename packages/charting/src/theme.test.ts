@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { seriesColor, buildChartTheme, chartTokens } from './theme.js';
-import type { ChartThemeConfig } from './theme.js';
+import { seriesColor, chartTokens } from './theme.js';
+import { buildChartTheme } from './xychart-theme.js';
+import type { ChartThemeConfig } from './xychart-theme.js';
 
 /**
  * The smallest config `buildChartTheme` accepts, carrying NO style blocks. Every

@@ -118,28 +118,13 @@ export { ErrorState } from './components/ErrorState.js';
 export { ErrorBoundary } from './components/ErrorBoundary.js';
 export { AsyncStateRenderer } from './components/AsyncStateRenderer.js';
 export * from './components/data-table/index.js';
-export { Avatar } from '@ark-ui/react/avatar';
-export { Menu } from '@ark-ui/react/menu';
-export { Slider } from '@ark-ui/react/slider';
-export { TreeView, createTreeCollection } from '@ark-ui/react/tree-view';
-export type { TreeCollection, TreeNode } from '@ark-ui/react/tree-view';
-export {
-  useTreeView,
-  type UseTreeViewProps,
-  type UseTreeViewReturn,
-} from '@ark-ui/react/tree-view';
-export { Tooltip } from '@ark-ui/react/tooltip';
+// The unstyled Ark UI pass-throughs, which are also their own subpath.
+export * from './ark.js';
 export type { SortingState } from '@tanstack/react-table';
 // Deprecated compatibility aliases — see their `@deprecated` JSDoc in
 // `components/data-table/types.ts` for why they're no longer straight
 // re-exports of `@tanstack/react-table`'s own types.
 export type { CellContext, ColumnDef } from './components/data-table/types.js';
-export { Tabs } from '@ark-ui/react/tabs';
-export { Toggle } from '@ark-ui/react/toggle';
-export { ToggleGroup } from '@ark-ui/react/toggle-group';
-export { Switch } from '@ark-ui/react/switch';
-export { Dialog } from '@ark-ui/react/dialog';
-export { Portal } from '@ark-ui/react/portal';
 export {
   Indicator,
   type IndicatorStatus,
@@ -152,8 +137,6 @@ export {
   type TextareaProps,
 } from './components/TextInput.js';
 export { Drawer } from './components/Drawer.js';
-export { Field } from '@ark-ui/react/field';
-export { Progress } from '@ark-ui/react/progress';
 export { Sparkline, type SparklineProps } from './components/Sparkline.js';
 export {
   Panel,

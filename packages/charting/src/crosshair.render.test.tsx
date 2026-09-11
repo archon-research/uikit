@@ -2,7 +2,7 @@ import { cleanup, render } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { Crosshair } from './cursor-layer.js';
+import { Crosshair } from './crosshair.js';
 import { chartTokens } from './theme.js';
 
 afterEach(cleanup);

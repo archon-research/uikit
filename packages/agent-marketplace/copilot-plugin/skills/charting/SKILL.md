@@ -16,10 +16,19 @@ visualization in this monorepo. The authoritative contract is
   [visx](https://github.com/airbnb/visx): UIKit owns the visual language, visx
   owns the rendering mechanics.
 - Consumers depend on `@archon-research/charting`, never on `@visx/*` directly.
-  The package re-exports the supported visx surface from its root today
-  (`XYChart`, `Axis`, `Grid`, `Tooltip`, `LineSeries`, `AreaSeries`, `BarSeries`,
-  `BarGroup`, `BarStack`, `GlyphSeries`, `buildChartTheme`); a subpath layout is
-  planned (see DESIGN.md).
+  The package re-exports the supported visx surface (`XYChart`, `Axis`, `Grid`,
+  `Tooltip`, `LineSeries`, `AreaSeries`, `BarSeries`, `BarGroup`, `BarStack`,
+  `GlyphSeries`). `buildChartTheme` is NOT part of that surface: visx's is
+  deliberately not re-exported, and the `buildChartTheme` this package ships is
+  its own token-resolving wrapper. A superset of visx's — raw-string configs
+  behave identically, token names additionally resolve — so pass token names,
+  not a bare visx `ThemeConfig`.
+- Import from the root barrel by default. Reach for a subpath when a chunk
+  boundary needs one: `/core` (tokens, legend, data table, downsamplers — no
+  `@visx/*`, ~8 kB), `/primitives` (scales, shapes, themed standalone axes,
+  brush, zoom — no `@visx/xychart`), `/xychart` (`<XYChart>` and every mark
+  reading its `DataContext` — ~210 kB, the one worth loading lazily). Same names
+  in all cases; the root is their union. See DESIGN.md.
 - Theme every chart with the package `chartTheme` (for `XYChart`); use
   `chartTokens` or `seriesColor` for custom marks and legends. All derive from the
   semantic chart tokens.

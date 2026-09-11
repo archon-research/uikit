@@ -1,6 +1,8 @@
 import { Splitter } from '@ark-ui/react/splitter';
 import { Fragment, type ReactNode } from 'react';
 
+import { deriveDefaultSizes, resolveControlledSize } from './splitSizes.js';
+
 /**
  * One pane of a `SplitLayout`.
  */
@@ -37,7 +39,8 @@ export type SplitLayoutProps = {
    * Controlled panel sizes (percent, one per panel, same order as
    * `panels`). Uncontrolled by default — omit this and `onResize`/
    * `onResizeEnd` to let Ark Splitter own the size internally, seeded from
-   * each panel's `size` weight.
+   * each panel's `size` weight. An empty array describes no panel and so
+   * counts as omitted, not as a control taking over.
    */
   size?: number[];
   onResize?: (details: { size: number[] }) => void;
@@ -48,22 +51,6 @@ const DEFAULT_MIN_SIZE = 10;
 
 const cx = (...classes: Array<string | false | null | undefined>): string =>
   classes.filter(Boolean).join(' ');
-
-/**
- * Renormalizes relative panel weights (`SplitLayoutPanel.size`, default `1`)
- * into percentages summing to 100 — the initial `defaultSize` Ark Splitter
- * seeds from. Pure and exported (but not re-exported from `index.ts`/the
- * package root) purely for `SplitLayout.test.ts` to exercise without
- * rendering. A non-positive or empty weight list falls back to an even
- * split across however many weights were given (guards against a `0`
- * total, e.g. every panel weighted `0`).
- */
-export function deriveDefaultSizes(weights: number[]): number[] {
-  if (weights.length === 0) return [];
-  const total = weights.reduce((sum, weight) => sum + weight, 0);
-  if (total <= 0) return weights.map(() => 100 / weights.length);
-  return weights.map((weight) => (weight / total) * 100);
-}
 
 /**
  * Generic N-way resizable-panel primitive over Ark Splitter — the same
@@ -88,6 +75,7 @@ export function SplitLayout({
   onResize,
   onResizeEnd,
 }: SplitLayoutProps) {
+  const controlledSize = resolveControlledSize(size);
   const defaultSize = deriveDefaultSizes(
     panels.map((panel) => panel.size ?? 1),
   );
@@ -102,8 +90,8 @@ export function SplitLayout({
     <Splitter.Root
       orientation={orientation}
       panels={arkPanels}
-      size={size}
-      defaultSize={size ? undefined : defaultSize}
+      size={controlledSize}
+      defaultSize={controlledSize ? undefined : defaultSize}
       onResize={onResize}
       onResizeEnd={onResizeEnd}
       className={cx('splitLayout__root', className)}

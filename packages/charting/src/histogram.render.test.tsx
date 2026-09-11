@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { HistogramSeries, type HistogramSeriesProps } from './histogram.js';
 import { XYChart } from './index.js';
-import { chartTheme } from './theme.js';
+import { chartTheme } from './xychart-theme.js';
 
 afterEach(cleanup);
 

@@ -1,215 +1,25 @@
-// Token-driven theme contract (see DESIGN.md). `axis*Style` are exported so a
-// hand-composed chart can style an axis unit label / custom SVG text with the
-// same tokens the themed axes use.
-export {
-  axisLabelStyle,
-  axisTickLabelStyle,
-  buildChartTheme,
-  chartTheme,
-  chartTokens,
-  seriesColor,
-} from './theme.js';
-export type { ChartThemeConfig } from './theme.js';
-
-// Typed chart color tokens: the default way to name a color in this package.
-// Props declared BY THIS PACKAGE take `ChartColor`, so `'chart.series.primary'`
-// is compile-checked while a raw string stays available as the escape hatch.
-// The raw visx re-exports (LineSeries, AreaSeries, Axis*, ...) forward visx's
-// own props and do NOT resolve token names — theme them via `buildChartTheme`
-// or pass `resolveChartColor(token)` explicitly.
-export {
-  chartColorToken,
-  chartColorTokens,
-  resolveChartColor,
-} from './chart-color.js';
-export type { ChartColor, ChartColorToken } from './chart-color.js';
-
-// Curated visx surface, so consumers depend on this package, not @visx/* directly.
-export {
-  XYChart,
-  Axis,
-  Grid,
-  // visx `Tooltip`'s `showVerticalCrosshair` renders the crosshair in a
-  // body-level portal, so it can detach from the plot on scroll; prefer
-  // `ChartCursorLayer` for an in-SVG crosshair that stays aligned with the plot.
-  Tooltip,
-  LineSeries,
-  AreaSeries,
-  BarSeries,
-  BarGroup,
-  BarStack,
-  GlyphSeries,
-  // NOTE: `buildChartTheme` is NOT re-exported from here — the token-resolving
-  // wrapper in `theme.js` (exported above) takes its place. It is a superset:
-  // raw-string configs behave identically, token names additionally work.
-  // Animated variants (spring-driven transitions between data changes).
-  AnimatedAxis,
-  AnimatedGrid,
-  AnimatedLineSeries,
-  AnimatedAreaSeries,
-  AnimatedAreaStack,
-  AnimatedBarSeries,
-  AnimatedBarGroup,
-  AnimatedBarStack,
-  AnimatedGlyphSeries,
-  // Context and event bus: the escape hatch for building custom marks that
-  // need the chart's live xScale/yScale (see `candlestick.tsx` /
-  // `reference-band.tsx`), and for cross-chart coordination (see
-  // `interaction.tsx`).
-  DataContext,
-  EventEmitterProvider,
-} from '@visx/xychart';
-
-// Curve factories (re-exported from @visx/curve so consumers don't import
-// @visx/* directly), for the `curve` prop on Line/Area series.
-export {
-  curveLinear,
-  curveMonotoneX,
-  curveNatural,
-  curveStep,
-  curveStepAfter,
-  curveStepBefore,
-  curveBasis,
-} from '@visx/curve';
-
-// Low-level visx composition primitives, re-exported so a chart that steps off
-// the single-plot `XYChart` happy path (faceted small-multiples, a custom
-// stacked area, a sorted distribution) can be composed without adding `@visx/*`
-// as a direct app dependency. Pair these with the token-themed axes below so a
-// hand-composed chart still renders on-theme. (These are already `charting`
-// dependencies; this just surfaces them.)
-export { Group } from '@visx/group';
-export { Area, AreaStack, Bar, Line, LinePath } from '@visx/shape';
-export { scaleBand, scaleLinear, scaleTime } from '@visx/scale';
-
-// Token-themed standalone axes (wrap `@visx/axis`, applying the same tokens as
-// `chartTheme`), for composed charts that render their own axes outside XYChart.
-export { AxisBottom, AxisLeft, AxisRight, AxisTop } from './axis.js';
-export type {
-  ThemedAxisBottomProps,
-  ThemedAxisLeftProps,
-  ThemedAxisRightProps,
-  ThemedAxisTopProps,
-} from './axis.js';
-
-// Time-range brush + zoom/pan.
-export { TimeRangeBrush } from './brush.js';
-export type {
-  TimeRangeBrushProps,
-  TimeRangeBrushDatum,
-  TimeRangeBrushDomain,
-} from './brush.js';
-export { ZoomPanOverlay } from './zoom.js';
-export type { ZoomPanOverlayProps, ZoomDomain } from './zoom.js';
-
-// Reference lines / threshold + confidence bands.
-export { ReferenceBand } from './reference-band.js';
-export type {
-  ReferenceBandProps,
-  ThresholdBandProps,
-  ConfidenceBandProps,
-} from './reference-band.js';
-
-// Candlestick / OHLC mark.
-export { CandlestickSeries } from './candlestick.js';
-export type { CandlestickSeriesProps } from './candlestick.js';
-
-// Provided legend (static, or interactive toggle/hover), plus the small
-// themed swatch SVG it renders per item, standalone for a hand-composed
-// legend or interactive-legend binding.
-export { ChartLegend, Swatch } from './legend.js';
-export type {
-  ChartLegendItem,
-  ChartLegendProps,
-  SwatchProps,
-} from './legend.js';
-
-// Reader layer: accessible + interactive read affordances over a chart.
-// Accessible table mirror of chart series (screen-reader / "show data").
-export { ChartDataTable } from './chart-data-table.js';
-export type { ChartDataTableProps } from './chart-data-table.js';
-// End-of-line series labels with collision-avoidance stacking.
-export { DirectLabels, resolveLabelPositions } from './direct-labels.js';
-export type { DirectLabelsProps, DirectLabelItem } from './direct-labels.js';
-// Snap-to-datum crosshair + per-series readout + positioned tooltip, plus the
-// standalone themed crosshair line it draws internally (stateless, positioned
-// via props) for a hand-composed chart that only needs the line itself.
-export { ChartCursorLayer, Crosshair, nearestStop } from './cursor-layer.js';
-export type {
-  ChartCursorLayerProps,
-  CrosshairProps,
-  CursorSeries,
-  CursorPoint,
-  CursorTooltipContext,
-} from './cursor-layer.js';
-
-// Cross-chart interaction layer (synced cursor + shared time range + cross-filter).
-export {
-  DashboardInteractionProvider,
-  SyncedChartGroup,
-  DragSelectionOverlay,
-  useDashboardFilter,
-  useDashboardInteraction,
-  useHiddenKeys,
-  useHighlightedKey,
-  useHoveredTimestamp,
-  useInteractionDispatch,
-  useInteractionSetters,
-  useInteractionValue,
-  useSelectedTimeRange,
-  useSetHiddenKeys,
-  useSetHighlightedKey,
-  useSetHoveredTimestamp,
-  useSyncedCursor,
-  useSyncedCursorHandlers,
-  useToggleHiddenKey,
-  useTimeRangeBrushGesture,
-} from './interaction.js';
-export type {
-  DashboardInteractionApi,
-  DashboardInteractionState,
-  InteractionDispatch,
-  InteractionKey,
-  PixelRange,
-  TimeRange,
-} from './interaction.js';
-
-// Responsive sizing: measure a container, derive width/height + axis margins.
-export {
-  ResponsiveChart,
-  useChartDimensions,
-  useContainerWidth,
-  deriveLeftMargin,
-  FALLBACK_CHART_WIDTH,
-} from './responsive.js';
-export type {
-  ResponsiveChartProps,
-  ChartDimensions,
-  UseChartDimensionsOptions,
-  DeriveLeftMarginOptions,
-} from './responsive.js';
-
-// Histogram + distribution marks (frequency bars, ordinal distribution with a
-// highlighted head) plus the pure binning/sorting helpers.
-export {
-  DEFAULT_BIN_COUNT,
-  DistributionSeries,
-  HistogramSeries,
-  histogramBins,
-  sortDistribution,
-} from './histogram.js';
-export type {
-  DistributionSeriesProps,
-  HistogramBin,
-  HistogramBinsOptions,
-  HistogramSeriesProps,
-} from './histogram.js';
-
-// Series downsampling / pixel conflation for large series.
-export {
-  DOWNSAMPLE_THRESHOLD,
-  downsample,
-  lttb,
-  minMaxPerPixel,
-} from './downsample.js';
-export type { DownsampleOptions, DownsampleStrategy } from './downsample.js';
+/**
+ * The root barrel: the union of the three subpath barrels, so importing from
+ * `@archon-research/charting` still reaches every export this package has.
+ *
+ * The subpaths exist so a consumer can pick a chunk boundary without a wrapper
+ * module, and they are derived from the dependency graph rather than from
+ * taste:
+ *
+ * - `./core` — no `@visx/*` import at all (~8 kB minified / ~3.5 kB gzipped):
+ *   tokens, colors, legend, data-table fallback, crosshair line, responsive
+ *   sizing, downsampling.
+ * - `./primitives` — visx, but not `@visx/xychart` (~14-50 kB minified per
+ *   visx package actually used): scales, shapes, curves, themed standalone
+ *   axes, brush, zoom.
+ * - `./xychart` — `<XYChart>` and every mark that reads its `DataContext`.
+ *   `@visx/xychart` has no entry below its own barrel, so any import from it
+ *   costs ~83 kB minified before tree-shaking; this is the subpath to load
+ *   lazily.
+ *
+ * Each name lives in exactly one of the three, so this file is a plain union
+ * and `exports.test.ts` holds that invariant.
+ */
+export * from './core.js';
+export * from './primitives.js';
+export * from './xychart.js';

@@ -2,6 +2,7 @@ import { DataContext } from '@visx/xychart';
 import { useContext, useMemo } from 'react';
 
 import { resolveChartColor, type ChartColor } from './chart-color.js';
+import { clamp } from './crosshair.js';
 import { seriesColor } from './theme.js';
 
 /** One histogram bucket: the half-open interval `[x0, x1)` and its frequency. */
@@ -87,7 +88,7 @@ export function histogramBins(
   }));
 
   for (const value of finite) {
-    const clamped = value < min ? min : value > max ? max : value;
+    const clamped = clamp(value, min, max);
     let index = Math.floor((clamped - min) / width);
     if (index < 0) index = 0;
     if (index >= count) index = count - 1;

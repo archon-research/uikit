@@ -54,8 +54,21 @@ Charts live in the separate [`@archon-research/charting`](../charting/README.md)
 
 ### Code-splitting heavy components
 
-`DataTable` (pulls TanStack Table) and `Drawer` (pulls `@zag-js/drawer`) have their own
-subpath entry points, so you can lazy-load them out of your initial bundle:
+Every component is exported from the package root, and importing from the root stays
+supported. The heavy ones also have a subpath entry point, so you can put a chunk
+boundary in front of them without a wrapper module:
+
+| Subpath | Exports | Cost, bundled alone |
+| --- | --- | --- |
+| `/data-table` | `DataTable` + column helpers (TanStack Table + Virtual) | ~278 kB min / ~85 kB gzip |
+| `/ark` | the unstyled Ark UI pass-throughs: `Dialog`, `Menu`, `Tabs`, `Tooltip`, `TreeView`, `Switch`, `Slider`, `Progress`, `Field`, `Avatar`, `Toggle`, `ToggleGroup`, `Portal` | ~251 kB min / ~74 kB gzip for all thirteen |
+| `/search-input` | `SearchInput` (Ark Combobox) | ~108 kB min / ~35 kB gzip |
+| `/drawer` | `Drawer` (Ark Drawer) | ~94 kB min / ~30 kB gzip |
+| `/info-popover` | `InfoPopover` | ~90 kB min / ~31 kB gzip |
+| `/popover` | `Popover` (Ark Popover) | ~89 kB min / ~30 kB gzip |
+| `/sidebar-layout` | `SidebarLayout` (Ark Splitter) | ~54 kB min / ~19 kB gzip |
+| `/split-layout` | `SplitLayout` (Ark Splitter) | ~50 kB min / ~18 kB gzip |
+| `/range-slider` | `RangeSlider` (Ark Slider) | ~42 kB min / ~15 kB gzip |
 
 ```typescript
 import { lazy } from 'react';
@@ -63,8 +76,14 @@ import { lazy } from 'react';
 const DataTable = lazy(() =>
   import('@archon-research/design-system/data-table').then((m) => ({ default: m.DataTable })),
 );
-// likewise: import('@archon-research/design-system/drawer')
+// likewise: import('@archon-research/design-system/drawer'), '/search-input', '/ark', ...
 ```
+
+Those are the components measurement singles out; everything else in the package
+costs single-digit kB, so a subpath for it would buy nothing a root import does not
+already give you. `/ark` is on the list because the `design-system-boundaries` lint
+preset (rightly) forbids importing `@ark-ui/react` directly, which left a consumer no
+way to reach 250 kB of Ark except through the root barrel.
 
 Every module except the theme bootstrap is marked side-effect-free
 (`"sideEffects": ["./dist/theme-bootstrap.js"]`), so importing only what you use is
