@@ -190,6 +190,18 @@ specific way mocks fail:
   throws on every write path — insert, seed, `replaceAll`, and an `update` whose
   patch moves an item onto a taken id — because that is a fixture bug rather
   than an API state.
+- **`createRequestRecorder(worker | server)`** — counting the requests a
+  scenario fires is how a refetch regression becomes an assertion, and msw
+  already knows every request it intercepts. The helper exists because the two
+  instruments a consumer reaches for first both fail silently, reporting zero
+  rather than erroring: a spy over `globalThis.fetch` misses everything, because
+  `openapi-fetch` resolves its transport once at `createClient` time and holds
+  that reference; and Resource Timing, which does record an entry for a
+  worker-fulfilled request but carries no HTTP method on it, reports a mocked
+  response indistinguishably from a cache hit, and disagrees across engines on
+  every field that might separate them. Life-cycle events have the `Request`
+  itself and behave identically in both environments, so the source parameter is
+  typed structurally (`{ events }`) and the helper stays in the root entry.
 - **`createSeededRng(seed)`** — `Math.random` in a mock makes a failing test
   unreproducible and a visual snapshot unstable. mulberry32: 32 bits of state and
   a handful of integer ops, cheap enough to call inside a handler. Statistical

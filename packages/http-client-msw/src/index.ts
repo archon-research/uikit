@@ -46,6 +46,15 @@ export {
   type MockStore,
   type MockStoreOptions,
 } from './mock-store.js';
+export {
+  createRequestRecorder,
+  type MockLifeCycleEmitter,
+  type MockLifeCycleSource,
+  type RecordedRequest,
+  type RequestRecorder,
+  type RequestRecorderOptions,
+  type RequestSelector,
+} from './request-recorder.js';
 export { createSeededRng, type SeededRng } from './seeded-rng.js';
 export {
   type MockResetCallback,
