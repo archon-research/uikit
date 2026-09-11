@@ -86,6 +86,13 @@
       "resolved": "packages/agent-marketplace/content/skills/design-bootstrap/SKILL.md"
     },
     {
+      "id": "perf-harvest",
+      "kind": "skill",
+      "sourceType": "local-authored",
+      "pinnedRevision": "local-v1",
+      "resolved": "packages/agent-marketplace/content/skills/perf-harvest/SKILL.md"
+    },
+    {
       "id": "ui-coder",
       "kind": "agent",
       "sourceType": "local-authored",
