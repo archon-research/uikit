@@ -7,7 +7,7 @@ import {
 } from 'react';
 
 import { resolveChartColor, type ChartColor } from './chart-color.js';
-import { Crosshair, clamp, nearestStop } from './crosshair.js';
+import { Crosshair, clamp, snapToStop } from './crosshair.js';
 import { chartTokens } from './theme.js';
 
 export type CursorSeries = {
@@ -148,7 +148,7 @@ export function ChartCursorLayer({
     if (stops.length === 0) return null;
     if (typeof xScale.invert === 'function') {
       const domainX = xScale.invert(svgX);
-      return snap ? (nearestStop(stops, domainX) ?? null) : domainX;
+      return snap ? (snapToStop(stops, domainX) ?? null) : domainX;
     }
     let best = stops[0]!;
     let bestDistance = Infinity;
@@ -166,15 +166,15 @@ export function ChartCursorLayer({
 
   // The drawable cursor. When snapping, the stored value is already a stop;
   // this guards against a controlled value that is not one, and against there
-  // being no stops to snap to at all, which `nearestStop` reports as
+  // being no stops to snap to at all, which `snapToStop` reports as
   // `undefined` — the same "nothing to draw" as a null cursor.
   const drawX =
-    activeX == null ? undefined : snap ? nearestStop(stops, activeX) : activeX;
+    activeX == null ? undefined : snap ? snapToStop(stops, activeX) : activeX;
 
   const indexOfActive = drawX === undefined ? -1 : stops.indexOf(drawX);
 
   const defaultStop =
-    defaultCursor == null ? undefined : nearestStop(stops, defaultCursor);
+    defaultCursor == null ? undefined : snapToStop(stops, defaultCursor);
 
   const defaultIndex =
     defaultStop === undefined ? 0 : stops.indexOf(defaultStop);

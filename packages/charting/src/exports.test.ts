@@ -111,6 +111,7 @@ const PUBLISHED_ROOT_EXPORTS = [
   'scaleLinear',
   'scaleTime',
   'seriesColor',
+  'snapToStop',
   'sortDistribution',
   'useChartDimensions',
   'useContainerWidth',

@@ -366,8 +366,10 @@ Current (exported from the package root):
   and so can detach from the plot on scroll. `Crosshair` is the stateless themed
   line it draws internally — the crosshair analog of the themed standalone axes
   — exported for a chart that only needs the line at a pixel `x` it already
-  resolved (from `useSyncedCursor`, say); `nearestStop` is the pure snapping
-  helper. Keeps its own cursor state, so it does not touch the interaction layer
+  resolved (from `useSyncedCursor`, say); `snapToStop` is the pure snapping
+  helper (`nearestStop` is its deprecated predecessor, `NaN` for an empty
+  `stops` where `snapToStop` is `undefined`, kept only because it shipped).
+  Keeps its own cursor state, so it does not touch the interaction layer
   unless the consumer feeds it a `cursor` prop.
 - **`DirectLabels`** (`direct-labels.tsx`): end-of-line series labels at the
   plot's right edge, nudged apart so adjacent labels do not collide.
@@ -424,10 +426,11 @@ across the `@visx/xychart` line without changing any export:
   88 kB. It now costs 4.4 kB; the themed standalone axes went 94.5 kB to 51.2 kB
   and `TimeRangeBrush` 125.7 kB to 66.7 kB, because none of them ever needed
   `<XYChart>` — they only needed its neighbours' colors.
-- `crosshair.tsx` took `Crosshair` and `nearestStop` out of `cursor-layer.tsx`.
-  `Crosshair` is documented above as the crosshair analog of the themed
-  standalone axes — a mark for hand-composed charts — so co-locating it with
-  `ChartCursorLayer`'s `DataContext` import put it on the wrong side of the line.
+- `crosshair.tsx` took `Crosshair` and the snapping helpers out of
+  `cursor-layer.tsx`. `Crosshair` is documented above as the crosshair analog
+  of the themed standalone axes — a mark for hand-composed charts — so
+  co-locating it with `ChartCursorLayer`'s `DataContext` import put it on the
+  wrong side of the line.
 
 Finer splits were considered and rejected on the same evidence: one subpath per
 visx package buys nothing that tree-shaking does not already do inside a tier

@@ -56,8 +56,10 @@ export type { ChartDataTableProps } from './chart-data-table.js';
 
 // The stateless themed crosshair line `ChartCursorLayer` draws internally
 // (positioned via props, no chart context), plus its pure snapping helper —
-// for a hand-composed chart that only needs the line itself.
-export { Crosshair, nearestStop } from './crosshair.js';
+// for a hand-composed chart that only needs the line itself. `snapToStop` is
+// that helper; `nearestStop` is its deprecated predecessor, kept because it
+// shipped, and differing only in reporting an empty `stops` as `NaN`.
+export { Crosshair, nearestStop, snapToStop } from './crosshair.js';
 export type { CrosshairProps } from './crosshair.js';
 
 // Responsive sizing: measure a container, derive width/height + axis margins.

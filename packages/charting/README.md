@@ -14,7 +14,7 @@ module to dynamic-import through:
 
 | Import | Contains | Cost, bundled alone |
 | --- | --- | --- |
-| `@archon-research/charting/core` | Tokens, `ChartColor`, `ChartLegend`, `Swatch`, `ChartDataTable`, `Crosshair`, `nearestStop`, `ResponsiveChart`, `downsample` | ~8 kB min / ~3.5 kB gzip — no `@visx/*` at all |
+| `@archon-research/charting/core` | Tokens, `ChartColor`, `ChartLegend`, `Swatch`, `ChartDataTable`, `Crosshair`, `snapToStop`, `ResponsiveChart`, `downsample` | ~8 kB min / ~3.5 kB gzip — no `@visx/*` at all |
 | `@archon-research/charting/primitives` | `scale*`, shapes, `curve*`, `Group`, the themed standalone axes, `TimeRangeBrush`, `ZoomPanOverlay` | ~145 kB min / ~47 kB gzip, tree-shaking down to the visx packages actually used (`@visx/axis` ~49 kB, `@visx/scale` + `@visx/curve` + `@visx/group` ~50 kB, `@visx/zoom` ~34 kB, `@visx/brush` ~28 kB, `@visx/shape` ~14 kB — each measured on its own, so they sum to more than the tier: `@visx/axis`, `@visx/brush` and `@visx/shape` all depend on `@visx/scale`, and through it on the d3 modules in `@visx/vendor`, which the tier pays for once) |
 | `@archon-research/charting/xychart` | `XYChart`, `chartTheme`, `buildChartTheme`, every `*Series`, and every mark that reads visx's `DataContext` | ~210 kB min / ~74 kB gzip |
 
@@ -92,7 +92,7 @@ Each name lives in exactly one subpath — the root barrel is their union, and
   themed swatch SVG it renders per item, standalone for a hand-composed legend.
 - `ChartCursorLayer` — a snap-to-datum crosshair with per-series readout dots
   and a positioned tooltip, keyboard-steppable between stops, plus the
-  standalone `Crosshair` line it draws and the `nearestStop` helper. Prefer it
+  standalone `Crosshair` line it draws and the `snapToStop` helper. Prefer it
   over visx `Tooltip`'s `showVerticalCrosshair`, which renders the crosshair in
   a body-level portal that can detach from the plot on scroll.
 - `DirectLabels` — end-of-line series labels with collision-avoidance stacking

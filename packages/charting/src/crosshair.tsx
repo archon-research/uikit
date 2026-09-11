@@ -25,19 +25,17 @@ export function clamp(value: number, min: number, max: number): number {
  * precondition `ChartCursorLayer` documents on its `stops` prop, and the two
  * are meant to be fed the same array.
  *
- * The empty case is `undefined` rather than `NaN` deliberately. `NaN` is
+ * The empty case is `undefined` rather than `NaN` deliberately, which is the
+ * whole reason this sits alongside {@link nearestStop}. `NaN` is
  * `number`-typed, so it type-checks its way into arithmetic and into scale and
  * SVG coordinates, where it is caught by luck if at all — `@visx/scale`
  * happens to map a non-finite input to `undefined`, which is the only reason
- * an empty `stops` does not currently paint `x1="NaN"`. `undefined` makes the
- * "no stops, no answer" case one the caller has to handle, and matches how the
- * rest of the package reports having nothing to say (`histogramBins` returns
- * `[]`, `CursorSeries.valueAt` returns `null`).
+ * an empty `stops` does not paint `x1="NaN"`. `undefined` makes the "no stops,
+ * no answer" case one the caller has to handle, and matches how the rest of
+ * the package reports having nothing to say (`histogramBins` returns `[]`,
+ * `CursorSeries.valueAt` returns `null`).
  */
-export function nearestStop(
-  stops: number[],
-  value: number,
-): number | undefined {
+export function snapToStop(stops: number[], value: number): number | undefined {
   const n = stops.length;
   if (n === 0) return undefined;
   if (value <= stops[0]!) return stops[0]!;
@@ -53,6 +51,27 @@ export function nearestStop(
     else hi = mid;
   }
   return value - stops[lo]! <= stops[hi]! - value ? stops[lo]! : stops[hi]!;
+}
+
+/**
+ * {@link snapToStop}, but reporting an empty `stops` as `NaN` instead of
+ * `undefined`. Identical in every other case.
+ *
+ * @deprecated Use {@link snapToStop}. `NaN` here is `number`-typed, so the
+ * empty-`stops` case flows unchallenged into arithmetic, scale inputs and SVG
+ * coordinates rather than being a case the caller has to handle — and a
+ * `Number.isNaN` guard is the only thing that catches it, which nothing in
+ * this package had.
+ *
+ * Kept, with its signature and its `NaN` untouched, because it shipped in
+ * `@archon-research/charting` 0.10.1: narrowing the return to
+ * `number | undefined` stops a strict-TS consumer assigning it to a `number`
+ * from compiling, and silently inverts any `Number.isNaN(...)` guard on the
+ * old sentinel (`Number.isNaN(undefined)` is `false`). That is a compatibility
+ * debt, not an endorsement — no new call site should reach for it.
+ */
+export function nearestStop(stops: number[], value: number): number {
+  return snapToStop(stops, value) ?? NaN;
 }
 
 export type CrosshairProps = {
