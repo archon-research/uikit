@@ -137,6 +137,28 @@ const names = (mod: object) => Object.keys(mod).sort();
 
 const SRC_DIR = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Every syntactic form that names a module, because the boundary assertions
+ * below are only as complete as the set of forms this recognises.
+ *
+ * `from '...'` alone — the obvious one, and what this walked at first — sees
+ * neither of the two ways to reach a module without binding a name from it. A
+ * bare `import '@visx/xychart';` and an `import('@visx/xychart')` both put the
+ * whole ~83 kB barrel back in the `/core` chunk while every assertion below
+ * stays green, which is the one outcome this file is written to prevent. Each
+ * pattern is anchored on `import`/`from` immediately before the quote so a
+ * module specifier quoted in prose (this package's comments are long) is not
+ * mistaken for an edge.
+ */
+const MODULE_SPECIFIER_PATTERNS = [
+  // `import x from '...'`, `import type { X } from '...'`, `export * from '...'`.
+  /\bfrom\s*'([^']+)'/g,
+  // `import '...';` — evaluated for effect, so it binds no name to match on.
+  /\bimport\s+'([^']+)'/g,
+  // `import('...')`, with the whitespace the formatter may wrap it across.
+  /\bimport\s*\(\s*'([^']+)'/g,
+];
+
 /** Every module specifier reachable from `entry` by following relative imports. */
 function reachableSpecifiers(entry: string): Set<string> {
   const found = new Set<string>();
@@ -146,8 +168,10 @@ function reachableSpecifiers(entry: string): Set<string> {
     if (visited.has(file)) return;
     visited.add(file);
     const source = readFileSync(file, 'utf8');
-    for (const match of source.matchAll(/from '([^']+)'/g)) {
-      const spec = match[1]!;
+    const specifiers = MODULE_SPECIFIER_PATTERNS.flatMap((pattern) => [
+      ...source.matchAll(pattern),
+    ]).map((match) => match[1]!);
+    for (const spec of specifiers) {
       if (!spec.startsWith('.')) {
         found.add(spec);
         continue;
