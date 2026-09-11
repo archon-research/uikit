@@ -51,27 +51,44 @@ const reactConfig = {
     'react/unsupported-syntax': 'error',
     'react/use-memo': 'error',
     'react/void-use-memo': 'error',
+    // Enabled here rather than with the other 18: it had 3 findings, all
+    // resetting state an external system owns, and each is fixed in a layer
+    // below this one — `ThemeProvider`'s mount-time `matchMedia` read,
+    // `usePlayback`'s live-buffer reset, and `mcp-connect`'s confirmation
+    // countdown. With the last of them landed, this is the layer that earns it.
+    'react/set-state-in-effect': 'error',
     // Deferred, with the reason and the current count. An unnamed rule and a
     // deliberately-deferred one must not look the same to a reader.
     //
-    // 3 findings, all resetting state an external system owns, where the
-    // compiler's remedy (remount on a `key`) is unavailable to a hook:
-    // `ThemeProvider`'s mount-time `matchMedia` read (the other half of the
-    // anti-flash seed), `usePlayback`'s live-buffer reset, and
-    // `mcp-connect`'s confirmation countdown. Each is fixed in a later layer;
-    // this flips to `error` once the last of them lands.
-    'react/set-state-in-effect': 'off',
     // Bailouts and dependency rules, deferred together: the suppressions are
     // what mask the other two, so removing them is the fix that unblocks all
-    // three. Counts with disables stripped: `rule-suppression` 5,
-    // `exhaustive-effect-dependencies` 5, `memo-dependencies` 1, `todo` 5,
-    // `incompatible-library` 1 (@tanstack/react-virtual's return is not
-    // memoizable — a library fact, not repo debt).
+    // three. Counts below are each rule's worse number across the two runs the
+    // note above prescribes, measured over every package that consumes this
+    // preset: `rule-suppression` 5 — all of them from the disables-in-place
+    // run, since stripping a suppression is what removes the finding, and all
+    // of them suppressions of `react-hooks/*` rules, which is the only kind
+    // this rule sees; `exhaustive-effect-dependencies` 3, `memo-dependencies`
+    // 2, `todo` 5, `incompatible-library` 1 (@tanstack/react-virtual's return
+    // is not memoizable — a library fact, not repo debt). All but the first
+    // are from the disables-stripped run.
     'react/rule-suppression': 'off',
     'react/exhaustive-effect-dependencies': 'off',
     'react/memo-dependencies': 'off',
     'react/todo': 'off',
     'react/incompatible-library': 'off',
+
+    // --- react-perf: deliberately NOT enabled --------------------------------
+    //
+    // Measured in a consumer before this preset existed: `react-perf/*`
+    // reported 106 findings, nearly all `className={css({...})}` and
+    // JSX-passed-as-a-prop — i.e. precisely the hand-memoization the React
+    // Compiler exists to remove. Enabling it would fight the compiler rules
+    // above, telling authors to memoize by hand what the compiler already
+    // memoizes for them.
+    //
+    // Recorded here rather than in a ticket so it is not re-proposed after
+    // someone reads a blog post. If the compiler is ever turned OFF for a
+    // consumer, this trade-off changes and is worth revisiting then.
   },
 };
 

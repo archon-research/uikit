@@ -2,6 +2,8 @@ import { scaleLinear } from '@visx/scale';
 import { Zoom } from '@visx/zoom';
 import { useEffect, useMemo, type ReactNode } from 'react';
 
+import { useLatest } from './use-latest.js';
+
 export type ZoomDomain = [number, number];
 
 /** The subset of `@visx/zoom`'s render-prop object this overlay relies on. */
@@ -70,18 +72,25 @@ function ZoomDomainEffect({
   onDomainChange: (window: ZoomDomain) => void;
 }) {
   const { scaleX, translateX } = zoom.transformMatrix;
-  const invert = useMemo(() => {
-    const scale = scaleLinear({ domain: [0, width], range: [0, width] });
-    return (px: number) => scale.invert((px - translateX) / scaleX);
-  }, [translateX, scaleX, width]);
+
+  // The emit inputs are read, never depended on. `onDomainChange` normally
+  // feeds the chart's own `domain` prop straight back in, so `fullScale` —
+  // derived from that domain — takes a new identity on every emit. Listing
+  // either as a dependency would make this effect emit because it just
+  // emitted. The zoom transform is the only honest trigger.
+  const emitRef = useLatest({ fullScale, width, onDomainChange });
 
   useEffect(() => {
-    const start = fullScale(invert(0));
-    const end = fullScale(invert(width));
-    onDomainChange(start <= end ? [start, end] : [end, start]);
-    // Re-derive only when the transform actually changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scaleX, translateX]);
+    const emit = emitRef.current;
+    const scale = scaleLinear({
+      domain: [0, emit.width],
+      range: [0, emit.width],
+    });
+    const invert = (px: number) => scale.invert((px - translateX) / scaleX);
+    const start = emit.fullScale(invert(0));
+    const end = emit.fullScale(invert(emit.width));
+    emit.onDomainChange(start <= end ? [start, end] : [end, start]);
+  }, [scaleX, translateX, emitRef]);
 
   return null;
 }

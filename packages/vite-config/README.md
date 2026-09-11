@@ -115,7 +115,7 @@ that the excluded trees really do come out untouched.
 
 The compiler's own static analysis is available as oxlint rules, and the `react`
 preset in [`@archon-research/oxlint-config`](../oxlint-config/README.md) enables
-18 of them. A consumer on that preset gets the build and the lint agreeing
+19 of them. A consumer on that preset gets the build and the lint agreeing
 without configuring anything.
 
 They are named one at a time — `react/hooks`, `react/purity`,
@@ -125,6 +125,6 @@ into one rule per compiler diagnostic, matching `eslint-plugin-react-hooks` v6,
 and naming the old umbrella is now a hard config-parse failure:
 `Rule 'react-compiler' not found in plugin 'react'`.
 
-Six further split rules are deferred to `off` in that preset, each with its
+Five further split rules are deferred to `off` in that preset, each with its
 reason and current finding count recorded beside it in
 [`react.ts`](../oxlint-config/react.ts).

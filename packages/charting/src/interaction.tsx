@@ -144,29 +144,42 @@ export function DashboardInteractionProvider({
     highlightedKey: null,
     hiddenKeys: EMPTY_HIDDEN_KEYS,
   });
-  const listenersRef = useRef<Map<InteractionKey, Set<() => void>>>(new Map());
+  // Created once, by `useState`'s lazy initialiser rather than by assigning a
+  // ref mid-render: writing `ref.current` while rendering is unsafe under
+  // concurrent rendering (a render may be thrown away) and the React Compiler
+  // rejects it. `useState` gives the same "allocate exactly one Map, ever"
+  // guarantee with none of that, and the identity it hands back is stable for
+  // the lifetime of the provider — which is what the callbacks below rely on.
+  const [listeners] = useState<Map<InteractionKey, Set<() => void>>>(
+    () => new Map(),
+  );
 
-  const notify = useCallback((key: InteractionKey) => {
-    for (const listener of listenersRef.current.get(key) ?? []) listener();
-  }, []);
+  const notify = useCallback(
+    (key: InteractionKey) => {
+      for (const listener of listeners.get(key) ?? []) listener();
+    },
+    [listeners],
+  );
 
-  // Stable forever: closes over refs only, never over `timeRange` /
-  // `hoveredTimestamp` / etc, so its identity survives every state update
-  // above. That stability is what lets `InteractionStoreContext` skip
-  // re-rendering its consumers when this provider re-renders for an
+  // Stable forever: closes over `listeners` and refs only, never over
+  // `timeRange` / `hoveredTimestamp` / etc, so its identity survives every
+  // state update above. That stability is what lets `InteractionStoreContext`
+  // skip re-rendering its consumers when this provider re-renders for an
   // unrelated field (see the type's doc comment).
-  const subscribe = useCallback((key: InteractionKey, onChange: () => void) => {
-    const listeners = listenersRef.current;
-    let set = listeners.get(key);
-    if (!set) {
-      set = new Set();
-      listeners.set(key, set);
-    }
-    set.add(onChange);
-    return () => {
-      set!.delete(onChange);
-    };
-  }, []);
+  const subscribe = useCallback(
+    (key: InteractionKey, onChange: () => void) => {
+      let set = listeners.get(key);
+      if (!set) {
+        set = new Set();
+        listeners.set(key, set);
+      }
+      set.add(onChange);
+      return () => {
+        set!.delete(onChange);
+      };
+    },
+    [listeners],
+  );
 
   const getSnapshot = useCallback(
     (key: InteractionKey) => valuesRef.current[key],

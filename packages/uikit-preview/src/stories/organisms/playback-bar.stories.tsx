@@ -110,6 +110,8 @@ function useFakeLiveSource(): LivePlaybackSource<EventPayload> {
     }, 1500);
 
     return () => clearInterval(interval);
+    // `listeners` is stable for the life of the hook, so the interval is still
+    // created exactly once.
   }, [listeners]);
 
   return useMemo(

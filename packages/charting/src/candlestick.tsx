@@ -4,6 +4,7 @@ import { useContext, useEffect } from 'react';
 
 import { resolveChartColor, type ChartColor } from './chart-color.js';
 import { seriesColor } from './theme.js';
+import { useLatest } from './use-latest.js';
 
 export type CandlestickSeriesProps<Datum> = {
   /** Unique key for this series, like `XYChart` series `dataKey`. */
@@ -90,18 +91,36 @@ export function CandlestickSeries<Datum>({
   const upFill = resolveChartColor(upColor);
   const downFill = resolveChartColor(downColor);
 
+  // The accessors are read at register time but are deliberately not
+  // dependencies. They are routinely passed inline (`xAccessor={(d) =>
+  // d.index}`), so a fresh identity arrives with every render — and
+  // re-registering pushes a new registry into `DataContext`, which re-renders
+  // this component, which would register again. Using the accessors this
+  // render supplies, while re-registering only when the series itself changes,
+  // keeps the previous behaviour and makes the dependency list honest.
+  const accessorsRef = useLatest({ xAccessor, highAccessor, lowAccessor });
+
   useEffect(() => {
     if (!registerData) return;
+    const accessors = accessorsRef.current;
     const highKey = `${dataKey}-high`;
     const lowKey = `${dataKey}-low`;
     registerData([
-      { key: highKey, data, xAccessor, yAccessor: highAccessor },
-      { key: lowKey, data, xAccessor, yAccessor: lowAccessor },
+      {
+        key: highKey,
+        data,
+        xAccessor: accessors.xAccessor,
+        yAccessor: accessors.highAccessor,
+      },
+      {
+        key: lowKey,
+        data,
+        xAccessor: accessors.xAccessor,
+        yAccessor: accessors.lowAccessor,
+      },
     ]);
     return () => unregisterData?.([highKey, lowKey]);
-    // Re-register only when the identity of the series inputs changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataKey, data, registerData, unregisterData]);
+  }, [dataKey, data, registerData, unregisterData, accessorsRef]);
 
   if (!xScale || !yScale) return null;
 

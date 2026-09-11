@@ -6,7 +6,7 @@ import {
   useDataTable,
 } from '@archon-research/design-system';
 import type { SortingState } from '@tanstack/react-table';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 
 import { css } from '../../../styled-system/css';
 
@@ -470,17 +470,18 @@ export const ColumnResizeReorderPin = () => {
 };
 
 export const MultiRowSelection = () => {
-  const [selectedRows, setSelectedRows] = useState<Row[]>([]);
   const table = useDataTable(rows, columns as never, {
     enableSorting: true,
     enableRowSelection: true,
   });
 
-  const selectedRowModel = table.getSelectedRowModel();
-  useEffect(() => {
-    setSelectedRows(selectedRowModel.rows.map((row) => row.original));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [table.state.rowSelection]);
+  // Derived during render rather than mirrored into state by an effect. The
+  // effect had to lie about its dependencies (the row model is a fresh object
+  // every render, so listing it looped) and rendered one commit behind the
+  // selection; reading the model directly is both honest and in sync.
+  const selectedRows = table
+    .getSelectedRowModel()
+    .rows.map((row) => row.original);
 
   return (
     <div className={wrapperClassName}>

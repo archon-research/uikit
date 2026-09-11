@@ -92,6 +92,10 @@ const ControlPreviewInner = () => {
   const [theme, setTheme] = useState<Theme>('light');
 
   // The Ladle story catalogue (id -> {name, levels}); fetched once for search.
+  // State, not a ref: the catalogue arrives asynchronously and is read during
+  // render (the "Showing:" title below), so the component has to re-render when
+  // it lands. As a ref it was written without a re-render, which left the title
+  // showing the raw story id until some unrelated state change repainted.
   const [stories, setStories] = useState<Stories>({});
 
   const titleOf = (id: string): string => {

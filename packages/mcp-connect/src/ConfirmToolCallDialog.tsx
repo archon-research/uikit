@@ -2,8 +2,8 @@
 import { Button } from '@archon-research/design-system';
 import { AlertTriangle, ChevronDown, ChevronRight, X } from 'lucide-react';
 import {
-  useCallback,
   useEffect,
+  useMemo,
   useReducer,
   useRef,
   useState,
@@ -16,40 +16,49 @@ import type { PendingCallRecord } from './types.js';
 // Countdown hook
 // ---------------------------------------------------------------------------
 
-function useSecondsRemaining(expiresAt: string | null): number {
-  const calc = useCallback(() => {
-    if (!expiresAt) {
-      return 0;
-    }
-
-    const diff = Math.floor(
-      (new Date(expiresAt).getTime() - Date.now()) / 1000,
-    );
-    return Math.max(0, diff);
-  }, [expiresAt]);
-
-  const [secondsRemaining, setSecondsRemaining] = useState(calc);
+/**
+ * Seconds left before `expiresAt`, ticking once a second. `null` when
+ * `expiresAt` does not parse: unknown, which is not the same as expired.
+ *
+ * The clock reading lives in state rather than being read during render:
+ * render has to be pure, and `Date.now()` is not. The interval owns it.
+ *
+ * The interval is the only writer, and it stops itself at the deadline - so the
+ * reading is only as fresh as the last tick, and it stops advancing once the
+ * prompt it was mounted for has run out. Call this from a component that is
+ * remounted per prompt (see `ConfirmToolCallCard`, keyed on `callId`), never
+ * from one that outlives the prompt: the mount is what seeds a fresh reading.
+ */
+function useSecondsRemaining(expiresAt: string): number | null {
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- can't derive during render (`calc` reads `Date.now()`); see the PR description.
-    setSecondsRemaining(calc());
-
-    if (!expiresAt) {
+    const deadline = new Date(expiresAt).getTime();
+    // An unparseable stamp has no deadline to stop at: `NaN - reading <= 0` is
+    // false forever, so the interval below would re-render the card every
+    // second for the whole life of the prompt. Nothing to count, so no timer.
+    if (!Number.isFinite(deadline)) {
       return;
     }
 
     const interval = setInterval(() => {
-      const next = calc();
-      setSecondsRemaining(next);
-      if (next <= 0) {
+      const reading = Date.now();
+      setNow(reading);
+      // Stop at the deadline: the value is clamped at zero from here on, so
+      // further ticks would only cost renders.
+      if (deadline - reading <= 0) {
         clearInterval(interval);
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [calc, expiresAt]);
+  }, [expiresAt]);
 
-  return secondsRemaining;
+  const deadline = new Date(expiresAt).getTime();
+  if (!Number.isFinite(deadline)) {
+    return null;
+  }
+  return Math.max(0, Math.floor((deadline - now) / 1000));
 }
 
 // ---------------------------------------------------------------------------
@@ -79,14 +88,6 @@ export function ConfirmToolCallDialog({
   onDeny,
 }: ConfirmToolCallDialogProps) {
   const isOpen = pendingCall !== null;
-  const [detailsOpen, toggleDetails] = useReducer(
-    (prev: boolean) => !prev,
-    false,
-  );
-  // Button does not forward ref; use a wrapper div for auto-focus
-  const approveFocusRef = useRef<HTMLDivElement>(null);
-
-  const secondsRemaining = useSecondsRemaining(pendingCall?.expiresAt ?? null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -115,36 +116,9 @@ export function ConfirmToolCallDialog({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isOpen, onDeny]);
 
-  // Focus the approve button wrapper when the dialog opens
-  useEffect(() => {
-    if (isOpen) {
-      const focusable =
-        approveFocusRef.current?.querySelector<HTMLButtonElement>('button');
-      focusable?.focus();
-    }
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- `pendingCall?.callId` is a deliberate trigger-only dep; see the PR description.
-  }, [isOpen, pendingCall?.callId]);
-
   if (!isOpen || !pendingCall) {
     return null;
   }
-
-  const totalTimeout = pendingCall.expiresAt
-    ? Math.round(
-        (new Date(pendingCall.expiresAt).getTime() -
-          new Date(pendingCall.createdAt).getTime()) /
-          1000,
-      )
-    : 120;
-  const progressPct =
-    totalTimeout > 0 ? (secondsRemaining / totalTimeout) * 100 : 0;
-
-  const countdownStyle: CSSProperties = {
-    width: `${progressPct}%`,
-    transition: 'width 1s linear',
-  };
-
-  const argsJson = JSON.stringify(pendingCall.toolArgs, null, 2);
 
   return (
     <div
@@ -162,77 +136,179 @@ export function ConfirmToolCallDialog({
         style={backdropStyle}
       />
 
-      <div style={cardStyle}>
-        {/* Header */}
-        <div style={headerStyle}>
-          <div style={headerLeadingStyle}>
-            <AlertTriangle
-              size={16}
-              aria-hidden
-              style={{
-                flexShrink: 0,
-                color: 'var(--colors-warning-default, #d97706)',
-              }}
-            />
-            <span style={toolNameStyle}>{pendingCall.toolName}</span>
-            {queueLength > 1 ? (
-              <span style={queueBadgeStyle}>1 of {queueLength} pending</span>
-            ) : null}
-          </div>
-          <Button iconOnly aria-label="Deny and close" onClick={onDeny}>
-            <X size={14} aria-hidden />
+      {/*
+        Keyed on the call: the card owns the countdown, and the countdown's
+        clock reading is seeded at mount and then only advanced by an interval
+        that stops itself at the deadline. Reusing the card across prompts would
+        carry the previous prompt's reading into the next one and show it time
+        that has already gone. Remounting is what makes the first frame honest.
+      */}
+      <ConfirmToolCallCard
+        key={pendingCall.callId}
+        pendingCall={pendingCall}
+        queueLength={queueLength}
+        onApprove={onApprove}
+        onDeny={onDeny}
+      />
+    </div>
+  );
+}
+
+type ConfirmToolCallCardProps = {
+  pendingCall: PendingCallRecord;
+  queueLength: number;
+  onApprove: () => void;
+  onDeny: () => void;
+};
+
+/** The dialog card for one pending call. Mounted once per `callId`. */
+function ConfirmToolCallCard({
+  pendingCall,
+  queueLength,
+  onApprove,
+  onDeny,
+}: ConfirmToolCallCardProps) {
+  const [detailsOpen, toggleDetails] = useReducer(
+    (prev: boolean) => !prev,
+    false,
+  );
+
+  // `Button` does not forward a ref, so focus goes through a wrapper div.
+  // Mounting is the "new prompt" event - the card is keyed on `callId` - so
+  // this fires exactly when the dialog opens and on every prompt after it,
+  // which is what the parent used to express as a trigger-only dependency.
+  const approveFocusRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    approveFocusRef.current
+      ?.querySelector<HTMLButtonElement>('button')
+      ?.focus();
+  }, []);
+
+  const rawSecondsRemaining = useSecondsRemaining(pendingCall.expiresAt);
+
+  // Derived from props that are fixed for this card's keyed lifetime, so it is
+  // computed once rather than on each of the ~120 countdown renders.
+  const totalTimeout = useMemo(
+    () =>
+      Math.round(
+        (new Date(pendingCall.expiresAt).getTime() -
+          new Date(pendingCall.createdAt).getTime()) /
+          1000,
+      ),
+    [pendingCall.expiresAt, pendingCall.createdAt],
+  );
+
+  // Both stamps are minted by the relay; `now` is this browser's clock. A
+  // browser 30s behind the server reads 150s left of a 120s window - "Expires
+  // in 150s" over a 125%-wide bar. The window the server granted is the
+  // ceiling no honest reading can pass, so clamp to it. This bounds skew only:
+  // the first frame of each prompt is made honest by the per-`callId` remount
+  // above, not by this, and the clamp cannot stand in for it - a prompt that
+  // waited in the queue is already part-spent when it reaches the head, so a
+  // stale reading still lands on the window, not on what is actually left.
+  const secondsRemaining =
+    rawSecondsRemaining !== null && totalTimeout > 0
+      ? Math.min(rawSecondsRemaining, totalTimeout)
+      : rawSecondsRemaining;
+
+  const progressPct =
+    secondsRemaining !== null && totalTimeout > 0
+      ? (secondsRemaining / totalTimeout) * 100
+      : 0;
+
+  const countdownStyle: CSSProperties = {
+    width: `${progressPct}%`,
+    transition: 'width 1s linear',
+  };
+
+  // The countdown re-renders this card once a second, and `toolArgs` is
+  // exactly the large payload a confirmation dialog exists for. Pretty-print it
+  // when the details are actually open, and only once per payload - not ~120
+  // times into a collapsed section that never renders the string.
+  const argsJson = useMemo(
+    () => (detailsOpen ? JSON.stringify(pendingCall.toolArgs, null, 2) : null),
+    [detailsOpen, pendingCall.toolArgs],
+  );
+
+  return (
+    <div style={cardStyle}>
+      {/* Header */}
+      <div style={headerStyle}>
+        <div style={headerLeadingStyle}>
+          <AlertTriangle
+            size={16}
+            aria-hidden
+            style={{
+              flexShrink: 0,
+              color: 'var(--colors-warning-default, #d97706)',
+            }}
+          />
+          <span style={toolNameStyle}>{pendingCall.toolName}</span>
+          {queueLength > 1 ? (
+            <span style={queueBadgeStyle}>1 of {queueLength} pending</span>
+          ) : null}
+        </div>
+        <Button iconOnly aria-label="Deny and close" onClick={onDeny}>
+          <X size={14} aria-hidden />
+        </Button>
+      </div>
+
+      {/* Countdown progress bar */}
+      <div style={progressTrackStyle} aria-hidden>
+        <div style={{ ...progressBarStyle, ...countdownStyle }} />
+      </div>
+
+      {/* Body */}
+      <div style={bodyStyle}>
+        <p id="confirm-tool-call-summary" style={summaryStyle}>
+          {pendingCall.summary}
+        </p>
+
+        <div style={expiryStyle}>{expiryLabel(secondsRemaining)}</div>
+
+        {/* Collapsible args preview */}
+        <button
+          type="button"
+          style={detailsToggleStyle}
+          onClick={toggleDetails}
+          aria-expanded={detailsOpen}
+        >
+          {detailsOpen ? (
+            <ChevronDown size={12} aria-hidden />
+          ) : (
+            <ChevronRight size={12} aria-hidden />
+          )}
+          <span>Show details</span>
+        </button>
+
+        {argsJson !== null ? <pre style={argsPreStyle}>{argsJson}</pre> : null}
+      </div>
+
+      {/* Footer */}
+      <div style={footerStyle}>
+        <Button aria-label="Deny tool call" onClick={onDeny}>
+          Deny
+        </Button>
+        <div ref={approveFocusRef} style={{ display: 'contents' }}>
+          <Button aria-label="Approve tool call" onClick={onApprove}>
+            Approve
           </Button>
-        </div>
-
-        {/* Countdown progress bar */}
-        <div style={progressTrackStyle} aria-hidden>
-          <div style={{ ...progressBarStyle, ...countdownStyle }} />
-        </div>
-
-        {/* Body */}
-        <div style={bodyStyle}>
-          <p id="confirm-tool-call-summary" style={summaryStyle}>
-            {pendingCall.summary}
-          </p>
-
-          <div style={expiryStyle}>
-            {secondsRemaining > 0
-              ? `Expires in ${secondsRemaining}s`
-              : 'Expired'}
-          </div>
-
-          {/* Collapsible args preview */}
-          <button
-            type="button"
-            style={detailsToggleStyle}
-            onClick={toggleDetails}
-            aria-expanded={detailsOpen}
-          >
-            {detailsOpen ? (
-              <ChevronDown size={12} aria-hidden />
-            ) : (
-              <ChevronRight size={12} aria-hidden />
-            )}
-            <span>Show details</span>
-          </button>
-
-          {detailsOpen ? <pre style={argsPreStyle}>{argsJson}</pre> : null}
-        </div>
-
-        {/* Footer */}
-        <div style={footerStyle}>
-          <Button aria-label="Deny tool call" onClick={onDeny}>
-            Deny
-          </Button>
-          <div ref={approveFocusRef} style={{ display: 'contents' }}>
-            <Button aria-label="Approve tool call" onClick={onApprove}>
-              Approve
-            </Button>
-          </div>
         </div>
       </div>
     </div>
   );
+}
+
+/**
+ * The countdown line. An unknown deadline reads as unknown: calling a call
+ * "Expired" that the relay will still accept is the more misleading of the two.
+ */
+function expiryLabel(secondsRemaining: number | null): string {
+  if (secondsRemaining === null) {
+    return 'Expiry unknown';
+  }
+  return secondsRemaining > 0 ? `Expires in ${secondsRemaining}s` : 'Expired';
 }
 
 // ---------------------------------------------------------------------------
