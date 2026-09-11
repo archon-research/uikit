@@ -6,6 +6,7 @@
   "type": "module",
   "files": [
     "dist",
+    "code-splitting.ts",
     "react-compiler.ts"
   ],
   "scripts": {
@@ -20,6 +21,10 @@
     "test": "npm run build && vitest run"
   },
   "exports": {
+    "./code-splitting": {
+      "types": "./dist/code-splitting.d.ts",
+      "default": "./dist/code-splitting.js"
+    },
     "./react-compiler": {
       "types": "./dist/react-compiler.d.ts",
       "default": "./dist/react-compiler.js"
