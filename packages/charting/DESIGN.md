@@ -260,8 +260,9 @@ The package exposes:
 
 `XYChart` consumes `chartTheme`; primitive-based components (`ReferenceBand`,
 `CandlestickSeries`, `TimeRangeBrush`, `ChartLegend`, the themed standalone
-axes, `ChartCursorLayer`, `HistogramSeries`/`DistributionSeries`, and the
-planned `Sparkline`) read `chartTokens`/`seriesColor` directly. All derive from the one
+axes, `ChartCursorLayer`, `SyncedTooltip`, `HistogramSeries`/
+`DistributionSeries`, and the planned `Sparkline`) read
+`chartTokens`/`seriesColor` directly. All derive from the one
 token contract, so they render consistently.
 
 This package owns chart concerns only. Card chrome (a paneled container with a
@@ -385,6 +386,12 @@ Current (exported from the package root):
   `stops` where `snapToStop` is `undefined`, kept only because it shipped).
   Keeps its own cursor state, so it does not touch the interaction layer
   unless the consumer feeds it a `cursor` prop.
+- **`SyncedTooltip`** (`synced-tooltip.tsx`): the tooltip readout for a synced
+  group, driven by the shared cursor instead of visx's event bus — a card (and,
+  by default, a crosshair and per-series readout dots) written onto
+  already-mounted nodes rather than re-rendered. Opt-in and additive: the bus
+  is still there, so a panel still using visx `Tooltip` is unaffected. See the
+  dedicated section below.
 - **`DirectLabels`** (`direct-labels.tsx`): end-of-line series labels at the
   plot's right edge, nudged apart so adjacent labels do not collide.
   `resolveLabelPositions` is the pure placement function behind it — ideal `y`s
@@ -692,6 +699,114 @@ one, like the rest of the interaction layer: a chart whose legend silently does
 nothing is worse than a chart that fails to mount. `DirectLabels` is the single
 exception — it already shipped and already renders standalone, so it reads the
 hidden set only when a provider happens to be there.
+
+## Tooltip readout: off the shared cursor, not the event bus
+
+`SyncedChartGroup` installs one `EventEmitterProvider` above every panel. That
+is what makes a visx `<Tooltip>` in one chart respond to a hover in another, and
+it is the right default for two or three panels. It stops being free at scale,
+because of how the bus distributes: **one pointer move fans out to every
+panel's `Tooltip`**, and each one independently runs a nearest-datum lookup over
+its own series, updates its own tooltip context, and re-renders its own portal.
+Fifteen panels is fifteen tooltip pipelines reacting to a single hover, at
+pointer-move frequency.
+
+Be honest about the size of this. In the downstream profile that prompted the
+work, the dominant cost was app-side — an accidentally quadratic series
+derivation — not the kit. The bus fan-out was a **secondary** contributor. It is
+real and worth removing from a fifteen-panel dashboard; it is not the thing that
+made one slow.
+
+### The pattern
+
+Route the hover the other way round. The pointer publishes **one number** to the
+interaction store, and each panel resolves that number against its own data:
+
+1. **Publish once.** `useSyncedCursorHandlers(xAccessor)` on the `<XYChart>` the
+   pointer is over reads the timestamp off the nearest datum and writes it to
+   `hoveredTimestamp`. It takes the setter from the stable dispatch, so the
+   publishing chart does not re-render either.
+2. **Resolve per chart.** Each panel snaps that value to its own sorted stops
+   with one binary search (`snapToStop`) and reads its own series at that stop.
+   A panel sampled differently from the publisher lands on a real datum of its
+   own instead of interpolating, and no panel ever learns another's pixel space.
+3. **Render that chart's values.** The crosshair half of this already shipped: a
+   controlled `<ChartCursorLayer cursor={hoveredTimestamp} …>` (see the
+   `SyncedCrosshair` story). The readout half is the same idea carried through
+   to the card.
+
+That much needs no new API — `useSyncedCursor` + a controlled `ChartCursorLayer`
+and its tooltip render prop express it today, and a consumer already on those
+rails is already off the bus for everything except the tooltip.
+
+### `SyncedTooltip`
+
+`SyncedTooltip` is that pattern packaged, with one thing added: it does not
+re-render. A controlled `ChartCursorLayer` still costs each panel a render per
+pointer move, because the panel has to read `hoveredTimestamp` through React to
+pass it down. `SyncedTooltip` reads the store through `useInteractionStore()`
+instead — `get`/`subscribe` **without** `useSyncExternalStore`, the seam
+`EmphasisLayer` established for hover-frequency effects — and writes the result
+straight onto the card, the dots and the crosshair line it mounted once.
+
+```tsx
+function Panel({ data }: { data: Point[] }) {
+  const handlers = useSyncedCursorHandlers<Point>((d) => d.t);
+  return (
+    <XYChart … {...handlers}>
+      <LineSeries dataKey="tvl" data={data} … />
+      <SyncedTooltip
+        stops={STOPS}
+        formatX={formatTime}
+        series={[
+          {
+            id: 'tvl',
+            label: 'TVL',
+            color: 'chart.series.primary',
+            valueAt: (t) => byTime.get(t) ?? null,
+            format: usd,
+          },
+        ]}
+      />
+    </XYChart>
+  );
+}
+```
+
+A panel written this way calls no reactive hook at all: a pointer move costs it
+one binary search and a handful of `setAttribute`/`textContent` writes, and zero
+commits. `SyncedTooltipSeries` is a superset of `ChartCursorLayer`'s
+`CursorSeries`, so the same array feeds both when a chart wants that layer's
+pointer/keyboard input as well; pass `marks={false}` to let the cursor layer
+keep drawing the line and dots.
+
+Rows for series in `hiddenKeys` are dropped, the way `DirectLabels` drops their
+labels — the same imperative read, so hiding a series from the legend does not
+re-render the readout either.
+
+`synced-tooltip.test.tsx` holds the claim up the way `emphasis.test.tsx` does:
+a `<Profiler>` commit count and per-mark render counters across a pointer sweep,
+the DOM node identities before and after, and the **control** those assertions
+need — the same readout reading the cursor through React, where both counters
+move.
+
+### Additive, on purpose
+
+The bus stays. `SyncedChartGroup` still renders `EventEmitterProvider`, a panel
+using visx `<Tooltip>` keeps working unchanged, and the two coexist in one chart
+body (`synced-tooltip.render.test.tsx` asserts exactly that). Adopting this is a
+swap inside one chart body, made one panel at a time — not a re-architecture,
+and not a version consumers have to move to. Making off-the-bus the *default*
+would be breaking, and is a major-version choice this does not need.
+
+### Input stays separate
+
+`SyncedTooltip` is output only: it captures no pointer or keyboard events. The
+cursor is published by whichever chart the pointer is over
+(`useSyncedCursorHandlers`), and keyboard control of the cursor remains
+`ChartCursorLayer`'s focusable slider — keep one in the group as the input
+surface and let `onCursorChange` publish. As everywhere else in this package,
+the accessible mirror of the values is `ChartDataTable`, not the tooltip.
 
 ## Series downsampling / pixel conflation
 

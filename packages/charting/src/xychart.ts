@@ -110,6 +110,16 @@ export type {
 export { EmphasisLayer, EmphasisSeries } from './emphasis.js';
 export type { EmphasisLayerProps, EmphasisSeriesProps } from './emphasis.js';
 
+// The off-bus tooltip readout: a card (plus crosshair and readout dots) driven
+// by the group's shared cursor and written onto already-mounted nodes, instead
+// of N visx `Tooltip`s each reacting to the same pointer move over the shared
+// event bus. Additive — the bus is still there for anything already on it.
+export { SyncedTooltip } from './synced-tooltip.js';
+export type {
+  SyncedTooltipProps,
+  SyncedTooltipSeries,
+} from './synced-tooltip.js';
+
 // `ChartLegend` pre-bound to the group store (hover -> highlight, click ->
 // hide, both reflected back). The plain `ChartLegend` in `/core` stays the
 // unwired one, for a legend that is not about series.
