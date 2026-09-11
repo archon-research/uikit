@@ -1,0 +1,15 @@
+{
+  "extends": "@archon-research/tsconfig/node",
+  "compilerOptions": {
+    "allowImportingTsExtensions": false,
+    // The package runs in node (it drives a browser from the test process) but
+    // the collector it installs is browser code, and the summarising half types
+    // the entries the browser hands back. Both `lib`s have to resolve for that
+    // one file to type-check against the real `PerformanceObserver` shapes.
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node"]
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}

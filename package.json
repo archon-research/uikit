@@ -23,7 +23,8 @@
     "packages/webmcp",
     "packages/mcp-connect",
     "packages/uikit-preview",
-    "packages/uikit-cli"
+    "packages/uikit-cli",
+    "packages/playwright-perf"
   ],
   "scripts": {
     "clean": "npm run clean --workspaces --if-present",

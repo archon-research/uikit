@@ -139,6 +139,12 @@ jobs:
       - name: Build charting
         run: npm run build --workspace packages/charting
 
+      # playwright-perf's spec drives a real Chromium: it asserts that making a
+      # page measurably worse moves the harvest, which cannot be faked in jsdom.
+      # Only the browser is needed here, not the full `playwright install`.
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
       - name: Run all vitest specs (relay core unit + Worker/DO integration)
         run: npm test
 

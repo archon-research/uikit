@@ -164,6 +164,7 @@ See `uikit-cli` package documentation for more details.
 2. Shared config packages (`tsconfig`, `oxlint-config`, `oxfmt-config`, `vite-config`) provide reusable defaults for consumer apps.
 3. Runtime packages (`design-system`, `charting`, `dashboard-kit`, `router-kit`, `http-client-core`, `http-client-react`, `http-client-msw`, `webmcp`, `mcp-connect`, `mcp-relay`) ship a built library that consumer apps import. In local development they resolve through the npm-workspace symlink to that package's own `dist/`, so a change is picked up after a rebuild, not straight from `src/`.
 4. `uikit-cli` links local package builds into consumer repositories to support fast co-development loops.
+5. `playwright-perf` is a test-time library: consumer Playwright specs import it, so it ships a build like the runtime packages but never reaches an application bundle.
 
 ## Versioning
 
@@ -293,6 +294,18 @@ npm publish --workspaces --registry https://registry.npmjs.org
 - Peer dependency: `msw`
 - Entry points: the root export is environment-neutral; `/browser` wraps `setupWorker` and `/node`
   wraps `setupServer`, so neither environment's msw import reaches the other's bundle
+
+### Playwright performance harvest
+
+- Package: `@archon-research/playwright-perf`
+- Purpose: Collect blocking time, worst interaction latency, and per-endpoint request counts from a
+  Playwright run, and judge them against budgets and a stored baseline
+- Key dependencies: none — the `Page` surface it drives is typed structurally, so it works against
+  whichever Playwright a consumer already pins
+- Pairs with `uikit-cli bundle-budget` for the static half of the same question, and with
+  `createRequestRecorder` in `@archon-research/http-client-msw` for the vitest-level equivalent of
+  its request counts
+- See `packages/playwright-perf/DESIGN.md` for the instruments that were tried and rejected
 
 ### Tooling config packages
 

@@ -27,6 +27,7 @@ packages/
   mcp-connect/      Harness connection UI (chat icon, status, connect modal)
   mcp-relay/        Host-agnostic WebMCP relay protocol core (sans-I/O, TS)
   uikit-cli/        CLI for local package linking in consumer repos
+  playwright-perf/  Performance harvest for a Playwright run (blocking, INP, requests)
 ```
 
 ## Packages
@@ -48,6 +49,7 @@ Published to npm:
 - `@archon-research/mcp-connect`
 - `@archon-research/mcp-relay`
 - `@archon-research/uikit-cli`
+- `@archon-research/playwright-perf`
 
 Private to this repository, not published:
 
@@ -61,7 +63,7 @@ If you are adapting this template for another organization, you can replace the 
 Install packages from npm:
 
 ```bash
-npm install @archon-research/tsconfig @archon-research/oxlint-config @archon-research/oxfmt-config @archon-research/vite-config @archon-research/design-system @archon-research/charting @archon-research/dashboard-kit @archon-research/http-client-core @archon-research/http-client-react @archon-research/http-client-msw @archon-research/router-kit @archon-research/webmcp @archon-research/mcp-connect @archon-research/mcp-relay @archon-research/uikit-cli
+npm install @archon-research/tsconfig @archon-research/oxlint-config @archon-research/oxfmt-config @archon-research/vite-config @archon-research/design-system @archon-research/charting @archon-research/dashboard-kit @archon-research/http-client-core @archon-research/http-client-react @archon-research/http-client-msw @archon-research/router-kit @archon-research/webmcp @archon-research/mcp-connect @archon-research/mcp-relay @archon-research/uikit-cli @archon-research/playwright-perf
 ```
 
 Each package has its own npm page with detailed documentation and usage examples.
@@ -92,6 +94,7 @@ See the individual package READMEs for specific usage examples:
 - [mcp-connect](./packages/mcp-connect/README.md)
 - [mcp-relay](./packages/mcp-relay/README.md)
 - [uikit-cli](./packages/uikit-cli/README.md)
+- [playwright-perf](./packages/playwright-perf/README.md)
 
 ## Development
 
