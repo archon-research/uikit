@@ -1,0 +1,1 @@
+{"version":3,"file":"vendor-core-e7yQAHLJ.js","names":[],"sources":["../../src/vendor-core.ts"],"sourcesContent":["export const coreLabel = 'core-vendor-' + 'x'.repeat(2000);\nexport function core(n: number): number { return n * 2; }\n"],"mappings":"AAAA,IAAa,EAAY,eAAiB,IAAI,OAAO,GAAI,EACzD,SAAgB,EAAK,EAAmB,CAAE,OAAO,EAAI,CAAG"}

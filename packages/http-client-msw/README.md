@@ -74,7 +74,7 @@ const positions = createMockStore(() =>
 export const mocks = setupMocks(
   [
     mock.get('/positions', async ({ query, response }) => {
-      await mockDelay(300);
+      await mockDelay('typical');
       const limit = Number(query.get('limit') ?? '25');
 
       return response(200).json(positions.list().slice(0, limit));
@@ -212,6 +212,96 @@ unmatched under `setupServer`, where every request URL is absolute. Pass
 `origin: 'exact'` to `createMockApi` to opt out; see
 [DESIGN.md](./DESIGN.md#handler-path-and-origin-matching).
 
+## Latency profiles
+
+`mockDelay` takes a profile name anywhere it takes a number, so "does this screen
+hold up on a slow connection?" is a scenario you select rather than a constant you
+invent:
+
+```ts
+await mockDelay('typical');              // dev only; 0 under test
+await mockDelay({ dev: 'slow', test: 10 });
+await mockDelay(MOCK_LATENCY_PROFILES.typical + 120); // + server think time
+```
+
+| Profile | ms | Chrome DevTools preset |
+| --- | --- | --- |
+| `fast` | 165 | Fast 4G (`60 * 2.75`) |
+| `typical` | 562.5 | Slow 4G (`150 * 3.75`) — Lighthouse's default throttling |
+| `slow` | 2000 | Slow 3G (`400 * 5`) |
+| `offline` | `Infinity` | Offline — the request never settles |
+
+The numbers are the `latency` field of each preset in the DevTools frontend,
+taken verbatim rather than invented, so a profile means the same thing here as it
+does in the Network panel's throttling dropdown. They describe the network round
+trip only; add your own server time on top.
+
+Two things worth knowing:
+
+- **A bare profile is a dev-only delay**, exactly like a bare number — under test
+  it resolves to `0`, including `'offline'`, so a handler cannot hang a suite by
+  accident. To hold a request pending in a test, ask for it on both sides:
+  `mockDelay({ dev: 'offline', test: 'offline' })`.
+- **`offline` is a stall, not an error.** The request never settles — a captive
+  portal or a dropped VPN, the state apps handle worst because no `catch` ever
+  runs. For the browser's own offline behaviour (an immediate network error),
+  return `HttpResponse.error()` from the handler; that is a response, not a
+  latency.
+
+## Counting requests
+
+"Does opening the drawer twice fetch twice?" is an assertion, not an afternoon.
+`createRequestRecorder` subscribes to msw's life-cycle events and counts what it
+intercepts — the same call works against the browser worker and the node server,
+since it only needs `.events`:
+
+```ts
+const requests = createRequestRecorder(mockServer.server);
+
+render(<Positions />);
+await screen.findByText('Position 1');
+requests.reset();
+
+await user.click(screen.getByRole('button', { name: 'Details' }));
+await user.click(screen.getByRole('button', { name: 'Close' }));
+await user.click(screen.getByRole('button', { name: 'Details' }));
+
+expect(requests.count('GET /positions')).toBe(0); // no refetch of the list
+expect(requests.counts()).toEqual({ 'GET /positions/p1': 1 });
+```
+
+Requests are keyed `` `${method} ${pathname}` `` by default — method included
+because a refetch assertion has to tell a re-read from a write, query string
+excluded because a second page of an endpoint is still a request to it. Pass
+`key` to group differently. `count` takes an exact key, a `RegExp` over keys, or
+a predicate; `unhandled()` lists requests no handler matched, which is worth
+checking before trusting a zero.
+
+Subscribe before the scenario starts: the recorder counts only what it was
+listening for.
+
+### Why not the obvious instruments
+
+Both of these fail *silently* — they report zero while requests are plainly
+going out — so they are worth naming:
+
+**Patching `globalThis.fetch` sees nothing.** `openapi-fetch` resolves its
+transport once, in `createClient`, as a default parameter (`fetch: baseFetch =
+globalThis.fetch`). The client closes over whatever the global was at
+construction time, so a spy installed later records nothing. Any client that
+snapshots its transport at construction behaves this way.
+
+**Resource Timing is the wrong instrument** — though not for the reason usually
+given. A service-worker-fulfilled `fetch()` *does* produce a
+`PerformanceResourceTiming` entry; measured across Chromium, Firefox and WebKit,
+all three record one. The problem is what the entry contains: no HTTP method, so
+`GET /things` and `POST /things` are indistinguishable; `transferSize: 0` and an
+empty `nextHopProtocol`, which is also what a cache hit looks like; and
+engine-specific disagreement on the rest (`workerStart` is `0` in Firefox even
+when the worker served the response, body sizes are real in Chromium and `0`
+elsewhere, `responseStatus` is absent in WebKit). The resource buffer is capped
+at 250 entries, too, so a long scenario quietly drops its oldest.
+
 ## API surface
 
 | Export | What it does |
@@ -222,7 +312,9 @@ unmatched under `setupServer`, where every request URL is absolute. Pass
 | `setupMockServer(mocks)` | **`/node`.** Serves them from msw's node interceptors |
 | `createMockStore(seedFn, options?)` | In-memory collection so a write shows up in the next read |
 | `createSeededRng(seed)` | Deterministic PRNG for reproducible generated fixtures |
-| `mockDelay(ms \| { test, dev })` | Env-aware latency; no delay under test by default |
+| `createRequestRecorder(worker \| server, options?)` | Counts intercepted requests per endpoint over a scenario |
+| `mockDelay(ms \| profile \| { test, dev })` | Env-aware latency; no delay under test by default |
+| `MOCK_LATENCY_PROFILES` | `fast` / `typical` / `slow` / `offline`, from Chrome DevTools' throttling presets |
 | `resolveMockDelay` / `isTestEnvironment` | The delay decision, for a consumer's own helpers |
 | `resolveWorkerScriptUrl` / `normalizeApiBaseUrl` / `resolveHandlerBase` / `isAbsoluteUrl` | The URL primitives |
 | `buildWorkerStartOptions` / `createIdempotentStart` | **`/browser`.** The start decisions, unit-testable |
