@@ -4,10 +4,12 @@
     "allowImportingTsExtensions": false
   },
   "include": [
-    "react-compiler.ts",
-    "react-compiler.test.ts",
-    "oxlint.config.ts",
+    "code-splitting.test.ts",
+    "code-splitting.ts",
     "oxfmt.config.ts",
+    "oxlint.config.ts",
+    "react-compiler.test.ts",
+    "react-compiler.ts",
     "vitest.config.ts"
   ]
 }
