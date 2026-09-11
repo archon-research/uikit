@@ -188,13 +188,27 @@ function ConfirmToolCallCard({
     false,
   );
 
-  const secondsRemaining = useSecondsRemaining(pendingCall.expiresAt);
+  const rawSecondsRemaining = useSecondsRemaining(pendingCall.expiresAt);
 
   const totalTimeout = Math.round(
     (new Date(pendingCall.expiresAt).getTime() -
       new Date(pendingCall.createdAt).getTime()) /
       1000,
   );
+
+  // Both stamps are minted by the relay; `now` is this browser's clock. A
+  // browser 30s behind the server reads 150s left of a 120s window - "Expires
+  // in 150s" over a 125%-wide bar. The window the server granted is the
+  // ceiling no honest reading can pass, so clamp to it. This bounds skew only:
+  // the first frame of each prompt is made honest by the per-`callId` remount
+  // above, not by this, and the clamp cannot stand in for it - a prompt that
+  // waited in the queue is already part-spent when it reaches the head, so a
+  // stale reading still lands on the window, not on what is actually left.
+  const secondsRemaining =
+    rawSecondsRemaining !== null && totalTimeout > 0
+      ? Math.min(rawSecondsRemaining, totalTimeout)
+      : rawSecondsRemaining;
+
   const progressPct =
     secondsRemaining !== null && totalTimeout > 0
       ? (secondsRemaining / totalTimeout) * 100
