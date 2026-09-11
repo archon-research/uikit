@@ -74,7 +74,7 @@ const positions = createMockStore(() =>
 export const mocks = setupMocks(
   [
     mock.get('/positions', async ({ query, response }) => {
-      await mockDelay(300);
+      await mockDelay('typical');
       const limit = Number(query.get('limit') ?? '25');
 
       return response(200).json(positions.list().slice(0, limit));
@@ -212,6 +212,42 @@ unmatched under `setupServer`, where every request URL is absolute. Pass
 `origin: 'exact'` to `createMockApi` to opt out; see
 [DESIGN.md](./DESIGN.md#handler-path-and-origin-matching).
 
+## Latency profiles
+
+`mockDelay` takes a profile name anywhere it takes a number, so "does this screen
+hold up on a slow connection?" is a scenario you select rather than a constant you
+invent:
+
+```ts
+await mockDelay('typical');              // dev only; 0 under test
+await mockDelay({ dev: 'slow', test: 10 });
+await mockDelay(MOCK_LATENCY_PROFILES.typical + 120); // + server think time
+```
+
+| Profile | ms | Chrome DevTools preset |
+| --- | --- | --- |
+| `fast` | 165 | Fast 4G (`60 * 2.75`) |
+| `typical` | 562.5 | Slow 4G (`150 * 3.75`) — Lighthouse's default throttling |
+| `slow` | 2000 | Slow 3G (`400 * 5`) |
+| `offline` | `Infinity` | Offline — the request never settles |
+
+The numbers are the `latency` field of each preset in the DevTools frontend,
+taken verbatim rather than invented, so a profile means the same thing here as it
+does in the Network panel's throttling dropdown. They describe the network round
+trip only; add your own server time on top.
+
+Two things worth knowing:
+
+- **A bare profile is a dev-only delay**, exactly like a bare number — under test
+  it resolves to `0`, including `'offline'`, so a handler cannot hang a suite by
+  accident. To hold a request pending in a test, ask for it on both sides:
+  `mockDelay({ dev: 'offline', test: 'offline' })`.
+- **`offline` is a stall, not an error.** The request never settles — a captive
+  portal or a dropped VPN, the state apps handle worst because no `catch` ever
+  runs. For the browser's own offline behaviour (an immediate network error),
+  return `HttpResponse.error()` from the handler; that is a response, not a
+  latency.
+
 ## API surface
 
 | Export | What it does |
@@ -222,7 +258,8 @@ unmatched under `setupServer`, where every request URL is absolute. Pass
 | `setupMockServer(mocks)` | **`/node`.** Serves them from msw's node interceptors |
 | `createMockStore(seedFn, options?)` | In-memory collection so a write shows up in the next read |
 | `createSeededRng(seed)` | Deterministic PRNG for reproducible generated fixtures |
-| `mockDelay(ms \| { test, dev })` | Env-aware latency; no delay under test by default |
+| `mockDelay(ms \| profile \| { test, dev })` | Env-aware latency; no delay under test by default |
+| `MOCK_LATENCY_PROFILES` | `fast` / `typical` / `slow` / `offline`, from Chrome DevTools' throttling presets |
 | `resolveMockDelay` / `isTestEnvironment` | The delay decision, for a consumer's own helpers |
 | `resolveWorkerScriptUrl` / `normalizeApiBaseUrl` / `resolveHandlerBase` / `isAbsoluteUrl` | The URL primitives |
 | `buildWorkerStartOptions` / `createIdempotentStart` | **`/browser`.** The start decisions, unit-testable |

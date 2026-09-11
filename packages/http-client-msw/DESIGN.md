@@ -194,10 +194,21 @@ specific way mocks fail:
   unreproducible and a visual snapshot unstable. mulberry32: 32 bits of state and
   a handful of integer ops, cheap enough to call inside a handler. Statistical
   quality is irrelevant; reproducibility is the requirement.
-- **`mockDelay(ms | { test, dev })`** — latency is what makes an app exercise
-  pending, skeleton, and race states, and the same latency in a suite is dead
-  time. A plain number applies in dev and is skipped under test; an object sets
-  both. Zero resolves without a timer, so a suite's timing behaviour is unchanged.
+- **`mockDelay(ms | profile | { test, dev })`** — latency is what makes an app
+  exercise pending, skeleton, and race states, and the same latency in a suite is
+  dead time. A plain number applies in dev and is skipped under test; an object
+  sets both. Zero resolves without a timer, so a suite's timing behaviour is
+  unchanged.
+- **`MOCK_LATENCY_PROFILES`** — the mechanism above was there; the vocabulary was
+  not, so every consumer invented its own `LIST_DELAY_MS` constant and then
+  guessed at the value. `fast` / `typical` / `slow` / `offline` carry Chrome
+  DevTools' throttling latencies verbatim (Fast 4G, Slow 4G, Slow 3G), so the
+  numbers are checkable against a source and mean the same thing as the Network
+  panel's dropdown. `typical` is Slow 4G because that is what Lighthouse
+  throttles to by default. `offline` is `Infinity` — a request that never
+  settles, which is a stall rather than an error; `HttpResponse.error()` is the
+  error. Like a bare number, a bare profile is dev-only and resolves to `0` under
+  test, so `'offline'` cannot hang a suite by accident.
 
 ## Deliberately out of v1
 

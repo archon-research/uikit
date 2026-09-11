@@ -34,8 +34,11 @@ export {
 } from './base-url.js';
 export {
   isTestEnvironment,
+  MOCK_LATENCY_PROFILES,
+  type MockDelayAmount,
   mockDelay,
   type MockDelayInput,
+  type MockLatencyProfile,
   resolveMockDelay,
 } from './mock-delay.js';
 export {
