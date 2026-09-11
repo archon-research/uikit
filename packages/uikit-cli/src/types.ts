@@ -4,7 +4,8 @@ export type CommandMode =
   | 'register'
   | 'lint'
   | 'format'
-  | 'doctor';
+  | 'doctor'
+  | 'bundle-budget';
 
 export type WorkspaceInfo = {
   name: string | null;

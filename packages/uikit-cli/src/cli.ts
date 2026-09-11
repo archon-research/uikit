@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { NpmCommandExecutor } from './command-executor.js';
+import { BundleBudgetCommand } from './commands/bundle-budget.js';
 import { DoctorCommand } from './commands/doctor.js';
 import { FormatCommand } from './commands/format.js';
 import { LinkCommand } from './commands/link.js';
@@ -19,13 +20,25 @@ import type { CommandMode, ParsedArgs } from './types.js';
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 
 /**
+ * Commands that inspect the consumer's own cwd — their build output or their
+ * generated CSS — and never resolve anything out of the uikit checkout. Failing
+ * to find a uikit root must not stop them.
+ */
+const CWD_ONLY_MODES = new Set<CommandMode>([
+  'lint',
+  'format',
+  'doctor',
+  'bundle-budget',
+]);
+
+/**
  * Parse command line arguments
  */
 function parseArgs(argv: string[]): ParsedArgs {
   const args = argv.slice(2);
   if (args.length === 0) {
     throw new Error(
-      'Usage: uikit-cli <register|link|unlink|lint|format|doctor> [--verify] [--debug] [--uikit-root <path>] [args...]',
+      'Usage: uikit-cli <register|link|unlink|lint|format|doctor|bundle-budget> [--verify] [--debug] [--uikit-root <path>] [args...]',
     );
   }
 
@@ -37,6 +50,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     'link',
     'unlink',
     'doctor',
+    'bundle-budget',
   ];
 
   if (!validModes.includes(mode)) {
@@ -98,7 +112,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
   }
 
-  if (!uikitRoot && mode !== 'lint' && mode !== 'format' && mode !== 'doctor') {
+  if (!uikitRoot && !CWD_ONLY_MODES.has(mode)) {
     // Try to find from consumer
     try {
       const tempConsumerRoot = discovery.findConsumerRoot(process.cwd());
@@ -111,7 +125,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
   }
 
-  if (!uikitRoot && mode !== 'lint' && mode !== 'format' && mode !== 'doctor') {
+  if (!uikitRoot && !CWD_ONLY_MODES.has(mode)) {
     // Try walking up from cwd
     const foundRoot = discovery.findUIKitRoot(process.cwd());
     if (foundRoot) {
@@ -119,7 +133,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
   }
 
-  if (!uikitRoot && mode !== 'lint' && mode !== 'format' && mode !== 'doctor') {
+  if (!uikitRoot && !CWD_ONLY_MODES.has(mode)) {
     throw new Error(
       'Could not find uikit root directory.\n' +
         'Tried:\n' +
@@ -224,6 +238,13 @@ try {
   if (mode === 'doctor') {
     const doctorCmd = new DoctorCommand(fs, logger, executor);
     process.exit(doctorCmd.execute(commandArgs) ? 0 : 1);
+  }
+
+  // Same shape as doctor: reads the consumer's build output in their cwd, and
+  // exits non-zero on a breach so it gates CI.
+  if (mode === 'bundle-budget') {
+    const budgetCmd = new BundleBudgetCommand(fs, logger);
+    process.exit(budgetCmd.execute(commandArgs) ? 0 : 1);
   }
 
   // Handle register command

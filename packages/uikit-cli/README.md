@@ -135,6 +135,78 @@ The palette→roles map is read out of the stylesheet itself (each `colorPalette
 ruleset *is* the preset's role tokens in generated form), so palettes added to the preset — or
 defined in a consumer's own preset extension — are covered with no list to keep in sync.
 
+### Hold a build to a bundle budget
+
+```bash
+uikit-cli bundle-budget                       # reads ./bundle-budget.json
+uikit-cli bundle-budget budgets/ui.json --dist build
+```
+
+Runs in the consumer's cwd against their own build output, like `doctor`, and
+exits non-zero on a breach so it gates CI. The thresholds are yours; the
+assertions are not:
+
+```json
+{
+  "dist": "dist",
+  "eagerKb": 320,
+  "minChunks": 6,
+  "lazy": [
+    { "name": "markdown", "maxKb": 200 },
+    { "name": "charts", "maxKb": 240 }
+  ],
+  "forbidEager": ["micromark|@visx|react-markdown"]
+}
+```
+
+| Key | What it asserts |
+| --- | --- |
+| `eagerKb` | Summed gzipped size of the whole eager set, not just the entry chunk |
+| `lazy[].name` | The chunk exists, **and is not in the eager set** |
+| `lazy[].maxKb` | Gzipped ceiling for that chunk |
+| `forbidEager` | Regexes that must not match any eager chunk |
+| `minChunks` | Least number of JS chunks the build must emit |
+
+Sizes are gzipped, and `kB` means 1000 bytes — the same unit Vite's own build
+report prints, so the numbers you read off a build log are the numbers you type.
+
+Two things this gets right that a hand-rolled check usually does not:
+
+**It measures the eager set, not the entry.** The eager set is the entry scripts
+in `index.html`, their `<link rel="modulepreload">` links, and the static-import
+closure over both. An entry-only budget passes while the critical path
+regresses, because moving a dependency into its own chunk group shrinks the
+entry by exactly what it adds to the preload list. The closure matters too:
+`build.modulePreload: false` emits no links at all, and without it the check
+would measure one chunk and call it the critical path.
+
+**It asserts lazy chunks are lazy, not merely present.** A chunk group stays out
+of the eager set only while something *dynamically* imports it. Turn one
+`await import('./heavy')` into a top-level import and the bundler rewires it
+with no warning and a zero exit code — and the chunk file is *still emitted*, so
+a presence-only check still passes. What changes is that it joins the preload
+list:
+
+```
+❌ `markdown` (assets/markdown-COo9o8vT.js) is in the eager set — it is preloaded or
+  statically imported, so the browser fetches it before first paint and the
+  split buys nothing.
+  ...
+❌ only 4 chunks were emitted, fewer than the 5 required.
+```
+
+`minChunks` is the backstop for the other shape of the same failure: a group
+whose `test` stops matching (a renamed module, a dependency that restructured
+its subpaths) is folded into the entry and leaves no file behind to name.
+
+`forbidEager` is matched against each eager chunk's sourcemap `sources`, which
+are real module ids — so `@visx` matches `node_modules/@visx/xychart/…`. Without
+a `.map` beside the chunk there are no module ids, and the patterns fall back to
+the filename and the minified text, which finds a package that leaves a string
+literal behind and misses one that does not. That case reports a warning saying
+so; `build.sourcemap: "hidden"` makes the check exact without shipping maps to
+users.
+
 ### Register the local uikit packages
 
 ```bash

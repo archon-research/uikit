@@ -1,0 +1,1 @@
+{"version":3,"file":"charts-C1PH4omx.js","names":[],"sources":["../../src/heavy-charts.ts"],"sourcesContent":["export const chartBlob = 'visx-payload-' + 'v'.repeat(30000);\nexport function chart(): string { return chartBlob.slice(0, 8); }\n"],"mappings":"0FAAa,EAAY,gBAAkB,IAAI,OAAO,GAAK,EAC3D,SAAgB,GAAgB,CAAE,OAAO,EAAU,MAAM,EAAG,CAAC,CAAG"}
