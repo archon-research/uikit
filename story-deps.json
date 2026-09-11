@@ -15,6 +15,9 @@
     "packages/charting/dist/chart-data-table.js": [
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
     ],
+    "packages/charting/dist/crosshair.js": [
+      "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
+    ],
     "packages/charting/dist/cursor-layer.js": [
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
     ],
@@ -37,6 +40,14 @@
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
     ],
     "packages/charting/dist/theme.js": [
+      "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
+      "packages/uikit-preview/src/stories/organisms/visx-charts.stories.tsx"
+    ],
+    "packages/charting/dist/use-latest.js": [
+      "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
+    ],
+    "packages/charting/dist/xychart-theme.js": [
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
       "packages/uikit-preview/src/stories/organisms/visx-charts.stories.tsx"
@@ -322,6 +333,10 @@
       "packages/uikit-preview/src/stories/templates/sidebar-layout.stories.tsx"
     ],
     "packages/design-system/dist/layouts/SplitLayout.js": [
+      "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
+      "packages/uikit-preview/src/stories/templates/split-layout.stories.tsx"
+    ],
+    "packages/design-system/dist/layouts/splitSizes.js": [
       "packages/uikit-preview/src/stories/organisms/dashboard-kit.stories.tsx",
       "packages/uikit-preview/src/stories/templates/split-layout.stories.tsx"
     ],

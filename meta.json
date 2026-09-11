@@ -1559,8 +1559,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 625,
-      "locEnd": 655,
+      "locStart": 626,
+      "locEnd": 656,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "ExpandableRows",
       "meta": {}
@@ -1607,8 +1607,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 506,
-      "locEnd": 550,
+      "locStart": 507,
+      "locEnd": 551,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "MagnitudeColumns",
       "meta": {}
@@ -1620,7 +1620,7 @@
         "Data table"
       ],
       "locStart": 472,
-      "locEnd": 504,
+      "locEnd": 505,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "MultiRowSelection",
       "meta": {}
@@ -1667,8 +1667,8 @@
         "Organisms",
         "Data table"
       ],
-      "locStart": 598,
-      "locEnd": 620,
+      "locStart": 599,
+      "locEnd": 621,
       "filePath": "src/stories/organisms/data-table.stories.tsx",
       "namedExport": "Toolbar",
       "meta": {}
@@ -1883,8 +1883,8 @@
         "Organisms",
         "Mcp connect"
       ],
-      "locStart": 329,
-      "locEnd": 342,
+      "locStart": 333,
+      "locEnd": 346,
       "filePath": "src/stories/organisms/mcp-connect.stories.tsx",
       "namedExport": "ChatButton",
       "meta": {}
@@ -1895,8 +1895,8 @@
         "Organisms",
         "Mcp connect"
       ],
-      "locStart": 344,
-      "locEnd": 357,
+      "locStart": 348,
+      "locEnd": 361,
       "filePath": "src/stories/organisms/mcp-connect.stories.tsx",
       "namedExport": "ConnectModalOpen",
       "meta": {}
@@ -1919,8 +1919,8 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 149,
-      "locEnd": 201,
+      "locStart": 151,
+      "locEnd": 203,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "LiveVsReplay",
       "meta": {}
@@ -1931,8 +1931,8 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 217,
-      "locEnd": 266,
+      "locStart": 219,
+      "locEnd": 268,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "OrdinalCursor",
       "meta": {}
@@ -1943,8 +1943,8 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 273,
-      "locEnd": 310,
+      "locStart": 275,
+      "locEnd": 312,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "StatusInTrailing",
       "meta": {}
@@ -1955,8 +1955,8 @@
         "Organisms",
         "Playback bar"
       ],
-      "locStart": 325,
-      "locEnd": 368,
+      "locStart": 327,
+      "locEnd": 370,
       "filePath": "src/stories/organisms/playback-bar.stories.tsx",
       "namedExport": "WithTransportHotkeys",
       "meta": {}
@@ -2145,8 +2145,8 @@
         "Templates",
         "Risk detail drawer"
       ],
-      "locStart": 430,
-      "locEnd": 460,
+      "locStart": 447,
+      "locEnd": 476,
       "filePath": "src/stories/templates/risk-detail-drawer.stories.tsx",
       "namedExport": "Default",
       "meta": {}
@@ -2157,8 +2157,8 @@
         "Templates",
         "Risk detail drawer"
       ],
-      "locStart": 462,
-      "locEnd": 484,
+      "locStart": 478,
+      "locEnd": 500,
       "filePath": "src/stories/templates/risk-detail-drawer.stories.tsx",
       "namedExport": "DrawerClosed",
       "meta": {}
@@ -2169,8 +2169,8 @@
         "Templates",
         "Risk detail drawer"
       ],
-      "locStart": 486,
-      "locEnd": 509,
+      "locStart": 502,
+      "locEnd": 525,
       "filePath": "src/stories/templates/risk-detail-drawer.stories.tsx",
       "namedExport": "DrawerOpenPerformance",
       "meta": {}
