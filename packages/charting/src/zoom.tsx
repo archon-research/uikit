@@ -44,9 +44,17 @@ export type ZoomPanOverlayProps = {
  * y bound can be pinned this way, because the y transform is what has to stay
  * out of the way: this overlay derives a horizontal domain window, it does not
  * transform the chart's SVG.
+ *
+ * The identity return for `deltaY === 0` is not a micro-optimisation. A
+ * trackpad's horizontal scroll arrives as a `deltaX` with `deltaY` exactly 0
+ * (or -0), and a two-branch ternary has nowhere to put "no vertical delta":
+ * `-0 > 0` is false, so a sideways swipe would fall into the zoom-OUT branch
+ * and step the overlay down a notch per wheel tick, all the way to
+ * `scaleXMin`, emitting a new domain from `onDomainChange` each time. `0 ===
+ * -0` in JS, so the one comparison covers both spellings.
  */
 const horizontalWheelDelta = (event: { deltaY: number }) => ({
-  scaleX: -event.deltaY > 0 ? 1.1 : 0.9,
+  scaleX: event.deltaY === 0 ? 1 : -event.deltaY > 0 ? 1.1 : 0.9,
   scaleY: 1,
 });
 

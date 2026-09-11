@@ -53,6 +53,47 @@ describe('ZoomPanOverlay', () => {
     expect(start).toBeLessThan(end);
   });
 
+  // A trackpad's horizontal scroll arrives as `deltaX` with `deltaY` exactly
+  // 0 (or -0). Since the wheel handler is what makes zoom apply at all, a
+  // delta table that treats "no vertical delta" as "zoom out" turns a sideways
+  // two-finger swipe into a zoom-out per tick, all the way down to
+  // `scaleXMin`, emitting a new domain each time.
+  it('ignores a horizontal-only wheel while zoomed in', () => {
+    const onDomainChange = vi.fn();
+    const { container } = render(
+      <ZoomPanOverlay
+        width={WIDTH}
+        height={HEIGHT}
+        domain={DOMAIN}
+        onDomainChange={onDomainChange}
+      />,
+    );
+    const surface = container.querySelector('rect')!;
+    // Three notches in (1.1^3), so a single 0.9 notch back out still clears
+    // `scaleXMin={1}` and would be applied rather than rejected by the bound.
+    for (let i = 0; i < 3; i++) {
+      fireEvent.wheel(surface, {
+        deltaY: -100,
+        clientX: WIDTH / 2,
+        clientY: HEIGHT / 2,
+      });
+    }
+    expect(onDomainChange).toHaveBeenCalledTimes(4);
+    const zoomed = onDomainChange.mock.lastCall![0] as ZoomDomain;
+
+    for (const deltaY of [0, -0]) {
+      fireEvent.wheel(surface, {
+        deltaX: -100,
+        deltaY,
+        clientX: WIDTH / 2,
+        clientY: HEIGHT / 2,
+      });
+    }
+
+    expect(onDomainChange).toHaveBeenCalledTimes(4);
+    expect(onDomainChange.mock.lastCall![0]).toEqual(zoomed);
+  });
+
   it('does not re-emit when only the callback identity changes', () => {
     const onEmit = vi.fn();
     function Consumer() {
