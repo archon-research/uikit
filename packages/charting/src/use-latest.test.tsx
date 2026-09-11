@@ -1,5 +1,5 @@
 import { cleanup, render } from '@testing-library/react';
-import { StrictMode, useEffect, useRef, type RefObject } from 'react';
+import { StrictMode, useEffect, useLayoutEffect, type RefObject } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { useLatest } from './use-latest.js';
@@ -23,11 +23,13 @@ import { useLatest } from './use-latest.js';
  *      would re-fire those effects every render - the exact loop the ref was
  *      introduced to break.
  *   2. `ref.current` is current *in the same commit* the trigger fires in. The
- *      write is an effect with no dependency array, so it only beats the reader
- *      by being declared first; effects run in declaration order. This is what
- *      the doc comment's "call this above the effects that read the ref" buys,
- *      and `ReaderDeclaredBeforeWriter` below is the control that shows the
- *      cost of getting it backwards.
+ *      write is a `useInsertionEffect`, which React runs during the mutation
+ *      phase - every one in the tree, before any layout effect and long before
+ *      any passive effect. So freshness does not depend on where the reader is
+ *      declared: the specs below pin a reader in a child component and a reader
+ *      in a `useLayoutEffect`, both of which a `useEffect` write leaves a commit
+ *      behind - checked by reverting the write to `useEffect`, which fails both
+ *      of them.
  *
  * Freshness matters because trigger and input routinely change in the *same*
  * commit: a resize that moves `width` while the zoom transform also moves, or a
@@ -35,15 +37,13 @@ import { useLatest } from './use-latest.js';
  * wrong `yAccessor` into visx's registry, or emits a domain computed against
  * the previous width.
  *
- * One asymmetry falls out of that and is pinned below because it is easy to
- * assume the other way round: a *cleanup* reads the value from the commit it
- * was created in, not the one replacing it. React drains every destroy before
- * running any create, so the write effect for the new commit has not run yet.
+ * The price of writing that early is one asymmetry, pinned below because it is
+ * easy to assume the other way round: a *cleanup* running for the outgoing
+ * commit sees the *incoming* value. Passive destroys run after the commit that
+ * replaced them, so the write is already done by the time they are entered.
  * `candlestick.tsx` is already right about this - it unregisters the keys its
- * own closure captured - but a future call site that reached for `ref.current`
- * in a cleanup expecting the incoming value would be reading the outgoing one.
- * That assertion is also what separates this from a `useLayoutEffect` write,
- * which lands early enough to change what the outgoing cleanup sees.
+ * own closure captured, not whatever `ref.current` says - and that is the shape
+ * for any future cleanup to copy.
  */
 
 afterEach(() => {
@@ -86,13 +86,31 @@ function CallSiteShape({
 }
 
 /**
- * The same shape with `useLatest` inlined and split so its write effect is
- * declared *after* the reader. Not a supported use - it is here to show that
- * the declaration order in the doc comment is a real constraint and not a
- * stylistic preference. It deliberately does not call `useLatest`, so it
- * characterises React's effect ordering rather than this hook.
+ * A reader in a child component, given the ref as a prop. Its effect is a
+ * passive effect that React runs *before* the parent's, exactly like an effect
+ * declared above the `useLatest` call in the same component - so under the
+ * previous `useEffect` write this read the previous render's value, and the
+ * doc comment's "call this above the effects that read the ref" could not reach
+ * it at all. The insertion-effect write lands before every passive effect in
+ * the tree, so the reader's position stops mattering.
  */
-function ReaderDeclaredBeforeWriter({
+function ChildReader({
+  trigger,
+  inputRef,
+  onRun,
+}: {
+  trigger: number;
+  inputRef: RefObject<Input>;
+  onRun: (entry: string) => void;
+}) {
+  useEffect(() => {
+    onRun(`child:${trigger}:${inputRef.current.label}`);
+  }, [trigger, inputRef, onRun]);
+
+  return null;
+}
+
+function ParentWriter({
   trigger,
   input,
   onRun,
@@ -101,15 +119,30 @@ function ReaderDeclaredBeforeWriter({
   input: Input;
   onRun: (entry: string) => void;
 }) {
-  const inputRef = useRef(input);
+  const inputRef = useLatest(input);
 
-  useEffect(() => {
-    onRun(`run:${trigger}:${inputRef.current.label}`);
+  return <ChildReader trigger={trigger} inputRef={inputRef} onRun={onRun} />;
+}
+
+/**
+ * A reader in the layout phase. Layout effects run after every insertion effect
+ * in the tree but before any passive one, so this is the case a `useEffect`
+ * write cannot serve at all, whatever the declaration order.
+ */
+function LayoutReader({
+  trigger,
+  input,
+  onRun,
+}: {
+  trigger: number;
+  input: Input;
+  onRun: (entry: string) => void;
+}) {
+  const inputRef = useLatest(input);
+
+  useLayoutEffect(() => {
+    onRun(`layout:${trigger}:${inputRef.current.label}`);
   }, [trigger, inputRef, onRun]);
-
-  useEffect(() => {
-    inputRef.current = input;
-  });
 
   return null;
 }
@@ -138,8 +171,8 @@ describe('useLatest', () => {
     expect(log).toEqual(['run:1:a']);
 
     // Trigger and input move together, the case a stale read gets wrong. The
-    // cleanup is entered before any of the new commit's effects, so it still
-    // reads `a` - see the note on ordering above.
+    // cleanup is entered after the new commit has already written the ref, so
+    // it reads `b` - the asymmetry described above, not a stale read.
     rerender(
       <CallSiteShape
         trigger={2}
@@ -148,29 +181,31 @@ describe('useLatest', () => {
         onCleanup={onCleanup}
       />,
     );
-    expect(log).toEqual(['run:1:a', 'cleanup:1:a', 'run:2:b']);
+    expect(log).toEqual(['run:1:a', 'cleanup:1:b', 'run:2:b']);
   });
 
-  it('leaves the reader a commit behind when declared after it', () => {
+  it("is current for a child's effect, which runs before the parent's", () => {
     const log: string[] = [];
     const onRun = (entry: string) => log.push(entry);
     const { rerender } = render(
-      <ReaderDeclaredBeforeWriter
-        trigger={1}
-        input={{ label: 'a' }}
-        onRun={onRun}
-      />,
+      <ParentWriter trigger={1} input={{ label: 'a' }} onRun={onRun} />,
     );
-    rerender(
-      <ReaderDeclaredBeforeWriter
-        trigger={2}
-        input={{ label: 'b' }}
-        onRun={onRun}
-      />,
-    );
+    rerender(<ParentWriter trigger={2} input={{ label: 'b' }} onRun={onRun} />);
 
-    // `b` is what this render supplied; the reader saw `a`.
-    expect(log).toEqual(['run:1:a', 'run:2:a']);
+    // `b` is what this render supplied, and `b` is what the child saw. Under
+    // the previous `useEffect` write this second entry read `a`.
+    expect(log).toEqual(['child:1:a', 'child:2:b']);
+  });
+
+  it('is current for a reader in the layout phase', () => {
+    const log: string[] = [];
+    const onRun = (entry: string) => log.push(entry);
+    const { rerender } = render(
+      <LayoutReader trigger={1} input={{ label: 'a' }} onRun={onRun} />,
+    );
+    rerender(<LayoutReader trigger={2} input={{ label: 'b' }} onRun={onRun} />);
+
+    expect(log).toEqual(['layout:1:a', 'layout:2:b']);
   });
 
   it('does not re-fire a reader that depends on the ref', () => {
@@ -224,9 +259,9 @@ describe('useLatest', () => {
     // ref per render, a layout-effect write, and a cleanup that clears the ref -
     // and caught only the last, which the freshness test above already catches.
     // Double-invocation turns out to be orthogonal to this contract, which is
-    // about declaration order and ref stability. It stays because it is cheap
-    // and pins that the hook is idempotent under it; do not read a pass here as
-    // evidence on its own.
+    // about ref stability and which commit phase the write lands in. It stays
+    // because it is cheap and pins that the hook is idempotent under it; do not
+    // read a pass here as evidence on its own.
     expect(log).toEqual(['run:1:a', 'cleanup:1:a', 'run:1:a']);
   });
 });
