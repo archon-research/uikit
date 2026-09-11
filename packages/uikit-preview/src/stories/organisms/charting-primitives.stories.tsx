@@ -17,6 +17,7 @@ import {
   ResponsiveChart,
   SyncedChartGroup,
   SyncedChartLegend,
+  SyncedTooltip,
   TimeRangeBrush,
   XYChart,
   ZoomPanOverlay,
@@ -858,6 +859,99 @@ export const SyncedCrosshair = () => (
             byIndex={A_BY_INDEX}
           />
           <SyncedCrosshairPanel
+            title="Benchmark"
+            data={SERIES_B}
+            color={seriesColor.secondary}
+            byIndex={B_BY_INDEX}
+          />
+        </div>
+      </SyncedChartGroup>
+    </div>
+  </ThemeProvider>
+);
+
+// The READOUT half of the same pattern. `SyncedCrosshair` above drives the
+// crosshair from the shared cursor; this drives the whole tooltip card from it
+// — one number published per pointer move, one binary search per panel against
+// that panel's own stops, and the values written straight onto the card's
+// mounted nodes.
+//
+// The alternative it replaces is a visx `<Tooltip>` in each panel. Those work
+// off the shared `EventEmitterProvider` a `SyncedChartGroup` installs, so ONE
+// pointer move fans out to EVERY panel's tooltip, each running its own
+// nearest-datum lookup, its own tooltip-context update and its own portal
+// re-render. At two panels that is invisible; at fifteen it is fifteen tooltip
+// pipelines reacting to one hover. The bus is still there — this is an
+// additive path, adopted one chart body at a time.
+//
+// Note what this panel does NOT do: it calls no reactive hook at all. Compare
+// `SyncedCrosshairPanel` above, which reads `useHoveredTimestamp()` and so
+// re-renders on every tick to pass the controlled `cursor` down.
+function SyncedReadoutPanel({
+  title,
+  data,
+  color,
+  byIndex,
+}: {
+  title: string;
+  data: Point[];
+  color: string;
+  byIndex: Map<number, number>;
+}) {
+  const handlers = useSyncedCursorHandlers<Point>((d) => d.index);
+  return (
+    <section className={panelClassName}>
+      <p className={panelTitleClassName}>{title}</p>
+      <XYChart
+        width={640}
+        height={180}
+        theme={chartTheme}
+        xScale={{ type: 'linear', domain: [0, 39] }}
+        yScale={{ type: 'linear', nice: true }}
+        onPointerMove={handlers.onPointerMove}
+        onPointerOut={handlers.onPointerOut}
+      >
+        <Grid columns={false} numTicks={4} />
+        <Axis orientation="bottom" numTicks={6} />
+        <Axis orientation="left" numTicks={4} />
+        <LineSeries
+          dataKey={title}
+          data={data}
+          xAccessor={xAccessor}
+          yAccessor={yAccessor}
+          stroke={color}
+        />
+        <SyncedTooltip
+          stops={STOPS}
+          formatX={(x) => `#${x}`}
+          series={[
+            {
+              id: title,
+              label: title,
+              color,
+              valueAt: (x) => byIndex.get(x) ?? null,
+              format: (value) => value.toFixed(1),
+            },
+          ]}
+        />
+      </XYChart>
+    </section>
+  );
+}
+
+export const SyncedReadout = () => (
+  <ThemeProvider>
+    <div className={pageClassName}>
+      <SyncedChartGroup>
+        <SeedCursor at={20} />
+        <div className={css({ display: 'grid', gap: '4' })}>
+          <SyncedReadoutPanel
+            title="Account"
+            data={SERIES}
+            color={seriesColor.primary}
+            byIndex={A_BY_INDEX}
+          />
+          <SyncedReadoutPanel
             title="Benchmark"
             data={SERIES_B}
             color={seriesColor.secondary}
