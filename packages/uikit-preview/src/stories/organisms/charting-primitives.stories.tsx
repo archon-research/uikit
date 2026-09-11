@@ -7,6 +7,8 @@ import {
   ChartLegend,
   DirectLabels,
   DistributionSeries,
+  EmphasisLayer,
+  EmphasisSeries,
   Grid,
   HistogramSeries,
   histogramBins,
@@ -14,6 +16,7 @@ import {
   ReferenceBand,
   ResponsiveChart,
   SyncedChartGroup,
+  SyncedChartLegend,
   TimeRangeBrush,
   XYChart,
   ZoomPanOverlay,
@@ -371,6 +374,106 @@ function SyncedCursorPanel() {
   );
 }
 
+/**
+ * One chart of the emphasis group. Note the visx `dataKey`s: this panel calls
+ * the series `a_value`/`b_value` and the one below calls them `a_pct`/`b_pct`,
+ * while both wrap them in the SAME logical ids the legend speaks (`a`, `b`).
+ * That reconciliation is the whole job of `EmphasisSeries`.
+ */
+function EmphasisPanel({ suffix }: { suffix: string }) {
+  return (
+    <XYChart
+      theme={chartTheme}
+      width={640}
+      height={160}
+      xScale={{ type: 'linear' }}
+      yScale={{ type: 'linear', nice: true }}
+    >
+      <Grid columns={false} numTicks={4} />
+      <EmphasisLayer>
+        <EmphasisSeries id="a">
+          <LineSeries
+            dataKey={`a_${suffix}`}
+            data={SERIES}
+            xAccessor={(d) => d.index}
+            yAccessor={(d) => d.value}
+            colorAccessor={() => seriesColor.primary}
+          />
+        </EmphasisSeries>
+        <EmphasisSeries id="b">
+          <LineSeries
+            dataKey={`b_${suffix}`}
+            data={SERIES_B}
+            xAccessor={(d) => d.index}
+            yAccessor={(d) => d.value}
+            colorAccessor={() => seriesColor.secondary}
+          />
+        </EmphasisSeries>
+        <DirectLabels
+          labels={[
+            {
+              id: 'a',
+              label: 'Series A',
+              value: SERIES[SERIES.length - 1]!.value,
+              color: seriesColor.primary,
+            },
+            {
+              id: 'b',
+              label: 'Series B',
+              value: SERIES_B[SERIES_B.length - 1]!.value,
+              color: seriesColor.secondary,
+            },
+          ]}
+        />
+      </EmphasisLayer>
+      <Axis orientation="bottom" numTicks={4} />
+      <Axis orientation="left" numTicks={4} />
+    </XYChart>
+  );
+}
+
+/**
+ * Cross-chart emphasis with no per-mark wiring: hovering a legend item dims the
+ * other series in BOTH charts, clicking hides it in both, and the end-of-line
+ * labels follow. The dim/hide is applied as attribute + style writes on the
+ * already-mounted `<g data-series>` nodes, so neither chart re-renders on hover
+ * — inspect one in the elements panel and watch `data-dim` toggle in place.
+ */
+function EmphasisPanels() {
+  return (
+    <section className={panelClassName}>
+      <div>
+        <h3 className={panelTitleClassName}>Cross-chart emphasis</h3>
+        <p className={panelSubtitleClassName}>
+          Hover a legend item to highlight that series everywhere; click to hide
+          it. &quot;Threshold&quot; is <code>sync: false</code> — a legend entry
+          with no series behind it, which must not dim the charts.
+        </p>
+      </div>
+      <SyncedChartGroup>
+        <div className={css({ display: 'grid', gap: '3' })}>
+          <SyncedChartLegend
+            shape="line"
+            items={[
+              { id: 'a', label: 'Series A', color: seriesColor.primary },
+              { id: 'b', label: 'Series B', color: seriesColor.secondary },
+              {
+                id: 'threshold',
+                label: 'Threshold',
+                color: seriesColor.critical,
+                dash: true,
+                sync: false,
+              },
+            ]}
+          />
+          <EmphasisPanel suffix="value" />
+          <EmphasisPanel suffix="pct" />
+        </div>
+      </SyncedChartGroup>
+    </section>
+  );
+}
+
 export const Default = () => (
   <ThemeProvider>
     <div className={pageClassName}>
@@ -378,6 +481,7 @@ export const Default = () => (
       <ReferenceBandPanels />
       <CandlestickPanel />
       <SyncedCursorPanel />
+      <EmphasisPanels />
     </div>
   </ThemeProvider>
 );

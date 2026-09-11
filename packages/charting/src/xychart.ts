@@ -103,6 +103,22 @@ export type {
   HistogramSeriesProps,
 } from './histogram.js';
 
+// Cross-chart emphasis: dim the series a legend is not hovering, drop the ones
+// it has toggled off, applied as attribute/style writes on already-mounted mark
+// nodes rather than as a re-render of every chart in the group. Lives in this
+// subpath because it reads the interaction store, which reads visx.
+export { EmphasisLayer, EmphasisSeries } from './emphasis.js';
+export type { EmphasisLayerProps, EmphasisSeriesProps } from './emphasis.js';
+
+// `ChartLegend` pre-bound to the group store (hover -> highlight, click ->
+// hide, both reflected back). The plain `ChartLegend` in `/core` stays the
+// unwired one, for a legend that is not about series.
+export { SyncedChartLegend } from './synced-legend.js';
+export type {
+  SyncedChartLegendItem,
+  SyncedChartLegendProps,
+} from './synced-legend.js';
+
 // Cross-chart interaction layer (synced cursor + shared time range + cross-filter).
 export {
   DashboardInteractionProvider,
@@ -115,6 +131,7 @@ export {
   useHoveredTimestamp,
   useInteractionDispatch,
   useInteractionSetters,
+  useInteractionStore,
   useInteractionValue,
   useSelectedTimeRange,
   useSetHiddenKeys,
@@ -130,6 +147,7 @@ export type {
   DashboardInteractionState,
   InteractionDispatch,
   InteractionKey,
+  InteractionStore,
   PixelRange,
   TimeRange,
 } from './interaction.js';

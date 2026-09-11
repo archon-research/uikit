@@ -358,6 +358,20 @@ Current (exported from the package root):
   `Swatch` — the small themed swatch SVG it renders per item — is exported
   standalone so a hand-composed legend reuses the same markup instead of
   re-deriving it.
+- **`EmphasisLayer` / `EmphasisSeries`** (`emphasis.tsx`): cross-chart
+  dim-and-hide, applied as CSS on already-mounted nodes rather than as a
+  re-render. `EmphasisSeries id="…"` wraps a mark in one stable
+  `<g data-series>`; the enclosing `EmphasisLayer` subscribes to the group's
+  `highlightedKey`/`hiddenKeys` imperatively and writes `data-dim`/`data-hidden`
+  plus the matching `opacity`/`display` onto those nodes. See the dedicated
+  section below — the CSS-not-render part is the point of the primitive, not an
+  optimization detail.
+- **`SyncedChartLegend`** (`synced-legend.tsx`): `ChartLegend interactive` with
+  the store loop already wired — hover sets `highlightedKey`, click toggles
+  `hiddenKeys`, and both are reflected back onto each item. Renders through
+  `ChartLegend`, so there is one legend implementation. A legend that is not
+  about series stays a plain `ChartLegend`; a single non-series entry inside a
+  series legend takes `sync: false`.
 - **`ChartCursorLayer`** (`cursor-layer.tsx`): a snap-to-datum crosshair with
   per-series readout dots and a tooltip positioned from a render prop, plus a
   focusable slider whose arrows step between stops and whose Enter/Space commits
@@ -375,6 +389,11 @@ Current (exported from the package root):
   plot's right edge, nudged apart so adjacent labels do not collide.
   `resolveLabelPositions` is the pure placement function behind it — ideal `y`s
   in, collision-free `y`s in the same order out — exported for unit testing.
+  Inside a `SyncedChartGroup` it drops labels whose `id` is in `hiddenKeys`
+  (a hidden series otherwise leaves an orphan label) and re-stacks the rest;
+  outside one it behaves exactly as before, so it stays usable standalone. Each
+  label carries `data-series`, so nesting it in an `EmphasisLayer` dims labels
+  with their marks.
 - **`ChartDataTable`** (`chart-data-table.tsx`): an accessible `<table>` mirror
   of a chart's series, visually hidden by default. A chart drawn as inline SVG
   carries no tabular structure for assistive tech; this is the fallback the
@@ -499,7 +518,11 @@ hover or a selection. `src/interaction.tsx` closes that gap with four pieces:
 - **`useInteractionValue(key)`** — a per-key subscription so a widget bound
   to one field (e.g. `highlightedKey`) is not re-rendered by unrelated,
   hover-frequency updates (e.g. `hoveredTimestamp`). See the dedicated
-  section below.
+  section below. **`useInteractionStore()`** is the same store with the render
+  removed: `get(key)` reads now, `subscribe(key, cb)` calls back on change, and
+  neither re-renders the caller. That is the surface for an effect that mutates
+  already-mounted DOM instead of describing it — `EmphasisLayer` below is the
+  first user, and the shape any other pointer-frequency painter should copy.
 - **`useTimeRangeBrushGesture()` + `<DragSelectionOverlay>`** — a minimal,
   dependency-free drag-to-select gesture: the gesture hook tracks a drag from
   an `<XYChart>`'s own pointer events (`svgPoint` is already local to that
@@ -578,6 +601,97 @@ function LegendChip({ seriesKey }: { seriesKey: string }) {
   return <Chip active={highlightedKey === seriesKey}>{seriesKey}</Chip>;
 }
 ```
+
+## Cross-chart emphasis: CSS on mounted nodes, not a re-render
+
+`highlightedKey` and `hiddenKeys` are state; nothing in visx reads them.
+`LineSeries`/`AreaSeries`/`BarSeries` have no emphasis notion, so "hover a
+legend item, dim the others everywhere" was consumer work: a composed
+`strokeOpacity`/`fillOpacity` threaded into every mark, a skip-render for
+hidden, the same filter repeated into the end-of-line labels.
+
+That works, and it is the wrong shape, for a reason that only shows up at
+scale: **it makes emphasis a render.** A legend hover then re-renders every
+chart wired to the group. Downstream that meant hundreds of nested SVG groups
+reconciled per hover, and under live streaming data the highlight render queued
+behind the per-tick renders — a measured **1-2s from hover to dim**.
+
+So `EmphasisLayer` does not re-render anything:
+
+- `EmphasisSeries id="…"` mounts one stable, inert `<g data-series="…">` around
+  a mark. No transform, no clip, no pointer handling — `XYChart` renders its
+  children as given, so the series inside registers with `DataContext` and emits
+  tooltip events exactly as it does unwrapped.
+- `EmphasisLayer` reads the store through `useInteractionStore()` —
+  `subscribe`/`get` **without** `useSyncExternalStore`, so a change notifies a
+  callback instead of scheduling a render — and writes `data-dim`/`data-hidden`
+  plus `opacity`/`display` straight onto those existing nodes.
+
+A hover therefore costs one attribute write per changed series plus compositor
+work, and that cost does not grow with how much chart is mounted. `React` is not
+on the path at all, so a data tick mid-hover has nothing to queue behind.
+
+Both an attribute and an inline style are written, and each earns its place: the
+attributes are the styling contract (a consumer stylesheet can key off
+`[data-dim]` to desaturate rather than fade), and the inline style is the
+default rendering of it, so the primitive works with no CSS file — this package
+ships none.
+
+`emphasis.test.tsx` holds this up with a `<Profiler>` commit count and per-mark
+render counters across a hover, plus the DOM node identities before and after.
+It also carries the **control** those assertions need: the same tree with
+emphasis wired the hand-threaded way, where both counters do move. A counter
+that cannot move proves nothing.
+
+### The reusable part
+
+The pattern generalises to anything driven at pointer frequency — a tooltip
+readout, a canvas overlay: **subscribe to the store imperatively, mutate the
+mounted node, never route it through render.** `useInteractionStore()` is that
+seam, and is exported for it. `useInteractionValue(key)` remains right for a
+widget whose OUTPUT is a function of the value (a chip, a label, the legend
+itself); reach for the store when the value drives a change React does not need
+to reconcile.
+
+### Logical ids, not `dataKey`s
+
+The id on `EmphasisSeries` is a **logical** series id, and deliberately not the
+visx `dataKey` of the mark inside it. The same series is `tvl_usd` in one chart
+and `tvl` in another; the wrapper is where the two are reconciled, so neither
+the legend nor the store ever learns a chart's local naming, and no lookup table
+has to be maintained beside them. Two wrappers may share an id (an upper and a
+lower bound that emphasize as one series), and one wrapper may hold several
+marks (a line plus its glyphs).
+
+### Stacked marks: caller-side, on purpose
+
+`BarStack`/`AreaStack` read their own children to build the stack, so a wrapper
+between them and their series breaks it — and CSS could not have fixed it
+anyway. Hiding one band of a stack has to re-run the stack layout so the
+remaining bands re-fill to 100%; that is a data change, not a style change, and
+no attribute toggle can express it.
+
+**The decision: stacked baselines are caller-side.** Filter the stack's children
+or its data by `hiddenKeys` at the call site (`useHiddenKeys()`) and accept the
+re-render. That is the honest cost — the layout genuinely has to be recomputed —
+and it is a click-frequency event, not a hover-frequency one, so it is not the
+cost this primitive exists to remove. Wrapping the stack as a whole in an
+`EmphasisLayer` to dim it against neighbouring panels still works.
+
+### Opting out
+
+A legend not backed by series marks — a categorical color key, a status ramp —
+must not drive the store, or hovering it highlights an id no mark carries and
+every chart in the group dims at once. Such a legend stays a plain
+`ChartLegend`, or passes `hover={false}` to `SyncedChartLegend`. A single stray
+entry inside an otherwise series-shaped legend (a threshold line, a "shaded =
+forecast" note) takes `sync: false` on that item.
+
+`EmphasisLayer` requires a `DashboardInteractionProvider` and throws without
+one, like the rest of the interaction layer: a chart whose legend silently does
+nothing is worse than a chart that fails to mount. `DirectLabels` is the single
+exception — it already shipped and already renders standalone, so it reads the
+hidden set only when a provider happens to be there.
 
 ## Series downsampling / pixel conflation
 
