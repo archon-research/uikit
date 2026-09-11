@@ -3,9 +3,15 @@ import { useContext } from 'react';
 
 import { resolveChartColor, type ChartColor } from './chart-color.js';
 import { clamp } from './crosshair.js';
+import { useOptionalHiddenKeys } from './interaction.js';
 
 export type DirectLabelItem = {
-  /** Stable identity; defaults to `label`. */
+  /**
+   * Stable identity; defaults to `label`. Inside a `SyncedChartGroup` this is
+   * also the logical series id matched against the group's `hiddenKeys` — use
+   * the same id the legend and `EmphasisSeries` use, and a hidden series takes
+   * its end-of-line label with it.
+   */
   id?: string;
   label: string;
   /** Y-data value the label points at (its ideal position). */
@@ -77,6 +83,11 @@ export function resolveLabelPositions(
   return result;
 }
 
+/** An item's logical series id — its explicit `id`, else its label. */
+function labelId(item: DirectLabelItem): string {
+  return item.id ?? item.label;
+}
+
 /**
  * End-of-line series labels with vertical collision avoidance. Each label sits
  * at the right edge of the plot at its series' y-value; overlapping labels are
@@ -86,6 +97,19 @@ export function resolveLabelPositions(
  * Reads the live `yScale`/`innerHeight`/`margin` from `DataContext`, so it
  * lines up with sibling series and computes no domain math of its own. Render
  * as a child of `<XYChart>`.
+ *
+ * Inside a `SyncedChartGroup`, labels for series in the group's `hiddenKeys`
+ * are dropped — a hidden series otherwise leaves an orphan label pointing at a
+ * line that is no longer drawn — and the remaining labels re-stack into the
+ * space it freed. That is a real re-render rather than the CSS toggling
+ * `EmphasisLayer` uses, and deliberately so: dropping a label changes where the
+ * OTHER labels sit, which no style change can express. It is also a
+ * click-frequency event, not a hover-frequency one. Outside a provider this is
+ * inert and the component behaves exactly as it did before.
+ *
+ * Each label also carries `data-series`, so nesting `DirectLabels` inside an
+ * `EmphasisLayer` dims non-highlighted labels along with their marks, on the
+ * same CSS path and with no re-render.
  */
 export function DirectLabels({ labels, gap = 14, x = 4 }: DirectLabelsProps) {
   const {
@@ -94,12 +118,16 @@ export function DirectLabels({ labels, gap = 14, x = 4 }: DirectLabelsProps) {
     innerHeight = 0,
     margin,
   } = useContext(DataContext) as XYChartDataContext;
+  const hiddenKeys = useOptionalHiddenKeys();
 
   if (!yScale || !margin) return null;
 
   // Resolve ideal pixel positions, dropping any label whose value falls off
-  // the scale so indices stay aligned with the resolver's output.
+  // the scale so indices stay aligned with the resolver's output. Hidden
+  // series are filtered out BEFORE placement, so the stack re-flows into the
+  // gap instead of leaving a hole where the label would have been.
   const placed = labels
+    .filter((label) => !hiddenKeys.has(labelId(label)))
     .map((label) => ({ label, y: yScale(label.value) }))
     .filter(
       (entry): entry is { label: DirectLabelItem; y: number } =>
@@ -122,7 +150,8 @@ export function DirectLabels({ labels, gap = 14, x = 4 }: DirectLabelsProps) {
     <g data-part="direct-labels">
       {placed.map((entry, index) => (
         <text
-          key={entry.label.id ?? entry.label.label}
+          key={labelId(entry.label)}
+          data-series={labelId(entry.label)}
           x={textX}
           y={resolved[index]}
           dominantBaseline="middle"
