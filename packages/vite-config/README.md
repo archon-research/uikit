@@ -44,6 +44,7 @@ that is not Oxc, so this preset adds the `id` filter the preset omits.
 | Option | Default | Effect |
 | --- | --- | --- |
 | `exclude` | `[]` | Extra module ids kept out of the Babel pass, merged after the defaults rather than replacing them |
+| `excludeStyledSystem` | `true` | Whether the default `styled-system` exclusion applies |
 | `compiler` | `undefined` | Options forwarded to `babel-plugin-react-compiler` |
 
 Excluded by default:
@@ -55,11 +56,26 @@ Excluded by default:
 
 The `jsx` carve-out is deliberate. Under `jsxFramework: 'react'` Panda generates
 real `forwardRef` components into `styled-system/jsx/`, and this repo's own
-shared Panda config sets exactly that. Since `exclude` only ever adds, a
-blanket `styled-system` exclusion would skip the compiler on genuine components
-with nothing a consumer could do about it — so the default is narrowed to the
-part of the tree that is component-free under every Panda setting, rather than
-made overridable.
+shared Panda config sets exactly that. Since `exclude` only ever adds, a blanket
+`styled-system` exclusion would skip the compiler on genuine components — so the
+default is narrowed to the part of the tree that is component-free under every
+Panda setting, rather than left for consumers to correct.
+
+That leaves one assumption: that the segment means Panda's `outdir` at all. A
+project where it does not — a hand-written `styled-system/` directory, say —
+would hit exactly the failure this preset exists to prevent, a build that
+type-checks, exits 0 and ships those components unoptimized, with no way to say
+so through an append-only `exclude`. `excludeStyledSystem: false` drops that one
+pattern:
+
+```typescript
+reactCompiler({ excludeStyledSystem: false });
+```
+
+`node_modules` is not part of the trade and stays out of the pass either way. It
+is also `@rolldown/plugin-babel`'s own default `exclude`, applied to the pass
+independently of the filter this preset sets, so an option to compile
+dependencies would not work even if one existed.
 
 Add your own generated trees:
 

@@ -152,6 +152,37 @@ describe('react-compiler preset', () => {
     expectCompiled(code, 'Component.tsx');
   });
 
+  it('puts a styled-system tree back in the pass under excludeStyledSystem: false', async () => {
+    // The default assumes that segment is Panda's `outdir`. Where it is not —
+    // a directory of that name holding hand-written components — the skip is
+    // silent, and `exclude` only adds, so this flag is the only way back in.
+    const code = await bundleFixture({ excludeStyledSystem: false });
+
+    expectCompiled(code, 'styled-system/Excluded.tsx');
+    expectCompiled(code, 'Component.tsx');
+    expectCompiled(code, 'jsx/Factory.tsx');
+  });
+
+  it('keeps node_modules out of the pass however that flag is set', async () => {
+    // The fixture, unchanged, under a `node_modules` segment. Every module in
+    // it compiles at its normal root — asserted above — so nothing being
+    // compiled here is the path segment doing the work and nothing else.
+    //
+    // An outcome assertion, deliberately: two independent gates hold it, this
+    // preset's own pattern and `@rolldown/plugin-babel`'s default `exclude`,
+    // which is applied to the pass whatever filter a preset carries. Dropping
+    // either one leaves this passing. What a consumer is owed is that no flag
+    // here hands dependencies to Babel, and that is what is asserted.
+    const code = await bundleFixture(
+      { excludeStyledSystem: false },
+      fixtureCopyUnder('node_modules'),
+    );
+
+    expect(code).not.toContain('react/compiler-runtime');
+    expectNotCompiled(code, 'Component.tsx');
+    expectNotCompiled(code, 'styled-system/Excluded.tsx');
+  });
+
   it('forwards options.compiler to the compiler itself', async () => {
     // `target` is the observable one: on an older React the compiler emits its
     // runtime import from the standalone package rather than from React.
