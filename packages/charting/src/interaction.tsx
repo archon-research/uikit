@@ -76,6 +76,21 @@ export interface InteractionDispatch {
   toggleKey: (id: string) => void;
 }
 
+/**
+ * Imperative, non-reactive access to the shared store — see
+ * {@link useInteractionStore}. `get` reads a field now; `subscribe` calls back
+ * with the new value on every change to that one field and returns an
+ * unsubscribe function. Neither re-renders the caller, which is what makes this
+ * the right surface for an effect that mutates already-mounted DOM.
+ */
+export interface InteractionStore {
+  get: <K extends InteractionKey>(key: K) => DashboardInteractionState[K];
+  subscribe: <K extends InteractionKey>(
+    key: K,
+    onChange: (value: DashboardInteractionState[K]) => void,
+  ) => () => void;
+}
+
 export interface DashboardInteractionApi
   extends DashboardInteractionState, InteractionDispatch {}
 
@@ -98,14 +113,14 @@ const InteractionDispatchContext = createContext<InteractionDispatch | null>(
  * context from re-rendering when the provider re-renders for an unrelated
  * reason.
  */
-interface InteractionStore {
+interface InteractionKeyStore {
   subscribe: (key: InteractionKey, onChange: () => void) => () => void;
   getSnapshot: (
     key: InteractionKey,
   ) => DashboardInteractionState[InteractionKey];
 }
 
-const InteractionStoreContext = createContext<InteractionStore | null>(null);
+const InteractionStoreContext = createContext<InteractionKeyStore | null>(null);
 
 /**
  * Owns the shared interaction state. Usually reached via `SyncedChartGroup`
@@ -265,7 +280,7 @@ export function DashboardInteractionProvider({
     [notify],
   );
 
-  const store = useMemo<InteractionStore>(
+  const store = useMemo<InteractionKeyStore>(
     () => ({ subscribe, getSnapshot }),
     [subscribe, getSnapshot],
   );
@@ -398,6 +413,61 @@ export function useInteractionDispatch(): InteractionDispatch {
   return dispatch;
 }
 
+/**
+ * Imperative, NON-REACTIVE access to the shared interaction store: read a field
+ * now (`get`), and be called back when it changes (`subscribe`). The caller is
+ * never re-rendered by either — this is the read half of the same store
+ * {@link useInteractionValue} subscribes to, minus the `useSyncExternalStore`
+ * that turns a change into a render.
+ *
+ * That is the point. `useInteractionValue` is right for a widget whose OUTPUT
+ * is a function of the value (a chip, a label). It is the wrong tool when the
+ * value drives a change that React does not need to reconcile — dimming already
+ * mounted marks (`EmphasisLayer` toggles attributes on the DOM nodes it already
+ * has), or repainting a canvas overlay — because there the re-render is pure
+ * cost, paid per pointer-move or per hover across every wired chart.
+ *
+ * Use it for effects that mutate already-mounted DOM, and keep `get` calls
+ * inside the callback so each one reads the freshest value (the provider writes
+ * its value ref synchronously, before the notify, so a subscriber reading in
+ * its own callback is never a frame behind).
+ *
+ * ```tsx
+ * const store = useInteractionStore();
+ * useEffect(
+ *   () => store.subscribe('highlightedKey', (key) => paint(key)),
+ *   [store],
+ * );
+ * ```
+ */
+export function useInteractionStore(): InteractionStore {
+  const store = useContext(InteractionStoreContext);
+  if (!store) {
+    throw new Error(
+      'useInteractionStore must be used within a DashboardInteractionProvider (SyncedChartGroup provides one).',
+    );
+  }
+
+  const get = useCallback(
+    <K extends InteractionKey>(key: K) =>
+      store.getSnapshot(key) as DashboardInteractionState[K],
+    [store],
+  );
+
+  const subscribe = useCallback(
+    <K extends InteractionKey>(
+      key: K,
+      onChange: (value: DashboardInteractionState[K]) => void,
+    ) =>
+      store.subscribe(key, () => {
+        onChange(store.getSnapshot(key) as DashboardInteractionState[K]);
+      }),
+    [store],
+  );
+
+  return useMemo(() => ({ get, subscribe }), [get, subscribe]);
+}
+
 /** Setter-only hook for the emphasized key — does not subscribe (no re-render on ticks). */
 export function useSetHighlightedKey(): (key: string | null) => void {
   return useInteractionDispatch().setHighlightedKey;
@@ -521,6 +591,41 @@ export function useHighlightedKey() {
 export function useHiddenKeys() {
   const hiddenKeys = useInteractionValue('hiddenKeys');
   return [hiddenKeys, useInteractionDispatch().toggleKey] as const;
+}
+
+/** Stable no-op unsubscribe for the provider-less branch of {@link useOptionalHiddenKeys}. */
+const NO_SUBSCRIPTION = () => {};
+
+/**
+ * `hiddenKeys` when a `DashboardInteractionProvider` is present, and the stable
+ * empty set when it is not — INTERNAL to this package, deliberately not
+ * exported from the barrels.
+ *
+ * Every public hook here throws outside a provider, on purpose: interactivity
+ * should be an explicit dependency rather than something that silently
+ * degrades. This exists for the opposite case — a component that already ships
+ * and already renders fine standalone (`DirectLabels`), which should pick the
+ * group's hidden set up when it happens to be inside one without making a
+ * provider newly mandatory for everyone else.
+ */
+export function useOptionalHiddenKeys(): ReadonlySet<string> {
+  const store = useContext(InteractionStoreContext);
+
+  const subscribe = useCallback(
+    (onChange: () => void) =>
+      store ? store.subscribe('hiddenKeys', onChange) : NO_SUBSCRIPTION,
+    [store],
+  );
+
+  const getSnapshot = useCallback(
+    () =>
+      store
+        ? (store.getSnapshot('hiddenKeys') as ReadonlySet<string>)
+        : EMPTY_HIDDEN_KEYS,
+    [store],
+  );
+
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
 /** Narrow selector hook for one named filter in the shared filter bag. */
