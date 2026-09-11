@@ -13,6 +13,7 @@ packages/
   tsconfig/         Shared TypeScript configs (base, react, node)
   oxlint-config/    Shared Oxlint configs (base, react)
   oxfmt-config/     Shared Oxfmt config
+  vite-config/      Shared Vite build presets (React Compiler)
   agent-marketplace/ Plugin marketplace content and generators (private)
   design-system/    Shared UI components and style recipes
   charting/         Dedicated charting primitives package
@@ -35,6 +36,7 @@ Published to npm:
 - `@archon-research/tsconfig`
 - `@archon-research/oxlint-config`
 - `@archon-research/oxfmt-config`
+- `@archon-research/vite-config`
 - `@archon-research/design-system`
 - `@archon-research/charting`
 - `@archon-research/dashboard-kit`
@@ -59,7 +61,7 @@ If you are adapting this template for another organization, you can replace the 
 Install packages from npm:
 
 ```bash
-npm install @archon-research/tsconfig @archon-research/oxlint-config @archon-research/oxfmt-config @archon-research/design-system @archon-research/charting @archon-research/dashboard-kit @archon-research/http-client-core @archon-research/http-client-react @archon-research/http-client-msw @archon-research/router-kit @archon-research/webmcp @archon-research/mcp-connect @archon-research/mcp-relay @archon-research/uikit-cli
+npm install @archon-research/tsconfig @archon-research/oxlint-config @archon-research/oxfmt-config @archon-research/vite-config @archon-research/design-system @archon-research/charting @archon-research/dashboard-kit @archon-research/http-client-core @archon-research/http-client-react @archon-research/http-client-msw @archon-research/router-kit @archon-research/webmcp @archon-research/mcp-connect @archon-research/mcp-relay @archon-research/uikit-cli
 ```
 
 Each package has its own npm page with detailed documentation and usage examples.
@@ -78,6 +80,7 @@ See the individual package READMEs for specific usage examples:
 - [tsconfig](./packages/tsconfig/README.md)
 - [oxlint-config](./packages/oxlint-config/README.md)
 - [oxfmt-config](./packages/oxfmt-config/README.md)
+- [vite-config](./packages/vite-config/README.md)
 - [design-system](./packages/design-system/README.md)
 - [charting](./packages/charting/README.md)
 - [dashboard-kit](./packages/dashboard-kit/README.md)

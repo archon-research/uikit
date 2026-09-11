@@ -161,7 +161,7 @@ See `uikit-cli` package documentation for more details.
 ## How packages are structured
 
 1. Workspaces under `packages/*` are resolved through npm workspaces.
-2. Shared config packages (`tsconfig`, `oxlint-config`, `oxfmt-config`) provide reusable defaults for consumer apps.
+2. Shared config packages (`tsconfig`, `oxlint-config`, `oxfmt-config`, `vite-config`) provide reusable defaults for consumer apps.
 3. Runtime packages (`design-system`, `charting`, `dashboard-kit`, `router-kit`, `http-client-core`, `http-client-react`, `http-client-msw`, `webmcp`, `mcp-connect`, `mcp-relay`) ship a built library that consumer apps import. In local development they resolve through the npm-workspace symlink to that package's own `dist/`, so a change is picked up after a rebuild, not straight from `src/`.
 4. `uikit-cli` links local package builds into consumer repositories to support fast co-development loops.
 
@@ -299,3 +299,4 @@ npm publish --workspaces --registry https://registry.npmjs.org
 - `@archon-research/tsconfig` exports shared TS config presets
 - `@archon-research/oxlint-config` exports `base` and `react` lint presets
 - `@archon-research/oxfmt-config` exports a shared formatter preset
+- `@archon-research/vite-config` exports a `react-compiler` Vite preset
