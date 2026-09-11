@@ -17,7 +17,8 @@ import type { PendingCallRecord } from './types.js';
 // ---------------------------------------------------------------------------
 
 /**
- * Seconds left before `expiresAt`, ticking once a second.
+ * Seconds left before `expiresAt`, ticking once a second. `null` when
+ * `expiresAt` does not parse: unknown, which is not the same as expired.
  *
  * The clock reading lives in state rather than being read during render:
  * render has to be pure, and `Date.now()` is not. The interval owns it.
@@ -28,11 +29,18 @@ import type { PendingCallRecord } from './types.js';
  * remounted per prompt (see `ConfirmToolCallCard`, keyed on `callId`), never
  * from one that outlives the prompt: the mount is what seeds a fresh reading.
  */
-function useSecondsRemaining(expiresAt: string): number {
+function useSecondsRemaining(expiresAt: string): number | null {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     const deadline = new Date(expiresAt).getTime();
+    // An unparseable stamp has no deadline to stop at: `NaN - reading <= 0` is
+    // false forever, so the interval below would re-render the card every
+    // second for the whole life of the prompt. Nothing to count, so no timer.
+    if (!Number.isFinite(deadline)) {
+      return;
+    }
+
     const interval = setInterval(() => {
       const reading = Date.now();
       setNow(reading);
@@ -47,6 +55,9 @@ function useSecondsRemaining(expiresAt: string): number {
   }, [expiresAt]);
 
   const deadline = new Date(expiresAt).getTime();
+  if (!Number.isFinite(deadline)) {
+    return null;
+  }
   return Math.max(0, Math.floor((deadline - now) / 1000));
 }
 
@@ -185,7 +196,9 @@ function ConfirmToolCallCard({
       1000,
   );
   const progressPct =
-    totalTimeout > 0 ? (secondsRemaining / totalTimeout) * 100 : 0;
+    secondsRemaining !== null && totalTimeout > 0
+      ? (secondsRemaining / totalTimeout) * 100
+      : 0;
 
   const countdownStyle: CSSProperties = {
     width: `${progressPct}%`,
@@ -228,9 +241,7 @@ function ConfirmToolCallCard({
           {pendingCall.summary}
         </p>
 
-        <div style={expiryStyle}>
-          {secondsRemaining > 0 ? `Expires in ${secondsRemaining}s` : 'Expired'}
-        </div>
+        <div style={expiryStyle}>{expiryLabel(secondsRemaining)}</div>
 
         {/* Collapsible args preview */}
         <button
@@ -263,6 +274,17 @@ function ConfirmToolCallCard({
       </div>
     </div>
   );
+}
+
+/**
+ * The countdown line. An unknown deadline reads as unknown: calling a call
+ * "Expired" that the relay will still accept is the more misleading of the two.
+ */
+function expiryLabel(secondsRemaining: number | null): string {
+  if (secondsRemaining === null) {
+    return 'Expiry unknown';
+  }
+  return secondsRemaining > 0 ? `Expires in ${secondsRemaining}s` : 'Expired';
 }
 
 // ---------------------------------------------------------------------------
