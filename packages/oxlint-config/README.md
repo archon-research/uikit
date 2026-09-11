@@ -43,6 +43,63 @@ export default defineConfig({
 });
 ```
 
+### React projects, with the opt-in strict rules
+
+```typescript
+import reactStrictConfig from '@archon-research/oxlint-config/react-strict';
+import { defineConfig } from 'oxlint';
+
+export default defineConfig({
+  ...reactStrictConfig,
+});
+```
+
+`react` plus the two `restriction`-category rules it deliberately leaves out:
+`typescript/no-explicit-any` and `react/only-export-components`. Both sit in a
+category `base`'s `correctness` + `suspicious` never reaches, so naming them is
+the only thing that turns them on.
+
+**This repo does not adopt this preset, and does not pass it.** Measured across
+all 16 workspaces: `no-explicit-any` is clean (via one documented line-scoped
+suppression in `http-client-react`), but `only-export-components` has **76
+violations here** and none of them are bugs. They are exported hooks living
+beside the provider that backs them, unexported compound-component parts, and
+barrel entrypoints — the layout a component library is supposed to have.
+
+That is the adoption story in one line: **`only-export-components` is for
+applications, not for libraries.** It is Fast-Refresh hygiene, and Fast Refresh
+is a property of an app's dev server; a published library's modules are not the
+boundaries the consumer's HMR reloads. Adopt it in an app, where a mixed-export
+module really does cost you a full reload instead of preserved state. Do not
+expect a component library to satisfy it.
+
+Because the two halves diverge that sharply, each is also exported on its own so
+a consumer can take one axis without the other:
+
+```typescript
+import reactConfig from '@archon-research/oxlint-config/react';
+import { noExplicitAnyRules } from '@archon-research/oxlint-config/react-strict';
+
+export default defineConfig({
+  ...reactConfig,
+  rules: { ...reactConfig.rules, ...noExplicitAnyRules },
+});
+```
+
+`noExplicitAnyRules`, `fastRefreshRules`, and `reactStrictRules` (both) are all
+available.
+
+#### `no-explicit-any` cannot be scoped to value positions
+
+There is no configuration that allows `any` in a type or generic-constraint
+position while denying it in a value position. oxlint's schema for the rule is
+`additionalProperties: false` over exactly `fixToUnknown` and `ignoreRestArgs`.
+So a constraint that genuinely requires `any` — where `unknown` would break
+inference rather than tighten it — has to be suppressed at the site with
+`// oxlint-disable-next-line typescript/no-explicit-any` and a comment saying
+why. Keep it to the one line; a file- or package-level disable hides the trade
+instead of recording it.
+
 ### React projects with design-system import governance
 
 ```typescript
@@ -90,8 +147,22 @@ The rules are also exported on their own as `typeAwareRules`, for merging into
 
 - **base** - General linting rules, including `import/no-cycle`
 - **react** - `base` plus React rules, including Rules of Hooks
+- **react-strict** - React rules plus `no-explicit-any` and `only-export-components`; opt-in, and aimed at applications rather than libraries
 - **design-system-boundaries** - React rules plus an error on direct primitive imports from `@ark-ui/react` and its subpaths
 - **type-aware** - React rules plus promise safety; requires `--type-aware` and `oxlint-tsgolint`
+
+### Naming
+
+Variants are named `<base-preset>-<what-it-adds>`: the prefix says which preset
+they compose on, the suffix says which axis they tighten. A preset for the
+pedantic module-size rules (`max-lines`, `max-lines-per-function`,
+`import/max-dependencies`) has been proposed and belongs here as
+**`react-structure`** under this scheme.
+
+Prefixing by severity instead — `strict-react`, `strict-structure` — would
+fragment the namespace, grouping some variants by the preset they extend and
+others by how strict they are, and leave a reader scanning the exports map to
+work out which one holds what.
 
 ## Extending a preset
 

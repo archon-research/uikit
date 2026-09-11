@@ -50,6 +50,14 @@ import { createTagRegistry } from './tags.js';
  */
 export type QueryApiPaths = Record<
   string,
+  // Suppressed for this one line, not the file. `no-explicit-any` ships in the
+  // opt-in `react-strict` oxlint preset, and this is the site that preset
+  // cannot express an exception for: oxlint's rule takes only `fixToUnknown`
+  // and `ignoreRestArgs`, neither of which distinguishes a generic constraint
+  // from a value annotation. `unknown` here is not a safer spelling of the same
+  // type — it breaks the inference described above and the constraint stops
+  // doing its job. The trade is recorded here rather than configured away.
+  // oxlint-disable-next-line typescript/no-explicit-any
   { [TMethod in HttpMethod]?: any } & { parameters?: any }
 >;
 

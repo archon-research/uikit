@@ -11,7 +11,7 @@ Live preview: https://archon-research.github.io/uikit/
 ```text
 packages/
   tsconfig/         Shared TypeScript configs (base, react, node)
-  oxlint-config/    Shared Oxlint configs (base, react)
+  oxlint-config/    Shared Oxlint configs (base, react, react-strict, design-system-boundaries, type-aware)
   oxfmt-config/     Shared Oxfmt config
   vite-config/      Shared Vite build presets (React Compiler)
   agent-marketplace/ Plugin marketplace content and generators (private)

@@ -8,6 +8,7 @@
     "dist",
     "base.ts",
     "react.ts",
+    "react-strict.ts",
     "design-system-boundaries.ts",
     "type-aware.ts"
   ],
@@ -30,6 +31,10 @@
     "./react": {
       "types": "./dist/react.d.ts",
       "default": "./dist/react.js"
+    },
+    "./react-strict": {
+      "types": "./dist/react-strict.d.ts",
+      "default": "./dist/react-strict.js"
     },
     "./design-system-boundaries": {
       "types": "./dist/design-system-boundaries.d.ts",

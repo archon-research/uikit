@@ -187,7 +187,15 @@ const allocations = [
 // Components
 // ============================================================================
 
-const AllocationCard = ({ allocation, onSelect }: any) => (
+type Allocation = (typeof allocations)[number];
+
+const AllocationCard = ({
+  allocation,
+  onSelect,
+}: {
+  allocation: Allocation;
+  onSelect: (allocation: Allocation) => void;
+}) => (
   <button
     className={allocationCardClassName}
     onClick={() => onSelect(allocation)}
@@ -224,7 +232,16 @@ const AllocationCard = ({ allocation, onSelect }: any) => (
   </button>
 );
 
-const RiskDetailDrawer = ({ allocation, onClose }: any) => {
+const RiskDetailDrawer = ({
+  allocation,
+  onClose,
+}: {
+  // `undefined` as well as `null`: one call site passes `allocations[0]`, and
+  // `noUncheckedIndexedAccess` makes that possibly-undefined. The guard below
+  // covers both.
+  allocation: Allocation | null | undefined;
+  onClose: () => void;
+}) => {
   const [activeTab, setActiveTab] = useState('overview');
 
   if (!allocation) return null;
@@ -428,9 +445,8 @@ const RiskDetailDrawer = ({ allocation, onClose }: any) => {
 // ============================================================================
 
 export const Default = () => {
-  const [selectedAllocation, setSelectedAllocation] = useState<
-    (typeof allocations)[number] | null
-  >(allocations[0] ?? null);
+  const [selectedAllocation, setSelectedAllocation] =
+    useState<Allocation | null>(allocations[0] ?? null);
 
   return (
     <ThemeProvider>
