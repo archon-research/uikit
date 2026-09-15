@@ -71,7 +71,14 @@ export type SyncedTooltipProps = {
    * draws them and this component is only wanted for the card.
    */
   marks?: boolean;
-  /** Gap in px between the crosshair and the card. Defaults to `12`. */
+  /**
+   * Gap in px between the crosshair and the card, on whichever side the card
+   * ends up: to the right of the vertical crosshair line by default, to the
+   * left when the card flips to stay inside the chart's own box. Defaults to
+   * `12`. Vertical placement — centered on the topmost visible point, or
+   * flipped below it when that would push the card above the chart's own top
+   * edge — is not controlled by this prop; see the component doc comment.
+   */
   offset?: number;
 };
 
@@ -142,6 +149,15 @@ const VALUE_STYLE: CSSProperties = {
   paddingLeft: 12,
   fontVariantNumeric: 'tabular-nums',
 };
+
+/**
+ * Vertical clearance in px between the anchor point and the card's near edge
+ * when the card is flipped below it (see `flipY` in `apply`). Independent of
+ * the public `offset` prop, which is documented as the horizontal gap only —
+ * this exists so a flipped card does not sit flush on top of the readout dot
+ * it is anchored to, not to express a general "gap from the crosshair".
+ */
+const VERTICAL_FLIP_GAP = 8;
 
 /**
  * Toggles `display` between `none` and `shown`, writing only when it differs so
@@ -215,6 +231,19 @@ function byAttribute<T extends Element>(
  * Rows for series in the group's `hiddenKeys` are dropped, as `DirectLabels`
  * drops their labels — the same imperative read, so hiding a series from the
  * legend does not re-render the readout either.
+ *
+ * The card is positioned relative to the crosshair on both axes, and flips on
+ * either one to stay inside the chart's own box (`0` to `width`/`height`, the
+ * area a `<foreignObject>` sized to the whole chart covers) rather than
+ * overflow it: horizontally, it sits `offset`px to the right of the crosshair
+ * by default and flips to `offset`px to the left when that would cross the
+ * chart's right edge; vertically, it is centered on the topmost visible
+ * point by default and flips to sit below it when that would push the card's
+ * top edge above the chart's own top edge. Staying inside that box matters
+ * because a consumer that clips chart overflow (e.g. `overflow-x: hidden` on
+ * the wrapper — which, per CSS, stops `overflow-y` being `visible` too) can
+ * only clip content that leaves the chart's own box, not content that
+ * overflows the plot's margin but stays inside it.
  *
  * This is output only: it captures no pointer or keyboard input. For keyboard
  * control of the cursor, keep one `ChartCursorLayer` (its focusable slider
@@ -326,17 +355,34 @@ export function SyncedTooltip({
       line.setAttribute('y2', String(margin.top + innerHeight));
     }
 
+    // Anchored to the topmost visible point; `margin.top` is the same
+    // "nothing to anchor to" fallback `ChartCursorLayer`'s `top` documents.
+    const anchorY = Number.isFinite(topY) ? topY : margin.top;
+
     setDisplay(card, true, 'block');
     card.style.left = `${cx}px`;
-    card.style.top = `${Number.isFinite(topY) ? topY : margin.top}px`;
-    // Flip to the other side of the crosshair rather than overflow the plot.
-    // `offsetWidth` is 0 before the card has been laid out (and in jsdom),
-    // which reads as "it fits" — the right answer for the first frame, and
-    // self-correcting on the next move.
-    const flip = cx + currentOffset + card.offsetWidth > width;
-    card.style.transform = flip
-      ? `translate(calc(-100% - ${currentOffset}px), -50%)`
-      : `translate(${currentOffset}px, -50%)`;
+    card.style.top = `${anchorY}px`;
+    // Flip to the other side of the anchor rather than overflow the chart's
+    // own box — horizontally past the right edge, vertically past the top
+    // edge — on both axes independently. `offsetWidth`/`offsetHeight` are 0
+    // before the card has been laid out (and in jsdom), which reads as "it
+    // fits" — the right answer for the first frame, and self-correcting on
+    // the next move.
+    //
+    // Vertical default is centered on the anchor (`translateY(-50%)`), so a
+    // card whose top half would cross `y = 0` — the top of the chart's own
+    // box, not just the plot's `margin.top` — flips to sit entirely below
+    // the anchor instead of straddling it. `y = 0` is deliberate: a
+    // consumer's `overflow: hidden` wrapper clips at the chart's own edge, so
+    // a card that stays inside `margin.top` but above `y = 0` is exactly the
+    // case that was clipped in practice.
+    const flipX = cx + currentOffset + card.offsetWidth > width;
+    const flipY = anchorY - card.offsetHeight / 2 < 0;
+    const translateX = flipX
+      ? `calc(-100% - ${currentOffset}px)`
+      : `${currentOffset}px`;
+    const translateY = flipY ? `${VERTICAL_FLIP_GAP}px` : '-50%';
+    card.style.transform = `translate(${translateX}, ${translateY})`;
   }, [store, inputsRef]);
 
   // The hot path: a pointer move lands here, not in React.
