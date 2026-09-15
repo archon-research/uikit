@@ -264,6 +264,132 @@ describe('SyncedTooltip (DOM writes, not re-renders)', () => {
     expect(view.value('a')).toBe('20 u');
   });
 
+  /**
+   * The bug this guards: the card is vertically centered on the topmost
+   * visible point (`top: topY; transform: translateY(-50%)`), so its top
+   * half renders ABOVE that point. A point near the chart's own top edge
+   * (`y = 0`, not just `margin.top`) then puts the card's top edge above
+   * `y = 0` — inside a consumer's `overflow: hidden` wrapper, that is
+   * clipped, the same failure mode the horizontal flip already exists to
+   * avoid on the right edge. `card.offsetHeight` is always `0` in jsdom (as
+   * the horizontal flip's own comment notes), so it is stubbed here the same
+   * way a real laid-out card would report a nonzero height.
+   */
+  it('flips the card below the anchor, not centered on it, when headroom above is insufficient', () => {
+    const view = render(
+      <SyncedChartGroup>
+        <CursorButton at={2} />
+        <XYChart
+          theme={chartTheme}
+          width={400}
+          height={200}
+          margin={{ top: 4, left: 40, right: 20, bottom: 30 }}
+          xScale={{ type: 'linear', domain: [0, 4] }}
+          yScale={{ type: 'linear', domain: [0, 100] }}
+        >
+          <LineSeries
+            dataKey="a"
+            data={DATA}
+            xAccessor={(datum: (typeof DATA)[number]) => datum.x}
+            yAccessor={(datum: (typeof DATA)[number]) => datum.y}
+          />
+          <SyncedTooltip
+            stops={STOPS}
+            formatX={(x) => `#${x}`}
+            series={[
+              {
+                id: 'a',
+                label: 'Alpha',
+                color: 'chart.series.primary' as const,
+                // The domain max: yScale maps it to margin.top (4px) — right
+                // at the chart's own top edge once the card's height is
+                // accounted for.
+                valueAt: () => 100,
+              },
+            ]}
+          />
+        </XYChart>
+      </SyncedChartGroup>,
+    );
+
+    const card = view.container.querySelector<HTMLElement>(
+      '[data-part="synced-tooltip-card"]',
+    )!;
+    Object.defineProperty(card, 'offsetHeight', {
+      value: 40,
+      configurable: true,
+    });
+
+    click('cursor-2');
+
+    // Anchor unchanged: still the topmost visible point.
+    expect(card.style.top).toBe('4px');
+    // Centered (`-50%` of a 40px card) would put the top edge at
+    // 4 - 20 = -16px — above the chart's own box. Flipped, the card sits
+    // below the anchor by a small fixed clearance instead.
+    expect(card.style.transform).not.toMatch(/-50%/);
+    expect(card.style.transform).toMatch(/translate\(12px, 8px\)/);
+    // The number the fix exists for: top (px) + translateY (px) is the
+    // card's actual rendered top edge, and it must not go negative.
+    const renderedTop = 4 + 8;
+    expect(renderedTop).toBeGreaterThanOrEqual(0);
+  });
+
+  /**
+   * The control for the test above: ample headroom keeps the pre-existing
+   * centered behavior exactly as it was — the fix must not touch the common
+   * case just because it now also handles the tight one.
+   */
+  it('keeps the card centered on the anchor when headroom above is ample', () => {
+    const view = render(
+      <SyncedChartGroup>
+        <CursorButton at={2} />
+        <XYChart
+          theme={chartTheme}
+          width={400}
+          height={300}
+          margin={{ top: 100, left: 40, right: 20, bottom: 30 }}
+          xScale={{ type: 'linear', domain: [0, 4] }}
+          yScale={{ type: 'linear', domain: [0, 100] }}
+        >
+          <LineSeries
+            dataKey="a"
+            data={DATA}
+            xAccessor={(datum: (typeof DATA)[number]) => datum.x}
+            yAccessor={(datum: (typeof DATA)[number]) => datum.y}
+          />
+          <SyncedTooltip
+            stops={STOPS}
+            formatX={(x) => `#${x}`}
+            series={[
+              {
+                id: 'a',
+                label: 'Alpha',
+                color: 'chart.series.primary' as const,
+                valueAt: () => 100,
+              },
+            ]}
+          />
+        </XYChart>
+      </SyncedChartGroup>,
+    );
+
+    const card = view.container.querySelector<HTMLElement>(
+      '[data-part="synced-tooltip-card"]',
+    )!;
+    // Same stubbed height as the tight case above — the only thing that
+    // differs here is `margin.top`, which is what makes headroom ample.
+    Object.defineProperty(card, 'offsetHeight', {
+      value: 40,
+      configurable: true,
+    });
+
+    click('cursor-2');
+
+    expect(card.style.top).toBe('100px');
+    expect(card.style.transform).toMatch(/translate\(12px, -50%\)/);
+  });
+
   it('follows a data tick that moves the values under a stationary cursor', () => {
     /**
      * The readout is a function of scales and data this component does not
