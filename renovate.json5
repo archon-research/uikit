@@ -86,6 +86,25 @@
       ],
       groupName: "semantic-release-tooling",
     },
+    {
+      // babel-plugin-react-compiler@1.0.0 (current latest) peers
+      // @babel/types: "^7.26.0" and requires its own copy — dist/index.js
+      // calls require("@babel/types") 83 times rather than relying solely on
+      // the `types` object Babel injects into a plugin. A @babel/core major
+      // (core 8 hard-depends on @babel/types ^8) would land two live
+      // @babel/types in the tree: 7.x hoisted for the compiler plugin, 8.x
+      // nested under core, with the plugin introspecting an AST that Babel 8
+      // owns. Nothing reports this: npm is satisfied because the compiler's
+      // ^7 peer IS met by the hoisted copy, and a consumer on core 8 still
+      // builds and type-checks clean — the skew was found by reading the
+      // lockfile, not from a failure. So the cost of taking the major is an
+      // unsound tree the React Compiler's authors have not validated, not a
+      // red build that would tell you to revert. Revisit once
+      // babel-plugin-react-compiler ships a release peering on @babel/types ^8.
+      matchPackageNames: ["@babel/core"],
+      matchUpdateTypes: ["major"],
+      enabled: false,
+    },
   ],
   // Open all PRs as drafts for supply chain review
   draftPR: true,
