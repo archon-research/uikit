@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  renderHook,
+} from '@testing-library/react';
 import { useEffect, useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -9,6 +15,7 @@ import {
   useInteractionSetters,
   useInteractionValue,
   useSyncedCursorHandlers,
+  useTimeRangeBrushGesture,
   useToggleHiddenKey,
 } from './interaction.js';
 
@@ -283,5 +290,105 @@ describe('stable setters (useSyncedCursorHandlers / useInteractionSetters)', () 
     // is the exact re-render trap the synced-cursor wiring used to hit.
     expect(wirerRenders).toBe(1);
     expect(settersRenders).toBe(1);
+  });
+});
+
+describe('useTimeRangeBrushGesture', () => {
+  it('commits a range when the drag exceeds the 4px threshold', () => {
+    const { result } = renderHook(() => useTimeRangeBrushGesture());
+
+    act(() => {
+      result.current.onPointerDown({ svgPoint: { x: 10 } });
+      result.current.onPointerMove({ svgPoint: { x: 20 } });
+      result.current.onPointerUp();
+    });
+
+    expect(result.current.committedPx).toEqual({ start: 10, end: 20 });
+  });
+
+  it('does not commit a drag of 4px or less, or a plain click', () => {
+    const { result } = renderHook(() => useTimeRangeBrushGesture());
+
+    // Exactly 4px — the gesture requires strictly more than 4px.
+    act(() => {
+      result.current.onPointerDown({ svgPoint: { x: 10 } });
+      result.current.onPointerMove({ svgPoint: { x: 14 } });
+      result.current.onPointerUp();
+    });
+    expect(result.current.committedPx).toBeNull();
+
+    // A plain click: pointer down then up with no move at all.
+    act(() => {
+      result.current.onPointerDown({ svgPoint: { x: 50 } });
+      result.current.onPointerUp();
+    });
+    expect(result.current.committedPx).toBeNull();
+  });
+
+  it('clears livePx on pointer-up regardless of whether the drag commits', () => {
+    const { result } = renderHook(() => useTimeRangeBrushGesture());
+
+    act(() => {
+      result.current.onPointerDown({ svgPoint: { x: 0 } });
+      result.current.onPointerMove({ svgPoint: { x: 50 } });
+    });
+    expect(result.current.livePx).toEqual({ start: 0, end: 50 });
+
+    act(() => {
+      result.current.onPointerUp();
+    });
+    expect(result.current.livePx).toBeNull();
+  });
+
+  it('commits a right-to-left drag as a usable (min < max, once normalised) pixel range', () => {
+    const { result } = renderHook(() => useTimeRangeBrushGesture());
+
+    act(() => {
+      result.current.onPointerDown({ svgPoint: { x: 100 } });
+      result.current.onPointerMove({ svgPoint: { x: 20 } });
+      result.current.onPointerUp();
+    });
+
+    // The hook itself stores the raw drag direction (start > end here) —
+    // normalisation is `DragSelectionOverlay`'s job via Math.min/Math.max —
+    // but the committed values must still be exactly the drag's endpoints.
+    expect(result.current.committedPx).toEqual({ start: 100, end: 20 });
+    const normalised = {
+      start: Math.min(
+        result.current.committedPx!.start,
+        result.current.committedPx!.end,
+      ),
+      end: Math.max(
+        result.current.committedPx!.start,
+        result.current.committedPx!.end,
+      ),
+    };
+    expect(normalised).toEqual({ start: 20, end: 100 });
+  });
+
+  it('ignores onPointerMove before any onPointerDown', () => {
+    const { result } = renderHook(() => useTimeRangeBrushGesture());
+
+    act(() => {
+      result.current.onPointerMove({ svgPoint: { x: 40 } });
+    });
+
+    expect(result.current.livePx).toBeNull();
+  });
+
+  it('ignores a pointer event with no svgPoint', () => {
+    const { result } = renderHook(() => useTimeRangeBrushGesture());
+
+    act(() => {
+      result.current.onPointerDown(undefined);
+    });
+    expect(result.current.livePx).toBeNull();
+
+    act(() => {
+      result.current.onPointerDown({ svgPoint: { x: 10 } });
+      result.current.onPointerMove(undefined);
+    });
+    // The drag started at x=10 and the no-op move left it unchanged.
+    expect(result.current.livePx).toEqual({ start: 10, end: 10 });
   });
 });

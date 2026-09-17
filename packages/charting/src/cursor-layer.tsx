@@ -75,7 +75,10 @@ export type ChartCursorLayerProps = {
 type XYChartDataContext = {
   xScale?: {
     (value: unknown): number | undefined;
-    invert?: (value: number) => number;
+    // A `time` xScale's `invert` returns a `Date`, not a `number` — see the
+    // `Number(...)` coercion in `stopFromPixel` below, and its counterpart
+    // in `interaction.tsx`'s `resolveCommittedRange`.
+    invert?: (value: number) => number | Date;
   };
   yScale?: (value: number) => number | undefined;
   innerWidth?: number;
@@ -147,7 +150,10 @@ export function ChartCursorLayer({
   const stopFromPixel = (svgX: number): number | null => {
     if (stops.length === 0) return null;
     if (typeof xScale.invert === 'function') {
-      const domainX = xScale.invert(svgX);
+      // `Number(...)` coerces a `time` scale's `Date` to epoch ms (a no-op
+      // for `linear`'s already-`number` result) — see `resolveCommittedRange`
+      // in `interaction.tsx`, this file's precedent for the coercion.
+      const domainX = Number(xScale.invert(svgX));
       return snap ? (snapToStop(stops, domainX) ?? null) : domainX;
     }
     let best = stops[0]!;
