@@ -16,8 +16,11 @@
 // nothing re-renders: the subscription is `useInteractionStore()` — `get` and
 // `subscribe` WITHOUT `useSyncExternalStore` — so a cursor move costs a
 // handful of attribute and `textContent` writes per panel and never reaches
-// React. It is the shape `EmphasisLayer` established for hover-frequency
-// effects (see `emphasis.tsx`), applied to the readout.
+// React, and never reads layout either — the one read that used to sit on
+// this path (the card's own size, for the flip logic) is now a
+// `ResizeObserver`-fed cache instead (see `sizeRef`), so a move forces no
+// style+layout flush. It is the shape `EmphasisLayer` established for
+// hover-frequency effects (see `emphasis.tsx`), applied to the readout.
 //
 // Additive on purpose: the bus is still there, and a panel using visx
 // `<Tooltip>` is unaffected. Adopting this is a swap inside one chart body.
@@ -40,7 +43,9 @@ import { useLatest } from './use-latest.js';
 /**
  * One row of the readout. A superset of `ChartCursorLayer`'s
  * {@link CursorSeries}, so the SAME array can be handed to both when a chart
- * wants that layer's pointer/keyboard input as well as this readout.
+ * wants that layer's pointer/keyboard input as well as this readout. Inside a
+ * `SyncedChartGroup`, `id` must be the legend's logical series id — hidden-row
+ * dropping keys the group's `hiddenKeys` off it, same as `DirectLabelItem.id`.
  */
 export type SyncedTooltipSeries = CursorSeries & {
   /** Row label, e.g. the series name as the legend says it. */
@@ -266,6 +271,19 @@ export function SyncedTooltip({
   const cardRef = useRef<HTMLDivElement | null>(null);
   const lineRef = useRef<SVGLineElement | null>(null);
 
+  // The card's own box size, read ONLY here — never in `apply` — so the hot
+  // cursor path stays write-only. `offsetWidth`/`offsetHeight` force a
+  // synchronous style+layout flush; reading them from `apply` (as the flip
+  // logic used to) pays that cost once per panel per pointer move, which is
+  // exactly the cost this component exists to avoid (see the file doc
+  // comment). A `ResizeObserver` instead reports the box size on its own
+  // schedule (batched, after layout, before paint), so `apply` only ever
+  // reads this cache. Starts at `{ 0, 0 }`, the same "no box yet" value
+  // `offsetWidth`/`offsetHeight` themselves read before first layout (and
+  // always, in jsdom) — see the flip comment in `apply` for why that default
+  // is the correct first-frame answer, not a bug.
+  const sizeRef = useRef({ width: 0, height: 0 });
+
   // Read through a ref so the subscription effect below depends on the store
   // alone: `series` and the formatters are fresh identities on every render of
   // the parent, and naming them would re-subscribe once per data tick.
@@ -364,10 +382,15 @@ export function SyncedTooltip({
     card.style.top = `${anchorY}px`;
     // Flip to the other side of the anchor rather than overflow the chart's
     // own box — horizontally past the right edge, vertically past the top
-    // edge — on both axes independently. `offsetWidth`/`offsetHeight` are 0
-    // before the card has been laid out (and in jsdom), which reads as "it
-    // fits" — the right answer for the first frame, and self-correcting on
-    // the next move.
+    // edge — on both axes independently. The size read here comes from
+    // `sizeRef`, not `card.offsetWidth`/`offsetHeight` — see the comment on
+    // `sizeRef` above. Before the `ResizeObserver` has reported a box (the
+    // first frame, and always in jsdom, which implements no
+    // `ResizeObserver`), that cache is `{ 0, 0 }`, which reads as "it fits" —
+    // the right answer for the first frame. Self-correction no longer waits
+    // for the next pointer move: the observer calls `apply` itself as soon as
+    // it reports a real size, so a wrong first-frame flip decision is
+    // repainted before the user acts on it rather than left stale.
     //
     // Vertical default is centered on the anchor (`translateY(-50%)`), so a
     // card whose top half would cross `y = 0` — the top of the chart's own
@@ -376,8 +399,8 @@ export function SyncedTooltip({
     // consumer's `overflow: hidden` wrapper clips at the chart's own edge, so
     // a card that stays inside `margin.top` but above `y = 0` is exactly the
     // case that was clipped in practice.
-    const flipX = cx + currentOffset + card.offsetWidth > width;
-    const flipY = anchorY - card.offsetHeight / 2 < 0;
+    const flipX = cx + currentOffset + sizeRef.current.width > width;
+    const flipY = anchorY - sizeRef.current.height / 2 < 0;
     const translateX = flipX
       ? `calc(-100% - ${currentOffset}px)`
       : `${currentOffset}px`;
@@ -394,6 +417,30 @@ export function SyncedTooltip({
       unsubscribeHidden();
     };
   }, [store, apply]);
+
+  // Feeds `sizeRef`, which `apply`'s flip logic reads instead of measuring
+  // the card itself. Content that changes the card's box (a longer formatted
+  // value, a row appearing) re-fires this the same way any other layout
+  // change would — a `ResizeObserver` reports content-driven resizes, not
+  // only viewport ones — so the cache tracks the CURRENT readout's size, not
+  // a stale one left over from a previous, differently-sized hover. Runs
+  // `apply()` on every report so a flip decision made against a stale or
+  // unknown size is corrected as soon as the real size is known, rather than
+  // waiting for the next pointer move.
+  //
+  // No-ops where there is no `ResizeObserver` (jsdom, older environments):
+  // `sizeRef` stays at its `{ 0, 0 }` default and the flip logic falls back
+  // to "it fits", exactly as an unmeasured card already did.
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      sizeRef.current = { width: card.offsetWidth, height: card.offsetHeight };
+      apply();
+    });
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, [apply]);
 
   // Deliberately no dependency array, as in `EmphasisLayer`: the readout is a
   // function of scales and data this component does not own, so a render that

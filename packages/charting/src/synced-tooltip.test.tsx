@@ -12,6 +12,58 @@ import { SyncedTooltip } from './synced-tooltip.js';
 import { chartTheme } from './xychart-theme.js';
 
 /**
+ * jsdom ships no `ResizeObserver`, and `SyncedTooltip`'s size-caching effect
+ * (see `sizeRef` in synced-tooltip.tsx) no-ops without one — the flip logic
+ * would then run against its `{ 0, 0 }` first-frame default forever, and the
+ * tests below that exercise a flip could never observe one. This stub stands
+ * in for a real observer: `observe` just remembers the element, and a test
+ * fires `trigger()` once it has stubbed the card's `offsetWidth`/
+ * `offsetHeight` to the size it wants to simulate — the two steps (lay out,
+ * then report) a real browser performs on its own, driven by hand.
+ */
+class StubResizeObserver {
+  static instances: StubResizeObserver[] = [];
+  readonly observed = new Set<Element>();
+  disconnected = false;
+  readonly #callback: () => void;
+
+  constructor(callback: () => void) {
+    this.#callback = callback;
+    StubResizeObserver.instances.push(this);
+  }
+
+  observe(target: Element): void {
+    this.observed.add(target);
+  }
+
+  unobserve(target: Element): void {
+    this.observed.delete(target);
+  }
+
+  disconnect(): void {
+    this.disconnected = true;
+    this.observed.clear();
+  }
+
+  /** Fires the callback as a real observer would once the box settles. */
+  trigger(): void {
+    this.#callback();
+  }
+}
+
+globalThis.ResizeObserver =
+  StubResizeObserver as unknown as typeof ResizeObserver;
+
+/** The stub observer `SyncedTooltip` created for this card. */
+function resizeObserverFor(card: Element): StubResizeObserver {
+  const observer = StubResizeObserver.instances.find((entry) =>
+    entry.observed.has(card),
+  );
+  if (!observer) throw new Error('no ResizeObserver is observing this card');
+  return observer;
+}
+
+/**
  * The claim this file exists to hold up: **a pointer move over one panel
  * updates every panel's readout and re-renders nothing.**
  *
@@ -28,7 +80,10 @@ import { chartTheme } from './xychart-theme.js';
  * subtree regardless of subscriptions and mask what is being measured.
  */
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  StubResizeObserver.instances = [];
+});
 
 const DATA = Array.from({ length: 5 }, (_, index) => ({
   x: index,
@@ -271,9 +326,11 @@ describe('SyncedTooltip (DOM writes, not re-renders)', () => {
    * (`y = 0`, not just `margin.top`) then puts the card's top edge above
    * `y = 0` — inside a consumer's `overflow: hidden` wrapper, that is
    * clipped, the same failure mode the horizontal flip already exists to
-   * avoid on the right edge. `card.offsetHeight` is always `0` in jsdom (as
-   * the horizontal flip's own comment notes), so it is stubbed here the same
-   * way a real laid-out card would report a nonzero height.
+   * avoid on the right edge. The flip logic reads a cached size fed by a
+   * `ResizeObserver` (absent in jsdom), so the card's height is stubbed AND
+   * the stub observer is triggered here — the same two steps a real layout
+   * pass followed by a real observer report would perform to establish a
+   * nonzero height.
    */
   it('flips the card below the anchor, not centered on it, when headroom above is insufficient', () => {
     const view = render(
@@ -319,6 +376,7 @@ describe('SyncedTooltip (DOM writes, not re-renders)', () => {
       value: 40,
       configurable: true,
     });
+    resizeObserverFor(card).trigger();
 
     click('cursor-2');
 
@@ -383,11 +441,209 @@ describe('SyncedTooltip (DOM writes, not re-renders)', () => {
       value: 40,
       configurable: true,
     });
+    resizeObserverFor(card).trigger();
 
     click('cursor-2');
 
     expect(card.style.top).toBe('100px');
     expect(card.style.transform).toMatch(/translate\(12px, -50%\)/);
+  });
+
+  /**
+   * The deliberate first-frame default: before the `ResizeObserver` has
+   * reported anything, the cached size is `{ 0, 0 }`, which the flip logic
+   * reads as "it fits" — the same promise the pre-refactor
+   * `offsetWidth`/`offsetHeight` reads made in jsdom (see the flip comment in
+   * `apply`, synced-tooltip.tsx). A stop right at the edge that a real-sized
+   * card WOULD flip for must not flip before any size has ever been reported.
+   */
+  it('reads an unmeasured card (no ResizeObserver report yet) as fitting on both axes', () => {
+    const view = render(
+      <SyncedChartGroup>
+        <CursorButton at={4} />
+        <XYChart
+          theme={chartTheme}
+          width={400}
+          height={300}
+          margin={{ top: 100, left: 40, right: 20, bottom: 30 }}
+          xScale={{ type: 'linear', domain: [0, 4] }}
+          yScale={{ type: 'linear', domain: [0, 100] }}
+        >
+          <LineSeries
+            dataKey="a"
+            data={DATA}
+            xAccessor={(datum: (typeof DATA)[number]) => datum.x}
+            yAccessor={(datum: (typeof DATA)[number]) => datum.y}
+          />
+          <SyncedTooltip
+            stops={STOPS}
+            formatX={(x) => `#${x}`}
+            series={[
+              {
+                id: 'a',
+                label: 'Alpha',
+                color: 'chart.series.primary' as const,
+                valueAt: () => 50,
+              },
+            ]}
+          />
+        </XYChart>
+      </SyncedChartGroup>,
+    );
+
+    // No offsetWidth/offsetHeight stub, no observer trigger: the cache is
+    // still at its mount-time default.
+    click('cursor-4');
+
+    const card = view.container.querySelector<HTMLElement>(
+      '[data-part="synced-tooltip-card"]',
+    )!;
+    expect(card.style.transform).toBe('translate(12px, -50%)');
+  });
+
+  /**
+   * `flipX` reads the same cached size as the vertical flip above — this
+   * locks down the horizontal axis, which no test exercised before this
+   * refactor.
+   */
+  it('flips the card left of the crosshair via the cached width, and stays right of it when the card fits', () => {
+    const view = render(
+      <SyncedChartGroup>
+        <CursorButton at={0} />
+        <CursorButton at={4} />
+        <XYChart
+          theme={chartTheme}
+          width={400}
+          height={300}
+          margin={{ top: 100, left: 40, right: 20, bottom: 30 }}
+          xScale={{ type: 'linear', domain: [0, 4] }}
+          yScale={{ type: 'linear', domain: [0, 100] }}
+        >
+          <LineSeries
+            dataKey="a"
+            data={DATA}
+            xAccessor={(datum: (typeof DATA)[number]) => datum.x}
+            yAccessor={(datum: (typeof DATA)[number]) => datum.y}
+          />
+          <SyncedTooltip
+            stops={STOPS}
+            formatX={(x) => `#${x}`}
+            series={[
+              {
+                id: 'a',
+                label: 'Alpha',
+                color: 'chart.series.primary' as const,
+                valueAt: () => 50,
+              },
+            ]}
+          />
+        </XYChart>
+      </SyncedChartGroup>,
+    );
+
+    const card = view.container.querySelector<HTMLElement>(
+      '[data-part="synced-tooltip-card"]',
+    )!;
+    Object.defineProperty(card, 'offsetWidth', {
+      value: 50,
+      configurable: true,
+    });
+    resizeObserverFor(card).trigger();
+
+    // Rightmost stop: cx = 380 (width 400 − margin.right 20). 380 + offset
+    // (12) + width (50) = 442, past the chart's own right edge (400), so it
+    // flips to the left of the crosshair.
+    click('cursor-4');
+    expect(card.style.transform).toMatch(
+      /translate\(calc\(-100% - 12px\), -50%\)/,
+    );
+
+    // Leftmost stop: cx = 40 (margin.left). 40 + 12 + 50 = 102, well inside
+    // 400, so it sits to the right of the crosshair, unflipped.
+    click('cursor-0');
+    expect(card.style.transform).toMatch(/translate\(12px, -50%\)/);
+  });
+
+  /**
+   * The size cache is fed by the observer's own report, not carried over from
+   * whatever a previous, differently-sized hover measured — so growing
+   * content (a longer formatted value, more rows) gets its own flip decision,
+   * not a stale one. And that correction lands as soon as the observer
+   * reports it, without waiting for the next pointer move: no stale-flip
+   * frame is left on screen while the card's content grows under a
+   * stationary cursor.
+   */
+  it('re-corrects the flip decision when the observer reports a content-driven size change, without waiting for the next pointer move', () => {
+    const view = render(
+      <SyncedChartGroup>
+        <CursorButton at={4} />
+        <XYChart
+          theme={chartTheme}
+          width={400}
+          height={300}
+          margin={{ top: 100, left: 40, right: 20, bottom: 30 }}
+          xScale={{ type: 'linear', domain: [0, 4] }}
+          yScale={{ type: 'linear', domain: [0, 100] }}
+        >
+          <LineSeries
+            dataKey="a"
+            data={DATA}
+            xAccessor={(datum: (typeof DATA)[number]) => datum.x}
+            yAccessor={(datum: (typeof DATA)[number]) => datum.y}
+          />
+          <SyncedTooltip
+            stops={STOPS}
+            formatX={(x) => `#${x}`}
+            series={[
+              {
+                id: 'a',
+                label: 'Alpha',
+                color: 'chart.series.primary' as const,
+                valueAt: () => 50,
+              },
+            ]}
+          />
+        </XYChart>
+      </SyncedChartGroup>,
+    );
+
+    const card = view.container.querySelector<HTMLElement>(
+      '[data-part="synced-tooltip-card"]',
+    )!;
+    const observer = resizeObserverFor(card);
+
+    // Narrow readout: comfortably fits at the rightmost stop (cx = 380; 380 +
+    // offset 12 + width 5 = 397, inside the chart's own 400px width).
+    Object.defineProperty(card, 'offsetWidth', {
+      value: 5,
+      configurable: true,
+    });
+    observer.trigger();
+    click('cursor-4');
+    expect(card.style.transform).toMatch(/translate\(12px, -50%\)/);
+
+    // The card grows for the SAME hover — no pointer move in between — and
+    // the observer reports the new box.
+    Object.defineProperty(card, 'offsetWidth', {
+      value: 50,
+      configurable: true,
+    });
+    observer.trigger();
+
+    expect(card.style.transform).toMatch(
+      /translate\(calc\(-100% - 12px\), -50%\)/,
+    );
+  });
+
+  it('disconnects its ResizeObserver on unmount', () => {
+    const view = setup();
+    const card = view.card();
+    const observer = resizeObserverFor(card);
+    expect(observer.disconnected).toBe(false);
+
+    view.unmount();
+
+    expect(observer.disconnected).toBe(true);
   });
 
   it('follows a data tick that moves the values under a stationary cursor', () => {
