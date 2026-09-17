@@ -1,13 +1,14 @@
 import { cleanup, render } from '@testing-library/react';
 import { DataContext } from '@visx/xychart';
 import { useContext, useEffect } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BarSeries, LineSeries, XYChart } from './index.js';
 import {
   DashboardInteractionProvider,
   DragSelectionOverlay,
   useDashboardInteraction,
+  warnedBrushIssues,
   type PixelRange,
 } from './interaction.js';
 import { chartTheme } from './xychart-theme.js';
@@ -26,6 +27,16 @@ import { chartTheme } from './xychart-theme.js';
  */
 
 afterEach(cleanup);
+
+// `warnedBrushIssues` is keyed on a per-instance `chartId`, so unrelated
+// charts don't suppress each other's warnings — but two SEPARATE test
+// mounts can still land on the same `useId()` value (each starts a fresh
+// React tree), which would make these assertions order-dependent on
+// whichever test warns for a given reason first. Clearing between tests
+// pins that down.
+beforeEach(() => {
+  warnedBrushIssues.clear();
+});
 
 /** Surfaces the mounted chart's own `xScale` to the test via a callback ref. */
 function ScaleCapture({ onScale }: { onScale: (scale: unknown) => void }) {
@@ -266,7 +277,72 @@ describe('DragSelectionOverlay — commit path per scale type', () => {
       </DashboardInteractionProvider>,
     );
 
-    expect(getByTestId('time-range').textContent).toBe('2:4');
+    // `end` is the START OF THE NEXT BAND (5), not band 4's own domain value —
+    // otherwise a half-open consumer filter (`start <= x < end`) would drop
+    // band 4 itself, the last band the drag visibly covered.
+    expect(getByTestId('time-range').textContent).toBe('2:5');
+  });
+
+  it('commits a range for a band xScale with a Date domain, coercing per value', () => {
+    const day1 = new Date('2024-01-01T00:00:00.000Z');
+    const day2 = new Date('2024-01-02T00:00:00.000Z');
+    const day3 = new Date('2024-01-03T00:00:00.000Z');
+    const day4 = new Date('2024-01-04T00:00:00.000Z');
+
+    let scale:
+      | (((value: Date) => number | undefined) & {
+          bandwidth?: () => number;
+        })
+      | undefined;
+
+    const props = (committedPx: PixelRange | null) => (
+      <DashboardInteractionProvider>
+        <TimeRangeReader />
+        <XYChart
+          theme={chartTheme}
+          width={300}
+          height={150}
+          xScale={{
+            type: 'band',
+            paddingInner: 0.2,
+            domain: [day1, day2, day3, day4],
+          }}
+          yScale={{ type: 'linear', domain: [0, 5] }}
+        >
+          <ScaleCapture
+            onScale={(s) => {
+              scale = s as unknown as ((value: Date) => number | undefined) & {
+                bandwidth?: () => number;
+              };
+            }}
+          />
+          <BarSeries
+            dataKey="bars"
+            data={[day1, day2, day3, day4].map((x, y) => ({ x, y: y + 1 }))}
+            xAccessor={(d: { x: Date }) => d.x}
+            yAccessor={(d: { y: number }) => d.y}
+          />
+          <DragSelectionOverlay livePx={null} committedPx={committedPx} />
+        </XYChart>
+      </DashboardInteractionProvider>
+    );
+
+    const { getByTestId, rerender } = render(props(null));
+
+    expect(scale).toBeDefined();
+    const halfBand = scale!.bandwidth!() / 2;
+    // Centres of days 2 and 3 — a band scale over `Date`s still has no
+    // invert(), so this only resolves via the nearest-scan.
+    const committedPx: PixelRange = {
+      start: scale!(day2)! + halfBand,
+      end: scale!(day3)! + halfBand,
+    };
+
+    rerender(props(committedPx));
+
+    expect(getByTestId('time-range').textContent).toBe(
+      `${day2.getTime()}:${day4.getTime()}`,
+    );
   });
 });
 
@@ -491,5 +567,69 @@ describe('DragSelectionOverlay — commit-once', () => {
     );
 
     expect(setTimeRangeCalls).toBe(1);
+  });
+});
+
+describe('DragSelectionOverlay — placeholder-scale retry', () => {
+  it('retries an unresolved committedPx once a working xScale replaces a placeholder one', () => {
+    // Stands in for `<XYChart>`'s real first-render placeholder scale: a
+    // shape that satisfies `resolveCommittedRange`'s `invert`-branch check
+    // but cannot actually resolve these pixels — the same failure shape a
+    // real placeholder linear scale hits before a band chart's series
+    // register. `committedPx` is a plain public prop, not restricted to
+    // values from `useTimeRangeBrushGesture` — a consumer can pass one
+    // in on the very first render (e.g. restoring a saved selection).
+    const placeholderScale = Object.assign(() => undefined, {
+      invert: () => Number.NaN,
+    });
+    // A real band scale: left edges 20px apart, 16px wide, over [1..5].
+    const bandScale = Object.assign((value: number) => (value - 1) * 20, {
+      domain: () => [1, 2, 3, 4, 5],
+      bandwidth: () => 16,
+    });
+    const margin = { top: 0, left: 0, right: 0, bottom: 0 };
+    const committedPx: PixelRange = { start: 25, end: 65 };
+
+    const { getByTestId, rerender } = render(
+      <DashboardInteractionProvider>
+        <TimeRangeReader />
+        <DataContext.Provider
+          value={
+            {
+              xScale: placeholderScale,
+              margin,
+              height: 100,
+            } as unknown as never
+          }
+        >
+          <DragSelectionOverlay livePx={null} committedPx={committedPx} />
+        </DataContext.Provider>
+      </DashboardInteractionProvider>,
+    );
+
+    expect(getByTestId('time-range').textContent).toBe('none');
+
+    // The SAME `committedPx` object, only the context's xScale changed — this
+    // is what `<XYChart>` does once series registration recomputes the real
+    // scale, and must still commit rather than being stuck on the first,
+    // failed attempt.
+    rerender(
+      <DashboardInteractionProvider>
+        <TimeRangeReader />
+        <DataContext.Provider
+          value={
+            {
+              xScale: bandScale,
+              margin,
+              height: 100,
+            } as unknown as never
+          }
+        >
+          <DragSelectionOverlay livePx={null} committedPx={committedPx} />
+        </DataContext.Provider>
+      </DashboardInteractionProvider>,
+    );
+
+    expect(getByTestId('time-range').textContent).toBe('2:5');
   });
 });
