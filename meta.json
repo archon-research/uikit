@@ -1343,8 +1343,8 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 572,
-      "locEnd": 611,
+      "locStart": 677,
+      "locEnd": 716,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "ColoredLegend",
       "meta": {}
@@ -1355,8 +1355,8 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 374,
-      "locEnd": 383,
+      "locStart": 478,
+      "locEnd": 488,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "Default",
       "meta": {}
@@ -1367,8 +1367,8 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 627,
-      "locEnd": 681,
+      "locStart": 732,
+      "locEnd": 786,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "Distribution",
       "meta": {}
@@ -1379,8 +1379,8 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 442,
-      "locEnd": 568,
+      "locStart": 547,
+      "locEnd": 673,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "ReaderLayer",
       "meta": {}
@@ -1391,8 +1391,8 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 388,
-      "locEnd": 424,
+      "locStart": 493,
+      "locEnd": 529,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "Responsive",
       "meta": {}
@@ -1403,10 +1403,22 @@
         "Organisms",
         "Charting primitives"
       ],
-      "locStart": 744,
-      "locEnd": 766,
+      "locStart": 849,
+      "locEnd": 871,
       "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
       "namedExport": "SyncedCrosshair",
+      "meta": {}
+    },
+    "organisms--charting-primitives--synced-readout": {
+      "name": "Synced readout",
+      "levels": [
+        "Organisms",
+        "Charting primitives"
+      ],
+      "locStart": 942,
+      "locEnd": 964,
+      "filePath": "src/stories/organisms/charting-primitives.stories.tsx",
+      "namedExport": "SyncedReadout",
       "meta": {}
     },
     "organisms--confirm-tool-call-dialog--countdown-active": {

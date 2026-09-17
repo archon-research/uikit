@@ -24,6 +24,9 @@
     "packages/charting/dist/direct-labels.js": [
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
     ],
+    "packages/charting/dist/emphasis.js": [
+      "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
+    ],
     "packages/charting/dist/histogram.js": [
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
     ],
@@ -37,6 +40,12 @@
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
     ],
     "packages/charting/dist/responsive.js": [
+      "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
+    ],
+    "packages/charting/dist/synced-legend.js": [
+      "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
+    ],
+    "packages/charting/dist/synced-tooltip.js": [
       "packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx"
     ],
     "packages/charting/dist/theme.js": [
