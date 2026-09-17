@@ -96,7 +96,16 @@ Each name lives in exactly one subpath — the root barrel is their union, and
   over visx `Tooltip`'s `showVerticalCrosshair`, which renders the crosshair in
   a body-level portal that can detach from the plot on scroll.
 - `DirectLabels` — end-of-line series labels with collision-avoidance stacking
-  (`resolveLabelPositions` is the pure placement helper behind it).
+  (`resolveLabelPositions` is the pure placement helper behind it). Inside a
+  `SyncedChartGroup` it drops labels for hidden series and re-stacks the rest.
+- `EmphasisLayer` / `EmphasisSeries` — cross-chart dim-and-hide driven by the
+  group's `highlightedKey`/`hiddenKeys`, applied as attribute + style writes on
+  already-mounted mark nodes rather than by re-rendering the marks. Wrap each
+  mark in `<EmphasisSeries id="…">` with a logical series id (not its visx
+  `dataKey`) and put an `EmphasisLayer` inside the chart. See
+  [DESIGN.md](./DESIGN.md#cross-chart-emphasis-css-on-mounted-nodes-not-a-re-render).
+- `SyncedChartLegend` — `ChartLegend` with the group wiring done: hover
+  highlights, click hides, both reflected back, no per-item wiring.
 - `ChartDataTable` — an accessible `<table>` mirror of a chart's series,
   visually hidden by default: a screen-reader / "show data" affordance for a
   chart that carries no tabular structure of its own.
@@ -106,13 +115,15 @@ Each name lives in exactly one subpath — the root barrel is their union, and
 - Cross-chart interaction layer (cross-filter + synced cursor across a stack
   of charts): `SyncedChartGroup`, `useDashboardInteraction` and its narrow
   selector hooks (`useSelectedTimeRange`, `useHoveredTimestamp`,
-  `useHighlightedKey`, `useDashboardFilter`), `useSyncedCursorHandlers`,
+  `useHighlightedKey`, `useHiddenKeys`, `useDashboardFilter`), the setter-only
+  dispatch hooks, the render-free `useInteractionStore`, `useSyncedCursorHandlers`,
   `useTimeRangeBrushGesture`, `DragSelectionOverlay`. See
   [DESIGN.md](./DESIGN.md#cross-chart-interaction-layer-cross-filter--synced-cursor).
 
 See `packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx`
 for a worked example combining the brush, zoom/pan, reference bands, a
-candlestick + volume pair, and a synced-cursor group.
+candlestick + volume pair, a synced-cursor group, and a cross-chart emphasis
+group.
 
 ## Usage
 
