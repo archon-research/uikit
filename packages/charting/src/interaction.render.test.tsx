@@ -344,6 +344,85 @@ describe('DragSelectionOverlay — commit path per scale type', () => {
       `${day2.getTime()}:${day4.getTime()}`,
     );
   });
+
+  it('commits start < end for a band xScale whose domain values descend with index', () => {
+    // A reverse-chronological bucket chart — index order (pixel order)
+    // still ascends left to right, but the domain VALUES descend. The
+    // published range must still be `start < end`; nothing may assume a
+    // band domain's values ascend with its index.
+    const DESCENDING_BAND_DATA = [5, 4, 3, 2, 1].map((x, y) => ({ x, y }));
+
+    let scale:
+      | (((value: number) => number | undefined) & {
+          bandwidth?: () => number;
+        })
+      | undefined;
+
+    const { getByTestId, rerender } = render(
+      <DashboardInteractionProvider>
+        <TimeRangeReader />
+        <XYChart
+          theme={chartTheme}
+          width={300}
+          height={150}
+          xScale={{ type: 'band', paddingInner: 0.2, domain: [5, 4, 3, 2, 1] }}
+          yScale={{ type: 'linear', domain: [0, 5] }}
+        >
+          <ScaleCapture
+            onScale={(s) => {
+              scale = s as unknown as ((
+                value: number,
+              ) => number | undefined) & {
+                bandwidth?: () => number;
+              };
+            }}
+          />
+          <BarSeries
+            dataKey="bars"
+            data={DESCENDING_BAND_DATA}
+            xAccessor={(d: (typeof DESCENDING_BAND_DATA)[number]) => d.x}
+            yAccessor={(d: (typeof DESCENDING_BAND_DATA)[number]) => d.y}
+          />
+          <DragSelectionOverlay livePx={null} committedPx={null} />
+        </XYChart>
+      </DashboardInteractionProvider>,
+    );
+
+    expect(scale).toBeDefined();
+    const halfBand = scale!.bandwidth!() / 2;
+    // Centres of bands holding values 4 (index 1) and 3 (index 2) — the two
+    // middle bands, left to right.
+    const committedPx: PixelRange = {
+      start: scale!(4)! + halfBand,
+      end: scale!(3)! + halfBand,
+    };
+
+    rerender(
+      <DashboardInteractionProvider>
+        <TimeRangeReader />
+        <XYChart
+          theme={chartTheme}
+          width={300}
+          height={150}
+          xScale={{ type: 'band', paddingInner: 0.2, domain: [5, 4, 3, 2, 1] }}
+          yScale={{ type: 'linear', domain: [0, 5] }}
+        >
+          <BarSeries
+            dataKey="bars"
+            data={DESCENDING_BAND_DATA}
+            xAccessor={(d: (typeof DESCENDING_BAND_DATA)[number]) => d.x}
+            yAccessor={(d: (typeof DESCENDING_BAND_DATA)[number]) => d.y}
+          />
+          <DragSelectionOverlay livePx={null} committedPx={committedPx} />
+        </XYChart>
+      </DashboardInteractionProvider>,
+    );
+
+    // Values 4 and 3 selected; extending past value 3 in its established
+    // direction of travel (descending by 1) lands on 2 — normalised to
+    // `{ start: 2, end: 4 }`, never the un-normalised `{ start: 4, end: 2 }`.
+    expect(getByTestId('time-range').textContent).toBe('2:4');
+  });
 });
 
 describe('DragSelectionOverlay — uncommittable cases', () => {
@@ -408,6 +487,84 @@ describe('DragSelectionOverlay — uncommittable cases', () => {
         ([message]) =>
           typeof message === 'string' &&
           message.includes('[charting]') &&
+          message.toLowerCase().includes('non-numeric'),
+      ),
+    ).toBe(true);
+
+    warnSpy.mockRestore();
+  });
+
+  it('does not commit numeric-looking string labels as if they were timestamps', () => {
+    // `Number('2024')` is a finite `2024` — a loose `Number(...)`-only check
+    // would accept these as domain values and commit `{ start: 2024, end:
+    // 2027 }` into the shared `timeRange`, which every other chart in a
+    // `SyncedChartGroup` reads as epoch ms. They are plainly string labels
+    // and must be rejected the same way non-numeric strings are.
+    const YEAR_LABEL_DATA = [
+      { x: '2024', y: 1 },
+      { x: '2025', y: 2 },
+      { x: '2026', y: 3 },
+    ];
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const { getByTestId, rerender } = render(
+      <DashboardInteractionProvider>
+        <TimeRangeReader />
+        <XYChart
+          theme={chartTheme}
+          width={300}
+          height={150}
+          xScale={{
+            type: 'band',
+            paddingInner: 0.2,
+            domain: ['2024', '2025', '2026'],
+          }}
+          yScale={{ type: 'linear', domain: [0, 5] }}
+        >
+          <BarSeries
+            dataKey="bars"
+            data={YEAR_LABEL_DATA}
+            xAccessor={(d: (typeof YEAR_LABEL_DATA)[number]) => d.x}
+            yAccessor={(d: (typeof YEAR_LABEL_DATA)[number]) => d.y}
+          />
+          <DragSelectionOverlay livePx={null} committedPx={null} />
+        </XYChart>
+      </DashboardInteractionProvider>,
+    );
+
+    rerender(
+      <DashboardInteractionProvider>
+        <TimeRangeReader />
+        <XYChart
+          theme={chartTheme}
+          width={300}
+          height={150}
+          xScale={{
+            type: 'band',
+            paddingInner: 0.2,
+            domain: ['2024', '2025', '2026'],
+          }}
+          yScale={{ type: 'linear', domain: [0, 5] }}
+        >
+          <BarSeries
+            dataKey="bars"
+            data={YEAR_LABEL_DATA}
+            xAccessor={(d: (typeof YEAR_LABEL_DATA)[number]) => d.x}
+            yAccessor={(d: (typeof YEAR_LABEL_DATA)[number]) => d.y}
+          />
+          <DragSelectionOverlay
+            livePx={null}
+            committedPx={{ start: 10, end: 60 }}
+          />
+        </XYChart>
+      </DashboardInteractionProvider>,
+    );
+
+    expect(getByTestId('time-range').textContent).toBe('none');
+    expect(
+      warnSpy.mock.calls.some(
+        ([message]) =>
+          typeof message === 'string' &&
           message.toLowerCase().includes('non-numeric'),
       ),
     ).toBe(true);
@@ -631,5 +788,72 @@ describe('DragSelectionOverlay — placeholder-scale retry', () => {
     );
 
     expect(getByTestId('time-range').textContent).toBe('2:5');
+  });
+
+  it('does not re-run the band scan on every render for a genuinely unresolvable committedPx', () => {
+    // Same shape as a real band scale — left edges 20px apart, 16px wide,
+    // over [1..5] — but the callable itself is a spy, so the test can count
+    // how many times the (relatively expensive, full-domain) nearest-scan
+    // actually runs.
+    const rawScale = vi.fn((value: number) => (value - 1) * 20);
+    const bandScale = Object.assign(rawScale, {
+      domain: () => [1, 2, 3, 4, 5],
+      bandwidth: () => 16,
+    });
+    const margin = { top: 0, left: 0, right: 0, bottom: 0 };
+    // Both pixels land nearest to the same band (value 3's centre, 48) — a
+    // zero-width, permanently unresolvable drag, the same class of "never
+    // resolvable" as a string domain.
+    const committedPx: PixelRange = { start: 46, end: 50 };
+
+    const dataContextValue = {
+      xScale: bandScale,
+      margin,
+      height: 100,
+    } as unknown as never;
+
+    const { rerender } = render(
+      <DashboardInteractionProvider>
+        <DataContext.Provider value={dataContextValue}>
+          <DragSelectionOverlay livePx={null} committedPx={committedPx} />
+        </DataContext.Provider>
+      </DashboardInteractionProvider>,
+    );
+
+    // Two full nearest-scans over a 5-value domain: 10 calls.
+    expect(rawScale.mock.calls.length).toBe(10);
+
+    // Re-rendering with the SAME committedPx and the SAME xScale identity
+    // must not re-run the scan — only a genuinely different xScale (a real
+    // one replacing a placeholder) should trigger a retry.
+    for (let i = 0; i < 3; i += 1) {
+      rerender(
+        <DashboardInteractionProvider>
+          <DataContext.Provider value={dataContextValue}>
+            <DragSelectionOverlay livePx={null} committedPx={committedPx} />
+          </DataContext.Provider>
+        </DashboardInteractionProvider>,
+      );
+    }
+    expect(rawScale.mock.calls.length).toBe(10);
+
+    // A genuinely different xScale (identity change) still retries.
+    const otherRawScale = vi.fn((value: number) => (value - 1) * 20);
+    const otherBandScale = Object.assign(otherRawScale, {
+      domain: () => [1, 2, 3, 4, 5],
+      bandwidth: () => 16,
+    });
+    rerender(
+      <DashboardInteractionProvider>
+        <DataContext.Provider
+          value={
+            { xScale: otherBandScale, margin, height: 100 } as unknown as never
+          }
+        >
+          <DragSelectionOverlay livePx={null} committedPx={committedPx} />
+        </DataContext.Provider>
+      </DashboardInteractionProvider>,
+    );
+    expect(otherRawScale.mock.calls.length).toBe(10);
   });
 });

@@ -763,11 +763,30 @@ export function useTimeRangeBrushGesture() {
  *   band's pixel width, used to find its centre).
  */
 type XScaleLike = {
-  (value: number | string): number | undefined;
+  (value: number | string | Date): number | undefined;
   invert?: (value: number) => number | Date;
-  domain?: () => ReadonlyArray<number | string>;
+  domain?: () => ReadonlyArray<number | string | Date>;
   bandwidth?: () => number;
 };
+
+/**
+ * A band domain value that can produce a finite `TimeRange` endpoint:
+ * either a plain finite number, or an object (a `Date`, from any realm —
+ * checked structurally, not via `instanceof`) whose `Number(...)` coercion
+ * is finite. Deliberately narrower than "anything `Number(...)` accepts" —
+ * `Number('2024')`, `Number(null)`, and `Number('')` are all finite too,
+ * which would silently accept string category labels (see the
+ * `non-numeric-domain` warning below) as if they were timestamps.
+ */
+function isNumericDomainValue(
+  value: number | string | Date,
+): value is number | Date {
+  return typeof value === 'number'
+    ? Number.isFinite(value)
+    : typeof value === 'object' &&
+        value !== null &&
+        Number.isFinite(Number(value));
+}
 
 // Ambient, package-local declaration — mirrors `chart-color.ts`'s
 // `IS_DEV_WARNING_ENABLED` (see its comment for why `process` needs this
@@ -894,23 +913,24 @@ function resolveCommittedRange(
     return null;
   }
 
-  // Coerced in parallel with `domain`, index for index — `numericDomain` is
-  // only ever used for the OUTPUT range; every `xScale(...)` lookup below
-  // stays on the original `domain` entries (see doc comment).
-  const numericDomain = domain.map((value) => Number(value));
-  if (!numericDomain.every((value) => Number.isFinite(value))) {
+  if (!domain.every(isNumericDomainValue)) {
     warnUncommittableDrag(
       chartId,
       'non-numeric-domain',
       "this chart's xScale is a band scale over a non-numeric domain " +
-        '(a string category label, or another value that stays non-finite ' +
-        'even after Number(...) coercion), so a committed range ' +
+        '(e.g. string category labels), so a committed range ' +
         '({ start: number; end: number }) cannot be produced. The live ' +
         'selection band still draws; no timeRange is published for this ' +
         'drag.',
     );
     return null;
   }
+
+  // Coerced in parallel with `domain`, index for index, now that every entry
+  // has passed `isNumericDomainValue` — only ever used for the OUTPUT range;
+  // every `xScale(...)` lookup below stays on the original `domain` entries
+  // (see doc comment).
+  const numericDomain = domain.map((value) => Number(value));
 
   const halfBand = (xScale.bandwidth?.() ?? 0) / 2;
 
@@ -963,12 +983,15 @@ function resolveCommittedRange(
   }
 
   // Index order along a band scale's domain() IS pixel order (its position
-  // is assigned by index), so the lower index is always the earlier band —
-  // no separate "swap if reversed" step is needed the way the invert()
-  // branch above needs Math.min/max on its continuous output.
+  // is assigned by index), so the lower index is always the earlier band in
+  // PIXEL space — but nothing constrains domain VALUES to ascend with
+  // index (a reverse-chronological domain is a valid input). So the two
+  // edges below are computed from index order, then normalised by value,
+  // rather than assumed to already be in value order the way the invert()
+  // branch above's continuous output is.
   const loIndex = Math.min(startIndex, endIndex);
   const hiIndex = Math.max(startIndex, endIndex);
-  const start = numericDomain[loIndex]!;
+  const nearEdge = numericDomain[loIndex]!;
   const lastSelected = numericDomain[hiIndex]!;
   // `hiIndex` is always >= 1 here (it is strictly greater than `loIndex`,
   // which is >= 0), so `numericDomain[hiIndex - 1]` is always in range —
@@ -978,8 +1001,12 @@ function resolveCommittedRange(
     hiIndex + 1 < numericDomain.length
       ? numericDomain[hiIndex + 1]! - lastSelected
       : lastSelected - numericDomain[hiIndex - 1]!;
+  const farEdge = lastSelected + step;
 
-  return { start, end: lastSelected + step };
+  return {
+    start: Math.min(nearEdge, farEdge),
+    end: Math.max(nearEdge, farEdge),
+  };
 }
 
 /**
@@ -1013,11 +1040,21 @@ export function DragSelectionOverlay({
   const dataContext = useContext(DataContext);
   const { setTimeRange } = useDashboardInteraction();
   const lastCommittedRef = useRef<PixelRange | null>(null);
+  // The last `(committedPx, xScale)` pair that failed to resolve — lets a
+  // genuinely unresolvable `committedPx` (a string domain, a zero-width
+  // drag) short-circuit on every render after the first, rather than
+  // re-running the full band nearest-scan indefinitely. `xScale` is part of
+  // the key, not just `committedPx`, because a DIFFERENT scale is exactly
+  // what should force a retry — see the placeholder-scale note below.
+  const lastFailedRef = useRef<{ px: PixelRange; scale: unknown } | null>(null);
   const chartId = useId();
 
   useEffect(() => {
     if (!committedPx || committedPx === lastCommittedRef.current) return;
     const xScale = dataContext?.xScale as XScaleLike | undefined;
+    const failed = lastFailedRef.current;
+    if (failed && failed.px === committedPx && failed.scale === xScale) return;
+
     const range = resolveCommittedRange(chartId, xScale, committedPx);
     // Only mark `committedPx` as handled once it actually resolves. `<XYChart>`
     // publishes a placeholder scale on its first render, before child series
@@ -1027,7 +1064,10 @@ export function DragSelectionOverlay({
     // suppress the retry once the real scale arrives on the next render, via
     // the identity guard above — leaving that restored selection stuck
     // unresolved for the life of the component.
-    if (!range) return;
+    if (!range) {
+      lastFailedRef.current = { px: committedPx, scale: xScale };
+      return;
+    }
     lastCommittedRef.current = committedPx;
     setTimeRange(range);
   }, [chartId, committedPx, dataContext, setTimeRange]);
