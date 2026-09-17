@@ -271,6 +271,14 @@ export type EmphasisSeriesProps = {
  * its data) by `hiddenKeys` at the call site — `useHiddenKeys()` — and accept
  * the re-render; it is a click-frequency event, not a hover-frequency one. Put
  * `EmphasisLayer` around the stack to dim it as a whole if that reads well.
+ *
+ * **Hiding does not remove the series.** `display: none` hides the marks, but
+ * the series stays registered in visx's `DataContext`: the y-domain is
+ * computed from it as if it were still visible, so hiding the tallest series
+ * does not rescale the axis down, and a visx `<Tooltip>` still snaps to the
+ * hidden series' points and draws a glyph for it. Same remedy as the stacked
+ * case — filter the data by `hiddenKeys` at the call site instead of hiding,
+ * when either the y-domain or the tooltip has to reflect the hide.
  */
 export function EmphasisSeries({ id, children }: EmphasisSeriesProps) {
   const apply = useContext(EmphasisApplyContext);

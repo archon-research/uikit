@@ -43,7 +43,10 @@ export type SyncedChartLegendProps = {
   hover?: boolean;
   /**
    * Whether clicking an item hides/shows its series across the group. Default
-   * `true`. Set `false` for a hover-only legend.
+   * `true`. Set `false` for a hover-only legend. Every item still renders as
+   * `<button aria-pressed>` and stays clickable either way — `toggle={false}`
+   * makes the click a no-op, it does not drop the button affordance (same for
+   * a `sync: false` item under `toggle={true}`).
    */
   toggle?: boolean;
 };
