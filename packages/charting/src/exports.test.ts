@@ -84,6 +84,7 @@ const PUBLISHED_ROOT_EXPORTS = [
   'Swatch',
   'SyncedChartGroup',
   'SyncedChartLegend',
+  'SyncedTooltip',
   'TimeRangeBrush',
   'Tooltip',
   'XYChart',

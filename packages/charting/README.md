@@ -53,8 +53,9 @@ Each name lives in exactly one subpath — the root barrel is their union, and
   The raw visx re-exports forward visx's own props and do NOT resolve token
   names — theme those via `buildChartTheme` or pass `resolveChartColor(token)`.
 - `chartTokens` — the underlying CSS-variable token strings (series palette,
-  area, axis, grid, surface, label, plus `breachFill`/`bandFill` alpha tints
-  for reference bands).
+  area, axis, grid, surface, label, the `tooltipSurface`/`tooltipText` pairing
+  for a readout card, plus `breachFill`/`bandFill` alpha tints for reference
+  bands).
 - `seriesColor` — named series colors (`primary`, `secondary`, `tertiary`,
   `positive`, `critical`, plus `quaternary`/`quinary` continuing the ordinal
   ramp past `tertiary`) for legends and custom marks.
@@ -106,6 +107,15 @@ Each name lives in exactly one subpath — the root barrel is their union, and
   [DESIGN.md](./DESIGN.md#cross-chart-emphasis-css-on-mounted-nodes-not-a-re-render).
 - `SyncedChartLegend` — `ChartLegend` with the group wiring done: hover
   highlights, click hides, both reflected back, no per-item wiring.
+- `SyncedTooltip` — the tooltip readout for a `SyncedChartGroup`, driven by the
+  shared cursor instead of visx's event bus: one published cursor, one binary
+  search per panel, and the card (plus crosshair and readout dots) written onto
+  already-mounted nodes rather than re-rendered. A visx `Tooltip` in each panel
+  works off the shared bus, so one pointer move fans out to every panel's
+  tooltip — N nearest-datum lookups, N tooltip-context updates, N portal
+  re-renders per move. Opt-in and additive: the bus stays, and migrating is a
+  swap inside one chart body. See
+  [DESIGN.md](./DESIGN.md#tooltip-readout-off-the-shared-cursor-not-the-event-bus).
 - `ChartDataTable` — an accessible `<table>` mirror of a chart's series,
   visually hidden by default: a screen-reader / "show data" affordance for a
   chart that carries no tabular structure of its own.
@@ -122,8 +132,8 @@ Each name lives in exactly one subpath — the root barrel is their union, and
 
 See `packages/uikit-preview/src/stories/organisms/charting-primitives.stories.tsx`
 for a worked example combining the brush, zoom/pan, reference bands, a
-candlestick + volume pair, a synced-cursor group, and a cross-chart emphasis
-group.
+candlestick + volume pair, a synced-cursor group, a synced tooltip readout, and
+a cross-chart emphasis group.
 
 ## Usage
 

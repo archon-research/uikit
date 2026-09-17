@@ -1,0 +1,517 @@
+// The tooltip readout for a synced chart group, driven by the shared cursor
+// instead of visx's event bus.
+//
+// `SyncedChartGroup` puts one `EventEmitterProvider` above every panel, which
+// is what makes a visx `<Tooltip>` in one chart react to a hover in another.
+// That is the feature, and at scale it is also the cost: one pointer move fans
+// out to EVERY panel's `Tooltip`, and each one independently runs a
+// nearest-datum lookup over its own series, updates its own tooltip context,
+// and re-renders its own portal. N tooltip pipelines, all reacting to a single
+// hover, N times per pointer move.
+//
+// This is the same hover routed the other way round. The pointer publishes ONE
+// number to the interaction store (`hoveredTimestamp`); each panel resolves
+// that number against its own data with ONE binary search (`snapToStop`) and
+// writes the result onto nodes it has already mounted. Nothing fans out, and
+// nothing re-renders: the subscription is `useInteractionStore()` — `get` and
+// `subscribe` WITHOUT `useSyncExternalStore` — so a cursor move costs a
+// handful of attribute and `textContent` writes per panel and never reaches
+// React, and never reads layout either — the one read that used to sit on
+// this path (the card's own size, for the flip logic) is now a
+// `ResizeObserver`-fed cache instead (see `sizeRef`), so a move forces no
+// style+layout flush. It is the shape `EmphasisLayer` established for
+// hover-frequency effects (see `emphasis.tsx`), applied to the readout.
+//
+// Additive on purpose: the bus is still there, and a panel using visx
+// `<Tooltip>` is unaffected. Adopting this is a swap inside one chart body.
+import { DataContext } from '@visx/xychart';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  type CSSProperties,
+} from 'react';
+
+import { resolveChartColor } from './chart-color.js';
+import { snapToStop } from './crosshair.js';
+import type { CursorSeries } from './cursor-layer.js';
+import { useInteractionStore } from './interaction.js';
+import { chartTokens } from './theme.js';
+import { useLatest } from './use-latest.js';
+
+/**
+ * One row of the readout. A superset of `ChartCursorLayer`'s
+ * {@link CursorSeries}, so the SAME array can be handed to both when a chart
+ * wants that layer's pointer/keyboard input as well as this readout. Inside a
+ * `SyncedChartGroup`, `id` must be the legend's logical series id — hidden-row
+ * dropping keys the group's `hiddenKeys` off it, same as `DirectLabelItem.id`.
+ */
+export type SyncedTooltipSeries = CursorSeries & {
+  /** Row label, e.g. the series name as the legend says it. */
+  label: string;
+  /**
+   * Value formatter for this row. Defaults to `String`, deliberately: number
+   * formatting is locale and domain policy this package does not own (no mark
+   * here formats a value either — `DirectLabels` takes a ready-made string).
+   * Pass a formatter; the default is a legible fallback, not a house style.
+   */
+  format?: (value: number) => string;
+};
+
+export type SyncedTooltipProps = {
+  /**
+   * This chart's own sorted x-domain stops. The shared cursor is snapped to
+   * the nearest one (a binary search) before any value is read, so a panel
+   * sampled differently from the one being hovered still reads a real datum of
+   * its own rather than interpolating.
+   */
+  stops: number[];
+  series: SyncedTooltipSeries[];
+  /** Formats the active stop for the card header. Defaults to `String`. */
+  formatX?: (x: number) => string;
+  /**
+   * Also draw the crosshair line and the per-series readout dots (default
+   * `true`). Set `false` when a `ChartCursorLayer` in the same chart already
+   * draws them and this component is only wanted for the card.
+   */
+  marks?: boolean;
+  /**
+   * Gap in px between the crosshair and the card, on whichever side the card
+   * ends up: to the right of the vertical crosshair line by default, to the
+   * left when the card flips to stay inside the chart's own box. Defaults to
+   * `12`. Vertical placement — centered on the topmost visible point, or
+   * flipped below it when that would push the card above the chart's own top
+   * edge — is not controlled by this prop; see the component doc comment.
+   */
+  offset?: number;
+};
+
+type XYChartDataContext = {
+  xScale?: (value: unknown) => number | undefined;
+  yScale?: (value: number) => number | undefined;
+  innerHeight?: number;
+  width?: number;
+  height?: number;
+  margin?: { top: number; left: number; right: number; bottom: number };
+};
+
+/**
+ * Every input the imperative update reads, snapshotted per render so the
+ * effect that applies a cursor change depends on none of them.
+ */
+type TooltipInputs = {
+  stops: number[];
+  series: SyncedTooltipSeries[];
+  formatX: (x: number) => string;
+  marks: boolean;
+  offset: number;
+  context: XYChartDataContext;
+};
+
+const CARD_STYLE: CSSProperties = {
+  position: 'absolute',
+  // The resting state. Written here rather than in a mount effect so the card
+  // is never painted at the origin on the way to being hidden; React keeps
+  // this property at `'none'` across every re-render (the prop value never
+  // changes, so its style diff writes nothing), leaving the imperative
+  // `style.display` below the only thing that moves it.
+  display: 'none',
+  left: 0,
+  top: 0,
+  pointerEvents: 'none',
+  boxSizing: 'border-box',
+  padding: '6px 8px',
+  borderRadius: 6,
+  background: chartTokens.tooltipSurface,
+  color: chartTokens.tooltipText,
+  fontSize: 12,
+  lineHeight: 1.4,
+  whiteSpace: 'nowrap',
+};
+
+const HEADER_STYLE: CSSProperties = {
+  opacity: 0.7,
+  marginBottom: 2,
+};
+
+const ROW_STYLE: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 6,
+};
+
+const DOT_STYLE: CSSProperties = {
+  display: 'inline-block',
+  width: 8,
+  height: 8,
+  borderRadius: '50%',
+  flex: 'none',
+};
+
+const VALUE_STYLE: CSSProperties = {
+  marginLeft: 'auto',
+  paddingLeft: 12,
+  fontVariantNumeric: 'tabular-nums',
+};
+
+/**
+ * Vertical clearance in px between the anchor point and the card's near edge
+ * when the card is flipped below it (see `flipY` in `apply`). Independent of
+ * the public `offset` prop, which is documented as the horizontal gap only —
+ * this exists so a flipped card does not sit flush on top of the readout dot
+ * it is anchored to, not to express a general "gap from the crosshair".
+ */
+const VERTICAL_FLIP_GAP = 8;
+
+/**
+ * Toggles `display` between `none` and `shown`, writing only when it differs so
+ * a static readout writes nothing.
+ *
+ * `shown` is explicit, and has to be: these nodes carry a `display` in their
+ * JSX `style` prop, and writing `''` here would delete it rather than restore
+ * it — a row would lose its `flex` and React, seeing an unchanged style prop,
+ * would never put it back. Pass the same value the prop declares.
+ */
+function setDisplay(
+  node: { style: CSSStyleDeclaration },
+  on: boolean,
+  shown = '',
+): void {
+  const display = on ? shown : 'none';
+  if (node.style.display !== display) node.style.display = display;
+}
+
+/** Indexes the nodes carrying `attribute` under `root` by that attribute's value. */
+function byAttribute<T extends Element>(
+  root: Element,
+  attribute: string,
+): Map<string, T> {
+  const found = new Map<string, T>();
+  for (const node of root.querySelectorAll<T>(`[${attribute}]`)) {
+    found.set(node.getAttribute(attribute)!, node);
+  }
+  return found;
+}
+
+/**
+ * A tooltip card (and, by default, a crosshair and per-series readout dots)
+ * driven by the group's shared `hoveredTimestamp` rather than by visx's
+ * tooltip event bus. Render it as a child of `<XYChart>`, inside a
+ * `SyncedChartGroup`.
+ *
+ * The cursor itself still has to be published by whichever chart the pointer
+ * is over — `useSyncedCursorHandlers(xAccessor)` on the `<XYChart>` is the
+ * setter-only path and does not re-render the chart that publishes:
+ *
+ * ```tsx
+ * function Panel({ data }: { data: Point[] }) {
+ *   const handlers = useSyncedCursorHandlers<Point>((d) => d.t);
+ *   return (
+ *     <XYChart … {...handlers}>
+ *       <LineSeries dataKey="tvl" data={data} … />
+ *       <SyncedTooltip
+ *         stops={STOPS}
+ *         formatX={(t) => format(t)}
+ *         series={[
+ *           {
+ *             id: 'tvl',
+ *             label: 'TVL',
+ *             color: 'chart.series.primary',
+ *             valueAt: (t) => byTime.get(t) ?? null,
+ *             format: (v) => usd(v),
+ *           },
+ *         ]}
+ *       />
+ *     </XYChart>
+ *   );
+ * }
+ * ```
+ *
+ * Fifteen panels wired this way cost one binary search and a few DOM writes
+ * each per pointer move, and zero renders — where fifteen visx `<Tooltip>`s on
+ * the shared bus cost fifteen nearest-datum searches, fifteen tooltip-context
+ * updates and fifteen portal re-renders.
+ *
+ * Rows for series in the group's `hiddenKeys` are dropped, as `DirectLabels`
+ * drops their labels — the same imperative read, so hiding a series from the
+ * legend does not re-render the readout either.
+ *
+ * The card is positioned relative to the crosshair on both axes, and flips on
+ * either one to stay inside the chart's own box (`0` to `width`/`height`, the
+ * area a `<foreignObject>` sized to the whole chart covers) rather than
+ * overflow it: horizontally, it sits `offset`px to the right of the crosshair
+ * by default and flips to `offset`px to the left when that would cross the
+ * chart's right edge; vertically, it is centered on the topmost visible
+ * point by default and flips to sit below it when that would push the card's
+ * top edge above the chart's own top edge. Staying inside that box matters
+ * because a consumer that clips chart overflow (e.g. `overflow-x: hidden` on
+ * the wrapper — which, per CSS, stops `overflow-y` being `visible` too) can
+ * only clip content that leaves the chart's own box, not content that
+ * overflows the plot's margin but stays inside it.
+ *
+ * This is output only: it captures no pointer or keyboard input. For keyboard
+ * control of the cursor, keep one `ChartCursorLayer` (its focusable slider
+ * publishing through `onCursorChange`) as the input surface.
+ *
+ * Requires a `DashboardInteractionProvider` (a `SyncedChartGroup` is one) and
+ * a visx `DataContext` — i.e. it must be inside an `<XYChart>`.
+ */
+export function SyncedTooltip({
+  stops,
+  series,
+  formatX = String,
+  marks = true,
+  offset = 12,
+}: SyncedTooltipProps) {
+  const store = useInteractionStore();
+  const context = useContext(DataContext) as XYChartDataContext;
+
+  const rootRef = useRef<SVGGElement | null>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const lineRef = useRef<SVGLineElement | null>(null);
+
+  // The card's own box size, read ONLY here — never in `apply` — so the hot
+  // cursor path stays write-only. `offsetWidth`/`offsetHeight` force a
+  // synchronous style+layout flush; reading them from `apply` (as the flip
+  // logic used to) pays that cost once per panel per pointer move, which is
+  // exactly the cost this component exists to avoid (see the file doc
+  // comment). A `ResizeObserver` instead reports the box size on its own
+  // schedule (batched, after layout, before paint), so `apply` only ever
+  // reads this cache. Starts at `{ 0, 0 }`, the same "no box yet" value
+  // `offsetWidth`/`offsetHeight` themselves read before first layout (and
+  // always, in jsdom) — see the flip comment in `apply` for why that default
+  // is the correct first-frame answer, not a bug.
+  const sizeRef = useRef({ width: 0, height: 0 });
+
+  // Read through a ref so the subscription effect below depends on the store
+  // alone: `series` and the formatters are fresh identities on every render of
+  // the parent, and naming them would re-subscribe once per data tick.
+  const inputsRef = useLatest<TooltipInputs>({
+    stops,
+    series,
+    formatX,
+    marks,
+    offset,
+    context,
+  });
+
+  const apply = useCallback(() => {
+    const root = rootRef.current;
+    const card = cardRef.current;
+    if (!root || !card) return;
+
+    const {
+      stops: currentStops,
+      series: currentSeries,
+      formatX: formatHeader,
+      offset: currentOffset,
+      context: { xScale, yScale, margin, innerHeight = 0, width = 0 },
+    } = inputsRef.current;
+
+    const line = lineRef.current;
+    const dots = byAttribute<SVGCircleElement>(root, 'data-readout-dot');
+    const rows = byAttribute<HTMLElement>(card, 'data-readout-row');
+
+    const hideAll = () => {
+      setDisplay(card, false, 'block');
+      if (line) setDisplay(line, false);
+      for (const dot of dots.values()) setDisplay(dot, false);
+    };
+
+    const cursor = store.get('hoveredTimestamp');
+    if (cursor == null || !xScale || !yScale || !margin) {
+      hideAll();
+      return;
+    }
+
+    // The per-chart binary search: this panel's own nearest stop, not the
+    // pixel the pointer happened to be over in the panel that published.
+    const x = snapToStop(currentStops, cursor);
+    const cx = x === undefined ? undefined : xScale(x);
+    if (x === undefined || cx === undefined || !Number.isFinite(cx)) {
+      hideAll();
+      return;
+    }
+
+    const hiddenKeys = store.get('hiddenKeys');
+    let topY = Infinity;
+
+    for (const [index, entry] of currentSeries.entries()) {
+      const id = entry.id ?? String(index);
+      const row = rows.get(id);
+      const dot = dots.get(id);
+      const value = hiddenKeys.has(id) ? null : entry.valueAt(x);
+      const y = value == null ? undefined : yScale(value);
+      const visible = value != null && y !== undefined && Number.isFinite(y);
+
+      if (dot) {
+        setDisplay(dot, visible);
+        if (visible) {
+          dot.setAttribute('cx', String(cx));
+          dot.setAttribute('cy', String(y));
+        }
+      }
+      if (row) {
+        setDisplay(row, visible, 'flex');
+        const valueNode = row.querySelector('[data-readout-value]');
+        if (visible && valueNode) {
+          valueNode.textContent = (entry.format ?? String)(value);
+        }
+      }
+      if (visible) topY = Math.min(topY, y);
+    }
+
+    const header = card.querySelector('[data-readout-header]');
+    if (header) header.textContent = formatHeader(x);
+
+    if (line) {
+      setDisplay(line, true);
+      line.setAttribute('x1', String(cx));
+      line.setAttribute('x2', String(cx));
+      line.setAttribute('y1', String(margin.top));
+      line.setAttribute('y2', String(margin.top + innerHeight));
+    }
+
+    // Anchored to the topmost visible point; `margin.top` is the same
+    // "nothing to anchor to" fallback `ChartCursorLayer`'s `top` documents.
+    const anchorY = Number.isFinite(topY) ? topY : margin.top;
+
+    setDisplay(card, true, 'block');
+    card.style.left = `${cx}px`;
+    card.style.top = `${anchorY}px`;
+    // Flip to the other side of the anchor rather than overflow the chart's
+    // own box — horizontally past the right edge, vertically past the top
+    // edge — on both axes independently. The size read here comes from
+    // `sizeRef`, not `card.offsetWidth`/`offsetHeight` — see the comment on
+    // `sizeRef` above. Before the `ResizeObserver` has reported a box (the
+    // first frame, and always in jsdom, which implements no
+    // `ResizeObserver`), that cache is `{ 0, 0 }`, which reads as "it fits" —
+    // the right answer for the first frame. Self-correction no longer waits
+    // for the next pointer move: the observer calls `apply` itself as soon as
+    // it reports a real size, so a wrong first-frame flip decision is
+    // repainted before the user acts on it rather than left stale.
+    //
+    // Vertical default is centered on the anchor (`translateY(-50%)`), so a
+    // card whose top half would cross `y = 0` — the top of the chart's own
+    // box, not just the plot's `margin.top` — flips to sit entirely below
+    // the anchor instead of straddling it. `y = 0` is deliberate: a
+    // consumer's `overflow: hidden` wrapper clips at the chart's own edge, so
+    // a card that stays inside `margin.top` but above `y = 0` is exactly the
+    // case that was clipped in practice.
+    const flipX = cx + currentOffset + sizeRef.current.width > width;
+    const flipY = anchorY - sizeRef.current.height / 2 < 0;
+    const translateX = flipX
+      ? `calc(-100% - ${currentOffset}px)`
+      : `${currentOffset}px`;
+    const translateY = flipY ? `${VERTICAL_FLIP_GAP}px` : '-50%';
+    card.style.transform = `translate(${translateX}, ${translateY})`;
+  }, [store, inputsRef]);
+
+  // The hot path: a pointer move lands here, not in React.
+  useEffect(() => {
+    const unsubscribeCursor = store.subscribe('hoveredTimestamp', apply);
+    const unsubscribeHidden = store.subscribe('hiddenKeys', apply);
+    return () => {
+      unsubscribeCursor();
+      unsubscribeHidden();
+    };
+  }, [store, apply]);
+
+  // Feeds `sizeRef`, which `apply`'s flip logic reads instead of measuring
+  // the card itself. Content that changes the card's box (a longer formatted
+  // value, a row appearing) re-fires this the same way any other layout
+  // change would — a `ResizeObserver` reports content-driven resizes, not
+  // only viewport ones — so the cache tracks the CURRENT readout's size, not
+  // a stale one left over from a previous, differently-sized hover. Runs
+  // `apply()` on every report so a flip decision made against a stale or
+  // unknown size is corrected as soon as the real size is known, rather than
+  // waiting for the next pointer move.
+  //
+  // No-ops where there is no `ResizeObserver` (jsdom, older environments):
+  // `sizeRef` stays at its `{ 0, 0 }` default and the flip logic falls back
+  // to "it fits", exactly as an unmeasured card already did.
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      sizeRef.current = { width: card.offsetWidth, height: card.offsetHeight };
+      apply();
+    });
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, [apply]);
+
+  // Deliberately no dependency array, as in `EmphasisLayer`: the readout is a
+  // function of scales and data this component does not own, so a render that
+  // moved the y-scale (a streaming tick, a resize) has to be reflected onto
+  // nodes the cursor is not currently moving over. This is not the hover path
+  // — it runs on renders that were happening anyway, and writes only what
+  // changed.
+  useEffect(() => {
+    apply();
+  });
+
+  if (!context.xScale || !context.yScale || !context.margin) return null;
+
+  const { width = 0, height = 0 } = context;
+
+  return (
+    <g ref={rootRef} data-part="synced-tooltip">
+      {marks ? (
+        <>
+          <line
+            ref={lineRef}
+            style={{ display: 'none' }}
+            stroke={chartTokens.axis}
+            strokeWidth={1}
+            strokeDasharray="3 3"
+            pointerEvents="none"
+          />
+          {series.map((entry, index) => (
+            <circle
+              key={entry.id ?? String(index)}
+              data-readout-dot={entry.id ?? String(index)}
+              style={{ display: 'none' }}
+              r={3.5}
+              fill={resolveChartColor(entry.color)}
+              stroke={chartTokens.surface}
+              strokeWidth={1}
+              pointerEvents="none"
+            />
+          ))}
+        </>
+      ) : null}
+      <foreignObject
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        pointerEvents="none"
+        style={{ overflow: 'visible' }}
+      >
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          <div ref={cardRef} data-part="synced-tooltip-card" style={CARD_STYLE}>
+            <div data-readout-header="" style={HEADER_STYLE} />
+            {series.map((entry, index) => (
+              <div
+                key={entry.id ?? String(index)}
+                data-readout-row={entry.id ?? String(index)}
+                style={ROW_STYLE}
+              >
+                <span
+                  style={{
+                    ...DOT_STYLE,
+                    background: resolveChartColor(entry.color),
+                  }}
+                />
+                <span>{entry.label}</span>
+                <span data-readout-value="" style={VALUE_STYLE} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </foreignObject>
+    </g>
+  );
+}
