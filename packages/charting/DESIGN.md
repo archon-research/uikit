@@ -546,6 +546,34 @@ draggable-and-resizable mini-chart brush; reach for `useTimeRangeBrushGesture`
 + `<DragSelectionOverlay>` when the selection gesture should live directly on
 the main chart's own pointer events inside a `SyncedChartGroup`.
 
+It commits against all three `@visx/xychart` x-scale types: `linear` (direct
+`xScale.invert`), `time` (`xScale.invert` returns a `Date`, coerced to epoch
+ms via `Number(...)` — deliberately a coercion rather than an `instanceof
+Date` check, so it is robust across realms), and `band` (which has no
+`invert` at all — the committed pixel range is instead resolved via a
+nearest-pixel scan over `xScale.domain()`, scored at each band's CENTRE
+(`xScale(value) + xScale.bandwidth() / 2`), mirroring `stopFromPixel` in
+`cursor-layer.tsx`). For `band`, the drag must span **at least two bands**:
+both endpoints of a drag that stays within one band snap to the same
+domain value, and that zero-width result is rejected rather than published
+as `{ start: X, end: X }` — a consumer expecting `start < end` (stl's URL
+schema among them) cannot use it. The gesture's own >4px pixel threshold
+does not guarantee this on its own; on a wide band a >4px drag can still
+land entirely inside it. The other case `band` still cannot support is a
+**non-numeric** domain (e.g. string category labels) — `TimeRange` is
+`{ start: number; end: number }`, so no domain value can produce one. All
+three uncommittable band cases (non-numeric domain, zero-width drag, and an
+`xScale(value)` that returns `undefined` for the whole domain — not
+reachable with a real d3/`@visx/scale` band scale, but the loose
+`XScaleLike` shape does not guarantee one), plus the other scale types'
+failure cases (no scale, a non-finite `invert`), are reported via a
+development-only `console.warn` — gated and de-duplicated the same way as
+`resolveChartColor`'s unknown-token warning in `chart-color.ts` (dev builds
+only, once per distinct reason, never thrown) — rather than silently doing
+nothing. The live selection band still draws in every case regardless of
+whether the drag can commit, so a silent no-op on release was otherwise
+invisible.
+
 ### Governance decision: extend `charting`, not a new package
 
 The interaction layer lives in `packages/charting` rather than a separate
