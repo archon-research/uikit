@@ -27,7 +27,7 @@
   "devDependencies": {
     "@archon-research/oxfmt-config": "*",
     "@archon-research/tsconfig": "*",
-    "@types/node": "24.13.3",
+    "@types/node": "24.13.4",
     "vitest": "^4.1.9"
   },
   "files": [
