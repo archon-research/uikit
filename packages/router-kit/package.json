@@ -41,10 +41,10 @@
     "@archon-research/oxfmt-config": "*",
     "@archon-research/oxlint-config": "*",
     "@archon-research/tsconfig": "*",
-    "@tanstack/react-router": "1.170.33",
+    "@tanstack/react-router": "1.170.36",
     "oxfmt": "0.67.0",
     "oxlint": "1.82.0",
     "vitest": "^4.1.9",
-    "zod": "4.5.4"
+    "zod": "4.6.5"
   }
 }

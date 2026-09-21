@@ -28,7 +28,7 @@
   "dependencies": {
     "openapi-fetch": "0.17.0",
     "openapi-typescript-helpers": "0.1.0",
-    "zod": "4.5.4"
+    "zod": "4.6.5"
   },
   "peerDependencies": {
     "openapi-typescript": "^7.13.0"
@@ -36,7 +36,7 @@
   "devDependencies": {
     "@archon-research/oxfmt-config": "*",
     "@archon-research/tsconfig": "*",
-    "@types/node": "24.13.3",
+    "@types/node": "24.13.4",
     "oxfmt": "0.67.0",
     "oxlint": "1.82.0"
   }
