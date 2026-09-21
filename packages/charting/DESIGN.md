@@ -546,6 +546,70 @@ draggable-and-resizable mini-chart brush; reach for `useTimeRangeBrushGesture`
 + `<DragSelectionOverlay>` when the selection gesture should live directly on
 the main chart's own pointer events inside a `SyncedChartGroup`.
 
+It commits against all three `@visx/xychart` x-scale types: `linear` (direct
+`xScale.invert`), `time` (`xScale.invert` returns a `Date`, coerced to epoch
+ms via `Number(...)` — deliberately a coercion rather than an `instanceof
+Date` check, so it is robust across realms), and `band` (which has no
+`invert` at all — the committed pixel range is instead resolved via a
+nearest-pixel scan over `xScale.domain()`, scored at each band's CENTRE
+(`xScale(value) + xScale.bandwidth() / 2`), mirroring `stopFromPixel` in
+`cursor-layer.tsx`). A band domain can hold `Date`s (bucketed time plotted as
+bars) as readily as numbers — accepted by `isNumericDomainValue`, which
+checks a plain finite number or an object (a `Date`, from any realm, checked
+structurally) whose `Number(...)` coercion is finite, deliberately narrower
+than "anything `Number(...)` accepts": `Number('2024')` is a finite `2024`,
+so a looser check would silently commit a domain of numeric-looking string
+labels (year labels, say) as if they were epoch ms. Every `xScale(value)`
+lookup stays on the ORIGINAL domain entry regardless, since a band scale
+keyed by `Date` does not resolve a post-coercion epoch-ms number. The
+published `end` is the START OF THE NEXT BAND after the last one selected
+(estimated from the domain's own spacing), not that last band's domain
+value — matching `linear`/`time`, whose `invert` already lands past the
+last selected datum, so a half-open consumer filter (`start <= x < end`,
+stl's URL schema among them) does not silently drop the last band the drag
+visibly covered. Because a band scale's pixel position is assigned by
+INDEX, not by domain value, nothing constrains a domain to ascend in value
+alongside it (a reverse-chronological domain is a valid input) — so the
+near and far edges are computed from index order and then normalised
+(`Math.min`/`Math.max`) into `{ start, end }`, rather than assumed to
+already be in that order.
+
+For `band`, the drag must span **at least two bands**: both endpoints of a
+drag that stays within one band snap to the same domain value, and that
+zero-width result is rejected rather than published as `{ start: X, end: X
+}` — a consumer expecting `start < end` cannot use it either. The gesture's
+own >4px pixel threshold does not guarantee this on its own; on a wide band
+a >4px drag can still land entirely inside it. The other case `band` still
+cannot support is a **non-numeric domain** (e.g. string category labels) —
+`TimeRange` is `{ start: number; end: number }`, so no such domain value can
+produce one. A genuinely unresolvable `committedPx` (a non-numeric domain, a
+zero-width drag) is remembered per `(committedPx, xScale)` pair so it is not
+re-resolved on every render for the life of the component — only a change in
+`xScale` identity (the placeholder-to-real-scale transition below) forces a
+retry.
+All three uncommittable band cases (non-numeric domain, zero-width drag, and
+an `xScale(value)` that returns `undefined` for the whole domain — not
+reachable with a real d3/`@visx/scale` band scale, but the loose
+`XScaleLike` shape does not guarantee one), plus the other scale types'
+failure cases (no scale, a non-finite `invert`), are reported via a
+development-only `console.warn` — gated and de-duplicated the same way as
+`resolveChartColor`'s unknown-token warning in `chart-color.ts` (dev builds
+only, once per distinct reason per chart instance, never thrown; the
+warn-key is `${chartId}:${reason}`, `chartId` a `useId()`, so one problem
+chart's warning does not silence the same problem on a different chart, and
+the message names which chart it is about) — rather than silently doing
+nothing. The live selection band still draws in every case regardless of
+whether the drag can commit, so a silent no-op on release was otherwise
+invisible.
+
+A `committedPx` already set on the very first render (a consumer restoring a
+saved selection, say) is retried rather than given up on if it fails to
+resolve: `<XYChart>` publishes a placeholder scale before child series
+register the real one, and a resolution attempt against that placeholder is
+only marked "handled" once it actually succeeds — otherwise the identity
+guard that prevents re-committing an unchanged `committedPx` would also
+suppress the correction once the real scale arrives.
+
 ### Governance decision: extend `charting`, not a new package
 
 The interaction layer lives in `packages/charting` rather than a separate

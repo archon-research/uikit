@@ -19,6 +19,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -753,10 +754,275 @@ export function useTimeRangeBrushGesture() {
 }
 
 /**
+ * The minimal shape of an `@visx/xychart` `xScale` this file relies on,
+ * whichever scale type `DataContext` actually hands us:
+ *
+ * - `linear`/`time` scales are callable and have `invert`.
+ * - `band` (and other ordinal) scales are callable but have no `invert` —
+ *   only `domain()` (the ordered category values) and `bandwidth()` (each
+ *   band's pixel width, used to find its centre).
+ */
+type XScaleLike = {
+  (value: number | string | Date): number | undefined;
+  invert?: (value: number) => number | Date;
+  domain?: () => ReadonlyArray<number | string | Date>;
+  bandwidth?: () => number;
+};
+
+/**
+ * A band domain value that can produce a finite `TimeRange` endpoint:
+ * either a plain finite number, or an object (a `Date`, from any realm —
+ * checked structurally, not via `instanceof`) whose `Number(...)` coercion
+ * is finite. Deliberately narrower than "anything `Number(...)` accepts" —
+ * `Number('2024')`, `Number(null)`, and `Number('')` are all finite too,
+ * which would silently accept string category labels (see the
+ * `non-numeric-domain` warning below) as if they were timestamps.
+ */
+function isNumericDomainValue(
+  value: number | string | Date,
+): value is number | Date {
+  return typeof value === 'number'
+    ? Number.isFinite(value)
+    : typeof value === 'object' &&
+        value !== null &&
+        Number.isFinite(Number(value));
+}
+
+// Ambient, package-local declaration — mirrors `chart-color.ts`'s
+// `IS_DEV_WARNING_ENABLED` (see its comment for why `process` needs this
+// here rather than a `@types/node` reference).
+declare const process: { env?: { NODE_ENV?: string } } | undefined;
+
+const IS_DEV_WARNING_ENABLED =
+  typeof process !== 'undefined' && process?.env?.NODE_ENV !== 'production';
+
+/**
+ * Warned-once `${chartId}:${reason}` keys, so a recurring uncommittable drag
+ * on one chart logs a single line — without silencing every OTHER
+ * `DragSelectionOverlay` instance that hits the same reason (a `reason`-only
+ * key would: see {@link warnUncommittableDrag}). Exported so tests can reset
+ * it between cases instead of relying on distinct `chartId`s never colliding.
+ */
+export const warnedBrushIssues = new Set<string>();
+
+/**
+ * Dev-only: report why a drag gesture could not be turned into a `TimeRange`.
+ * Without this, a band scale over string categories (or a missing/empty
+ * scale) leaves `DragSelectionOverlay` drawing a live selection band that
+ * silently commits nothing on release — same class of "looks implemented,
+ * does nothing" as `resolveChartColor`'s unknown-token guard in
+ * `chart-color.ts`, which this mirrors: gated on `NODE_ENV`, warned once per
+ * distinct reason, never thrown.
+ *
+ * Keyed on `${chartId}:${reason}`, not `reason` alone — `chartId` (this
+ * component instance's `useId()`) both names which chart the message is
+ * about (otherwise indistinguishable messages from unrelated charts) and
+ * keeps one problem chart's warning from suppressing the same problem on a
+ * different chart for the rest of the page's life.
+ */
+function warnUncommittableDrag(
+  chartId: string,
+  reason: string,
+  message: string,
+): void {
+  if (!IS_DEV_WARNING_ENABLED) return;
+  const key = `${chartId}:${reason}`;
+  if (warnedBrushIssues.has(key)) return;
+  warnedBrushIssues.add(key);
+  console.warn(`[charting] DragSelectionOverlay (${chartId}): ${message}`);
+}
+
+/**
+ * Inverts a committed pixel range through `xScale` to a domain `TimeRange`,
+ * whichever of the three `@visx/xychart` scale types is in play — or returns
+ * `null` (after a dev-only warning explaining why) when it cannot.
+ *
+ * - `linear`: `xScale.invert` already returns a number.
+ * - `time`: `xScale.invert` returns a `Date`; `Number(...)` coerces it to
+ *   epoch ms via `Date.prototype.valueOf`. This is deliberately a `Number()`
+ *   coercion rather than an `instanceof Date` special case — it handles a
+ *   `Date` from another realm (e.g. an iframe) the same way, and costs
+ *   nothing extra for the plain-number case `linear` already takes.
+ * - `band`: no `invert`. Falls back to a pixel-space nearest scan over
+ *   `xScale.domain()`, mirroring `stopFromPixel` in `cursor-layer.tsx`
+ *   (the existing precedent for this shape), except each candidate is
+ *   scored at its band CENTRE (`xScale(value) + xScale.bandwidth() / 2`)
+ *   rather than its left edge, so a drag starting mid-band resolves to the
+ *   band a user would say they were over. A band domain can hold `Date`s (a
+ *   consumer plotting bucketed time as bars) as readily as numbers — both
+ *   coerce via `Number(...)`, the same coercion the `time` branch above
+ *   uses — but `xScale(value)` is always called with the ORIGINAL domain
+ *   entry, since a band scale keyed by `Date` does not resolve a
+ *   post-coercion epoch-ms number. A domain that still is not numeric after
+ *   coercion (e.g. string category labels) cannot produce a `TimeRange` and
+ *   is reported, not silently dropped. The published `end` is the START OF
+ *   THE NEXT BAND after the last one selected, not that last band's own
+ *   domain value — matching `linear`/`time`, whose `invert` already lands
+ *   past the last selected datum, so a half-open consumer filter
+ *   (`start <= x < end`) does not drop the last band the user visibly
+ *   highlighted. A drag that stays within a single band resolves both
+ *   endpoints to the same domain value; that zero-width result is rejected,
+ *   for the same reason a consumer expecting `start < end` (stl's URL
+ *   schema among them) cannot use it — the drag must span at least two
+ *   bands to commit.
+ */
+function resolveCommittedRange(
+  chartId: string,
+  xScale: XScaleLike | undefined,
+  pixelRange: PixelRange,
+): TimeRange | null {
+  if (!xScale) {
+    warnUncommittableDrag(
+      chartId,
+      'no-scale',
+      "could not read this chart's xScale from DataContext, so the drag " +
+        'was not committed. Render it as a child of <XYChart>.',
+    );
+    return null;
+  }
+
+  const lowPx = Math.min(pixelRange.start, pixelRange.end);
+  const highPx = Math.max(pixelRange.start, pixelRange.end);
+
+  if (typeof xScale.invert === 'function') {
+    const start = Number(xScale.invert(lowPx));
+    const end = Number(xScale.invert(highPx));
+    if (Number.isFinite(start) && Number.isFinite(end)) {
+      return { start, end };
+    }
+    warnUncommittableDrag(
+      chartId,
+      'non-finite-invert',
+      'xScale.invert(...) did not produce a finite value for this drag, ' +
+        'so it was not committed.',
+    );
+    return null;
+  }
+
+  // No `invert` — a band (or other ordinal) scale. Nearest-scan in pixel
+  // space over the domain instead.
+  const domain = xScale.domain?.();
+  if (!domain || domain.length === 0) {
+    warnUncommittableDrag(
+      chartId,
+      'empty-domain',
+      "this chart's xScale has no invert() and an empty domain(), so a " +
+        'band-scale nearest-scan has nothing to match against. The drag ' +
+        'was not committed.',
+    );
+    return null;
+  }
+
+  if (!domain.every(isNumericDomainValue)) {
+    warnUncommittableDrag(
+      chartId,
+      'non-numeric-domain',
+      "this chart's xScale is a band scale over a non-numeric domain " +
+        '(e.g. string category labels), so a committed range ' +
+        '({ start: number; end: number }) cannot be produced. The live ' +
+        'selection band still draws; no timeRange is published for this ' +
+        'drag.',
+    );
+    return null;
+  }
+
+  // Coerced in parallel with `domain`, index for index, now that every entry
+  // has passed `isNumericDomainValue` — only ever used for the OUTPUT range;
+  // every `xScale(...)` lookup below stays on the original `domain` entries
+  // (see doc comment).
+  const numericDomain = domain.map((value) => Number(value));
+
+  const halfBand = (xScale.bandwidth?.() ?? 0) / 2;
+
+  // Returns `undefined` only if `xScale(value)` is `undefined` for every
+  // domain value — which does not happen for a real d3/`@visx/scale` band
+  // scale (its pixel position is computed purely from a value's index
+  // within its own `domain()`, and `domain` IS that `domain()`), but
+  // `XScaleLike` is a loose shape, not a guarantee of that implementation.
+  // Surfacing `undefined` here (rather than silently falling back to index
+  // `0`, which could be a wrong band) keeps a foreign scale implementation
+  // in this same "report, don't guess" family as the other branches below.
+  const nearestIndex = (px: number): number | undefined => {
+    let bestIndex: number | undefined;
+    let bestDistance = Infinity;
+    for (let index = 0; index < domain.length; index += 1) {
+      const left = xScale(domain[index]!);
+      if (left === undefined) continue;
+      const distance = Math.abs(left + halfBand - px);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = index;
+      }
+    }
+    return bestIndex;
+  };
+
+  const startIndex = nearestIndex(lowPx);
+  const endIndex = nearestIndex(highPx);
+  if (startIndex === undefined || endIndex === undefined) {
+    warnUncommittableDrag(
+      chartId,
+      'unresolvable-band-pixel',
+      "this chart's xScale(value) returned undefined for every value in " +
+        'its own domain(), so the nearest-band scan had nothing to match ' +
+        'this drag against. The drag was not committed.',
+    );
+    return null;
+  }
+
+  if (startIndex === endIndex) {
+    warnUncommittableDrag(
+      chartId,
+      'zero-width-band',
+      'this drag stayed within a single band, so the nearest-band scan ' +
+        'resolved both endpoints to the same domain value and there is ' +
+        'no range to publish. Drag across at least two bands to commit a ' +
+        'selection.',
+    );
+    return null;
+  }
+
+  // Index order along a band scale's domain() IS pixel order (its position
+  // is assigned by index), so the lower index is always the earlier band in
+  // PIXEL space — but nothing constrains domain VALUES to ascend with
+  // index (a reverse-chronological domain is a valid input). So the two
+  // edges below are computed from index order, then normalised by value,
+  // rather than assumed to already be in value order the way the invert()
+  // branch above's continuous output is.
+  const loIndex = Math.min(startIndex, endIndex);
+  const hiIndex = Math.max(startIndex, endIndex);
+  const nearEdge = numericDomain[loIndex]!;
+  const lastSelected = numericDomain[hiIndex]!;
+  // `hiIndex` is always >= 1 here (it is strictly greater than `loIndex`,
+  // which is >= 0), so `numericDomain[hiIndex - 1]` is always in range —
+  // used as the step estimate at the domain's final band, where there is no
+  // next value to measure from directly.
+  const step =
+    hiIndex + 1 < numericDomain.length
+      ? numericDomain[hiIndex + 1]! - lastSelected
+      : lastSelected - numericDomain[hiIndex - 1]!;
+  const farEdge = lastSelected + step;
+
+  return {
+    start: Math.min(nearEdge, farEdge),
+    end: Math.max(nearEdge, farEdge),
+  };
+}
+
+/**
  * Renders the live selection band for a `useTimeRangeBrushGesture` drag, and
  * publishes the committed pixel range to the shared `timeRange` once a drag
  * gesture completes, inverted through this chart's own `xScale`. Must be
  * rendered as a child of `<XYChart>` so it can read `DataContext`.
+ *
+ * Supports all three `@visx/xychart` x-scale types: `linear` (direct
+ * `invert`), `time` (`invert` coerced from `Date` to epoch ms), and `band`
+ * with a numeric domain spanning at least two bands (a pixel-space nearest
+ * scan, since band scales have no `invert`). A band scale over a
+ * non-numeric (e.g. string) domain, or a band-scale drag that stays within
+ * a single band (a zero-width result), cannot produce a `TimeRange` and is
+ * reported via a development-only console warning instead of silently
+ * doing nothing — see {@link resolveCommittedRange}.
  */
 export function DragSelectionOverlay({
   livePx,
@@ -774,20 +1040,37 @@ export function DragSelectionOverlay({
   const dataContext = useContext(DataContext);
   const { setTimeRange } = useDashboardInteraction();
   const lastCommittedRef = useRef<PixelRange | null>(null);
+  // The last `(committedPx, xScale)` pair that failed to resolve — lets a
+  // genuinely unresolvable `committedPx` (a string domain, a zero-width
+  // drag) short-circuit on every render after the first, rather than
+  // re-running the full band nearest-scan indefinitely. `xScale` is part of
+  // the key, not just `committedPx`, because a DIFFERENT scale is exactly
+  // what should force a retry — see the placeholder-scale note below.
+  const lastFailedRef = useRef<{ px: PixelRange; scale: unknown } | null>(null);
+  const chartId = useId();
 
   useEffect(() => {
     if (!committedPx || committedPx === lastCommittedRef.current) return;
-    lastCommittedRef.current = committedPx;
-    const xScale = dataContext?.xScale as
-      | { invert?: (value: number) => number }
-      | undefined;
-    if (typeof xScale?.invert !== 'function') return;
-    const start = xScale.invert(Math.min(committedPx.start, committedPx.end));
-    const end = xScale.invert(Math.max(committedPx.start, committedPx.end));
-    if (Number.isFinite(start) && Number.isFinite(end)) {
-      setTimeRange({ start, end });
+    const xScale = dataContext?.xScale as XScaleLike | undefined;
+    const failed = lastFailedRef.current;
+    if (failed && failed.px === committedPx && failed.scale === xScale) return;
+
+    const range = resolveCommittedRange(chartId, xScale, committedPx);
+    // Only mark `committedPx` as handled once it actually resolves. `<XYChart>`
+    // publishes a placeholder scale on its first render, before child series
+    // register and the real scale is computed — a `committedPx` already set
+    // at mount (e.g. a consumer restoring a saved selection) can hit that
+    // placeholder first. Marking it "done" regardless of `range` would
+    // suppress the retry once the real scale arrives on the next render, via
+    // the identity guard above — leaving that restored selection stuck
+    // unresolved for the life of the component.
+    if (!range) {
+      lastFailedRef.current = { px: committedPx, scale: xScale };
+      return;
     }
-  }, [committedPx, dataContext, setTimeRange]);
+    lastCommittedRef.current = committedPx;
+    setTimeRange(range);
+  }, [chartId, committedPx, dataContext, setTimeRange]);
 
   const margin = dataContext?.margin;
   const height = dataContext?.height ?? 0;
