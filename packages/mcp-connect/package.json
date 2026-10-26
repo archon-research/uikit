@@ -35,7 +35,7 @@
     "@archon-research/oxlint-config": "*",
     "@archon-research/tsconfig": "*",
     "@types/react": "^19.0.0",
-    "oxfmt": "0.67.0",
-    "oxlint": "1.82.0"
+    "oxfmt": "0.73.0",
+    "oxlint": "1.88.0"
   }
 }
